@@ -1,0 +1,50 @@
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs} 
+\usepackage{listings} \usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage[most]{tcolorbox}
+% \usepackage{fontawesome5}
+\graphicspath{{./imagenes}}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tabularx}   % Para el entorno tabularx y la columna X
+\usepackage{booktabs}   % Para \toprule, \midrule y \bottomrule
+% \incluirimg{ruta}{Escala}{Capitulo}{Label}
+\newcommand{\incluirimg}[4]{
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=#2\textwidth]{#1}
+        \caption{#3}
+        \label{fig:#4}
+    \end{figure}
+}
+
+\newcommand{\incluircodigo}[3]{
+    \lstset{basicstyle=\ttfamily\small, frame=single, breaklines=true}
+    \begin{center}
+        \begin{minipage}{0.9\linewidth}
+            \lstinputlisting[language=#2, caption=#3]{#1}
+        \end{minipage}
+    \end{center}
+}
+\newcommand{\notaseguridad}[1]{
+    \begin{tcolorbox}[
+        colback=yellow!10!white,    % Color de fondo (amarillo muy claro)
+        colframe=orange!70!black,   % Color del borde (naranja oscuro)
+        title=\textbf{Observación de seguridad}, % Título de la caja
+        colbacktitle=orange!70!black, % Color de fondo del título
+        coltitle=white,             % Color del texto del título
+        arc=2mm,                    % Bordes redondeados
+        boxrule=0.5mm,              % Grosor del borde
+        left=10pt, right=10pt,      % Márgenes internos
+        fontupper=\itshape          % Texto del cuerpo en cursiva
+    ]
+        #1
+    \end{tcolorbox}
+}
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  
+\titlespacing*{\chapter}{0pt}{-20pt}{40pt}

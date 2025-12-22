@@ -1,4 +1,18 @@
+*.aux
+*.log
+*.toc
+*.out
+*.nav
+*.snm
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.blg
+*.bbl
+memoria/main.pdf
 # Logs
+
 logs
 *.log
 npm-debug.log*
