@@ -1,3 +1,38 @@
+## --- Archivos de salida finales ---
+*.pdf
+*.ps
+*.dvi
+
+## --- Archivos auxiliares de LaTeX (Core) ---
+*.aux
+*.log
+*.toc
+*.out
+*.lof
+*.lot
+*.gz
+*.fdb_latexmk
+*.fls
+
+## --- Archivos específicos de BibLaTeX y Biber ---
+*.bcf
+*.bbl
+*.blg
+*.run.xml
+*-blx.bib
+
+## --- Archivos temporales de capítulos ---
+# Esto limpia los .aux que se crean dentro de la carpeta /capitulos
+capitulos/*.aux
+capitulos/incrementos/*.aux
+
+## --- Archivos de backup y sistema ---
+*.bak
+*.sav
+*.tmp
+.DS_Store
+Thumbs.db
+
 *.aux
 *.log
 *.toc
