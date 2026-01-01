@@ -15,9 +15,9 @@
             title label font=\small\bfseries,
             bar/.style={fill=blue!20, draw=blue!60},
             % --- Línea de Control (EVM) ---
-            today=2026-01-10,
-            today rule/.style={draw=red, ultra thick, dashed},
-            today label=Corte de Control EVM
+            % today=2026-01-10,
+            % today rule/.style={draw=red, ultra thick, dashed},
+            % today label=Corte de Control EVM
             ]{2025-12-22}{2026-05-31} % Rango ampliado para cubrir noviembre
 
             % \gantttitlecalendar{year, month=name} \\
@@ -32,7 +32,17 @@
             \ganttbar[progress=100]{Primer envío a tutor y cotutor.}{2025-12-28}{2025-12-28} \\
             \ganttbar[progress=100]{Cambios primera retroalimentación tutor.}{2026-01-01}{2026-01-01} \\
 
-            \ganttnewline[thick, black!30]
+            % --- LÍNEAS DE ENTREGA (Personalizadas) ---
+            % Puedes poner tantas como necesites cambiando la fecha
+            \ganttvrule[
+                vrule/.style={draw=blue!80, thick, dotted}, 
+                vrule label node/.style={
+                    anchor=south,        % Lo empuja hacia arriba
+                    rotate=90,           % Lo mantiene vertical
+                    yshift=5pt,          % Pequeña separación del borde superior
+                    font=\scriptsize\bfseries\color{blue!80}
+                }
+            ]{Hito: Entrega}{2025-12-28}
 
         \end{ganttchart}
     }
