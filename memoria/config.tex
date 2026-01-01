@@ -4,6 +4,9 @@
 \usepackage{booktabs} 
 \usepackage{listings} \usepackage{xcolor}
 \usepackage{hyperref}
+\usepackage{pgfgantt}
+\usepackage{ltablex}
+\keepXColumns  % para que el comportamiento de X sea consistente
 \usepackage[most]{tcolorbox}
 % \usepackage{fontawesome5}
 \graphicspath{{./imagenes}}
@@ -48,3 +51,9 @@
   {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
   
 \titlespacing*{\chapter}{0pt}{-20pt}{40pt}
+% Definición de colores para el estado de las tareas
+\definecolor{colorplan}{RGB}{200, 200, 200} % Gris para lo planificado
+\definecolor{colorreal}{RGB}{100, 150, 250} % Azul para lo ejecutado
+\definecolor{colorretraso}{RGB}{230, 80, 80} % Rojo para el retraso
+\usepackage{pdflscape}
+\usepackage{rotating}

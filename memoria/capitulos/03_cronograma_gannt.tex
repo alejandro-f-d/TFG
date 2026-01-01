@@ -1,0 +1,40 @@
+\begin{landscape}
+\begin{figure}[p]
+    \centering
+    \caption{Cronograma de desarrollo basado en Ciclos de Vida Incrementales (I al V).}
+    \label{fig:gantt_incremental}
+
+    \resizebox{\linewidth}{!}{
+        \begin{ganttchart}[
+            x unit=3.5mm,
+            y unit chart=0.6cm,
+            time slot format=isodate,
+            vgrid={*7{black!5}, *1{black!20}},
+            hgrid=true,
+            group label font=\bfseries\small,
+            title label font=\small\bfseries,
+            bar/.style={fill=blue!20, draw=blue!60},
+            % --- Línea de Control (EVM) ---
+            today=2026-01-10,
+            today rule/.style={draw=red, ultra thick, dashed},
+            today label=Corte de Control EVM
+            ]{2025-12-22}{2026-05-31} % Rango ampliado para cubrir noviembre
+
+            % \gantttitlecalendar{year, month=name} \\
+            \gantttitlecalendar{year, month=name, week} \\
+
+            % --- INCREMENTO I: Definición de requisitos ---
+            \ganttgroup{Incremento I:}{2025-12-23}{2026-01-01} \\
+            \ganttbar[progress=100]{Introducción, objetivos, alcance.}{2025-12-23}{2025-12-24} \\
+            \ganttbar[progress=100]{Especificación de requisitos funcionales.}{2025-12-26}{2025-12-26} \\
+            \ganttbar[progress=100]{Especificación de requisitos no funcionales.}{2025-12-27}{2025-12-27} \\
+            \ganttbar[progress=100]{Especificación de tecnologías.}{2025-12-28}{2025-12-28} \\
+            \ganttbar[progress=100]{Primer envío a tutor y cotutor.}{2025-12-28}{2025-12-28} \\
+            \ganttbar[progress=100]{Cambios primera retroalimentación tutor.}{2026-01-01}{2026-01-01} \\
+
+            \ganttnewline[thick, black!30]
+
+        \end{ganttchart}
+    }
+\end{figure}
+\end{landscape}

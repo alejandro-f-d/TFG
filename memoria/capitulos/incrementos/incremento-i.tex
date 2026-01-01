@@ -1,56 +1,76 @@
 \chapter{Incremento I:}
 
 \section{Requisitos:}
+
+En las siguientes tablas podemos ver los requisitos funcionales y no funcionales de la aplicación. En la tabla \ref{tab:rf_simple} se encuentran organizados los requisitos funcionales para el dashboard. Mientras que en la tabla \ref{tab:rnf_simple} podemos encontrar los requisitos no funcionales de la aplciación.
+
+
 \subsection{Requisitos funcionales:}
 
 
-\begin{table}[htpb]
-\centering
-\small
-\caption{Requisitos Funcionales y su Incremento Asociado: }
-\label{tab:rf_simple}
-\begin{tabularx}{\textwidth}{lXl}
+\begin{center}
+\begin{longtable}{lp{8cm}l}  % Cambiado X por p{8cm}
+\caption{Requisitos Funcionales y su Incremento Asociado}
+\label{tab:rf_simple} \\
 \toprule
-\textbf{ID} & \textbf{Descripción} & \textbf{Incremento} \\ \midrule
-  RF1 & Gestión integral de investigadores (CRUD). & Incremento 1 \\
-  RF2 & Control de periodos de estancia y fechas de finalización. & Incremento 1 \\
-  RF3 & Autenticación y control de acceso basado en roles (RBAC). & Incremento 1 \\
-  RF4 & Los usuarios deben ser capaces de modificar y/o recuperar la contraseña de manera segura. & Incremento 1 \\
-  RF5 & Centralización de datos en la Fuente Única de Verdad (SSOT). & Incremento 1 \\
-  RF6 & El servicio debe permitir trazabilidad y envío de anexos firmados por parte de los usuarios. & Incremento 1 \\
-  RF7 & El sistema debe permitir la creación de nuevos servidores dependiendo de las necesidades. & Incremenot 1 \\
-  \midrule
-  RF8 & Aprovisionamiento automático de cuentas en servidores en los microservicios de CodeServer. & Incremento 2 \\
-  RF9 & Revocación de los accesos nativos. & Incremento 2 \\
-  RF10 & Gestión de privilegios de superusuario (sudo) solo para el administrador en servidores. & Incremento 2 \\ \midrule
-  RF11 & Gestión de miembros en repositorios de GitLab vía API. & Incremento 3 \\
-  RF12 & Control de acceso mediante códigos de invitación de las puertas de los laboratorios con la aplicación de NUKI. & Incremento 3 \\
-  RF13 & Integración y gestión de canales en Microsoft Teams. & Incremento 3 \\ \midrule
-  RF14 & Registro de auditoría bajo un estándar \textbf{NIST}. & Incremento 4 \\ \bottomrule
-\end{tabularx}
-\end{table}
+\textbf{ID} & \textbf{Descripción} & \textbf{Incremento} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{ID} & \textbf{Descripción} & \textbf{Incremento} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+RF1   & Gestión integral de investigadores (CRUD). & Incremento 1 \\
+RF1.1 & Los administradores pueden dar de alta a la cantidad de roles que sean necesarios. & Incremento 1 \\
+RF1.2 & Los administradores del sistema podrán visualizar los datos de todos los usuarios dados de alta. & Incremento 1 \\
+RF1.3 & Los usuarios no administradores deben poder ver sus datos propios. & Incremento 1 \\
+RF1.4 & Los administradores del sistema deben poder editar los datos de otros usuarios a excepción de las credenciales de acceso de cada usuario. & Incremento 1 \\
+RF1.5 & Los usuarios no administradores deben poder editar su información y su contraseña. & Incremento 1 \\
+RF1.6 & Los administradores son los únicos con permisos para eliminar la cuenta de un usuario. & Incremento 1 \\
+RF2   & Control de periodos de estancia y fechas de finalización. El sistema debe enviar un correo electrónico al administrador en el día de la baja del usuario notificándole la posible baja. & Incremento 1 \\
+RF3   & Autenticación y control de acceso basado en roles (RBAC). & Incremento 1 \\
+RF4   & Los usuarios deben ser capaces de modificar y/o recuperar la contraseña de manera segura. & Incremento 1 \\
+RF5   & Centralización de datos en la Fuente Única de Verdad (SSOT). & Incremento 1 \\
+RF6   & El servicio debe permitir trazabilidad y envío de anexos firmados por parte de los usuarios. & Incremento 1 \\
+RF7   & El sistema debe permitir la creación de nuevos servidores dependiendo de las necesidades. & Incremento 1 \\
+\midrule
+RF8   & Aprovisionamiento automático de cuentas en servidores en los microservicios de CodeServer. & Incremento 2 \\
+RF9   & Revocación de los accesos nativos. & Incremento 2 \\
+RF10  & Gestión de privilegios de superusuario (sudo) solo para el administrador en servidores. & Incremento 2 \\
+\midrule
+RF11  & Gestión de miembros en repositorios de GitLab vía API. & Incremento 3 \\
+RF12  & Control de acceso mediante códigos de invitación de las puertas de los laboratorios con la aplicación de NUKI. & Incremento 3 \\
+RF13  & Integración y gestión de canales en Microsoft Teams. & Incremento 3 \\
+\midrule
+RF14  & Registro de auditoría bajo un estándar NIST. & Incremento 4 \\
+\end{longtable}
+\end{center}
 \normalsize
 \newpage
 
 \subsection{Requisitos no funcionales:}
-
-\begin{table}[htpb]
-\centering
-\small
-\caption{Requisitos no Funcionales y su Incremento Asociado}
-\label{tab:rnf_simple}
-\begin{tabularx}{\textwidth}{lXl}
-\toprule
-\textbf{ID} & \textbf{Descripción} & \textbf{Incremento} \\ \midrule
-  RNF1 & Comunicación segura a la página web mediante certificados SSL y TLS. & Incremento 1 \\
-  RNF2 & Almacenamiento de las credenciales de acceso de manera segura en la base de datos con las huellas de las mismas. \\
-  RNF3 & Arquitectura modular permitiendo la escalabilidad de los servicios. & Incremento 1 \\
-  RNF4 & Consistencia entre el SSOT y los nodos remoto y restos de servicios. & Incremento 1, 2, 3 \\ 
-  RNF5 & El sistema debe garantizar el funcionamiento mientras este activo el servidor donde está la página web. & Incremento 1 \\ \bottomrule
-\end{tabularx}
+\begin{table}[htbp]
+    \centering
+    \caption{Requisitos no Funcionales y su Incremento Asociado}
+    \label{tab:rnf_simple}
+    \begin{tabularx}{\textwidth}{l X l}
+        \toprule
+        \textbf{ID} & \textbf{Descripción} & \textbf{Incremento} \\ \midrule
+        RNF1 & Comunicación segura a la página web mediante certificados SSL y TLS. & Incremento 1 \\
+        RNF2 & Almacenamiento de las credenciales de acceso de manera segura en la base de datos con las huellas de las mismas. & Incremento 1 \\
+        RNF3 & Arquitectura modular permitiendo la escalabilidad de los servicios. & Incremento 1 \\
+        RNF4 & Consistencia entre el SSOT y los nodos remoto y restos de servicios. & Incremento 1, 2, 3 \\
+        RNF5 & El sistema debe garantizar el funcionamiento mientras este activo el servidor donde está la página web. & Incremento 1 \\
+        RNF6 & \textbf{Documentación:} Manual de usuario completo disponible tanto para usuarios como para administradores. & - \\ \bottomrule
+    \end{tabularx}
 \end{table}
 \normalsize
-
+\newpage
 \section{Tecnologías planteadas.}
 
 \begin{table}[htpb]
