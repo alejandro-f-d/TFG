@@ -1,0 +1,63 @@
+\chapter{Incremento II:}
+
+\section{Especificación y modelado:}
+
+\subsection{Requisitos:}
+En la tabla \ref{TODO} se pueden encontrar los requisitos funcionales a implementar en esta etapa. En la tabla \ref{TODO} se localizan los requisitos no funcionales para este incremento. 
+
+\subsection{Sistema de identificación de usuarios:}
+
+En este punto, nos encontramos en la situación de que el sistema debe permitir al usuario identificarse de manera segura. Podemos encontrar principalmente dos tipos de usuarios.
+
+ \begin{itemize}
+  \item Usuarios con vinculación a la UPM. En este grupo encontramos a los estudiantes y el personal docente e investigador entre otros.
+  \item Usuarios sin vinculación a la UPM. Este grupo de usuarios, no tienen ninguna asociacón con la universidad, serían un grupo muy pequeño y acotado. Se encontrarían principalmente estudiantes (ajenos a la universidad) e investigadores (ajenos a la universidad) con vinculación en el laboratorio MEDAL.
+ \end{itemize} 
+
+\notaseguridad{Se debe destacar que el sistema de identificación única, en adelante SIU, se trata de un sistema más seguro que un sistema implementado propio para este trabajo fin de grado. Esto se debe a que se trata de un sistema probado y mantenido por personal experto.}
+
+En primera instancia, lo que se va a hacer es utilizar el SIU para el personal asociado a la UPM al cual de manera interna en el servicio se le aplicará una access control list (ACL) para filtrar los usuarios que tienen permitido el acceso. Para los usuarios sin vinculación a la UPM, se crearía un sistema parecido al ofrecido por la UPM pero interno al laboratorio. En la figura \ref{fig:diagrama_identificacion} se puede ver el diagrama de flujo de operación. 
+
+\begin{figure}[htb]
+ \begin{center}
+  \includegraphics[width=0.5\textwidth]{incremento-ii/diagrama_identificacion.png}
+ \end{center}
+ \caption{Flujo de identificación de los usuarios en el sistema.}\label{fig:diagrama_identificacion}
+\end{figure}
+
+
+\subsection{Casos de uso:}
+
+\subsection{Interfaces del sistema:}
+
+
+\subsection{Recursos:}
+
+
+\subsection{Diagramas de secuencia:}
+
+
+\subsection{Entidad relación:}
+
+
+
+\subsection{Puntos función:}
+
+
+
+\subsection{Resumen decisiones de diseño:}
+
+
+\section{Diseño de la solución:}
+
+\subsection{FIGMA: Diseño de pantallas}
+
+
+\section{Implementación y codificación:}
+
+
+\section{Validación y cierre:}
+
+
+
+
