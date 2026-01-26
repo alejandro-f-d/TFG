@@ -83,7 +83,14 @@ RF7   & El servicio debe tener un registro actualizado de la información del pe
   RF7.11 & Wi-Fi (\textit{Opcional}). \\
   RF7.12 & Activo (\textbf{Obligatorio.}) \\
   RF7.13 & Tarjeta de Acceso (\textbf{Obligatorio.}) \\
-RF8 & El sistema debe permitir la monitorización de páginas webs para conocer su estado de manera automática notificando al usuario en caso de no encontrarse funcionando. El healthcheck se hará cada 2 minutos para evitar bloqueo por posible ataque DoS.
+RF8 & El sistema debe permitir la monitorización de páginas webs para conocer su estado de manera automática notificando al usuario en caso de no encontrarse funcionando. El healthcheck se hará cada 2 minutos para evitar bloqueo por posible ataque DoS. \\
+RF9 & Creación de información asociada a los servidores. \\
+  RF9.1 & Nombre del servidor. \\
+  RF9.2 & IP pública del servidor. \\
+  RF9.3 & IP privada del servidor. \\
+  RF9.4 & Puerta de enlace del servidor. \\
+  RF9.5 & DNS del servidor. \\
+RF10 & Baja de los servidores.
 \end{longtable}
 \newpage
 \begin{longtable}{lp{10cm}}
@@ -113,17 +120,57 @@ En este sistema, a pesar de que pueden existir numerosos tipos de roles, se pued
   \item \texttt{Responsables:} Los que poseen este permiso son los encargados de realizar aprobaciones de los permisos de los usuarios base.
 
   \item \texttt{Usuario base:} Usuario sin permiso que realiza la petición de los servicios a los supervisores. 
+
+  \item \texttt{Cron:}  Proceso encargado de notificar de eventos de calendario/temporales.
+
+  \item \texttt{Healthcheck de las web:} Proceso encargado de notifcar cuando las páginas web se encuentran caidas.
 \end{itemize}
 
-Las personas asociados a estos permisos, son los \textbf{actores} del sistema. Los roles de negocio de la aplicación, mapearían a uno de estos roles de aplicación. 
+Estos son los \textbf{actores} del sistema. Los roles de negocio de la aplicación, mapearían a uno de estos roles de aplicación. 
+
+En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del sistema. 
 
 
 
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{incremento-ii/casos_uso_incremento_ii.png}
+ \caption{Casos de uso del incremento II.}
+ \label{fig:casos_uso_inc_ii}
+\end{figure}
 
 
 
+\newpage
 \subsection{Interfaces del sistema:}
 
+
+
+\begin{lstlisting}[language=json, caption={JSON Schema Usuario}, label=lst:json-schema-user]
+{
+  "schema": "http://json-schema.org/draft-07/schema#",
+  "title": "user",
+  "type": "object",
+  "properties": {
+    "nombre": { "type": "string" },
+    "apellidos": { "type": "string" },
+    "rol": { "enum": ["Administrador", "Responsable", "Usuario base", "..."] },
+    "correoInstitucional": { "type": "string" },
+    "usuarioVpn": { "type": "string" },
+    "gitlab": { "type": "string" },
+    "nukiP-1": { "type":  "string" },
+    "nukiP-0": { "type": "string" },
+    "profesorResponsable": { "type": "string" },
+    "fechaIncorporacion": { "type": "string" }, 
+    "fechaFin": { "type": "string" },
+    "Wi-Fi": { "type": "boolean" },
+    "activo": { "type": "boolean" },
+    "tarjetaAcceso": { "type": "boolean" },
+    "idUsuario": { "type": "integer" }
+  },
+  "required": ["nombre", "apellidos", "rol", "correoInstitucional", "profesorResponsable", "fechaIncorporacion", "activo", "tarjetaAcceso", "idUsuario"]
+}
+\end{lstlisting}
 
 \subsection{Recursos:}
 
@@ -133,6 +180,8 @@ Las personas asociados a estos permisos, son los \textbf{actores} del sistema. L
 
 \subsection{Entidad relación:}
 
+
+\subsection{Desglose de permisos del sistema:}
 
 
 \subsection{Puntos función:}
