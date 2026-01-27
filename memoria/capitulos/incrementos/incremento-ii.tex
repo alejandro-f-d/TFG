@@ -148,7 +148,7 @@ En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del
 
 \begin{lstlisting}[language=json, caption={JSON Schema Usuario}, label=lst:json-schema-user]
 {
-  "schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "user",
   "type": "object",
   "properties": {
@@ -166,11 +166,171 @@ En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del
     "Wi-Fi": { "type": "boolean" },
     "activo": { "type": "boolean" },
     "tarjetaAcceso": { "type": "boolean" },
-    "idUsuario": { "type": "integer" }
+    "idUsuario": { "type": "integer" }, 
+    "uuidUser": { "type": "string" },
+    "contrasena": { "type": "string" }
   },
-  "required": ["nombre", "apellidos", "rol", "correoInstitucional", "profesorResponsable", "fechaIncorporacion", "activo", "tarjetaAcceso", "idUsuario"]
+  "required": ["nombre", "apellidos", "rol", "correoInstitucional", "profesorResponsable", "fechaIncorporacion", "activo", "tarjetaAcceso", "idUsuario", "uuidUser", "contrasena"]
 }
 \end{lstlisting}
+
+\newpage
+
+\begin{lstlisting}[language=json, caption={JSON Schema Servidor}, label=lst:json-schema-server]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Servidores",
+  "type": "object",
+  "properties": {
+    "idServer": { "type": "integer" },
+    "nombre": { "type": "string" },
+    "direccionIpPrivadaV4": { 
+      "type": "string", 
+      "format": "ipv4",
+      "description": "Direccion IPv4. Todos los servidores tienen al menos la direccion IPv4 Privada."
+    },
+    "direccionIpPublicaV4": { 
+      "type": "string", 
+      "format": "ipv4", 
+      "description": "Direccion IPv4 Publica."
+    },
+    "direccionIpPrivadaV6": { 
+      "type": "string", 
+      "format": "ipv6",
+      "description": "Direccion IPv6 privada."
+    }, 
+    "direccionIpPublicaV6": { 
+      "type": "string", 
+      "format": "ipv6",
+      "description": "Direccion IPv6 Pública."
+    },
+    "puertosAbiertos": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1, "maximum": 65535 },
+      "uniqueItems": true
+    },
+    "sistemaOperativo": { "type": "string" },
+    "tieneCertificadoSsl": { "type": "boolean" },
+    "uuidServer": { "type": "string" }
+
+  },
+  "required": [ "idServer", "nombre", "entornoEjecucion", "direccionIpPrivadaV4", "puertosAbiertos" ],
+}
+\end{lstlisting}
+
+\newpage
+\begin{lstlisting}[language=json, caption={JSON Schema Petición}, label=lst:json-schema-peticion]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", 
+  "title": "peticionAcceso",
+  "type": "object",
+  "properties": {
+    "idPeticion": { "type": "integer" },
+    "status": { "type": "boolean" },
+    "profesorResponsable": { "type": "integer" },
+    "aprobadoResponsable": { "type": "boolean" },
+    "aprobadoJefeLaboratorio": { "type": "boolean" },
+    "implementada": { "type": "boolean" },
+    "uuidPeticion": { "type": "string" },
+    "fechaPeticion": { "type": "string", "format": "date" },
+    "fechaInicioAcceso": { "type": "string", "format": "date" },
+    "fechaFinAcceso": { "type": "string", "format": "date" },
+    "descripcionServicio": { "type": "string" },
+    "servidorAsociado": { "type": "integer" },
+    "documentoPropuestaUsuario": {
+      "type": "object",
+      "description": "Version inicial subida por el solicitante",
+      "properties": {
+        "idFichero": { "type": "string", "format": "uuid" },
+        "fechaSubida": { "type": "string", "format": "date-time" },
+        "hashVerificacion": { "type": "string", "description": "Hash SHA-256 para integridad" }
+      },
+      "required": ["idFichero", "fechaSubida"]
+    },
+    "documentoAprobadoResponsable": {
+      "type": "object",
+      "description": "Documento revisado y firmado por el profesor responsable",
+      "properties": {
+        "idFichero": { "type": "string", "format": "uuid" },
+        "fechaAprobacion": { "type": "string", "format": "date-time" },
+        "idProfesorAprobador": { "type": "integer" }
+      }
+    },
+    "documentoFinalFirmado": {
+      "type": "object",
+      "description": "Version final con el visto bueno de ambos (Responsable y Usuario)",
+      "properties": {
+        "idFichero": { "type": "string", "format": "uuid" },
+        "fechaCierre": { "type": "string", "format": "date-time" },
+        "estaCifrado": { "type": "boolean", "default": true }
+      }
+    }
+  },
+  "required": [ "idPeticion", "status", "profesorResponsable", "aprobadoResponsable", "aprobadoJefeLaboratorio",
+    "implementada", "uuidPeticion", "fechaPeticion", "fechaInicioAcceso", "descripcionServicio", "servidorAsociado" ]
+}
+\end{lstlisting}
+
+
+\begin{lstlisting}[language=json, caption={JSON Schema Notificación}, label=lst:json-schema-notificacion]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", 
+  "title": "notificacion",
+  "type": "object",
+  "properties": {
+    "idNotificacion": { "type": "integer" },
+    "uuidNotificacion": { "type": "string" },
+    "idDestinatario": { "type": "integer" },
+    "mensaje": { "type": "string" },
+    "tipo": {
+      "enum": [ "web", "usuario", "otro" ],
+      "description": "El evento específico que ocurrió"
+    } 
+  }
+}
+\end{lstlisting}
+
+
+\newpage
+
+
+
+
+\notaseguridad{También es importante tener un log de auditoría de las acciones que se han realizado, por ello se crea un recurso para los logs de auditoría. Esto se puede observar en la estructura \ref{lst:json-schema-log}}
+
+
+\begin{lstlisting}[language=json, caption={JSON Schema Log Auditoria}, label=lst:json-schema-log]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "logAuditoria",
+  "type": "object",
+  "properties": {
+    "idLog": { "type": "integer" },
+    "fechaEvento": { "type": "string", "format": "date-time" },
+    "idUsuarioActor": { "type": "integer", "description": "Quién hizo la acción" },
+    "tipoAccion": { 
+      "enum": ["creacion", "aprobacionResponsable", "aprobacionJefe", "implementacion", "revocacionCron", "rechazo"],
+      "description": "El evento específico que ocurrió"
+    },
+    "uuidRecursoAfectado": { "type": "string", "format": "uuid", "description": "El UUID de la peticion de acceso" },
+    "direccionIpOrigen": { "type": "string", "format": "ipv4" },
+    "detallesCambio": {
+      "type": "object",
+      "properties": {
+        "valorAnterior": { "type": ["string", "boolean", "null"] },
+        "valorNuevo": { "type": ["string", "boolean", "null"] }
+      }
+    },
+    "nivelSeveridad": { "enum": ["info", "warning", "critical"] }
+  },
+  "required": ["fechaEvento", "idUsuarioActor", "tipoAccion", "uuidRecursoAfectado", "nivelSeveridad"]
+}
+
+\end{lstlisting}
+
+
+
+
 
 \subsection{Recursos:}
 
