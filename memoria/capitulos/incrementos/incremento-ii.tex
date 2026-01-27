@@ -142,9 +142,9 @@ En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del
 
 
 \newpage
-\subsection{Interfaces del sistema:}
+\subsection{JSON Schema de los recursos:}
 
-
+A continuación, se detallan las recursos del sistema, los recursos deben seguir esta estructura definida. 
 
 \begin{lstlisting}[language=json, caption={JSON Schema Usuario}, label=lst:json-schema-user]
 {
@@ -222,7 +222,7 @@ En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del
 \begin{lstlisting}[language=json, caption={JSON Schema Petición}, label=lst:json-schema-peticion]
 {
   "$schema": "http://json-schema.org/draft-07/schema#", 
-  "title": "peticionAcceso",
+  "title": "peticion",
   "type": "object",
   "properties": {
     "idPeticion": { "type": "integer" },
@@ -292,6 +292,54 @@ En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del
 
 
 \newpage
+
+
+
+\begin{lstlisting}[language=json, caption={JSON Schema Petición}, label=lst:json-schema-servicio]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "servicioLaboratorio",
+  "description": "Servicio dentro de un servidor",
+  "type": "object",
+  "properties": {
+    "idServicio": { "type": "integer" },
+    "nombreServicio": { "type": "string", "minLength": 3 },
+    "descripcionTecnica": { "type": "string" },
+    "entorno": { 
+      "enum": ["produccion", "desarrollo", "testing", "aislado"] 
+    },
+    "idServidor": { "type": "integer" },
+    "idPeticion": { "type": "integer" }
+    "puertosAbiertos": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1, "maximum": 65535 },
+      "uniqueItems": true
+    },
+    "softwareBase": { 
+        "type": "string", 
+        "description": "Ej: Apache, PostgreSQL, Docker" 
+    },
+    "estaActivo": { "type": "boolean", "default": true },
+    "nivelSensibilidad": { 
+      "enum": ["bajo", "medio", "alto", "critico"],
+      "description": "Impacto en caso de brecha de seguridad"
+    }, 
+    "uuidServicio": { "type": "string" }
+  },
+  "required": [
+    "idServicio", 
+    "nombreServicio",
+    "idServidor",
+    "idPeticion",
+    "entorno", 
+    "direccionIpPrivadaV4", 
+    "idProfesorResponsable",
+    "uuidServicio"
+  ],
+  "additionalProperties": false
+}
+
+\end{lstlisting}
 
 
 
