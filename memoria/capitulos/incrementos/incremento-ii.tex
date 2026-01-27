@@ -142,7 +142,10 @@ En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del
 
 
 \newpage
-\subsection{JSON Schema de los recursos:}
+% \subsection{JSON Schema de los recursos:}
+\subsection{Interfaces del sistema (API):}
+\subsubsection{Recursos:}
+
 
 A continuación, se detallan las recursos del sistema, los recursos deben seguir esta estructura definida. 
 
@@ -168,7 +171,8 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     "tarjetaAcceso": { "type": "boolean" },
     "idUsuario": { "type": "integer" }, 
     "uuidUser": { "type": "string" },
-    "contrasena": { "type": "string" }
+    "contrasena": { "type": "string" },
+    "dirIpLastLogin": { "type": "string", "format": "ipv4" }
   },
   "required": ["nombre", "apellidos", "rol", "correoInstitucional", "profesorResponsable", "fechaIncorporacion", "activo", "tarjetaAcceso", "idUsuario", "uuidUser", "contrasena"]
 }
@@ -284,7 +288,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     "mensaje": { "type": "string" },
     "tipo": {
       "enum": [ "web", "usuario", "otro" ],
-      "description": "El evento específico que ocurrió"
+      "description": "El evento especifico que ocurrio"
     } 
   }
 }
@@ -295,7 +299,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 
 
 
-\begin{lstlisting}[language=json, caption={JSON Schema Petición}, label=lst:json-schema-servicio]
+\begin{lstlisting}[language=json, caption={JSON Schema Servicio}, label=lst:json-schema-servicio]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "servicioLaboratorio",
@@ -336,11 +340,116 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     "idProfesorResponsable",
     "uuidServicio"
   ],
-  "additionalProperties": false
 }
 
 \end{lstlisting}
 
+\newpage
+\begin{lstlisting}[language=json, caption={JSON Schema Log Roles}, label=lst:json-schema-roles]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "roles",
+  "type": "object", 
+  "properties": {
+    "idRole": { "type": "integer" },
+    "idAdminCreador" { "type": "integer" },
+    "uuidRole": { "type": "string" },
+    "nombre": { "type": "string" },
+    "permisos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nombre": { "type": "string" },
+          "nivel": { 
+            "enum": ["lectura", "escritura", "total"] 
+          },
+          "fechaAsignacion": { "type": "string", "format": "date" }
+        },
+        "required": ["nombre", "nivel"]
+      }
+    }
+
+  },
+  "required": [
+    "uuidRole", 
+    "idAdminCreador",
+    "nombre",
+    "permisos"
+  ]
+}
+\end{lstlisting}
+
+\newpage
+
+\begin{lstlisting}[language=json, caption={JSON Schema Monitoreo Web}, label=lst:json-schema-monitoreo]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "monitor-web",
+  "description": "Monitor de disponibilidad mediante ICMP y HTTP Status",
+  "type": "object",
+  "properties": {
+    "idMonitor": { "type": "integer" },
+    "nombreObjetivo": { "type": "string", "description": "Ej: Google o Servidor-Docker-1" },
+    "direccion": { 
+      "type": "string", 
+      "description": "URL (para HTTP) o IP/Hostname (para Ping)" 
+    },
+    "metodo": { 
+      "enum": ["http_status", "ping_icmp"] 
+    },
+    "configuracion": {
+      "type": "object",
+      "properties": {
+        "intervaloSegundos": { "type": "integer", "default": 60 },
+        "timeoutMs": { "type": "integer", "default": 2000 },
+        "umbralReintentos": { "type": "integer", "default": 3 }
+      }
+    },
+    "ultimoResultado": {
+      "type": "object",
+      "properties": {
+        "disponible": { "type": "boolean" },
+        "valorRespuesta": { 
+          "type": "integer", 
+          "description": "Codigo HTTP (ej. 200) o tiempo de latencia ICMP en ms" 
+        },
+        "fechaVerificacion": { "type": "string", "format": "date-time" },
+        "mensajeError": { "type": "string" }
+      }
+    }
+  },
+  "required": ["nombreObjetivo", "direccion", "metodo"]
+}
+\end{lstlisting}
+
+
+
+\begin{lstlisting}[language=json, caption={JSON Schema Monitoreo Web Historico}, label=lst:json-schema-monitoreo-hist]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "historicoMonitoreo",
+  "description": "Registro puntual de un evento de disponibilidad",
+  "type": "object",
+  "properties": {
+    "idRegistro": { "type": "integer" },
+    "idMonitor": { 
+      "type": "integer", 
+      "description": "ID del monitor configurado" 
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "disponible": { "type": "boolean" },
+    "latenciaMs": { "type": "integer" },
+    "codigoEstado": { 
+      "type": "integer", 
+      "description": "200 para HTTP, 0 para PING fallido, 1 para PING ok" 
+    }
+  },
+  "required": ["idMonitor", "timestamp", "disponible"]
+  // No hace falta uuid ya que el servidor haría todas las operaciones de lo que tiene que mostrar, luego no hace falta identificador de recurso.
+}
+
+\end{lstlisting}
 
 
 
@@ -355,20 +464,13 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
   "properties": {
     "idLog": { "type": "integer" },
     "fechaEvento": { "type": "string", "format": "date-time" },
-    "idUsuarioActor": { "type": "integer", "description": "Quién hizo la acción" },
+    "idUsuarioActor": { "type": "integer", "description": "Quien hizo la accion" },
     "tipoAccion": { 
       "enum": ["creacion", "aprobacionResponsable", "aprobacionJefe", "implementacion", "revocacionCron", "rechazo"],
-      "description": "El evento específico que ocurrió"
+      "description": "El evento especifico que ocurrio"
     },
     "uuidRecursoAfectado": { "type": "string", "format": "uuid", "description": "El UUID de la peticion de acceso" },
     "direccionIpOrigen": { "type": "string", "format": "ipv4" },
-    "detallesCambio": {
-      "type": "object",
-      "properties": {
-        "valorAnterior": { "type": ["string", "boolean", "null"] },
-        "valorNuevo": { "type": ["string", "boolean", "null"] }
-      }
-    },
     "nivelSeveridad": { "enum": ["info", "warning", "critical"] }
   },
   "required": ["fechaEvento", "idUsuarioActor", "tipoAccion", "uuidRecursoAfectado", "nivelSeveridad"]
@@ -379,17 +481,76 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 
 
 
+\newpage
+\subsubsection{URIs del sistema:}
+Dominio de los usuarios:
+\begin{itemize}
+  \item \texttt{usuarios/}
+  \begin{itemize}
+    \item \texttt{usuarios/\{uuid\}/}
+    \begin{itemize}
+      \item \texttt{usuarios/\{uuid\}/peticiones}
+      \item \texttt{usuarios/\{uuid\}/roles}
+      \item \texttt{usuarios/\{uuid\}/monitorizacion}
+      \item \texttt{usuarios/\{uuid\}/logs}
+    \end{itemize}
+  \end{itemize}
+  
+  \item \texttt{roles/}
+\end{itemize}
 
-\subsection{Recursos:}
+Dominio de los servidores:
+\begin{itemize}
+  \item \texttt{servidores/}
+  \begin{itemize}
+    \item \texttt{servidores/\{uuid\}/}
+    \begin{itemize}
+      \item \texttt{servidores/\{uuid\}/servicios}
+    \end{itemize}
+  \end{itemize}
+
+  \item \texttt{servicios/}
+\end{itemize}
+
+Dominio de la notificaciones:
+\begin{itemize}
+  \item \texttt{notificacion/}
+\end{itemize}
+
+Dominio de la monitorización:
+\begin{itemize}
+  \item \texttt{monitorizacion/}
+  \item \texttt{monitorizacion/\{uuid\}/historico}
+
+\end{itemize}
 
 
-\subsection{Diagramas de secuencia:}
+Dominio de los logs:
+\begin{itemize}
+  \item \texttt{logs/}
+\end{itemize}
+
+Dominio de las peticiones:
+
+\begin{itemize}
+  \item \texttt{peticiones/}
+\end{itemize}
+
+
+El sistema, además permitirá el uso de querys para realizar un filtrado en base a una cadena de caracteres.
+
+
+
+
+\subsubsection{Diagramas de secuencia:}
 
 
 \subsection{Entidad relación:}
 
 
-\subsection{Desglose de permisos del sistema:}
+\subsubsection{Desglose de permisos del sistema:}
+
+\subsubsection{Componentes de la arquitectura y decisiones de diseño:}
 
 
 \subsection{Puntos función:}
