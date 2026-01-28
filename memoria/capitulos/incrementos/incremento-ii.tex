@@ -451,6 +451,65 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 
 \end{lstlisting}
 
+Servicio de login:
+
+\begin{lstlisting}[language=json, caption={JSON Schema Login}, label=lst:json-schema-login]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "auth-login",
+  "description": "Credenciales de acceso para la obtencion de token de sesion",
+  "type": "object",
+  "properties": {
+    "correoInstitucional": { 
+      "type": "string", 
+      "format": "email",
+    },
+    "password": { 
+      "type": "string",
+      "description": "Contrasena de acceso cifrada en transito"
+    }
+  },
+  "required": ["correoInstitucional", "password"],
+  "additionalProperties": false
+}
+
+\end{lstlisting}
+
+Respuesta del post del login:
+
+\begin{lstlisting}[language=json, caption={JSON Schema Login Response}, label=lst:json-schema-login-response]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "auth-response",
+  "type": "object",
+  "properties": {
+    "accessToken": { "type": "string" },
+    "tokenType": { "type": "string" },
+    "expiresIn": { "type": "integer" },
+    "userContext": {
+      "type": "object",
+      "properties": {
+        "uuid": { "type": "string", "format": "uuid" },
+        "nombre": { "type": "string" },
+        "roles": {
+          "type": "array",
+          "description": "Lista de roles asignados al usuario",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": ["uuid", "roles"]
+    }
+  },
+  "required": ["accessToken", "userContext"]
+}
+\end{lstlisting}
+
+
+
+
+
 
 
 \notaseguridad{También es importante tener un log de auditoría de las acciones que se han realizado, por ello se crea un recurso para los logs de auditoría. Esto se puede observar en la estructura \ref{lst:json-schema-log}}
@@ -545,10 +604,13 @@ El sistema, además permitirá el uso de querys para realizar un filtrado en bas
 \subsubsection{Diagramas de secuencia:}
 
 
+
+
+
 \subsection{Entidad relación:}
 
 
-\subsubsection{Desglose de permisos del sistema:}
+\subsection{Desglose de permisos del sistema:}
 
 \subsubsection{Componentes de la arquitectura y decisiones de diseño:}
 
