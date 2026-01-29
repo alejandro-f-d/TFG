@@ -331,12 +331,10 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     "uuidServicio": { "type": "string" }
   },
   "required": [
-    "idServicio", 
     "nombreServicio",
     "idServidor",
     "idPeticion",
     "entorno", 
-    "direccionIpPrivadaV4", 
     "idProfesorResponsable",
     "uuidServicio"
   ],
@@ -345,7 +343,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 \end{lstlisting}
 
 \newpage
-\begin{lstlisting}[language=json, caption={JSON Schema Log Roles}, label=lst:json-schema-roles]
+\begin{lstlisting}[language=json, caption={JSON Schema Roles}, label=lst:json-schema-roles]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "roles",
@@ -423,7 +421,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 }
 \end{lstlisting}
 
-
+\newpage
 
 \begin{lstlisting}[language=json, caption={JSON Schema Monitoreo Web Historico}, label=lst:json-schema-monitoreo-hist]
 {
@@ -451,6 +449,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 
 \end{lstlisting}
 
+\newpage
 Servicio de login:
 
 \begin{lstlisting}[language=json, caption={JSON Schema Login}, label=lst:json-schema-login]
@@ -474,6 +473,8 @@ Servicio de login:
 }
 
 \end{lstlisting}
+
+\newpage
 
 Respuesta del post del login:
 
@@ -509,7 +510,7 @@ Respuesta del post del login:
 
 
 
-
+\newpage
 
 
 \notaseguridad{También es importante tener un log de auditoría de las acciones que se han realizado, por ello se crea un recurso para los logs de auditoría. Esto se puede observar en la estructura \ref{lst:json-schema-log}}
@@ -549,6 +550,9 @@ Dominio de los usuarios:
     \item \texttt{usuarios/\{uuid\}/}
     \begin{itemize}
       \item \texttt{usuarios/\{uuid\}/peticiones}
+        \begin{itemize}
+          \item \texttt{usuarios/\{uuid\}/peticiones/\{uuid\}}
+        \end{itemize}
       \item \texttt{usuarios/\{uuid\}/roles}
       \item \texttt{usuarios/\{uuid\}/monitorizacion}
       \item \texttt{usuarios/\{uuid\}/logs}
@@ -603,14 +607,112 @@ El sistema, además permitirá el uso de querys para realizar un filtrado en bas
 
 \subsubsection{Diagramas de secuencia:}
 
+Para explicar el funcionamiento del servicio y del sistema se han creado diagramas de secuencia para ilustrar los \texttt{POST, PUT, GET} y \texttt{DELETE} más importantes.
+
+En la figura \ref{fig:diagrama_login} se ilustra el proceso de login. Este se realiza mediante un post al login que se encarga de devolver un token identificativo del usuario que será utilizado en cada operación. 
+
+La arquitectura está diseñado de manera \texttt{stateless}, esto garantiza que cada petición sea independiente.
+
+\notaseguridad{Es importante destacar que estos tokens tienen un tiempo de vida determinado, no son indefinidos. En caso contrario, serían una especie de llaves maestras que en caso de pérdida cualquier usuario no autorizado podría acceder con ellos lo que puede afectar a la seguridad.}
+
+
+
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=0.5\textwidth]{incremento-ii/diagrama_login.png}
+ \caption{Diagrama de login.}
+ \label{fig:diagrama_login}
+\end{figure}
+
+\newpage
+
+A continuación se describe el flujo operativo del sistema de peticiones, uno de los módulos centrales de la plataforma. El proceso se compone de varias etapas de validación que garantizan la trazabilidad de la solicitud desde su origen hasta su implementación final:
+
+\begin{enumerate}
+  \item \textbf{Solicitud inicial y formalización}: El proceso comienza cuando el usuario genera una petición desde la interfaz. El sistema envía automáticamente un documento PDF base por correo electrónico. La cumplimentación y firma inicial del documento se realizan externamente y no forman parte de esta implementación.
+
+  \item \textbf{Carga y validación de documentación}: Una vez firmado el documento, el usuario lo carga en la aplicación. Esta acción genera una notificación automática al responsable correspondiente, adjuntando la solicitud para su revisión y solicitando su firma conforme a la normativa del laboratorio.
+
+  \item \textbf{Aprobación jerárquica}: Tras la validación y firma del responsable, el Jefe de Laboratorio recibe una notificación para proceder con la aprobación final. Esta fase representa el último filtro administrativo.
+
+  \item \textbf{Implementación y cierre}: Una vez que la solicitud se encuentra en estado de Aprobada, el administrador del sistema ejecuta las acciones técnicas asociadas. Al finalizar, marca la petición como Implementada en la plataforma.
+
+  \item \textbf{Notificación de finalización}: Como cierre del flujo, el sistema envía una comunicación automática al usuario solicitante, al responsable y al Jefe de Laboratorio, informando que el recurso solicitado está disponible.
+\end{enumerate}
+
+Este proceso se encuentra reflejado en la figura \ref{fig:diagrama_peticion}.
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{incremento-ii/diagrama_peticion.png}
+  \end{center}
+  \caption{Diagrama de gestión de las peticiones de los usuarios.}
+  \label{fig:diagrama_peticion}
+\end{figure}
+
+\newpage
+
+En el ámbito de los roles, se pueden realizar diferentes acciones, creación, edición y eliminación. Se puede observar en la figura \ref{fig:diagrama_roles}.  
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{incremento-ii/diagrama_roles.png}
+  \end{center}
+  \caption{Diagrama de gestión con las posibilidades de gestión de roles.}
+  \label{fig:diagrama_roles}
+\end{figure}
+
+\newpage
+
+La misma gestión realizada con los roles, se hace con los servidores, con la gestión de los servidores. Se puede encontrar en la figura \ref{fig:diagrama_servidor}. 
+
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{incremento-ii/diagrama_servidor.png}
+  \end{center}
+  \caption{Diagrama de gestión con las posibilidades de gestión de servidores.}
+  \label{fig:diagrama_servidor}
+\end{figure}
+
+\newpage 
+
+Por otro lado, los usuarios pueden editar sus propios datos. Esto se puede encontrar en la figura \ref{fig:diagrama_datos_propios}.
+
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{incremento-ii/edicion_datos_propios.png}
+  \end{center}
+  \caption{Diagrama de edición de datos propios.}
+  \label{fig:diagrama_datos_propios}
+\end{figure}
+
+\newpage
+
+Por último, el diagrama de monitorización de páginas web. Se encuentra el diagrama en \ref{fig:monitorizacion}.
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{incremento-ii/monitorizacion_web.png}
+  \end{center}
+  \caption{Diagrama de monitorización web.}
+  \label{fig:monitorizacion}
+\end{figure}
+
+
+
+\subsection{Desglose de permisos del sistema:}
 
 
 
 
 \subsection{Entidad relación:}
 
-
-\subsection{Desglose de permisos del sistema:}
 
 \subsubsection{Componentes de la arquitectura y decisiones de diseño:}
 
