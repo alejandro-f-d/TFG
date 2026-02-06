@@ -168,7 +168,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     "fechaFin": { "type": "string" },
     "Wi-Fi": { "type": "boolean" },
     "activo": { "type": "boolean" },
-    "tarjetaAcceso": { "type": "boolean" },
+    "tarjetaAcceso": { "type": "string" },
     "idUsuario": { "type": "integer" }, 
     "uuidUser": { "type": "string" },
     "contrasena": { "type": "string" },
@@ -208,17 +208,50 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
       "format": "ipv6",
       "description": "Direccion IPv6 Pública."
     },
-    "puertosAbiertos": {
-      "type": "array",
-      "items": { "type": "integer", "minimum": 1, "maximum": 65535 },
-      "uniqueItems": true
-    },
     "sistemaOperativo": { "type": "string" },
-    "tieneCertificadoSsl": { "type": "boolean" },
-    "uuidServer": { "type": "string" }
-
+    "certificadoSsl": {
+      "type": "object",
+      "properties": {
+        "activo": { "type": "boolean" },
+        "fechaCaducidad": { 
+          "type": "string", 
+          "format": "date-time",
+          "description": "Fecha exacta en la que el certificado deja de ser válido."
+        },
+        "entidadEmisora": { 
+          "type": "string", 
+          "description": "Entidad emisora del certificado. (p.e. Fabrica nacional de moneda y timbre)" 
+        }
+      }
+    },
+    "uuidServer": { "type": "string" },
+    "discos": {
+      "type": "array",
+      "description": "Lista de unidades de almacenamiento asociadas al servidor.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "puntoMontaje": { 
+            "type": "string", 
+            "description": "Ej: /var/www o C:\\",
+            "example": "/mnt/data" 
+          },
+          "capacidadGB": { 
+            "type": "integer", 
+            "minimum": 1,
+            "description": "Tamaño del disco en Gigabytes." 
+          },
+          "tipo": { 
+            "type": "string", 
+            "enum": ["SSD", "HDD", "NVMe"],
+            "description": "Tecnologia de almacenamiento."
+          }
+        },
+        "required": ["puntoMontaje", "capacidadGB"]
+      }
+    }
   },
-  "required": [ "idServer", "nombre", "entornoEjecucion", "direccionIpPrivadaV4", "puertosAbiertos" ],
+  "required": [ "idServer", "nombre", "direccionIpPrivadaV4", "uuidServer", "discos" ]
 }
 \end{lstlisting}
 
@@ -444,7 +477,6 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     }
   },
   "required": ["idMonitor", "timestamp", "disponible"]
-  // No hace falta uuid ya que el servidor haría todas las operaciones de lo que tiene que mostrar, luego no hace falta identificador de recurso.
 }
 
 \end{lstlisting}
