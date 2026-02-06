@@ -1,0 +1,30 @@
+name: medal-gestion-users
+
+services: 
+  medal-bdd-postgres:
+    container_name: dbMedal
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_DB: medal
+      POSTGRES_PASSWORD: znIooF2a4eeoHa
+    ports:
+      - "10001:5432"
+    volumes:
+      - pgdata_volume:/var/lib/postgresql
+      - ./initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d medal"] 
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - medalnetwork
+
+volumes:
+  pgdata_volume: 
+
+networks:
+  medalnetwork:
+    driver: bridge
