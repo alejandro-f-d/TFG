@@ -763,9 +763,31 @@ Por último, el diagrama de monitorización de páginas web. Se encuentra el dia
 
 
 
-
+\newpage
 \subsection{Entidad relación:}
 
+Partiendo de la tabla \texttt{Usuario} como núcleo del sistema, el diseño se expande en tres áreas principales: 
+
+\begin{itemize}
+    \item \textbf{Módulo de Autorización y Sesión:} Se han implementado entidades como \texttt{refreshToken} y \texttt{recuperacionPassword} permitiendo la gestión del inicio de sesión.
+    \item \textbf{Jerarquía de Aprobación:} La relación entre \texttt{Usuario}, \texttt{Peticion} e \texttt{historialEstadoPeticion} permitiendo tener una trazabilidad de cada una de las acciones relacionadas con las peticiones.
+    \item \textbf{Gestión de los servidores y servicios:} A través de la información de los servidores, de los servicios y del sistema de monitorización permite un control de los sistemas y su operabilidad.
+\end{itemize}
+
+Adicionalmente a esto, se tiene apoyo en el sistema de notificación que será usado por cada uno de las áreas cuando sea necesario.
+
+En la figura \ref{fig:entidad-relacion} se encuentra el diagrama entidad relación de este incremento. 
+
+\clearpage
+
+\begin{sidewaysfigure}[p]
+    \centering
+    \includegraphics[width=0.95\textwidth]{incremento-ii/entidad_relacion.png}
+    \caption{Entidad relación Incremento II}
+    \label{fig:entidad-relacion}
+\end{sidewaysfigure}
+
+\clearpage
 
 \subsubsection{Componentes de la arquitectura y decisiones de diseño:}
 
