@@ -156,7 +156,8 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
   "type": "object",
   "properties": {
     "nombre": { "type": "string" },
-    "apellidos": { "type": "string" },
+    "apellido1": { "type": "string" },
+    "apellido2": { "type": "string" }
     "rol": { "enum": ["Administrador", "Responsable", "Usuario base", "..."] },
     "correoInstitucional": { "type": "string" },
     "usuarioVpn": { "type": "string" },
@@ -172,7 +173,8 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     "idUsuario": { "type": "integer" }, 
     "uuidUser": { "type": "string" },
     "contrasena": { "type": "string" },
-    "dirIpLastLogin": { "type": "string", "format": "ipv4" }
+    "dirIpLastLogin": { "type": "string", "format": "ipv4" },
+    "teams": { "type": "boolean" }
   },
   "required": ["nombre", "apellidos", "rol", "correoInstitucional", "profesorResponsable", "fechaIncorporacion", "activo", "tarjetaAcceso", "idUsuario", "uuidUser", "contrasena"]
 }
@@ -208,6 +210,16 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
       "format": "ipv6",
       "description": "Direccion IPv6 Pública."
     },
+    "puertaEnlaceIPv4": {
+      "type": "string",
+      "format": "ipv4",
+      "description": "Puerta de enlace IPv4 del servidor."
+    },
+    "puertaEnlaceIPv6": {
+      "type": "string",
+      "format": "ipv6",
+      "description": "Puerta de enlace IPv6."
+    }
     "sistemaOperativo": { "type": "string" },
     "certificadoSsl": {
       "type": "object",
@@ -233,13 +245,17 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
         "properties": {
           "puntoMontaje": { 
             "type": "string", 
-            "description": "Ej: /var/www o C:\\",
-            "example": "/mnt/data" 
+            "description": "Ej: /var/www o C:\\"
           },
           "capacidadGB": { 
             "type": "integer", 
             "minimum": 1,
             "description": "Tamaño del disco en Gigabytes." 
+          },
+          "capacidadUsada": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Tamaño usado del disco. en Gb."
           },
           "tipo": { 
             "type": "string", 
@@ -249,6 +265,10 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
         },
         "required": ["puntoMontaje", "capacidadGB"]
       }
+    },
+    "cantidadRam": {
+      "type": "integer",
+      "description": "Cantidad de RAM en GB."
     }
   },
   "required": [ "idServer", "nombre", "direccionIpPrivadaV4", "uuidServer", "discos" ]
@@ -263,11 +283,12 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
   "type": "object",
   "properties": {
     "idPeticion": { "type": "integer" },
-    "status": { "type": "boolean" },
+    "status": { 
+      "enum": [ "peticionUsuario", "aprobadoResponsable", "aprobadoJefeLaboratorio", "realizadoAdministrador" ],
+    },
     "profesorResponsable": { "type": "integer" },
     "aprobadoResponsable": { "type": "boolean" },
     "aprobadoJefeLaboratorio": { "type": "boolean" },
-    "implementada": { "type": "boolean" },
     "uuidPeticion": { "type": "string" },
     "fechaPeticion": { "type": "string", "format": "date" },
     "fechaInicioAcceso": { "type": "string", "format": "date" },
