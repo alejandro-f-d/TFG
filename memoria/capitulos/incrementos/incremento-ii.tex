@@ -671,24 +671,48 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 \begin{lstlisting}[language=json, caption={JSON Schema Monitoreo Web Historico}, label=lst:json-schema-monitoreo-hist]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "historicoMonitoreo",
-  "description": "Registro puntual de un evento de disponibilidad",
+  "title": "DatasetMonitoreoGrafica",
+  "description": "Conjunto de datos estructurado para representación visual de disponibilidad y latencia",
   "type": "object",
   "properties": {
-    "idRegistro": { "type": "integer" },
-    "idMonitor": { 
-      "type": "integer", 
-      "description": "ID del monitor configurado" 
+    "idMonitor": { "type": "integer" },
+    "nombreMonitor": { "type": "string" },
+    "periodo": {
+      "type": "object",
+      "properties": {
+        "inicio": { "type": "string" },
+        "fin": { "type": "string" },
+        "intervalo": { "type": "integer" }
+      }
     },
-    "timestamp": { "type": "string", "format": "date-time" },
-    "disponible": { "type": "boolean" },
-    "latenciaMs": { "type": "integer" },
-    "codigoEstado": { 
-      "type": "integer", 
-      "description": "200 para HTTP, 0 para PING fallido, 1 para PING ok" 
+    "labels": {
+      "type": "array",
+      "description": "Eje X de la gráfica (Timestamps)",
+      "items": { "type": "string" }
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "latencia": {
+          "type": "array",
+          "description": "Eje Y1: Valores de latencia en ms",
+          "items": { "type": ["number", "null"] }
+        },
+        "disponibilidad": {
+          "type": "array",
+          "items": { "type": "boolean" }
+        }
+      }
+    },
+    "resumen": {
+      "type": "object",
+      "properties": {
+        "uptimeTotal": { "type": "number" },
+        "latenciaMedia": { "type": "integer" }
+      }
     }
   },
-  "required": ["idMonitor", "timestamp", "disponible"]
+  "required": ["idMonitor", "labels", "datasets"]
 }
 
 \end{lstlisting}
@@ -1010,7 +1034,6 @@ A la hora de generación de los campos de la base de datos nos apoyamos al siste
 
 \clearpage
 
-\subsubsection{Componentes de la arquitectura y decisiones de diseño:}
 
 
 \subsection{Puntos función:}
