@@ -248,7 +248,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 
 
 
-\begin{lstlisting}[language=json, caption={JSON Schema Discor}, label=lst:json-schema-disco]
+\begin{lstlisting}[language=json, caption={JSON Schema Discos}, label=lst:json-schema-disco]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Unidad de Almacenamiento (Disco)",
@@ -374,6 +374,65 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 }
 \end{lstlisting}
 
+
+
+\begin{lstlisting}[language=json, caption={JSON Schema Documento}, label=lst:json-schema-puerta]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Documento de Petición Firmado",
+  "type": "object",
+  "properties": {
+    "uuidDocumento": { "type": "string", "format": "uuid" },
+    "idDocumento": { "type": "integer", "description": "Identificador de la base de datos del documento" },
+    "idPetAcceso": { "type": "string" },
+    "metadatos_archivo": {
+      "type": "object",
+      "properties": {
+        "nombreArchivo": { "type": "string" },
+        "mimeType": { "type": "string", "default": "application/pdf" },
+        "pathStorage": { "type": "string" }
+      }
+    },
+    "evidencia_firma": {
+      "type": "object",
+      "properties": {
+        "estado": { 
+          "type": "string",
+          "enum": ["pedidoUsuario", "pedidoResponsable", "pedidoJefe", "realizado"]
+        },
+        "fechaFirma": { "type": "string", "format": "date-time" },
+        "idFirma": { "type": "string", "description": "ID de transacción de @firma" },
+        "sujeto": {
+          "type": "object",
+          "properties": {
+            "nombreCompleto": { "type": "string", "description": "Nombre extraído del certificado" },
+            "idLegal": { "type": "string", "description": "DNI, NIE, Pasaporte o CIF" },
+            "tipoId": { 
+              "type": "string", 
+              "enum": ["DNI", "NIE", "Pasaporte", "CIF", "Certificado Digital"] 
+            },
+            "organizacion": { "type": "string", "description": "Institución o empresa del certificado" }
+          },
+          "required": ["nombreCompleto", "idLegal"]
+        },
+        "detallesCertificado": {
+          "type": "object",
+          "properties": {
+            "autoridad": { "type": "string", "description": "Ej: FNMT, AC Camerfirma, etc." },
+            "validoHasta": { "type": "string", "format": "date" }
+          }
+        }
+      },
+      "required": ["status", "sujeto"]
+    }
+  },
+  "required": ["idDocumento", "idPetAcceso", "metadatos_archivo", "evidencia_firma"]
+}
+
+\end{lstlisting}
+
+
+
 \begin{lstlisting}[language=json, caption={JSON Schema Puerta}, label=lst:json-schema-puerta]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -489,44 +548,81 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 
 \end{lstlisting}
 
-% TODO: Me quedo aqui revisando json schema.
 
 \newpage
 \begin{lstlisting}[language=json, caption={JSON Schema Roles}, label=lst:json-schema-roles]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "roles",
-  "type": "object", 
+  "title": "Rol",
+  "type": "object",
   "properties": {
-    "idRole": { "type": "integer" },
-    "idAdminCreador" { "type": "integer" },
-    "uuidRole": { "type": "string" },
-    "nombre": { "type": "string" },
+    "nombreRol": {
+      "type": "string",
+      "description": "Nombre del rol",
+    },
+    "descripcion": {
+      "type": "string"
+    },
     "permisos": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
-        "type": "object",
-        "properties": {
-          "nombre": { "type": "string" },
-          "nivel": { 
-            "enum": ["lectura", "escritura", "total"] 
-          },
-          "fechaAsignacion": { "type": "string", "format": "date" }
-        },
-        "required": ["nombre", "nivel"]
+        "type": "string",
+        "description": "El alias del permiso (ej: rol:crear)"
       }
+    },
+    "uuidRole": {
+      "type": "string"
+    },
+    "idRole": {
+      "type": "integer"
+    },
+    "fechaCreacion": {
+      "type": "string"
+    },
+    "creadoPor": {
+      "type": "string"
     }
-
   },
-  "required": [
-    "uuidRole", 
-    "idAdminCreador",
-    "nombre",
-    "permisos"
-  ]
+  "required": ["nombreRol", "permisos", "uuidRole"]
 }
 \end{lstlisting}
 
+
+\begin{lstlisting}[language=json, caption={JSON Schema Permiso}, label=lst:json-schema-monitoreo]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Permiso",
+  "type": "object",
+  "properties": {
+    "alias": {
+      "type": "string",
+      "description": "Identificador único del permiso (ej: peticion:firmar)",
+      "pattern": "^[a-z]+:[a-z]+$"
+    },
+    "descripcion": {
+      "type": "string",
+      "example": "Permite firmar documentos mediante @firma"
+    },
+    "modulo": {
+      "type": "string",
+      "enum": ["infraestructura", "seguridad", "usuarios", "puertas", "roles", "permisos"]
+    },
+    "nombre": {
+      "type": "string"
+    },
+    "uuidPermiso": {
+      "type": "string"
+    },
+    "idPermiso": {
+      "type": "integer"
+    }
+
+  },
+  "required": ["alias", "descripcion", "modulo", "uuidPermisos"]
+}
+
+\end{lstlisting}
 \newpage
 
 \begin{lstlisting}[language=json, caption={JSON Schema Monitoreo Web}, label=lst:json-schema-monitoreo]
@@ -700,6 +796,9 @@ Dominio de los usuarios:
       \item \texttt{usuarios/\{uuid\}/peticiones}
         \begin{itemize}
           \item \texttt{usuarios/\{uuid\}/peticiones/\{uuid\}}
+          \begin{itemize}
+            \item \texttt{usuarios/\{uuid\}/peticiones/\{uuid\}/documento}
+          \end{itemize}
         \end{itemize}
       \item \texttt{usuarios/\{uuid\}/roles}
       \item \texttt{usuarios/\{uuid\}/monitorizacion}
