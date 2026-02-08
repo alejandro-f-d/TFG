@@ -758,10 +758,35 @@ Por último, el diagrama de monitorización de páginas web. Se encuentra el dia
 \end{figure}
 
 
+\newpage
+
 
 \subsection{Desglose de permisos del sistema:}
-
-
+Para cada uno de los roles se les puede asignar diferentes permisos asociados, entre otros, se encuentran los siguientes:
+\subsubsection{Gestión de la infraestructura:}
+\begin{itemize}
+  \item \texttt{Creación y modificación del servidor}: Registrar una nueva máquina en el sistema.
+  \item \texttt{Ver servidor}: Acceso al registro completo del servidor y estado junto al servicios asociados.
+  \item \texttt{Baja del servidor}: Eliminación de un servidor del registro.
+\end{itemize}
+\subsubsection{Servicios asociados a la infraestructura:}
+\begin{itemize}
+  \item \texttt{Creación de un servicio asociado al servidor i}: Permite la creación de servicios asociados a un servidor. 
+  \item \texttt{Visualización de servicios asociados al servidor i}: Permite la visualización de los servicios asociados a un servidor. Esto, no incluye el acceso al resto de información del servidor. 
+  \item \texttt{Eliminación de un servicio asociado al servidor i}: Permite la eleiminación de un servicio asociado a un servidor. 
+\end{itemize}
+\subsubsection{Usuarios:}
+\begin{itemize}
+  \item \texttt{Crear usuarios}: Dar de alta a nuevos usuarios en el sistema. 
+  \item \texttt{Ver usuarios}: Listar los usuarios registrados.
+  \item \texttt{Asignar roles}: Vincular a un usuario con un role o conjunto de roles.
+\end{itemize}
+\subsubsection{Roles:}
+\begin{itemize}
+  \item \texttt{Creación de roles}: Permite al usuario la creación de roles.
+  \item \texttt{Listado de roles}: Permite ver al usuario los roles que se encuentran actualmente en el sistema.
+  \item \texttt{Asignación de roles}: Permite la asignación de roles existentes a los usuarios.
+\end{itemize}
 
 \newpage
 \subsection{Entidad relación:}
@@ -836,6 +861,19 @@ Asimismo, los requisitos de la firma electrónica avanzada se definen en su art�
   \item estar vinculada con los datos firmados por la misma de modo tal que cualquier modificación ulterior de los mismos sea detectable. 
 \end{itemize}
 \texttt{(fin de cita)}
+
+\subsection{Infraestructura:}
+
+La infraestructura se va a basar en microservicios apoyados en docker. El sistema se va a desarrollar en tres capas: 
+\begin{itemize}
+  \item Frontend: Esta capa va a ser la visible para el usuario y la que está pensada para que el usuario interactue.
+  \item API: Esta capa se encargará de la comunicación entre el frontend y el backend. Además se encargará de trabajar con los servicios de @firma.
+  \item Backend: Esta última capa se va a encargar del almacenamiento de los datos. Concretamente se va a dividir en dos partes principales, una base de datos y en una estructura encargada de almacenar los datos de los documentos (servicio de almacenamiento de objetos).
+\end{itemize}
+
+
+Se selecciona una arquitectura modular ya que estos sistemas permiten aislamiento y portabilidad con respecto a las características de la máquina. En un sistema de mayor cantidad de usuarios que en el caso de este laboratorio permitiría una mayor resilencia con el uso de herramientas como un loadbalancer que opere con diferentes instancias de la API levantando instancias según sea necesario. En la parte del almacenado de datos, este sistema permitiría la redundancia de datos del sistema en varias bases de datos si fuera necesario.
+
 
 \subsection{FIGMA: Diseño de pantallas}
 
