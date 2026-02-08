@@ -1,29 +1,79 @@
-name: medal-gestion-users
+name: medal-gestion-sistema
 
-services: 
+services:
+
+# Bases de datos.
   medal-bdd-postgres:
     container_name: dbMedal
     image: postgres:14
     restart: always
     environment:
-      POSTGRES_USER: root
-      POSTGRES_DB: medal
-      POSTGRES_PASSWORD: znIooF2a4eeoHa
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "10001:5432"
+      - "${DB_PORT_EXTERNAL}:5432"
     volumes:
-      - pgdata_volume:/var/lib/postgresql
+      - pgdata_volume:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d medal"] 
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
       - medalnetwork
 
+# Sistema de la api general.
+  medal-api-core:
+    container_name: apiMedal
+    build: ./api-core
+    restart: always
+    depends_on:
+      medal-bdd-postgres:
+        condition: service_healthy
+    ports:
+      - "${API_PORT_EXTERNAL}:8080"
+    environment:
+      DB_URL: postgres://${DB_USER}:${DB_PASSWORD}@medal-bdd-postgres:5432/${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+    networks:
+      - medalnetwork
+
+# Servicio para las operaciones pesadas del monitoreo.
+  medal-worker:
+    container_name: monitorMedal
+    build: ./monitor-service
+    environment:
+      API_URL: http://medal-api-core:8080
+    networks:
+      - medalnetwork
+
+
+# Servicio para el almacenado de los documentos firmados.
+
+  medal-storage:
+    container_name: storageMedal
+    build: ./storage-service
+    volumes:
+      - ./storage/firmas:/app/data/pdfs
+    networks:
+      - medalnetwork
+
+
+# Frontend:
+  medal-frontend:
+    container_name: webMedal
+    build: ./frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - medal-api-core
+    networks:
+      - medalnetwork
 volumes:
-  pgdata_volume: 
+  pgdata_volume:
 
 networks:
   medalnetwork:
