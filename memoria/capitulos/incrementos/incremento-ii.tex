@@ -292,6 +292,55 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 \end{lstlisting}
 
 
+\begin{lstlisting}[language=json, caption={JSON Schema Proyecto Gitlab}, label=lst:json-schema-gitlab]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Proyecto GitLab",
+  "type": "object",
+  "properties": {
+    "idProyecto": {
+      "type": "integer",
+      "description": "Identificador único del proyecto (PK)"
+    },
+    "Nombre": {
+      "type": "string",
+      "description": "Nombre del proyecto"
+    },
+    "Descripcion": {
+      "type": "string",
+      "description": "Descripción detallada del proyecto"
+    },
+    "uuidProyecto": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador universal único del proyecto"
+    },
+    "fechaInicio": {
+      "type": "string",
+      "format": "date",
+      "description": "Fecha de inicio del proyecto"
+    },
+    "fechaFin": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Fecha de finalización (puede ser nula si está activo)"
+    },
+    "activo": {
+      "type": "boolean",
+      "description": "Estado de actividad del proyecto"
+    },
+    "participantes": {
+      "type": "array",
+      "description": "Lista de UUIDs de los usuarios que participan en el proyecto",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    }
+  },
+  "required": ["idProyecto", "Nombre", "uuidProyecto", "activo"]
+}
+\end{lstlisting}
 
 
 \newpage
