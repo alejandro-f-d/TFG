@@ -901,7 +901,7 @@ La arquitectura está diseñado de manera \texttt{stateless}, esto garantiza que
 A continuación se describe el flujo operativo del sistema de peticiones, uno de los módulos centrales de la plataforma. El proceso se compone de varias etapas de validación que garantizan la trazabilidad de la solicitud desde su origen hasta su implementación final:
 
 \begin{enumerate}
-  \item \textbf{Solicitud inicial y formalización}: El proceso comienza cuando el usuario genera una petición desde la interfaz. El sistema envía automáticamente un documento PDF base por correo electrónico. La cumplimentación y firma inicial del documento se realizan externamente y no forman parte de esta implementación.
+  \item \textbf{Solicitud inicial y formalización}: El proceso comienza cuando el usuario genera una petición desde la interfaz. El sistema genera un documento PDF que debe ser firmado en primera instancia por parte del usuario.
 
   \item \textbf{Carga y validación de documentación}: Una vez firmado el documento, el usuario lo carga en la aplicación. Esta acción genera una notificación automática al responsable correspondiente, adjuntando la solicitud para su revisión y solicitando su firma conforme a la normativa del laboratorio.
 
