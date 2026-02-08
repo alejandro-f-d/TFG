@@ -158,12 +158,22 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     "nombre": { "type": "string" },
     "apellido1": { "type": "string" },
     "apellido2": { "type": "string" }
-    "rol": { "enum": ["Administrador", "Responsable", "Usuario base", "..."] },
+    "rol": {
+      "type": "array",
+      "description": "Roles asociados a un usuario",
+      "uniqueItems": true,
+      "items":{
+        "type": "string"
+      }
+    },
     "correoInstitucional": { "type": "string" },
     "usuarioVpn": { "type": "string" },
     "gitlab": { "type": "string" },
-    "nukiP-1": { "type":  "string" },
-    "nukiP-0": { "type": "string" },
+    "puertas_autorizadas": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Lista de IDs de las puertas con acceso."
+    },
     "profesorResponsable": { "type": "string" },
     "fechaIncorporacion": { "type": "string" }, 
     "fechaFin": { "type": "string" },
@@ -185,150 +195,214 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 \begin{lstlisting}[language=json, caption={JSON Schema Servidor}, label=lst:json-schema-server]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Servidores",
+  "title": "Servidor de Infraestructura",
   "type": "object",
   "properties": {
-    "idServer": { "type": "integer" },
-    "nombre": { "type": "string" },
-    "direccionIpPrivadaV4": { 
-      "type": "string", 
-      "format": "ipv4",
-      "description": "Direccion IPv4. Todos los servidores tienen al menos la direccion IPv4 Privada."
-    },
-    "direccionIpPublicaV4": { 
-      "type": "string", 
-      "format": "ipv4", 
-      "description": "Direccion IPv4 Publica."
-    },
-    "direccionIpPrivadaV6": { 
-      "type": "string", 
-      "format": "ipv6",
-      "description": "Direccion IPv6 privada."
-    }, 
-    "direccionIpPublicaV6": { 
-      "type": "string", 
-      "format": "ipv6",
-      "description": "Direccion IPv6 Pública."
-    },
-    "puertaEnlaceIPv4": {
+    "uuidServidor": {
       "type": "string",
-      "format": "ipv4",
-      "description": "Puerta de enlace IPv4 del servidor."
+      "format": "uuid",
+      "description": "Identificador único del nodo físico"
     },
-    "puertaEnlaceIPv6": {
+    "idServidor": {
+      "type": "integer",
+      "description": "Identificador de la base de datos del servidor."
+    },
+    "nombre": {
       "type": "string",
-      "format": "ipv6",
-      "description": "Puerta de enlace IPv6."
-    }
-    "sistemaOperativo": { "type": "string" },
-    "certificadoSsl": {
+      "example": "Nodo-Computo-01"
+    },
+    "red": {
       "type": "object",
       "properties": {
-        "activo": { "type": "boolean" },
-        "fechaCaducidad": { 
-          "type": "string", 
-          "format": "date-time",
-          "description": "Fecha exacta en la que el certificado deja de ser válido."
-        },
-        "entidadEmisora": { 
-          "type": "string", 
-          "description": "Entidad emisora del certificado. (p.e. Fabrica nacional de moneda y timbre)" 
+        "direccionIpPrivadaV4": { "type": "string", "format": "ipv4" },
+        "direccionIpPublicaV4": { "type": "string", "format": "ipv4" },
+        "direccionIpPrivadaV6": { "type": "string", "format": "ipv6" },
+        "direccionIpPublicaV6": { "type": "string", "format": "ipv6" },
+        "puertaEnlaceIPv4": { "type": "string", "format": "ipv4" },
+        "puertaEnlaceIPv6": { "type": "string", "format": "ipv6" }
+      },
+      "required": ["direccionIpPrivadaV4", "puertaEnlaceIPv4"]
+    },
+    "seguridad": {
+      "type": "object",
+      "properties": {
+        "certificadoSSLActivo": { "type": "boolean" },
+        "caducidadSSL": { "type": "string", "format": "date-time" },
+        "emisorSSL": { "type": "string" }
+      }
+    },
+    "especificaciones": {
+      "type": "object",
+      "properties": {
+        "sistemaOperativo": { "type": "string" },
+        "ram": { 
+          "type": "integer", 
+          "description": "Cantidad de memoria RAM en GB" 
         }
       }
-    },
-    "uuidServer": { "type": "string" },
-    "discos": {
-      "type": "array",
-      "description": "Lista de unidades de almacenamiento asociadas al servidor.",
-      "items": {
-        "type": "object",
-        "properties": {
-          "puntoMontaje": { 
-            "type": "string", 
-            "description": "Ej: /var/www o C:\\"
-          },
-          "capacidadGB": { 
-            "type": "integer", 
-            "minimum": 1,
-            "description": "Tamaño del disco en Gigabytes." 
-          },
-          "capacidadUsada": {
-            "type": "integer",
-            "minimum": 0,
-            "description": "Tamaño usado del disco. en Gb."
-          },
-          "tipo": { 
-            "type": "string", 
-            "enum": ["SSD", "HDD", "NVMe"],
-            "description": "Tecnologia de almacenamiento."
-          }
-        },
-        "required": ["puntoMontaje", "capacidadGB"]
-      }
-    },
-    "cantidadRam": {
-      "type": "integer",
-      "description": "Cantidad de RAM en GB."
     }
   },
-  "required": [ "idServer", "nombre", "direccionIpPrivadaV4", "uuidServer", "discos" ]
+  "required": ["uuidServidor", "nombre", "red", "especificaciones"]
 }
 \end{lstlisting}
+
+
+
+\begin{lstlisting}[language=json, caption={JSON Schema Discor}, label=lst:json-schema-disco]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Unidad de Almacenamiento (Disco)",
+  "type": "object",
+  "properties": {
+    "uuidDisco": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador único de la unidad física o lógica"
+    },
+    "idDisco": {
+      "type": "integer",
+      "description": "Identificador de la base de datos del disco."
+    },
+    "idServidor": {
+      "type": "string",
+      "description": "Clave foránea que vincula el disco con su Servidor correspondiente"
+    },
+    "puntoMontaje": {
+      "type": "string",
+      "example": "/var/lib/docker",
+      "description": "Ruta en el sistema operativo donde está montada la unidad"
+    },
+    "capacidad": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Capacidad total del disco en GB"
+    },
+    "capacidadUsada": {
+      "type": "integer",
+      "description": "Espacio ocupado actualmente en GB"
+    },
+    "tecnologia": {
+      "type": "string",
+      "enum": ["SSD", "HDD", "NVMe", "Virtual"],
+      "description": "Tipo de tecnología de almacenamiento"
+    }
+  },
+  "required": ["uuidDisco", "puntoMontaje", "capacidad", "tecnologia"]
+}
+\end{lstlisting}
+
+
+
 
 \newpage
 \begin{lstlisting}[language=json, caption={JSON Schema Petición}, label=lst:json-schema-peticion]
 {
-  "$schema": "http://json-schema.org/draft-07/schema#", 
-  "title": "peticion",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Detalle de Petición de Acceso",
   "type": "object",
   "properties": {
-    "idPeticion": { "type": "integer" },
-    "status": { 
-      "enum": [ "peticionUsuario", "aprobadoResponsable", "aprobadoJefeLaboratorio", "realizadoAdministrador" ],
+    "uuidPeticion": {
+      "type": "string"
+    }
+    "idPetAcceso": {
+      "type": "string",
+      "format": "integer",
+      "description": "Identificador único de la petición de la base de datos."
     },
-    "profesorResponsable": { "type": "integer" },
-    "aprobadoResponsable": { "type": "boolean" },
-    "aprobadoJefeLaboratorio": { "type": "boolean" },
-    "uuidPeticion": { "type": "string" },
-    "fechaPeticion": { "type": "string", "format": "date" },
-    "fechaInicioAcceso": { "type": "string", "format": "date" },
-    "fechaFinAcceso": { "type": "string", "format": "date" },
-    "descripcionServicio": { "type": "string" },
-    "servidorAsociado": { "type": "integer" },
-    "documentoPropuestaUsuario": {
+    "nombreProyectoAsociado": {
+      "type": "string",
+      "description": "Nombre del proyecto de investigación"
+    },
+    "recursosSolicitados": {
       "type": "object",
-      "description": "Version inicial subida por el solicitante",
       "properties": {
-        "idFichero": { "type": "string", "format": "uuid" },
-        "fechaSubida": { "type": "string", "format": "date-time" },
-        "hashVerificacion": { "type": "string", "description": "Hash SHA-256 para integridad" }
+        "cpu_solicitada": { "type": "integer", "minimum": 1 },
+        "gpuSolicitada": { "type": "integer", "minimum": 0 },
+        "ram": { "type": "integer", "description": "Memoria en GB" },
+        "disco": { "type": "integer", "description": "Espacio en GB" }
       },
-      "required": ["idFichero", "fechaSubida"]
+      "required": ["cpu_solicitada", "ram", "disco"]
     },
-    "documentoAprobadoResponsable": {
+    "configuracionTecnica": {
       "type": "object",
-      "description": "Documento revisado y firmado por el profesor responsable",
       "properties": {
-        "idFichero": { "type": "string", "format": "uuid" },
-        "fechaAprobacion": { "type": "string", "format": "date-time" },
-        "idProfesorAprobador": { "type": "integer" }
+        "sistemaoperativo": { "type": "string" },
+        "docker": { "type": "boolean", "default": true },
+        "nombreAccesoNativo": { "type": "string" },
+        "justificacionAccesoNat": { "type": "string" }
       }
     },
-    "documentoFinalFirmado": {
+    "gestionTarea": {
       "type": "object",
-      "description": "Version final con el visto bueno de ambos (Responsable y Usuario)",
       "properties": {
-        "idFichero": { "type": "string", "format": "uuid" },
-        "fechaCierre": { "type": "string", "format": "date-time" },
-        "estaCifrado": { "type": "boolean", "default": true }
-      }
+        "tareaRealizar": {
+          "type": "string",
+          "enum": [
+            "AI model training",
+            "Simulations",
+            "Data Analysis",
+            "Data storage",
+            "Service deployment",
+            "Otro"
+          ]
+        },
+        "prioridadTarea": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "tiempoEstimadoTarea": { "type": "string", "description": "Duración prevista" },
+        "comentariosAdicionales": { "type": "string" }
+      },
+      "required": ["tareaRealizar", "prioridadTarea"]
+    },
+    "cumplimiento": {
+      "type": "object",
+      "properties": {
+        "aceptaToS": { "type": "boolean", "const": true }
+      },
+      "required": ["aceptaToS"]
+    },
+    "fechaCreacion": {
+      "type": "string"
+    },
+    "fechaFin": {
+      "type": "string"
+    },
+    "estado": {
+      "type": "string",
+      "enum": ["pedidoUsuario", "pedidoResponsable", "pedidoJefe", "realizado"]
     }
   },
-  "required": [ "idPeticion", "status", "profesorResponsable", "aprobadoResponsable", "aprobadoJefeLaboratorio",
-    "implementada", "uuidPeticion", "fechaPeticion", "fechaInicioAcceso", "descripcionServicio", "servidorAsociado" ]
+  "required": ["idPetAcceso", "nombreProyectoAsociado", "recursosSolicitados", "cumplimiento", "estado", "fechaCreacion"]
 }
 \end{lstlisting}
 
+\begin{lstlisting}[language=json, caption={JSON Schema Puerta}, label=lst:json-schema-puerta]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dispositivo de Acceso Físico",
+  "type": "object",
+  "properties": {
+    "uuidPuerta": {
+      "type": "string"
+    },
+    "idPuerta": {
+      "type": "string"
+    },
+    "nombre": {
+      "type": "string",
+      "example": "Entrada Principal CPD",
+      "description": "Nombre amigable del punto de acceso"
+    },
+    "ubicacion": {
+      "type": "object",
+      "properties": {
+        "edificio": { "type": "string" },
+        "planta": { "type": "string" },
+        "sala": { "type": "string" }
+      }
+    },
+  },
+  "required": ["uuidPuerta", "nombre", "ubicacion"]
+}
+\end{lstlisting}
 
 \begin{lstlisting}[language=json, caption={JSON Schema Notificación}, label=lst:json-schema-notificacion]
 {
@@ -344,7 +418,8 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
       "enum": [ "web", "usuario", "otro" ],
       "description": "El evento especifico que ocurrio"
     } 
-  }
+  },
+  "required": ["uuidNotificacion", "idDestinatario", "tipo"]
 }
 \end{lstlisting}
 
@@ -370,15 +445,33 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     "idPeticion": { "type": "integer" }
     "puertosAbiertos": {
       "type": "array",
-      "items": { "type": "integer", "minimum": 1, "maximum": 65535 },
-      "uniqueItems": true
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "properties": {
+          "numeroPuerto": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "protocolo": {
+            "type": "string",
+            "enum": ["TCP", "UDP", "SCTP"]
+          },
+          "nombreServicio": {
+            "type": "string",
+            "description": "Nombre del servicio (ej. HTTP, SSH, etc.)"
+          }
+        },
+        "required": ["puerto", "protocolo"]
+      }
     },
     "softwareBase": { 
         "type": "string", 
         "description": "Ej: Apache, PostgreSQL, Docker" 
     },
     "estaActivo": { "type": "boolean", "default": true },
-    "nivelSensibilidad": { 
+    "nivelSeveridad": { 
       "enum": ["bajo", "medio", "alto", "critico"],
       "description": "Impacto en caso de brecha de seguridad"
     }, 
@@ -395,6 +488,8 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 }
 
 \end{lstlisting}
+
+% TODO: Me quedo aqui revisando json schema.
 
 \newpage
 \begin{lstlisting}[language=json, caption={JSON Schema Roles}, label=lst:json-schema-roles]
