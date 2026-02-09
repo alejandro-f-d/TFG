@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS medal.usuario (
   contrasena VARCHAR(1000) NOT NULL,
   gitlab VARCHAR(50) UNIQUE, 
   responsable INTEGER,
+  jefeLaboratorio BOOLEAN DEFAULT false,
   CONSTRAINT fk_responsable_usuario 
     FOREIGN KEY (responsable) 
     REFERENCES medal.usuario(idUsuario)
@@ -65,53 +66,6 @@ CREATE TABLE IF NOT EXISTS medal.discos(
         ON DELETE CASCADE
 );
 
--- 4. SERVICIO
-CREATE TABLE IF NOT EXISTS medal.servicio(
-  idServicio SERIAL PRIMARY KEY,
-  uuidServicio UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-  nombreServicio VARCHAR(100) NOT NULL,
-  descripcionTecnica VARCHAR(1000),
-  entorno VARCHAR(1000),
-  publico BOOLEAN DEFAULT FALSE,
-  softwareBase VARCHAR(500),
-  activo BOOLEAN DEFAULT TRUE,
-  nivelSeveridad VARCHAR(50),
-  idUsuario INTEGER NOT NULL,
-  CONSTRAINT fk_usuarioDueno 
-    FOREIGN KEY (idUsuario) 
-    REFERENCES medal.usuario(idUsuario)
-);
-
--- 5. CORRE 
-CREATE TABLE IF NOT EXISTS medal.corre (
-    idServicio INTEGER NOT NULL,
-    idServidor INTEGER NOT NULL,
-    PRIMARY KEY (idServicio, idServidor),
-    CONSTRAINT fk_corre_servicio
-        FOREIGN KEY (idServicio)
-        REFERENCES medal.servicio(idServicio)
-        ON DELETE CASCADE,
-    CONSTRAINT fk_corre_servidor
-        FOREIGN KEY (idServidor)
-        REFERENCES medal.servidor(idServidor)
-        ON DELETE CASCADE
-);
-
--- 6. PUERTOS ABIERTOS 
-CREATE TABLE IF NOT EXISTS medal.puertosAbiertos(
-  idPuerto SERIAL PRIMARY KEY,
-  numeroPuertoMaquina INTEGER NOT NULL,
-  protocolo VARCHAR(50),
-  nombreServicio VARCHAR(100),
-  puertoVirtual INTEGER,
-  idServicio INTEGER NOT NULL, 
-  CONSTRAINT uq_puerto_servicio 
-        UNIQUE (numeroPuertoMaquina, idServicio),
-  CONSTRAINT fk_puertos_servicio
-      FOREIGN KEY (idServicio)
-      REFERENCES medal.servicio(idServicio)
-      ON DELETE CASCADE
-);
 
 -- 7. PROYECTOS GITLAB
 CREATE TABLE IF NOT EXISTS medal.proyectosGitlab(
@@ -315,4 +269,77 @@ CREATE TABLE IF NOT EXISTS medal.reservaClaendario(
     ON DELETE CASCADE
 );
 
+
+-- 21 Peticiones:
+
+CREATE TABLE IF NOT EXISTS medal.peticion(
+  idPeticion SERIAL PRIMARY KEY,
+  uuidPeticion UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  fechaCreacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  estado VARCHAR(50) NOT NULL,
+  usuarioPeticion INTEGER NOT NULL, 
+  CONSTRAINT fk_usuario_creador_peticion 
+    FOREIGN KEY (usuarioPeticion) 
+    REFERENCES medal.usuario(idUsuario)
+    ON DELETE CASCADE,
+  usuarioSupervisor INTEGER NOT NULL,
+  CONSTRAINT fk_usuario_supervisor_peticion 
+    FOREIGN KEY (usuarioSupervisor) 
+    REFERENCES medal.usuario(idUsuario) 
+    ON DELETE CASCADE  
+);
+
+
+
+-- 4. SERVICIO
+CREATE TABLE IF NOT EXISTS medal.servicio(
+  idServicio SERIAL PRIMARY KEY,
+  uuidServicio UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  nombreServicio VARCHAR(100) NOT NULL,
+  descripcionTecnica VARCHAR(1000),
+  entorno VARCHAR(1000),
+  publico BOOLEAN DEFAULT FALSE,
+  softwareBase VARCHAR(500),
+  activo BOOLEAN DEFAULT TRUE,
+  nivelSeveridad VARCHAR(50),
+  idUsuario INTEGER NOT NULL,
+  CONSTRAINT fk_usuarioDueno 
+    FOREIGN KEY (idUsuario) 
+    REFERENCES medal.usuario(idUsuario),
+  idPeticion INTEGER NOT NULL,
+  CONSTRAINT fk_nace_peticion 
+    FOREIGN KEY (idPeticion) 
+    REFERENCES medal.peticion(idPeticion)
+);
+
+-- 5. CORRE 
+CREATE TABLE IF NOT EXISTS medal.corre (
+    idServicio INTEGER NOT NULL,
+    idServidor INTEGER NOT NULL,
+    PRIMARY KEY (idServicio, idServidor),
+    CONSTRAINT fk_corre_servicio
+        FOREIGN KEY (idServicio)
+        REFERENCES medal.servicio(idServicio)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_corre_servidor
+        FOREIGN KEY (idServidor)
+        REFERENCES medal.servidor(idServidor)
+        ON DELETE CASCADE
+);
+
+-- 6. PUERTOS ABIERTOS 
+CREATE TABLE IF NOT EXISTS medal.puertosAbiertos(
+  idPuerto SERIAL PRIMARY KEY,
+  numeroPuertoMaquina INTEGER NOT NULL,
+  protocolo VARCHAR(50),
+  nombreServicio VARCHAR(100),
+  puertoVirtual INTEGER,
+  idServicio INTEGER NOT NULL, 
+  CONSTRAINT uq_puerto_servicio 
+        UNIQUE (numeroPuertoMaquina, idServicio),
+  CONSTRAINT fk_puertos_servicio
+      FOREIGN KEY (idServicio)
+      REFERENCES medal.servicio(idServicio)
+      ON DELETE CASCADE
+);
 
