@@ -286,8 +286,33 @@ CREATE TABLE IF NOT EXISTS medal.auditoria(
   tipoAccion VARCHAR(50) NOT NULL,
   direccionIpOrigen VARCHAR(39),
   nivelSeveridad VARCHAR(50) NOT NULL DEFAULT 'bajo',
-  uuidAuditoria UUID NOT NULL UNIQUE DEFAULT gen_random_uuid()
+  uuidAuditoria UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  idUsuario INTEGER NOT NULL,
+  CONSTRAINT fk_usuario_reservaCalendario 
+    FOREIGN KEY (idUsuario) 
+    REFERENCES medal.usuario(idUsuario)
+    ON DELETE CASCADE
+
 );
 
+-- 20. reservaClaendario
+CREATE TABLE IF NOT EXISTS medal.reservaClaendario(
+  idCalendario SERIAL PRIMARY KEY,
+  fechaInicio DATE NOT NULL,
+  uuidCalendario UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  descripcion VARCHAR(500),
+  nombre VARCHAR(50) NOT NULL,
+  fechaFin DATE NOT NULL,
+  idUsuario INTEGER NOT NULL,
+  CONSTRAINT fk_usuario_reservaCalendario 
+    FOREIGN KEY (idUsuario) 
+    REFERENCES medal.usuario(idUsuario)
+    ON DELETE CASCADE,
+  idServidor INTEGER NOT NULL,
+  CONSTRAINT fk_servidor_reservaCalendario
+    FOREIGN KEY(idServidor) 
+    REFERENCES medal.servidor(idServidor)
+    ON DELETE CASCADE
+);
 
 
