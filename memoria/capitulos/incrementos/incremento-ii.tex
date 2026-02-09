@@ -525,7 +525,14 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     "tipo": {
       "enum": [ "web", "usuario", "otro" ],
       "description": "El evento especifico que ocurrio"
-    } 
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "redirectURL": {
+      "type": "string", 
+      "description": "Lugar de redirección del recurso."
+    }
   },
   "required": ["uuidNotificacion", "idDestinatario", "tipo"]
 }
@@ -557,7 +564,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
       "items": {
         "type": "object",
         "properties": {
-          "numeroPuerto": {
+          "numeroPuertoMaquina": {
             "type": "integer",
             "minimum": 1,
             "maximum": 65535
@@ -569,6 +576,12 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
           "nombreServicio": {
             "type": "string",
             "description": "Nombre del servicio (ej. HTTP, SSH, etc.)"
+          },
+          "puertoVirtual": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "Puerto en la máquina virtual a la que se le hace el mapeo."
           }
         },
         "required": ["puerto", "protocolo"]
