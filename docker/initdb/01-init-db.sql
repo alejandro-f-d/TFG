@@ -51,20 +51,34 @@ CREATE TABLE IF NOT EXISTS medal.servidor(
   sistemaOperativo VARCHAR(100) NOT NULL
 );
 
--- 3. DISCOS 
-CREATE TABLE IF NOT EXISTS medal.discos(
-  idDisco SERIAL PRIMARY KEY, 
-  puntoMontaje VARCHAR(200) NOT NULL,
-  capacidad INTEGER NOT NULL,
-  capacidadUsada INTEGER,
-  tecnologia VARCHAR(50) NOT NULL,
-  uuidDisco UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-  idServidor INTEGER NOT NULL, 
-  CONSTRAINT fk_servidor_medal
-        FOREIGN KEY (idServidor) 
-        REFERENCES medal.servidor(idServidor)
-        ON DELETE CASCADE
+
+-- 4. TIPODISPOSITIVO
+CREATE TABLE IF NOT EXISTS medal.tipoDispositivo(
+  idTipoDispositivo SERIAL PRIMARY KEY,
+  nombre VARCHAR(50),
+  descripcion VARCHAR(1000)
 );
+
+-- 3. DISPOSITIVOS
+CREATE TABLE IF NOT EXISTS medal.dispositivos(
+  idDispositivo SERIAL PRIMARY KEY,
+  puntoMontaje VARCHAR(100),
+  capacidad INTEGER, 
+  capacidadUsada INTEGER, 
+  tecnologia VARCHAR(200),
+  uuidDispositivo UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  idServidor INTEGER NOT NULL,
+  CONSTRAINT fk_pertenece_servidor 
+    FOREIGN KEY (idServidor)
+    REFERENCES medal.servidor(idServidor)
+    ON DELETE CASCADE,
+  idTipoDispositivo INTEGER NOT NULL,
+  CONSTRAINT fk_tipo_dispositivo
+    FOREIGN KEY (idTipoDispositivo)
+    REFERENCES medal.tipoDispositivo(idTipoDispositivo)
+    ON DELETE CASCADE 
+);
+
 
 
 -- 7. PROYECTOS GITLAB
@@ -333,6 +347,7 @@ CREATE TABLE IF NOT EXISTS medal.tareasRealizar(
   idTarea SERIAL PRIMARY KEY,
   nombre VARCHAR(50),
   descripcion VARCHAR(500)
+  -- TODO: Acabar de completar.
 );
 
 
