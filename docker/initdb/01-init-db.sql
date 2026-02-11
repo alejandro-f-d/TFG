@@ -305,6 +305,19 @@ CREATE TABLE IF NOT EXISTS medal.peticion(
 
 
 
+-- 23 Momento ejecucion
+CREATE TABLE IF NOT EXISTS medal.momentoEjecucuion(
+  idMomentoEjecucion SERIAL PRIMARY KEY,
+  nombre VARCHAR(25) NOT NULL,
+  descripcion VARCHAR(500),
+  peticionId INTEGER NOT NULL UNIQUE,
+  CONSTRAINT fk_peticion_asociada_detalle 
+    FOREIGN KEY (peticionId) 
+    REFERENCES medal.detallePeticionAcceso(idPetAcceso)
+    ON DELETE CASCADE
+);
+
+
 -- 22 Detalle de las peticiones
 
 CREATE TABLE IF NOT EXISTS medal.detallePeticionAcceso(
@@ -327,27 +340,35 @@ CREATE TABLE IF NOT EXISTS medal.detallePeticionAcceso(
   CONSTRAINT fk_peticion_asociada 
     FOREIGN KEY(idPeticionReferencia)
     REFERENCES medal.peticion(idPeticion)
+    ON DELETE CASCADE,
+  idMomentoEjecucion INTEGER NOT NULL,
+  CONSTRAINT fk_momento_ejecucion
+    FOREIGN KEY (idMomentoEjecucion)
+    REFERENCES medal.momentoEjecucion(idMomentoEjecucion)
     ON DELETE CASCADE
 );
 
--- 23 Momento ejecucion
-CREATE TABLE IF NOT EXISTS medal.momentoEjecucuion(
-  idTarea SERIAL PRIMARY KEY,
-  nombre VARCHAR(25) NOT NULL,
-  descripcion VARCHAR(500),
-  peticionId INTEGER NOT NULL UNIQUE,
-  CONSTRAINT fk_peticion_asociada_detalle 
-    FOREIGN KEY (peticionId) 
-    REFERENCES medal.detallePeticionAcceso(idPetAcceso)
-    ON DELETE CASCADE
-);
+
 
 -- 24 TAREAS REALIZAR
 CREATE TABLE IF NOT EXISTS medal.tareasRealizar(
   idTarea SERIAL PRIMARY KEY,
   nombre VARCHAR(50),
-  descripcion VARCHAR(500)
-  -- TODO: Acabar de completar.
+  descripcion VARCHAR(500),
+);
+
+--25 TABLA OPERA
+CREATE TABLE IF NOT EXISTS medal.opera(
+  idTarea INTEGER NOT NULL,
+  idPetAcceso INTEGER NOT NULL,
+  PRIMARY KEY(idTarea, idPetAcceso),
+  CONSTRAINT fk_tarea 
+    FOREIGN KEY (idTarea)
+    REFERENCES medal.tareasRealizar(idTarea)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_peticion_acceso
+    FOREIGN KEY (idPetAcceso)
+    REFERENCES medal.detallePeticionAcceso(idPetAcceso)
 );
 
 
