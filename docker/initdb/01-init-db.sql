@@ -33,15 +33,15 @@ CREATE TABLE IF NOT EXISTS medal.usuario (
     CHECK (fechaFin IS NULL OR fechaFin >= fechaIncorporacion)
 );
 
--- 2. SERVIDORES
-CREATE TABLE IF NOT EXISTS medal.servidor(
-  idServidor SERIAL PRIMARY KEY, 
+-- 2. Maquina
+CREATE TABLE IF NOT EXISTS medal.maquina(
+  idMaquina SERIAL PRIMARY KEY, 
   nombre VARCHAR(50) NOT NULL UNIQUE,
   caducidadSSL DATE,
   certificadoSslActivo BOOLEAN DEFAULT FALSE,
   emisorSsl VARCHAR(100),
   direccionIpPrivadaV4 VARCHAR(15) NOT NULL,
-  uuidServidor UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(), 
+  uuidMaquina UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(), 
   direccionIpPublicaV4 VARCHAR(15),
   direccionIpPrivadaV6 VARCHAR(39),
   direccionIpPublicaV6 VARCHAR(39),
@@ -67,10 +67,10 @@ CREATE TABLE IF NOT EXISTS medal.dispositivos(
   capacidadUsada INTEGER, 
   tecnologia VARCHAR(200),
   uuidDispositivo UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-  idServidor INTEGER NOT NULL,
-  CONSTRAINT fk_pertenece_servidor 
-    FOREIGN KEY (idServidor)
-    REFERENCES medal.servidor(idServidor)
+  idMaquina INTEGER NOT NULL,
+  CONSTRAINT fk_pertenece_Maquina 
+    FOREIGN KEY (idMaquina)
+    REFERENCES medal.Maquina(idMaquina)
     ON DELETE CASCADE,
   idTipoDispositivo INTEGER NOT NULL,
   CONSTRAINT fk_tipo_dispositivo
@@ -276,10 +276,10 @@ CREATE TABLE IF NOT EXISTS medal.reservaClaendario(
     FOREIGN KEY (idUsuario) 
     REFERENCES medal.usuario(idUsuario)
     ON DELETE CASCADE,
-  idServidor INTEGER NOT NULL,
-  CONSTRAINT fk_servidor_reservaCalendario
-    FOREIGN KEY(idServidor) 
-    REFERENCES medal.servidor(idServidor)
+  idMaquina INTEGER NOT NULL,
+  CONSTRAINT fk_Maquina_reservaCalendario
+    FOREIGN KEY(idMaquina) 
+    REFERENCES medal.Maquina(idMaquina)
     ON DELETE CASCADE
 );
 
@@ -304,18 +304,13 @@ CREATE TABLE IF NOT EXISTS medal.peticion(
 );
 
 
-
 -- 23 Momento ejecucion
-CREATE TABLE IF NOT EXISTS medal.momentoEjecucuion(
+CREATE TABLE IF NOT EXISTS medal.momentoEjecucion(
   idMomentoEjecucion SERIAL PRIMARY KEY,
   nombre VARCHAR(25) NOT NULL,
-  descripcion VARCHAR(500),
-  peticionId INTEGER NOT NULL UNIQUE,
-  CONSTRAINT fk_peticion_asociada_detalle 
-    FOREIGN KEY (peticionId) 
-    REFERENCES medal.detallePeticionAcceso(idPetAcceso)
-    ON DELETE CASCADE
+  descripcion VARCHAR(500)
 );
+
 
 
 -- 22 Detalle de las peticiones
@@ -350,15 +345,16 @@ CREATE TABLE IF NOT EXISTS medal.detallePeticionAcceso(
 
 
 
+
 -- 24 TAREAS REALIZAR
 CREATE TABLE IF NOT EXISTS medal.tareasRealizar(
   idTarea SERIAL PRIMARY KEY,
   nombre VARCHAR(50),
-  descripcion VARCHAR(500),
+  descripcion VARCHAR(500)
 );
 
 --25 TABLA OPERA
-CREATE TABLE IF NOT EXISTS medal.opera(
+CREATE TABLE IF NOT EXISTS medal.realiza(
   idTarea INTEGER NOT NULL,
   idPetAcceso INTEGER NOT NULL,
   PRIMARY KEY(idTarea, idPetAcceso),
@@ -369,11 +365,41 @@ CREATE TABLE IF NOT EXISTS medal.opera(
   CONSTRAINT fk_peticion_acceso
     FOREIGN KEY (idPetAcceso)
     REFERENCES medal.detallePeticionAcceso(idPetAcceso)
+    ON DELETE CASCADE
 );
 
 
 
+-- 26 TABLA ALOJADO
+CREATE TABLE IF NOT EXISTS medal.alojado(
+  idPetAcceso INTEGER NOT NULL,
+  idMaquina INTEGER NOT NULL,
+  justificacionVariosMaquina VARCHAR(500),
+  PRIMARY KEY(idPetAcceso, idMaquina),
+  CONSTRAINT fk_peticion_acceso
+    FOREIGN KEY(idPetAcceso) 
+    REFERENCES medal.detallePeticionAcceso(idPetAcceso)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_Maquina 
+    FOREIGN KEY (idMaquina)
+    REFERENCES medal.Maquina(idMaquina)
+    ON DELETE CASCADE
+);
 
+-- 27 PROPIETARIO
+CREATE TABLE IF NOT EXISTS medal.propietario(
+  idUsuario INTEGER NOT NULL,
+  idMaquina INTEGER NOT NULL,
+  PRIMARY KEY(idUsuario, idMaquina),
+  CONSTRAINT fk_maquina 
+    FOREIGN KEY (idMaquina)
+    REFERENCES medal.maquina(idMaquina)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_usuario
+    FOREIGN KEY (idUsuario)
+    REFERENCES medal.usuario(idUsuario)
+    ON DELETE CASCADE
+);
 
 
 
@@ -401,15 +427,15 @@ CREATE TABLE IF NOT EXISTS medal.servicio(
 -- 5. CORRE 
 CREATE TABLE IF NOT EXISTS medal.corre (
     idServicio INTEGER NOT NULL,
-    idServidor INTEGER NOT NULL,
-    PRIMARY KEY (idServicio, idServidor),
+    idMaquina INTEGER NOT NULL,
+    PRIMARY KEY (idServicio, idMaquina),
     CONSTRAINT fk_corre_servicio
         FOREIGN KEY (idServicio)
         REFERENCES medal.servicio(idServicio)
         ON DELETE CASCADE,
-    CONSTRAINT fk_corre_servidor
-        FOREIGN KEY (idServidor)
-        REFERENCES medal.servidor(idServidor)
+    CONSTRAINT fk_corre_Maquina
+        FOREIGN KEY (idMaquina)
+        REFERENCES medal.Maquina(idMaquina)
         ON DELETE CASCADE
 );
 

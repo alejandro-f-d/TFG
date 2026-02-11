@@ -34,6 +34,7 @@ Otra necesidad que se ha identificado es la necesidad de un sistema de monitoreo
 
 En la tabla \ref{tab:rf_inc2} se pueden encontrar los requisitos funcionales a implementar en esta etapa. En la tabla \ref{tab:rnf_inc2} se localizan los requisitos no funcionales para este incremento. 
 
+Los usuarios disponen de un ordenador fijo cuyo inventari es gestionado por el sistema tras realizar el registro correspondiente.
 
 
 % Ajuste de separación de filas para que no se vea tan apretada (opcional)
@@ -85,13 +86,15 @@ RF7   & El servicio debe tener un registro actualizado de la información del pe
   RF7.12 & Activo (\textbf{Obligatorio.}) \\
   RF7.13 & Tarjeta de Acceso (\textbf{Obligatorio.}) \\
 RF8 & El sistema debe permitir la monitorización de páginas webs para conocer su estado de manera automática notificando al usuario en caso de no encontrarse funcionando. El healthcheck se hará cada 2 minutos para evitar bloqueo por posible ataque DoS. \\
-RF9 & Creación de información asociada a los servidores. \\
-  RF9.1 & Nombre del servidor. \\
-  RF9.2 & IP pública del servidor. \\
-  RF9.3 & IP privada del servidor. \\
-  RF9.4 & Puerta de enlace del servidor. \\
-  RF9.5 & DNS del servidor. \\
-RF10 & Baja de los servidores.
+RF9 & Creación de información asociada a los máquinas. \\
+  RF9.1 & Nombre del máquina. \\
+  RF9.2 & IP pública del máquina. \\
+  RF9.3 & IP privada del máquina. \\
+  RF9.4 & Puerta de enlace del máquina. \\
+  RF9.5 & DNS del máquina. \\
+  RF9.7 & Identificador del máquina. \\
+  RF9.8 & Dueño de la máquina.
+RF10 & Baja de los máquinas.
 \end{longtable}
 \newpage
 \begin{longtable}{lp{10cm}}
@@ -218,7 +221,13 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     "contrasena": { "type": "string" },
     "dirIpLastLogin": { "type": "string", "format": "ipv4" },
     "teams": { "type": "boolean" },
-    "jefeLaboratorio": { "type": "boolean" }
+    "jefeLaboratorio": { "type": "boolean" },
+    "duenoMaquina": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
   "required": ["nombre", "apellidos", "rol", "correoInstitucional", "profesorResponsable", "fechaIncorporacion", "activo", "tarjetaAcceso", "idUsuario", "uuidUser", "contrasena"]
 }
@@ -226,7 +235,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 
 \newpage
 
-\begin{lstlisting}[language=json, caption={JSON Schema Servidor}, label=lst:json-schema-server]
+\begin{lstlisting}[language=json, caption={JSON Schema Máquina}, label=lst:json-schema-maquina]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Servidor de Infraestructura",
@@ -243,6 +252,12 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     },
     "nombre": {
       "type": "string",
+    },
+    "propietarios": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "red": {
       "type": "object",
@@ -924,13 +939,14 @@ Dominio de los usuarios:
   \item \texttt{permisos/}
 \end{itemize}
 
-Dominio de los servidores:
+Dominio de los servidores y máquinas:
 \begin{itemize}
-  \item \texttt{servidores/}
+  \item \texttt{maquinas/}
   \begin{itemize}
-    \item \texttt{servidores/\{uuid\}/}
+    \item \texttt{maquinas/\{uuid\}/}
     \begin{itemize}
-      \item \texttt{servidores/\{uuid\}/servicios}
+      \item \texttt{maquinas/\{uuid\}/servicios}
+      \item \texttt{maquinas/\{uuid\}/dispositivos}
     \end{itemize}
   \end{itemize}
 
