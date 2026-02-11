@@ -69,6 +69,7 @@ RF3   & Autenticación y control de acceso basado en roles (RBAC). \\
 RF4   & Los usuarios deben ser capaces de modificar y/o recuperar la contraseña de manera segura. \\
 RF5   & Centralización de datos en la Fuente Única de Verdad (SSOT). \\
 RF6   & El servicio debe permitir trazabilidad y envío de anexos firmados por parte de los usuarios. \\
+  RF6.1 & El servicio utilizará el servicio de \@Firma para la cumplimentación de los documentos. \\
 RF7   & El servicio debe tener un registro actualizado de la información del personal del laboratorio. \\
   RF7.1 & Nombre (\textbf{Obligatorio}). \\
   RF7.2 & Apellidos (\textbf{Obligatorio}). \\
@@ -142,6 +143,38 @@ En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del
 
 
 \newpage
+\subsection{Entidad relación:}
+
+Partiendo de la tabla \texttt{Usuario} como núcleo del sistema, el diseño se expande en tres áreas principales: 
+
+\begin{itemize}
+    \item \textbf{Módulo de Autorización y Sesión:} Se han implementado entidades como \texttt{refreshToken} y \texttt{recuperacionPassword} permitiendo la gestión del inicio de sesión.
+    \item \textbf{Jerarquía de Aprobación:} La relación entre \texttt{Usuario}, \texttt{Peticion} e \texttt{historialEstadoPeticion} permitiendo tener una trazabilidad de cada una de las acciones relacionadas con las peticiones.
+    \item \textbf{Gestión de los servidores y servicios:} A través de la información de los servidores, de los servicios y del sistema de monitorización permite un control de los sistemas y su operabilidad.
+\end{itemize}
+
+Adicionalmente a esto, se tiene apoyo en el sistema de notificación que será usado por cada uno de las áreas cuando sea necesario.
+
+En la figura \ref{fig:entidad-relacion} se encuentra el diagrama entidad relación de este incremento. 
+
+A la hora de generación de los campos de la base de datos nos apoyamos al sistema previo existente de un formulario que recoge esta información. Este documento se puede encontrar en la bibliografía.
+
+\clearpage
+
+\begin{sidewaysfigure}[p]
+    \centering
+    \includegraphics[width=0.95\textwidth]{incremento-ii/entidad_relacion.png}
+    \caption{Entidad relación Incremento II}
+    \label{fig:entidad-relacion}
+\end{sidewaysfigure}
+
+\clearpage
+
+
+
+
+
+
 % \subsection{JSON Schema de los recursos:}
 \subsection{Interfaces del sistema (API):}
 \subsubsection{Recursos:}
@@ -210,7 +243,6 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     },
     "nombre": {
       "type": "string",
-      "example": "Nodo-Computo-01"
     },
     "red": {
       "type": "object",
@@ -220,7 +252,9 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
         "direccionIpPrivadaV6": { "type": "string", "format": "ipv6" },
         "direccionIpPublicaV6": { "type": "string", "format": "ipv6" },
         "puertaEnlaceIPv4": { "type": "string", "format": "ipv4" },
-        "puertaEnlaceIPv6": { "type": "string", "format": "ipv6" }
+        "puertaEnlaceIPv6": { "type": "string", "format": "ipv6" },
+        "dnsprincipal": { "type": "string", "format": "ipv4" },
+        "dnsprincipalv6": { "type": "string", "format": "ipv6" }
       },
       "required": ["direccionIpPrivadaV4", "puertaEnlaceIPv4"]
     },
@@ -249,46 +283,36 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 
 
 
-\begin{lstlisting}[language=json, caption={JSON Schema Discos}, label=lst:json-schema-disco]
+\begin{lstlisting}[language=json, caption={JSON Schema Dispositivo}, label=lst:json-schema-dispositivo]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Unidad de Almacenamiento (Disco)",
+  "title": "Sistema de Gestión de Dispositivos",
   "type": "object",
-  "properties": {
-    "uuidDisco": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Identificador único de la unidad física o lógica"
+  "definitions": {
+    "tipoDispositivo": {
+      "type": "object",
+      "required": ["uuidTipoDispositivo", "nombre"],
+      "properties": {
+        "idTipo": { "type": "integer" },
+        "nombre": { "type": "string" },
+        "descripcion": { "type": "string" },
+        "uuidTipoDispositivo": { "type": "string" }
+      }
     },
-    "idDisco": {
-      "type": "integer",
-      "description": "Identificador de la base de datos del disco."
-    },
-    "idServidor": {
-      "type": "string",
-      "description": "Clave foránea que vincula el disco con su Servidor correspondiente"
-    },
-    "puntoMontaje": {
-      "type": "string",
-      "example": "/var/lib/docker",
-      "description": "Ruta en el sistema operativo donde está montada la unidad"
-    },
-    "capacidad": {
-      "type": "integer",
-      "minimum": 1,
-      "description": "Capacidad total del disco en GB"
-    },
-    "capacidadUsada": {
-      "type": "integer",
-      "description": "Espacio ocupado actualmente en GB"
-    },
-    "tecnologia": {
-      "type": "string",
-      "enum": ["SSD", "HDD", "NVMe", "Virtual"],
-      "description": "Tipo de tecnología de almacenamiento"
+    "dispositivo": {
+      "type": "object",
+      "required": ["uuidDispositivo", "idTipo"],
+      "properties": {
+        "idDispositivo": { "type": "integer" },
+        "uuidDispositivo": { "type": "string", "format": "uuid" },
+        "puntoMontaje": { "type": "string" },
+        "tecnologia": { "type": "string" },
+        "capacidad": { "type": "number", "description": "Capacidad total" },
+        "capacidadUsada": { "type": "number", "description": "Capacidad en uso" },
+        "idTipo": { "type": "integer", "description": "Relación con tipoDispositivo" }
+      }
     }
-  },
-  "required": ["uuidDisco", "puntoMontaje", "capacidad", "tecnologia"]
+  }
 }
 \end{lstlisting}
 
@@ -425,8 +449,9 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 \end{lstlisting}
 
 
+\newpage
 
-\begin{lstlisting}[language=json, caption={JSON Schema Documento}, label=lst:json-schema-puerta]
+\begin{lstlisting}[language=json, caption={JSON Schema Documento}, label=lst:json-schema-documento]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Documento de Petición Firmado",
@@ -497,7 +522,6 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
     },
     "nombre": {
       "type": "string",
-      "example": "Entrada Principal CPD",
       "description": "Nombre amigable del punto de acceso"
     },
     "ubicacion": {
@@ -512,6 +536,8 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
   "required": ["uuidPuerta", "nombre", "ubicacion"]
 }
 \end{lstlisting}
+
+\newpage
 
 \begin{lstlisting}[language=json, caption={JSON Schema Notificación}, label=lst:json-schema-notificacion]
 {
@@ -651,7 +677,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
 }
 \end{lstlisting}
 
-
+\newpage
 \begin{lstlisting}[language=json, caption={JSON Schema Permiso}, label=lst:json-schema-monitoreo]
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -894,6 +920,8 @@ Dominio de los usuarios:
   \end{itemize}
   
   \item \texttt{roles/}
+
+  \item \texttt{permisos/}
 \end{itemize}
 
 Dominio de los servidores:
@@ -1070,33 +1098,6 @@ Para cada uno de los roles se les puede asignar diferentes permisos asociados, e
 \end{itemize}
 
 \newpage
-\subsection{Entidad relación:}
-
-Partiendo de la tabla \texttt{Usuario} como núcleo del sistema, el diseño se expande en tres áreas principales: 
-
-\begin{itemize}
-    \item \textbf{Módulo de Autorización y Sesión:} Se han implementado entidades como \texttt{refreshToken} y \texttt{recuperacionPassword} permitiendo la gestión del inicio de sesión.
-    \item \textbf{Jerarquía de Aprobación:} La relación entre \texttt{Usuario}, \texttt{Peticion} e \texttt{historialEstadoPeticion} permitiendo tener una trazabilidad de cada una de las acciones relacionadas con las peticiones.
-    \item \textbf{Gestión de los servidores y servicios:} A través de la información de los servidores, de los servicios y del sistema de monitorización permite un control de los sistemas y su operabilidad.
-\end{itemize}
-
-Adicionalmente a esto, se tiene apoyo en el sistema de notificación que será usado por cada uno de las áreas cuando sea necesario.
-
-En la figura \ref{fig:entidad-relacion} se encuentra el diagrama entidad relación de este incremento. 
-
-A la hora de generación de los campos de la base de datos nos apoyamos al sistema previo existente de un formulario que recoge esta información. Este documento se puede encontrar en la bibliografía.
-
-\clearpage
-
-\begin{sidewaysfigure}[p]
-    \centering
-    \includegraphics[width=0.95\textwidth]{incremento-ii/entidad_relacion.png}
-    \caption{Entidad relación Incremento II}
-    \label{fig:entidad-relacion}
-\end{sidewaysfigure}
-
-\clearpage
-
 
 
 \subsection{Puntos función:}
@@ -1146,9 +1147,14 @@ Asimismo, los requisitos de la firma electrónica avanzada se definen en su art�
 
 La infraestructura se va a basar en microservicios apoyados en docker. El sistema se va a desarrollar en tres capas: 
 \begin{itemize}
-  \item Frontend: Esta capa va a ser la visible para el usuario y la que está pensada para que el usuario interactue.
-  \item API: Esta capa se encargará de la comunicación entre el frontend y el backend. Además se encargará de trabajar con los servicios de @firma.
-  \item Backend: Esta última capa se va a encargar del almacenamiento de los datos. Concretamente se va a dividir en dos partes principales, una base de datos y en una estructura encargada de almacenar los datos de los documentos (servicio de almacenamiento de objetos).
+  % \item Frontend: Esta capa va a ser la visible para el usuario y la que está pensada para que el usuario interactue.
+  % \item API: Esta capa se encargará de la comunicación entre el frontend y el backend. Además se encargará de trabajar con los servicios de @firma.
+  % \item Backend: Esta última capa se va a encargar del almacenamiento de los datos. Concretamente se va a dividir en dos partes principales, una base de datos y en una estructura encargada de almacenar los datos de los documentos (servicio de almacenamiento de objetos).
+  \item \texttt{Bases de datos}: Servicio de almacenamiento para el sistema.
+  \item \texttt{API}: Comunicación entre el frontend y el backend.
+  \item \texttt{Worker}: Encargado de realización de trabajos pesados tales como la monitorización de páginas web.
+  \item \texttt{Storage}: En este microservicio se van a almacenar de manera segura los documentos, separados de la base de datos para evitar su sobrecarga.
+  \item \texttt{Frontend}: Parte con la que va a interactuar el usuario. 
 \end{itemize}
 
 

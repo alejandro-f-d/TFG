@@ -291,6 +291,56 @@ CREATE TABLE IF NOT EXISTS medal.peticion(
 
 
 
+-- 22 Detalle de las peticiones
+
+CREATE TABLE IF NOT EXISTS medal.detallePeticionAcceso(
+  idPetAcceso SERIAL PRIMARY KEY,
+  cpuSolicitada INTEGER NOT NULL,
+  gpuSolicitada INTEGER NOT NULL,
+  nombreProyectoAsociado VARCHAR(50) NOT NULL,
+  nombreServicioAsociado VARCHAR(100) NOT NULL,
+  prioridadTarea INTEGER NOT NULL,
+  docker VARCHAR(50),
+  sistemaOperativo VARCHAR(100),
+  comentariosAdicionales VARCHAR(500),
+  tiempoEstimadoTarea INTEGER, 
+  aceptaTos BOOLEAN DEFAULT TRUE,
+  nombreAccesoNativo VARCHAR(50),
+  disco INTEGER NOT NULL,
+  justificacionAccesoNativo VARCHAR(1000),
+  ram INTEGER NOT NULL, 
+  idPeticionReferencia INTEGER NOT NULL,
+  CONSTRAINT fk_peticion_asociada 
+    FOREIGN KEY(idPeticionReferencia)
+    REFERENCES medal.peticion(idPeticion)
+    ON DELETE CASCADE
+);
+
+-- 23 Momento ejecucion
+CREATE TABLE IF NOT EXISTS medal.momentoEjecucuion(
+  idTarea SERIAL PRIMARY KEY,
+  nombre VARCHAR(25) NOT NULL,
+  descripcion VARCHAR(500),
+  peticionId INTEGER NOT NULL UNIQUE,
+  CONSTRAINT fk_peticion_asociada_detalle 
+    FOREIGN KEY (peticionId) 
+    REFERENCES medal.detallePeticionAcceso(idPetAcceso)
+    ON DELETE CASCADE
+);
+
+-- 24 TAREAS REALIZAR
+CREATE TABLE IF NOT EXISTS medal.tareasRealizar(
+  idTarea SERIAL PRIMARY KEY,
+  nombre VARCHAR(50),
+  descripcion VARCHAR(500)
+);
+
+
+
+
+
+
+
 -- 4. SERVICIO
 CREATE TABLE IF NOT EXISTS medal.servicio(
   idServicio SERIAL PRIMARY KEY,
