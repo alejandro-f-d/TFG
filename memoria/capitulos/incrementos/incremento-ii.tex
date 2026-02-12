@@ -241,14 +241,14 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
   "title": "Servidor de Infraestructura",
   "type": "object",
   "properties": {
-    "uuidServidor": {
+    "uuidMaquina": {
       "type": "string",
       "format": "uuid",
       "description": "Identificador único del nodo físico"
     },
-    "idServidor": {
+    "idMaquina": {
       "type": "integer",
-      "description": "Identificador de la base de datos del servidor."
+      "description": "Identificador de la base de datos del maquina."
     },
     "nombre": {
       "type": "string",
@@ -292,7 +292,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
       }
     }
   },
-  "required": ["uuidServidor", "nombre", "red", "especificaciones"]
+  "required": ["uuidMaquina", "nombre", "red", "especificaciones"]
 }
 \end{lstlisting}
 
@@ -361,7 +361,7 @@ A continuación, se detallan las recursos del sistema, los recursos deben seguir
       "description": "Fecha de inicio del proyecto"
     },
     "fechaFin": {
-      "type": ["string", "null"],
+      "type": "string",
       "format": "date",
       "description": "Fecha de finalización (puede ser nula si está activo)"
     },
