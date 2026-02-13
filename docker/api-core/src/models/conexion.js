@@ -11,7 +11,7 @@ class BaseDeDatos {
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       host: process.env.DB_HOST,
-      port: process.env.DB_PORT_EXTERNAL,
+      port: process.env.DB_PORT_INTERNAL,
       database: process.env.DB_NAME,
       max: 20, // Máximo de conexiones simultáneas
       idleTimeoutMillis: 30000,
