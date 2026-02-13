@@ -39,6 +39,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     networks:
       - medalnetwork
+    env_file:
+      - .env
 
 # Servicio para las operaciones pesadas del monitoreo.
   medal-worker:
