@@ -47,10 +47,14 @@ export const postUser = async (req, res) => {
     }
 
     if (resultado.status === 'OK') {
-      return res.status(201).json({
-        message: "Usuario creado con éxito",
-        location: resultado.location 
-      });
+      return res
+        .status(201)
+        .location(`${process.env.API_DIRECTION}/users/${resultado.id}`) 
+        .json({
+          message: "Usuario creado con éxito",
+          id: resultado.id,
+          url: `${process.env.API_DIRECTION}/users/${resultado.id}` 
+        });
     } else {
       return res.status(500).json({ error: resultado.error });
     }
