@@ -5,13 +5,31 @@ import dotenv from 'dotenv';
 
 import userRoute from './routes/userRoute.js';
 import healthCheckRoute from './routes/healthCheckRoute.js'
+import swaggerJsdoc from 'swagger-jsdoc'; 
+import swaggerUi from 'swagger-ui-express';
 
 dotenv.config();
 
 const app = express();
 const PORT = 8080; 
 
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Medal',
+      version: '1.0.0',
+    },
+    servers: [{ url: `http://localhost:${PORT}` }],
+  },
+  apis: ['./routes/*.js'],
+};
+
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+
 // Middlewares 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use(cors());
 app.use(express.json()); 
 
@@ -27,5 +45,6 @@ app.use((err, req, res, next) => {
 
 
 app.listen(PORT, () => {
-    console.log(`API Medal corriendo en http://localhost:${PORT}`);
+  console.log(`API Medal corriendo en http://localhost:${PORT}`);
+  console.log(`Documentación disponible en http://localhost:${PORT}/api-docs`);
 });

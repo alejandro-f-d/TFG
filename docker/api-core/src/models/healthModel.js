@@ -1,4 +1,6 @@
-import BaseDeDatos from './conexion.js';
+// import BaseDeDatos from './conexion.js';
+import BaseDeDatos from '../bbdd/conexion.js'; // Tu configuración de conexión a la DB
+
 class HealthModel {
   static async checkDB() {
     try {
