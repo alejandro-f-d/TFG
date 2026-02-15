@@ -63,7 +63,7 @@ class UserModel {
       // CORRECCIÓN: Al ser static, se llama con 'this' o con el nombre de la clase
       await this.guardarBdd(datos, userId);
       
-      return { status: 'OK', id: userUuid };
+      return { status: 'OK', location: userUuid };
     } catch (error) {
       console.error("Error en DB postUserUpm:", error);
       return { status: 'ERR', error: error.message };
@@ -92,7 +92,7 @@ class UserModel {
       const userUuid = resCreateUser.rows[0].uuidusuario;
 
       await this.guardarBdd(datos, userId);
-      return { status: 'OK', id: userUuid };
+      return { status: 'OK', location: userUuid };
     } catch (error) {
       console.error("Error en DB postUser (Externo):", error);
       return { status: 'ERR', error: error.message };

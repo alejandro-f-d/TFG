@@ -38,7 +38,6 @@ export const postUser = async (req, res) => {
     const dominio = obtenerDominio(correoInstitucional).toLowerCase();
 
     if (dominio.includes("upm")) {
-      // Llamada pasando el objeto completo (más limpio)
       resultado = await UserModel.postUserUpm(req.body);
     } else {
       if (!contrasena) {
@@ -50,7 +49,7 @@ export const postUser = async (req, res) => {
     if (resultado.status === 'OK') {
       return res.status(201).json({
         message: "Usuario creado con éxito",
-        id: resultado.id 
+        location: resultado.location 
       });
     } else {
       return res.status(500).json({ error: resultado.error });

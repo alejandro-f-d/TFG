@@ -22,14 +22,23 @@ const swaggerOptions = {
     },
     servers: [{ url: `http://localhost:${PORT}` }],
   },
-  apis: ['./routes/*.js'],
+  apis: ['./src/routes/*.js'],
 };
 
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 // Middlewares 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocs, {
+    swaggerOptions: {
+      supportedSubmitMethods: [], // Desactiva Try it Out
+    },
+    explorer: false, 
+  })
+);
 app.use(cors());
 app.use(express.json()); 
 
