@@ -455,3 +455,23 @@ CREATE TABLE IF NOT EXISTS medal.puertosAbiertos(
       ON DELETE CASCADE
 );
 
+
+CREATE TABLE IF NOT EXISTS medal.puertas(
+  idPuerta SERIAL PRIMARY KEY,
+  nombre VARCHAR(250),
+  ubicacion VARCHAR(500)
+);
+
+CREATE TABLE IF NOT EXISTS medal.accede(
+  idUsuario INTEGER NOT NULL, 
+  idPuerta INTEGER NOT NULL,
+  PRIMARY KEY(idUsuario, idPuerta),
+  CONSTRAINT fk_usuario
+    FOREIGN KEY(idUsuario) 
+    REFERENCES medal.usuario(idUsuario)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_puerta 
+    FOREIGN KEY(idPuerta)
+    REFERENCES medal.puertas(idPuerta)
+    ON DELETE CASCADE
+);
