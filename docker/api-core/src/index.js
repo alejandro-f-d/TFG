@@ -11,7 +11,6 @@ import swaggerUi from 'swagger-ui-express';
 dotenv.config();
 
 const app = express();
-const PORT = 8080; 
 
 const swaggerOptions = {
   definition: {
@@ -20,7 +19,7 @@ const swaggerOptions = {
       title: 'API Medal',
       version: '1.0.0',
     },
-    servers: [{ url: `${process.env.API_DIRECTION}:${PORT}` }],
+    servers: [{ url: `${process.env.API_DIRECTION}` }],
   },
   apis: ['./src/routes/*.js'],
 };
@@ -54,7 +53,7 @@ app.use((err, req, res, next) => {
 
 
 app.listen(PORT, () => {
-  console.log(`API Medal corriendo en http://${process.env.API_DIRECTION}:${PORT}`);
-  console.log(`Documentación disponible en http://${process.env.API_DIRECTION}:${PORT}/api-docs`);
-  console.log(`HealthCheck de la aplicación disponible en http://${process.env.API_DIRECTION}:${PORT}/api/healthCheck`)
+  console.log(`API Medal corriendo en ${process.env.API_DIRECTION}`);
+  console.log(`Documentación disponible en ${process.env.API_DIRECTION}/api-docs`);
+  console.log(`HealthCheck de la aplicación disponible en ${process.env.API_DIRECTION}/api/healthCheck`)
 });
