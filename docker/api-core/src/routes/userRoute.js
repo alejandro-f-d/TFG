@@ -167,6 +167,12 @@ router.get("/", getUsers);
  *         schema:
  *           type: string
  *         description: UUID del usuario.
+ *       - name: darBaja 
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: boolean
+
  *     requestBody:
  *       required: true
  *       content:
