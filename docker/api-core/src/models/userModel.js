@@ -140,25 +140,30 @@ class UserModel {
   }
 
   static async patchUser(uuid, campos){
-    const keys = Object.keys(campos);
-    const values = Object.values(campos);
-    
-    // Construimos los marcadores: nombre = $1, activo = $2...
-    const setQuery = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
-    
-    // El UUID será el último parámetro ($3 en el ejemplo anterior)
-    values.push(uuid);
+    try {      
+      const keys = Object.keys(campos);
+      const values = Object.values(campos); 
+      const setQuery = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
+      values.push(uuid);
+      const patchUser = `
+          UPDATE medal.usuario 
+          SET ${setQuery} 
+          WHERE uuidusuario = $${values.length}
+      `;
+      return await pool.query(patchUser, values); 
+    } catch (error) {
+      console.error("Error al hacer el patch a un usuario.");
+      throw error;
+    }
+  }
 
-    // LA QUERY (Asegúrate de no meter 'values' aquí dentro con ${})
-    const sql = `
-        UPDATE medal.usuario 
-        SET ${setQuery} 
-        WHERE uuidusuario = $${values.length}
-    `;
-
-    // IMPORTANTE: pool.query recibe (string, array)
-    // El error suele estar aquí si haces pool.query(`${sql}`, `${values}`) <-- MAL
-    return await pool.query(sql, values); // <-- BIEN
+  static async darBaja(uuid){
+    const queryDarBaja =`UPDATE medal.usuario SET activo = false WHERE uuidusuario = $1;`;
+    try { 
+      return await pool.query(queryDarBaja, [uuid]); 
+    } catch (error) {
+      throw error; 
+    }
   }
 }
 

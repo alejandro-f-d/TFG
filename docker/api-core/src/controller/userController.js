@@ -121,6 +121,20 @@ export const patchUser = async (req, res) => {
   try {
     const { uuid } = req.params;
     const camposCambiados = req.body;
+    const darBaja = req.query.darBaja === 'true';
+    console.log(darBaja);
+    if(darBaja){
+      //Si está activo, solamente se pasa el usuario a que ya no está activo, el resto de campos se mantienen igual.
+      const resultado = await UserModel.darBaja(uuid);
+      if(resultado.rowCount === 0){
+        return res.status(404).json({ error: "Usuario al que se le quiere dar de baja no encontrado." });
+      }
+      return res.status(204).json({
+        message: "Usuario dado de baja de manera correcta."
+      });
+    }
+
+
     if (Object.keys(camposCambiados).length === 0) {
       return res.status(400).json({ error: "No se han enviado campos a actualizar." });
     }
