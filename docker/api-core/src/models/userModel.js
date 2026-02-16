@@ -170,15 +170,15 @@ class UserModel {
       const queryGetPasswordByCorreoInstitucional = `SELECT 
      u.contrasena, 
      u.uuidusuario, 
-     array_agg(p.idPermiso) AS permisos
- FROM 
-     medal.usuario u, 
-     medal.rolestiene r, medal.operacon p 
- WHERE 
-     u.idusuario = r.idusuario AND r.idrole = p.idrole
-     AND u.correoinstitucional = $1 
-     AND u.activo = true
- GROUP BY 
+     array_agg(perm.alias) AS permisos
+      FROM 
+          medal.usuario u, 
+          medal.rolestiene r, medal.operacon p, medal.permisos perm 
+      WHERE 
+          u.idusuario = r.idusuario AND r.idrole = p.idrole and p.idpermiso = perm.idpermiso
+          AND u.correoinstitucional = 'alejandro.fisac.contact@gmail.com' 
+          AND u.activo = true
+      GROUP BY 
      u.idusuario, u.contrasena, u.uuidusuario;`; // Si el usuario no es un usuario activo no puede entrar en la plataforma.
       const res = await pool.query(queryGetPasswordByCorreoInstitucional, [correoInstitucional]); 
       return res.rows[0];

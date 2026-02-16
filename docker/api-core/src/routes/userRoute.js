@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { postUser, getUserByUuid, getUsers, patchUser, login } from '../controller/userController.js' 
-import { verificarToken, tienePermiso } from '../middlewares/authMiddleware.js';
+import { verificarToken } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 // ESTE MÉTODO SIEMPRE ES PÚBLICO.
@@ -128,7 +128,7 @@ router.post('/login', login);
 
 // router.post("/", verificarToken, postUser);
 
-router.post("/", [verificarToken, tienePermiso(1)], postUser);
+router.post("/", verificarToken, postUser);
 
 /**
  * @swagger
@@ -156,7 +156,7 @@ router.post("/", [verificarToken, tienePermiso(1)], postUser);
  *         description: Error interno del servidor.
  */
 
-router.get("/:uuid", [verificarToken, tienePermiso(2)], getUserByUuid);
+router.get("/:uuid", getUserByUuid);
 
 
 
@@ -192,7 +192,7 @@ router.get("/:uuid", [verificarToken, tienePermiso(2)], getUserByUuid);
  */
 
 
-router.get("/", [verificarToken, tienePermiso(2)] , getUsers);
+router.get("/", getUsers);
 
 /**
  * @swagger
@@ -231,7 +231,7 @@ router.get("/", [verificarToken, tienePermiso(2)] , getUsers);
  *         description: Error interno del servidor.
  */
 
-router.patch('/:uuid', [verificarToken, tienePermiso(3)] , patchUser);
+router.patch('/:uuid', patchUser);
 
 
 export default router;

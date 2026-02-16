@@ -14,18 +14,30 @@ export const verificarToken = (req, res, next) => {
     return res.status(401).json({ error: "Token inválido o expirado." });
   }
 }
-export const tienePermiso = (permisoIdRequerido) => {
-    return (req, res, next) => {
-       const listaPermisos = req.user?.permisos;
-        if (!Array.isArray(listaPermisos)) {
-            console.error("ERROR: No se encontraron permisos en el token del usuario:", req.user?.id);
-            return res.status(403).json({ error: "El token no contiene permisos válidos." });
-        }
-        if (!listaPermisos.includes(permisoIdRequerido)) {
-            return res.status(403).json({ error: "No tienes autorización para realizar esta operación." });
-        }
 
-        next();
+export const tienePermiso = (accion, recurso, esDinamico = false) => {
+    return (req, res, next) => {
+        const listaPermisos = req.user?.permisos;
+        if (!Array.isArray(listaPermisos)) {
+            return res.status(403).json({ error: "Token sin permisos válidos." });
+        }
+        // Construcción del alias a comprobar.
+        let slugRequerido = `${accion}:${recurso}`;
+
+        // Si es dependiente del recurso como servidorverservicios se le añade el servidor.
+        if (esDinamico) {
+            const { id } = req.params;
+            if (!id) {
+                return res.status(400).json({ error: "Falta el ID del recurso para validar el permiso." });
+            }
+            slugRequerido += `:${id}`;
+        }
+        if (listaPermisos.includes(slugRequerido) || listaPermisos.includes('admin:total')) { // Creación del todopoderosisimo admin:total.
+            return next();
+        }
+        return res.status(403).json({ 
+            error: `No tienes el permiso necesario: ${slugRequerido}` 
+        });
     };
 };
 
