@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import { postUser, getUserByUuid, getUsers, patchUser } from '../controller/userController.js' 
+import { postUser, getUserByUuid, getUsers, patchUser, login } from '../controller/userController.js' 
 const router = express.Router();
 
 /**
@@ -192,5 +192,36 @@ router.get("/", getUsers);
  */
 
 router.patch('/:uuid', patchUser);
+
+/**
+  * @swagger
+  * /api/user/login:
+  *   post:
+  *     summary: Obtienes un token de dos horas de duración para interactuar con el sistema.
+  *     tags: [User]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               correoInstitucional:
+  *                 type: string
+  *                 example: alejandro.fisac.contact@gmail.com
+  *               contrasena:
+  *                 type: string
+  *                 example: password
+  *     responses:
+  *       200:
+  *         description: Devuelve el token de acceso debido a un login correcto.
+  *       401:
+  *         description: Error en la identificación.
+  *       500:
+  *         description: Error interno del servidor.
+*/
+
+
+router.post('/login', login);
 
 export default router;

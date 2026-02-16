@@ -1,5 +1,7 @@
 import UserModel from '../models/userModel.js';
+import bcrypt from 'bcrypt';
 import {v4 as uuidv4} from 'uuid';
+import jwt from 'jsonwebtoken';
 
 
 const verificarCorreo = (correo) => {
@@ -148,6 +150,37 @@ export const patchUser = async (req, res) => {
   } catch (error) {
     console.error("Error en el patchUser", error);
     return res.status(500).json({error: "Error en el servidor."});
+  }
+}
+
+export const login = async (req, res) => {
+  const { correoInstitucional, contrasena } = req.body;
+  try {
+    if(!contrasena){
+      return res.status(401).json({error: "Credenciales inválidas."});
+    }
+    const resBbdd = await UserModel.getPasswordByCorreoInstitucional(correoInstitucional);
+    const contrasenaHashGuardada = resBbdd.contrasena;
+    const esValidaContrasena = await bcrypt.compare(contrasena, contrasenaHashGuardada);
+    if(!esValidaContrasena){
+      return res.status(401).json({error: "Credenciales inválidas."});
+    }
+    const token = jwt.sign(
+      { 
+        id: resBbdd.uuidusuario, 
+        roles: resBbdd.roles 
+      },
+      process.env.JWT_SECRET, 
+      { expiresIn: '2h' }    
+    );
+    return res.status(200).json({
+      message: "Login Correcto.",
+      token: token,
+      roles: resBbdd.roles
+    });
+  } catch (error) {
+    console.error("Error en login:", error);
+    return res.status(500).json({ error: "Error interno del servidor." });
   }
 }
 
