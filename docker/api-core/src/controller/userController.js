@@ -74,6 +74,11 @@ export const getUserByUuid = async (req, res) => {
     }
     const resultado = await UserModel.getUserByUuid(uuid);
     const usuario = resultado.info.rows[0];
+    if(usuario == undefined){
+      return res.status(404).json({
+        message: "Usuario no encontrado."
+      });
+    }
     delete usuario.contrasena;
     return res.status(200).json({
       message: "Usuario encontrado con éxito.",

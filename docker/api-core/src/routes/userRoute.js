@@ -89,8 +89,33 @@ const router = express.Router();
 
 
 router.post("/", postUser);
+
+/**
+ * @swagger
+ * /api/user/{uuid}:
+ *   get:
+ *     summary: Obtienes un usuario por uuid.
+ *     tags: [User]
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID del usuario
+ *         example: 178529fe-3c6b-4a50-b318-9d9f01ae0054
+ *     responses:
+ *       200:
+ *         description: Información del usuario encontrada correctamente.
+ *       400:
+ *         description: Error en los datos enviados.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+
 router.get("/:uuid", getUserByUuid);
-
-
 
 export default router;
