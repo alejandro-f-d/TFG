@@ -68,7 +68,7 @@ export const postUser = async (req, res) => {
 
 export const getUserByUuid = async (req, res) => {
   try {
-     const { uuid } = req.params;
+    const { uuid } = req.params;
     if(!uuid){
       return res.status(400).json({ error: `Falta el uuid.`});
     }
@@ -90,3 +90,23 @@ export const getUserByUuid = async (req, res) => {
     return res.status(500).json({ error: "Error interno del servidor." });
   } 
 } 
+
+export const getUsers = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 2;
+    const resultado = await UserModel.getAllUsers(page, limit);
+    const usuariosBrutos = resultado.info.rows;
+    const usuariosLimpios = usuariosBrutos.map(usuario => {
+      const { contrasena, ...usuarioSinPassword } = usuario;
+      return usuarioSinPassword;
+    });
+    return res.status(200).json({
+      message: "Lista de usuarios devuelta correctamente.",
+      info: usuariosLimpios
+    });
+  } catch (error) {
+    console.error("Error en el getUsers", error);
+    return res.status(500).json({error: "Error interno del servidor."});
+  }
+}

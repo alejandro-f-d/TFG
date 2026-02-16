@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import { postUser, getUserByUuid } from '../controller/userController.js' 
+import { postUser, getUserByUuid, getUsers } from '../controller/userController.js' 
 const router = express.Router();
 
 /**
@@ -117,5 +117,12 @@ router.post("/", postUser);
  */
 
 router.get("/:uuid", getUserByUuid);
+
+
+
+router.get("/", getUsers);
+
+
+
 
 export default router;

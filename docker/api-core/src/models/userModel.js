@@ -108,6 +108,21 @@ class UserModel {
     }
 
   }
+
+  static async getAllUsers(page, limit){
+    const offset = (page - 1) * limit;
+    const queryGetAllUsers = `
+      SELECT * FROM medal.usuario 
+      ORDER BY idusuario ASC 
+      LIMIT $1 OFFSET $2;
+    `;
+    try {
+      const resGetAllUsers = await pool.query(queryGetAllUsers, [limit, offset]);
+      return { status: 'OK', info: resGetAllUsers};
+    } catch (error) {
+      return {status: 'ERR', error: error.message};
+    }
+  }
 }
 
 export default UserModel;
