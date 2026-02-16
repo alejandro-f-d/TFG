@@ -20,13 +20,13 @@ const obtenerDominio = (correo) => {
 export const postUser = async (req, res) => {
   try {
     const {
-      nombre, apellido1, apellido2, rol, correoInstitucional,
+      nombre, apellido1, apellido2, roles, correoInstitucional,
       usuarioVpn, gitlab, puertasAutorizadas, profesorResponsable,
       fechaIncorporacion, fechaFin, wifi, activo, tarjetaAcceso,
       contrasena, dirIpLastLogin, teams, jefeLaboratorio, duenoMaquina, esResponsable
     } = req.body;
 
-    if (!nombre || !apellido1 || !rol || !correoInstitucional || !fechaIncorporacion || activo === undefined) {
+    if (!nombre || !apellido1 || !roles || !correoInstitucional || !fechaIncorporacion || activo === undefined) {
       return res.status(400).json({ error: `Faltan parámetros obligatorios.` });
     }
 
@@ -37,6 +37,7 @@ export const postUser = async (req, res) => {
     let resultado;
     const dominio = obtenerDominio(correoInstitucional).toLowerCase();
 
+    // console.log(dominio);
     if (dominio.includes("upm")) {
       resultado = await UserModel.postUserUpm(req.body);
     } else {

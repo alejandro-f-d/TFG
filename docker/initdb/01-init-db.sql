@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS medal.usuario (
   tarjetaAcceso VARCHAR(20), 
   dirIpLastLogin VARCHAR(39),
   uuidUsuario UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(), 
-  contrasena VARCHAR(1000) NOT NULL,
+  contrasena VARCHAR(1000),
   gitlab VARCHAR(50) UNIQUE, 
   responsable INTEGER,
   jefeLaboratorio BOOLEAN DEFAULT false,
