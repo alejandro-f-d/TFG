@@ -94,16 +94,17 @@ export const getUserByUuid = async (req, res) => {
 export const getUsers = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 2;
-    const resultado = await UserModel.getAllUsers(page, limit);
-    const usuariosBrutos = resultado.info.rows;
-    const usuariosLimpios = usuariosBrutos.map(usuario => {
-      const { contrasena, ...usuarioSinPassword } = usuario;
-      return usuarioSinPassword;
+    const limit = parseInt(req.query.limit) || 5;
+    const filtroNombre = req.query.filtroNombre || "";
+    const resultado = await UserModel.getAllUsers(page, limit, filtroNombre);
+    const usuariosLimpios = resultado.rows.map(usuario => {
+      const { contrasena, ...sinPass } = usuario;
+      return sinPass;
     });
     return res.status(200).json({
       message: "Lista de usuarios devuelta correctamente.",
-      info: usuariosLimpios
+      info: usuariosLimpios,
+      pagination: resultado.pagination
     });
   } catch (error) {
     console.error("Error en el getUsers", error);

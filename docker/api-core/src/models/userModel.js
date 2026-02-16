@@ -109,18 +109,32 @@ class UserModel {
 
   }
 
-  static async getAllUsers(page, limit){
+static async getAllUsers(page, limit, filtroNombre) {
     const offset = (page - 1) * limit;
-    const queryGetAllUsers = `
+    const busqueda = `%${filtroNombre}%`;
+    const query = `
       SELECT * FROM medal.usuario 
+      WHERE nombre ILIKE $3
       ORDER BY idusuario ASC 
       LIMIT $1 OFFSET $2;
-    `;
+    `; // Se usa ILIKE para que no sea caseSensitive.
+
     try {
-      const resGetAllUsers = await pool.query(queryGetAllUsers, [limit, offset]);
-      return { status: 'OK', info: resGetAllUsers};
+        const res = await pool.query(query, [limit, offset, busqueda]); 
+        const countQuery = `SELECT COUNT(*) FROM medal.usuario WHERE nombre ILIKE $1`;
+        const countRes = await pool.query(countQuery, [busqueda]);
+        const totalItems = parseInt(countRes.rows[0].count);
+        return { 
+            status: 'OK', 
+            rows: res.rows,
+            pagination: {
+                totalItems,
+                totalPages: Math.ceil(totalItems / limit),
+                currentPage: page
+            }
+        };
     } catch (error) {
-      return {status: 'ERR', error: error.message};
+        throw error;
     }
   }
 }
