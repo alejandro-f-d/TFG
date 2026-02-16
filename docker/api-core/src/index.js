@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 
 
 import userRoute from './routes/userRoute.js';
-import healthCheckRoute from './routes/healthCheckRoute.js'
+import healthCheckRoute from './routes/healthCheckRoute.js';
+import permisosRoute from './routes/permisosRoute.js';
 import swaggerJsdoc from 'swagger-jsdoc'; 
 import swaggerUi from 'swagger-ui-express';
 
@@ -44,6 +45,7 @@ app.use(express.json());
 // Endpoints
 app.use('/api/user', userRoute);
 app.use('/api/healthcheck', healthCheckRoute);
+app.use('/api/permisos', permisosRoute); // Para poder hacer un get de todos los permisos y poder mostrarlos en pantalla.
 
 // Errores interno 500
 app.use((err, req, res, next) => {
