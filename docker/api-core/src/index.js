@@ -43,8 +43,8 @@ app.use(cors());
 app.use(express.json()); 
 
 // Endpoints
-app.use('/user', userRoute);
-app.use('/healthcheck', healthCheckRoute);
+app.use('/api/user', userRoute);
+app.use('/api/healthcheck', healthCheckRoute);
 
 // Errores interno 500
 app.use((err, req, res, next) => {

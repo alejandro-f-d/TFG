@@ -5,7 +5,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /user:
+ * /api/user:
  *   post:
  *     summary: Creación de un usuario con sus datos asociados.
  *     description: Crea un usuario en el sistema con toda la información proporcionada y retorna la URI del recurso creado.

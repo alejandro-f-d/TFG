@@ -7,7 +7,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /healthCheck:
+ * /api/healthCheck:
  *   get:
  *     summary: Verificación del estado del servicio.
  *     description: Retorna el estado del servicio, la base de datos, el uptime y un timestamp del sistema.
