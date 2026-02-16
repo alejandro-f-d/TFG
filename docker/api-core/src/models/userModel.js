@@ -130,7 +130,8 @@ static async getAllUsers(page, limit, filtroNombre) {
             pagination: {
                 totalItems,
                 totalPages: Math.ceil(totalItems / limit),
-                currentPage: page
+                currentPage: page,
+                totalItems: totalItems
             }
         };
     } catch (error) {

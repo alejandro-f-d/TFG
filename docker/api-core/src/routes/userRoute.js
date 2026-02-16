@@ -120,6 +120,38 @@ router.get("/:uuid", getUserByUuid);
 
 
 
+/**
+ * @swagger
+ * /api/user/:
+ *   get:
+ *     summary: Obtienes la lista de todos los usuarios.
+ *     tags: [User]
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *       - name: filtroNombre
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Información de los usuarios encontrada correctamente.
+ *       404:
+ *         description: Usuario no encontrado con esa información.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+
+
 router.get("/", getUsers);
 
 

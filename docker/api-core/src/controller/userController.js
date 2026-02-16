@@ -97,6 +97,11 @@ export const getUsers = async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const filtroNombre = req.query.filtroNombre || "";
     const resultado = await UserModel.getAllUsers(page, limit, filtroNombre);
+    if (resultado.totalItems === 0) {
+      return res.status(404).json({
+        message: `No se han encontrado usuarios que coincidan con: ${filtroNombre}`
+      });
+    }
     const usuariosLimpios = resultado.rows.map(usuario => {
       const { contrasena, ...sinPass } = usuario;
       return sinPass;
