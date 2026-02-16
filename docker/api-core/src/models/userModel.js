@@ -109,34 +109,56 @@ class UserModel {
 
   }
 
-static async getAllUsers(page, limit, filtroNombre) {
-    const offset = (page - 1) * limit;
-    const busqueda = `%${filtroNombre}%`;
-    const query = `
-      SELECT * FROM medal.usuario 
-      WHERE nombre ILIKE $3
-      ORDER BY idusuario ASC 
-      LIMIT $1 OFFSET $2;
-    `; // Se usa ILIKE para que no sea caseSensitive.
+  static async getAllUsers(page, limit, filtroNombre) {
+      const offset = (page - 1) * limit;
+      const busqueda = `%${filtroNombre}%`;
+      const query = `
+        SELECT * FROM medal.usuario 
+        WHERE nombre ILIKE $3
+        ORDER BY idusuario ASC 
+        LIMIT $1 OFFSET $2;
+      `; // Se usa ILIKE para que no sea caseSensitive.
 
-    try {
-        const res = await pool.query(query, [limit, offset, busqueda]); 
-        const countQuery = `SELECT COUNT(*) FROM medal.usuario WHERE nombre ILIKE $1`;
-        const countRes = await pool.query(countQuery, [busqueda]);
-        const totalItems = parseInt(countRes.rows[0].count);
-        return { 
-            status: 'OK', 
-            rows: res.rows,
-            pagination: {
-                totalItems,
-                totalPages: Math.ceil(totalItems / limit),
-                currentPage: page,
-                totalItems: totalItems
-            }
-        };
-    } catch (error) {
-        throw error;
-    }
+      try {
+          const res = await pool.query(query, [limit, offset, busqueda]); 
+          const countQuery = `SELECT COUNT(*) FROM medal.usuario WHERE nombre ILIKE $1`;
+          const countRes = await pool.query(countQuery, [busqueda]);
+          const totalItems = parseInt(countRes.rows[0].count);
+          return { 
+              status: 'OK', 
+              rows: res.rows,
+              pagination: {
+                  totalItems,
+                  totalPages: Math.ceil(totalItems / limit),
+                  currentPage: page,
+                  totalItems: totalItems
+              }
+          };
+      } catch (error) {
+          throw error;
+      }
+  }
+
+  static async patchUser(uuid, campos){
+    const keys = Object.keys(campos);
+    const values = Object.values(campos);
+    
+    // Construimos los marcadores: nombre = $1, activo = $2...
+    const setQuery = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
+    
+    // El UUID será el último parámetro ($3 en el ejemplo anterior)
+    values.push(uuid);
+
+    // LA QUERY (Asegúrate de no meter 'values' aquí dentro con ${})
+    const sql = `
+        UPDATE medal.usuario 
+        SET ${setQuery} 
+        WHERE uuidusuario = $${values.length}
+    `;
+
+    // IMPORTANTE: pool.query recibe (string, array)
+    // El error suele estar aquí si haces pool.query(`${sql}`, `${values}`) <-- MAL
+    return await pool.query(sql, values); // <-- BIEN
   }
 }
 

@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import { postUser, getUserByUuid, getUsers } from '../controller/userController.js' 
+import { postUser, getUserByUuid, getUsers, patchUser } from '../controller/userController.js' 
 const router = express.Router();
 
 /**
@@ -154,7 +154,37 @@ router.get("/:uuid", getUserByUuid);
 
 router.get("/", getUsers);
 
+/**
+ * @swagger
+ * /api/user/{uuid}:
+ *   patch:
+ *     summary: Actualiza parcialmente un usuario.
+ *     tags: [User]
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID del usuario.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             example:
+ *               nombre: "Alejandro Modificado"
+ *               activo: false
+ *     responses:
+ *       200:
+ *         description: Actualizado con éxito.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
 
-
+router.patch('/:uuid', patchUser);
 
 export default router;

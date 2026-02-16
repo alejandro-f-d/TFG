@@ -50,7 +50,7 @@ export const postUser = async (req, res) => {
     if (resultado.status === 'OK') {
       return res
         .status(201)
-        .location(`${process.env.API_DIRECTION}/users/${resultado.id}`) 
+        .location(`${process.env.API_DIRECTION}/api/users/${resultado.id}`) 
         .json({
           message: "Usuario creado con éxito",
           id: resultado.id,
@@ -116,3 +116,25 @@ export const getUsers = async (req, res) => {
     return res.status(500).json({error: "Error interno del servidor."});
   }
 }
+
+export const patchUser = async (req, res) => {
+  try {
+    const { uuid } = req.params;
+    const camposCambiados = req.body;
+    if (Object.keys(camposCambiados).length === 0) {
+      return res.status(400).json({ error: "No se han enviado campos a actualizar." });
+    }
+    const resultado = await UserModel.patchUser(uuid, camposCambiados);
+    if (resultado.rowCount === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+    return res.status(204).json({
+      message: "Usuario actualizado."
+    });
+  } catch (error) {
+    console.error("Error en el patchUser", error);
+    return res.status(500).json({error: "Error en el servidor."});
+  }
+}
+
+
