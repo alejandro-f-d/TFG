@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS medal.usuario (
   apellido2 VARCHAR(50), 
   teams BOOLEAN DEFAULT FALSE,
   esResponsable BOOLEAN DEFAULT FALSE,
-  usuarioVPN VARCHAR(50),  
+  usuarioVPN VARCHAR(50) UNIQUE,  
   correoInstitucional VARCHAR(100) NOT NULL UNIQUE 
     CONSTRAINT check_correo CHECK (correoInstitucional LIKE '%@%'), 
     

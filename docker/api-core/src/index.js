@@ -52,7 +52,7 @@ app.use((err, req, res, next) => {
 });
 
 
-app.listen(PORT, () => {
+app.listen(process.env.PORT, () => {
   console.log(`API Medal corriendo en ${process.env.API_DIRECTION}`);
   console.log(`Documentación disponible en ${process.env.API_DIRECTION}/api-docs`);
   console.log(`HealthCheck de la aplicación disponible en ${process.env.API_DIRECTION}/api/healthCheck`)
