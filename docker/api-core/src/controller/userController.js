@@ -52,11 +52,11 @@ export const postUser = async (req, res) => {
     if (resultado.status === 'OK') {
       return res
         .status(201)
-        .location(`${process.env.API_DIRECTION}/api/users/${resultado.id}`) 
+        .location(`${process.env.API_DIRECTION}/api/user/${resultado.id}`) 
         .json({
           message: "Usuario creado con éxito",
           id: resultado.id,
-          url: `${process.env.API_DIRECTION}/users/${resultado.id}` 
+          url: `${process.env.API_DIRECTION}/api/user/${resultado.id}` 
         });
     } else {
       return res.status(500).json({ error: resultado.error });
@@ -168,7 +168,7 @@ export const login = async (req, res) => {
     const token = jwt.sign(
       { 
         id: resBbdd.uuidusuario, 
-        roles: resBbdd.roles 
+        permisos: resBbdd.permisos || []
       },
       process.env.JWT_SECRET, 
       { expiresIn: '2h' }    
@@ -176,7 +176,7 @@ export const login = async (req, res) => {
     return res.status(200).json({
       message: "Login Correcto.",
       token: token,
-      roles: resBbdd.roles
+      permisos: resBbdd.permisos
     });
   } catch (error) {
     console.error("Error en login:", error);

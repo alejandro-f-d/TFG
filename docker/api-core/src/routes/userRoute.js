@@ -1,7 +1,44 @@
 import express from "express";
 import dotenv from "dotenv";
 import { postUser, getUserByUuid, getUsers, patchUser, login } from '../controller/userController.js' 
+import { verificarToken, tienePermiso } from '../middlewares/authMiddleware.js';
 const router = express.Router();
+
+// ESTE MÉTODO SIEMPRE ES PÚBLICO.
+/**
+  * @swagger
+  * /api/user/login:
+  *   post:
+  *     summary: Obtienes un token de dos horas de duración para interactuar con el sistema.
+  *     tags: [User]
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               correoInstitucional:
+  *                 type: string
+  *                 example: alejandro.fisac.contact@gmail.com
+  *               contrasena:
+  *                 type: string
+  *                 example: password
+  *     responses:
+  *       200:
+  *         description: Devuelve el token de acceso debido a un login correcto.
+  *       401:
+  *         description: Error en la identificación.
+  *       500:
+  *         description: Error interno del servidor.
+*/
+
+
+router.post('/login', login);
+
+
+
+
 
 /**
  * @swagger
@@ -87,8 +124,11 @@ const router = express.Router();
  *         description: Error interno del servidor.
  */
 
+// router.post("/", postUser); Esta sería la petición normal sin verificar el token.
 
-router.post("/", postUser);
+// router.post("/", verificarToken, postUser);
+
+router.post("/", [verificarToken, tienePermiso(1)], postUser);
 
 /**
  * @swagger
@@ -116,7 +156,7 @@ router.post("/", postUser);
  *         description: Error interno del servidor.
  */
 
-router.get("/:uuid", getUserByUuid);
+router.get("/:uuid", [verificarToken, tienePermiso(2)], getUserByUuid);
 
 
 
@@ -152,7 +192,7 @@ router.get("/:uuid", getUserByUuid);
  */
 
 
-router.get("/", getUsers);
+router.get("/", [verificarToken, tienePermiso(2)] , getUsers);
 
 /**
  * @swagger
@@ -191,37 +231,7 @@ router.get("/", getUsers);
  *         description: Error interno del servidor.
  */
 
-router.patch('/:uuid', patchUser);
+router.patch('/:uuid', [verificarToken, tienePermiso(3)] , patchUser);
 
-/**
-  * @swagger
-  * /api/user/login:
-  *   post:
-  *     summary: Obtienes un token de dos horas de duración para interactuar con el sistema.
-  *     tags: [User]
-  *     requestBody:
-  *       required: true
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             properties:
-  *               correoInstitucional:
-  *                 type: string
-  *                 example: alejandro.fisac.contact@gmail.com
-  *               contrasena:
-  *                 type: string
-  *                 example: password
-  *     responses:
-  *       200:
-  *         description: Devuelve el token de acceso debido a un login correcto.
-  *       401:
-  *         description: Error en la identificación.
-  *       500:
-  *         description: Error interno del servidor.
-*/
-
-
-router.post('/login', login);
 
 export default router;
