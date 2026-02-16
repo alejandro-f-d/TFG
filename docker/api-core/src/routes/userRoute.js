@@ -1,16 +1,14 @@
 import express from "express";
 import dotenv from "dotenv";
-import { postUser } from '../controller/userController.js' 
+import { postUser, getUserByUuid } from '../controller/userController.js' 
 const router = express.Router();
 
 /**
  * @swagger
  * /api/user:
  *   post:
- *     summary: Creación de un usuario con sus datos asociados.
- *     description: Crea un usuario en el sistema con toda la información proporcionada y retorna la URI del recurso creado.
- *     tags:
- *       - User
+ *     summary: Crear un nuevo usuario
+ *     tags: [User]
  *     requestBody:
  *       required: true
  *       content:
@@ -20,87 +18,79 @@ const router = express.Router();
  *             properties:
  *               nombre:
  *                 type: string
- *                 example: "Alejandro"
+ *                 example: Alejandro
  *               apellido1:
  *                 type: string
- *                 example: "Fisac"
+ *                 example: Fisac
  *               apellido2:
  *                 type: string
- *                 nullable: true
- *                 example: "Delgado"
- *               teams:
- *                 type: boolean
- *                 example: true
- *               esResponsable:
- *                 type: boolean
- *                 example: false
- *               usuarioVpn:
- *                 type: string
- *                 nullable: true
- *                 example: "afisac"
+ *                 example: Delgado
  *               correoInstitucional:
  *                 type: string
- *                 format: email
- *                 example: "alejandro.fisac@alumnos.upm.es"
- *               activo:
- *                 type: boolean
- *                 example: true
+ *                 example: alejandro.fisac@alumnos.upm.es
+ *               usuarioVpn:
+ *                 type: string
+ *                 example: afisac
+ *               gitlab:
+ *                 type: string
+ *                 example: afisac
+ *               profesorResponsable:
+ *                 type: integer
+ *                 example: 1
  *               fechaIncorporacion:
  *                 type: string
  *                 format: date
- *                 example: "2024-02-12"
+ *                 example: 2026-02-16
  *               fechaFin:
  *                 type: string
  *                 format: date
- *                 nullable: true
- *                 example: null
+ *                 example: 2027-02-16
  *               wifi:
+ *                 type: boolean
+ *                 example: true
+ *               activo:
  *                 type: boolean
  *                 example: true
  *               tarjetaAcceso:
  *                 type: string
- *                 nullable: true
- *                 example: "TA-93284"
- *               gitlab:
- *                 type: string
- *                 nullable: true
- *                 example: "afisac"
- *               profesorResponsable:
- *                 type: string
- *                 nullable: true
- *                 example: "Ernestina Menasalvas"
+ *                 example: A-88923
+ *               teams:
+ *                 type: boolean
+ *                 example: true
  *               jefeLaboratorio:
  *                 type: boolean
  *                 example: false
- *               password:
- *                 type: string
- *                 description: Contraseña en texto plano (será hasheada por el backend).
- *                 example: "MiContraseñaSegura123"
- *             required:
- *               - nombre
- *               - apellido1
- *               - correoInstitucional
- *               - activo
- *               - fechaIncorporacion
- *               - password
+ *               esResponsable:
+ *                 type: boolean
+ *                 example: false
+ *               roles:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 example: [2]
+ *               puertasAutorizadas:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 example: [1]
+ *               duenoMaquina:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 example: [1, 2]
  *     responses:
  *       201:
- *         description: Usuario creado exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 location:
- *                   type: string
- *                   format: uuid
- *                   example: "f317fd34-5342-498b-b383-0cdab8d1ff8a"
+ *         description: Usuario creado correctamente
+ *       400:
+ *         description: Error en los datos enviados
  *       500:
  *         description: Error interno del servidor.
  */
 
 
 router.post("/", postUser);
+router.get("/:uuid", getUserByUuid);
+
 
 
 export default router;

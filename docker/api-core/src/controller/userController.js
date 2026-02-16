@@ -62,6 +62,26 @@ export const postUser = async (req, res) => {
 
   } catch (error) {
     console.error("Error en postUser Controller:", error);
-    return res.status(500).json({ error: "Error interno del servidor" });
+    return res.status(500).json({ error: "Error interno del servidor." });
   }
 };
+
+export const getUserByUuid = async (req, res) => {
+  try {
+     const { uuid } = req.params;
+    if(!uuid){
+      return res.status(400).json({ error: `Falta el uuid.`});
+    }
+    const resultado = await UserModel.getUserByUuid(uuid);
+    const usuario = resultado.info.rows[0];
+    delete usuario.contrasena;
+    return res.status(200).json({
+      message: "Usuario encontrado con éxito.",
+      info: usuario
+    });
+
+  } catch (error) {
+    console.error("Error en el getUserByUuid", error);
+    return res.status(500).json({ error: "Error interno del servidor." });
+  } 
+} 

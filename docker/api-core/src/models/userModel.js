@@ -4,7 +4,6 @@ import bcrypt from 'bcrypt';
 
 class UserModel {
   
-  // Agregamos static para poder llamarlo desde otros métodos static
   static async guardarBdd(datos, userId) {
     // --- 1. ROLES ---
     if (Array.isArray(datos.roles)) {
@@ -60,7 +59,6 @@ class UserModel {
       const userId = resCreateUser.rows[0].idusuario;
       const userUuid = resCreateUser.rows[0].uuidusuario;
 
-      // CORRECCIÓN: Al ser static, se llama con 'this' o con el nombre de la clase
       await this.guardarBdd(datos, userId);
       
       return { status: 'OK', id: userUuid };
@@ -86,7 +84,6 @@ class UserModel {
     ];
 
     try {
-      // CORRECCIÓN: Definir resCreateUser dentro del bloque
       const resCreateUser = await pool.query(queryUser, valoresQuery1);
       const userId = resCreateUser.rows[0].idusuario;
       const userUuid = resCreateUser.rows[0].uuidusuario;
@@ -97,6 +94,19 @@ class UserModel {
       console.error("Error en DB postUser (Externo):", error);
       return { status: 'ERR', error: error.message };
     }
+  }
+
+  static async getUserByUuid(uuid){
+    const queryGetUserByUuid = `SELECT * FROM medal.usuario WHERE uuidusuario = $1;`;
+    try {
+      const values = [uuid];
+      const resGetUserByUuid = await pool.query(queryGetUserByUuid, values);
+      return { status: 'OK', info: resGetUserByUuid };
+    } catch (error) {
+      console.error("Error al hacer un get de usuario por uuid: ", error);
+      return { status: 'ERR', error: error.message };
+    }
+
   }
 }
 
