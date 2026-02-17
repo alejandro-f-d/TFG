@@ -12,6 +12,7 @@ import swaggerUi from 'swagger-ui-express';
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', true); // Al venir de un docker es necesario para poder extraer la ip de la que se realiza la petición. 
 
 const swaggerOptions = {
   definition: {

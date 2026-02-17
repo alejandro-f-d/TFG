@@ -155,14 +155,23 @@ export const patchUser = async (req, res) => {
 
 export const login = async (req, res) => {
   const { correoInstitucional, contrasena } = req.body;
+  if(!correoInstitucional){
+    return res.status(400).json({error: "Error con los parámetros proporcionados en la petición."});
+  }
   try {
+    // Log de inicio de sesión.
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress; 
     if(!contrasena){
+      // login no exitoso.
+      const resLogLogin = await UserModel.intentoInicioSesion(ip, correoInstitucional, false); 
       return res.status(401).json({error: "Credenciales inválidas."});
     }
     const resBbdd = await UserModel.getPasswordByCorreoInstitucional(correoInstitucional);
     const contrasenaHashGuardada = resBbdd.contrasena;
     const esValidaContrasena = await bcrypt.compare(contrasena, contrasenaHashGuardada);
     if(!esValidaContrasena){
+      // login no exitoso. 
+      const resLogLogin = await UserModel.intentoInicioSesion(ip, correoInstitucional, false); 
       return res.status(401).json({error: "Credenciales inválidas."});
     }
     const token = jwt.sign(
@@ -173,6 +182,8 @@ export const login = async (req, res) => {
       process.env.JWT_SECRET, 
       { expiresIn: '2h' }    
     );
+    // login exitoso.
+    const resLogLogin = await UserModel.intentoInicioSesion(ip, correoInstitucional, true); 
     return res.status(200).json({
       message: "Login Correcto.",
       token: token,

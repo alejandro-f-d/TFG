@@ -186,6 +186,15 @@ class UserModel {
       throw error;
     }
   }
+  static async intentoInicioSesion(ip, correoInstitucional, exitoso){
+    const queryIntentoLogin = `INSERT INTO medal.intentosLogin(iporigen, emailintentado, exitoso) values($1, $2, $3);`;
+    try {
+      await pool.query(queryIntentoLogin, [ip, correoInstitucional, exitoso]);
+      return {status: "Ok"};
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default UserModel;
