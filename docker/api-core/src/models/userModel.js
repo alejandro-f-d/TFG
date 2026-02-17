@@ -139,21 +139,69 @@ class UserModel {
       }
   }
 
-  static async patchUser(uuid, campos){
-    try {      
-      const keys = Object.keys(campos);
-      const values = Object.values(campos); 
-      const setQuery = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
-      values.push(uuid);
-      const patchUser = `
-          UPDATE medal.usuario 
-          SET ${setQuery} 
-          WHERE uuidusuario = $${values.length}
-      `;
-      return await pool.query(patchUser, values); 
+  static async patchUser(uuid, campos) {
+    const client = await pool.connect(); 
+    try {
+      await client.query('BEGIN');
+
+      const { roles, puertasAutorizadas, duenoMaquina, ...camposUsuario } = campos;
+
+      let idUsuarioReal; // ID para tablas intermedias.
+      
+      const keys = Object.keys(camposUsuario);
+      if (keys.length > 0) {
+        const values = Object.values(camposUsuario);
+        const setQuery = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
+        values.push(uuid);
+        
+        const res = await client.query(
+          `UPDATE medal.usuario SET ${setQuery} WHERE uuidusuario = $${values.length} RETURNING idusuario`,
+          values
+        );
+        idUsuarioReal = res.rows[0]?.idusuario;
+      } else {
+        const res = await client.query('SELECT idusuario FROM medal.usuario WHERE uuidusuario = $1', [uuid]);
+        idUsuarioReal = res.rows[0]?.idusuario;
+      }
+
+      if (!idUsuarioReal) throw new Error("Usuario no encontrado");      
+      // --- Roles ---
+      if (roles !== undefined) {
+        await client.query('DELETE FROM medal.rolestiene WHERE idusuario = $1', [idUsuarioReal]);
+        if (Array.isArray(roles)) {
+          for (const rolId of roles) {
+            await client.query('INSERT INTO medal.rolestiene(idrole, idusuario) VALUES($1, $2)', [rolId, idUsuarioReal]);
+          }
+        }
+      }
+
+      // --- Puertas ---
+      if (puertasAutorizadas !== undefined) {
+        await client.query('DELETE FROM medal.accede WHERE idusuario = $1', [idUsuarioReal]);
+        if (Array.isArray(puertasAutorizadas)) {
+          for (const pId of puertasAutorizadas) {
+            await client.query('INSERT INTO medal.accede(idusuario, idpuerta) VALUES($1, $2)', [idUsuarioReal, pId]);
+          }
+        }
+      }
+
+      // --- Máquinas ---
+      if (duenoMaquina !== undefined) {
+        await client.query('DELETE FROM medal.propietario WHERE idusuario = $1', [idUsuarioReal]);
+        if (Array.isArray(duenoMaquina)) {
+          for (const mId of duenoMaquina) {
+            await client.query('INSERT INTO medal.propietario(idusuario, idmaquina) VALUES($1, $2)', [idUsuarioReal, mId]);
+          }
+        }
+      }
+      await client.query('COMMIT');
+      return { status: 'OK' };
     } catch (error) {
-      console.error("Error al hacer el patch a un usuario.");
+      await client.query('ROLLBACK');
+      console.error("Error en patchUser:", error.message);
       throw error;
+    } finally {
+      client.release();
     }
   }
 

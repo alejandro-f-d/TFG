@@ -52,7 +52,7 @@ export const postUser = async (req, res) => {
     if (resultado.status === 'OK') {
       return res
         .status(201)
-        .location(`${process.env.API_DIRECTION}/api/user/${resultado.id}`) 
+        .location(`/api/user/${resultado.id}`) 
         .json({
           message: "Usuario creado con éxito",
           id: resultado.id,

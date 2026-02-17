@@ -34,6 +34,10 @@ class BaseDeDatos {
       console.log('Pool de conexiones cerrado');
     }
   }
+  static async connect() {
+    const pool = this.establecerConexion();
+    return pool.connect(); 
+  }
 }
 
 export default BaseDeDatos;

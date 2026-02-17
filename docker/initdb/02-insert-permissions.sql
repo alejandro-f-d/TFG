@@ -35,11 +35,9 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('usr:getUs
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('usr:editUsuario', 'Edición de usuario.', 'Permite al usuario que lo posee el patch del usuario o establecerlo como inactivo.', 'usuario');
 
--- perm:listarPermisos
-
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('perm:listarPermisos', 'Listar permisos.', 'Permite el listado de permisos al usuario que lo posee.', 'permisos');
 
-
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('maq:postMaquina', 'Creación de una nueva máquina.', 'Permite al usuario la creación de una nueva máquina.', 'maquina');
 
 
 -- ====================================
