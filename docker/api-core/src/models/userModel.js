@@ -176,7 +176,7 @@ class UserModel {
           medal.rolestiene r, medal.operacon p, medal.permisos perm 
       WHERE 
           u.idusuario = r.idusuario AND r.idrole = p.idrole and p.idpermiso = perm.idpermiso
-          AND u.correoinstitucional = 'alejandro.fisac.contact@gmail.com' 
+          AND u.correoinstitucional = $1 
           AND u.activo = true
       GROUP BY 
      u.idusuario, u.contrasena, u.uuidusuario;`; // Si el usuario no es un usuario activo no puede entrar en la plataforma.

@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS medal.permisos(
   alias VARCHAR(50) NOT NULL UNIQUE,
   nombre VARCHAR(100) NOT NULL,
   descripcion VARCHAR(500),
-  modulo VARCHAR(30) NOT NULL, 
+  modulo VARCHAR(30) NOT NULL 
   -- uuidPermiso UUID NOT NULL UNIQUE DEFAULT gen_random_uuid()
 );
 

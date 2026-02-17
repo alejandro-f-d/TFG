@@ -1,16 +1,16 @@
--- =========================
--- 1. USUARIOS
--- =========================
-INSERT INTO medal.usuario 
-(nombre, apellido1, apellido2, teams, esResponsable, usuarioVPN, correoInstitucional, activo, wifi, tarjetaAcceso, dirIpLastLogin, contrasena, gitlab, jefeLaboratorio)
-VALUES
-('Carlos','Admin','Root',true,true,'cadmin','carlos.admin@medal.com',true,true,'TARJ001','10.0.0.10','hash1','cadmin',true),
-('Ana','Lopez','Perez',false,false,'alopez','ana.lopez@medal.com',true,true,'TARJ002','10.0.0.11','hash2','alopez',false),
-('Luis','Martinez','Sanchez',true,false,'lmartinez','luis.martinez@medal.com',true,false,'TARJ003','10.0.0.12','hash3','lmartinez',false);
-
--- Asignar responsable
-UPDATE medal.usuario SET responsable = 1 WHERE idUsuario IN (2,3);
-
+-- -- =========================
+-- -- 1. USUARIOS
+-- -- =========================
+-- INSERT INTO medal.usuario 
+-- (nombre, apellido1, apellido2, teams, esResponsable, usuarioVPN, correoInstitucional, activo, wifi, tarjetaAcceso, dirIpLastLogin, contrasena, gitlab, jefeLaboratorio)
+-- VALUES
+-- ('Carlos','Admin','Root',true,true,'cadmin','carlos.admin@medal.com',true,true,'TARJ001','10.0.0.10','hash1','cadmin',true),
+-- ('Ana','Lopez','Perez',false,false,'alopez','ana.lopez@medal.com',true,true,'TARJ002','10.0.0.11','hash2','alopez',false),
+-- ('Luis','Martinez','Sanchez',true,false,'lmartinez','luis.martinez@medal.com',true,false,'TARJ003','10.0.0.12','hash3','lmartinez',false);
+--
+-- -- Asignar responsable
+-- UPDATE medal.usuario SET responsable = 1 WHERE idUsuario IN (2,3);
+--
 
 -- =========================
 -- 2. MAQUINAS
@@ -56,28 +56,28 @@ INSERT INTO medal.participa VALUES
 (1,1);
 
 
--- =========================
--- 6. ROLES Y PERMISOS
--- =========================
-INSERT INTO medal.roles(nombre,idUsuario)
-VALUES
-('ADMIN',1),
-('DEVOPS',1);
-
-INSERT INTO medal.rolesTiene VALUES
-(1,1),
-(2,2);
-
-INSERT INTO medal.permisos(alias,nombre,descripcion,modulo)
-VALUES
-('USR_READ','Leer usuarios','Permite leer usuarios','USUARIOS'),
-('USR_WRITE','Modificar usuarios','Permite modificar usuarios','USUARIOS');
-
-INSERT INTO medal.operaCon VALUES
-(1,1),
-(1,2),
-(2,1);
-
+-- -- =========================
+-- -- 6. ROLES Y PERMISOS
+-- -- =========================
+-- INSERT INTO medal.roles(nombre,idUsuario)
+-- VALUES
+-- ('ADMIN',1),
+-- ('DEVOPS',1);
+--
+-- INSERT INTO medal.rolesTiene VALUES
+-- (1,1),
+-- (2,2);
+--
+-- INSERT INTO medal.permisos(alias,nombre,descripcion,modulo)
+-- VALUES
+-- ('USR_READ','Leer usuarios','Permite leer usuarios','USUARIOS'),
+-- ('USR_WRITE','Modificar usuarios','Permite modificar usuarios','USUARIOS');
+--
+-- INSERT INTO medal.operaCon VALUES
+-- (1,1),
+-- (1,2),
+-- (2,1);
+--
 
 -- =========================
 -- 7. METODO MONITOREO

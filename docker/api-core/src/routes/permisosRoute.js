@@ -1,6 +1,7 @@
 import express from "express";
 const router = express.Router();
 import { getAllPermisos } from '../controller/permisosController.js'
+import { verificarToken, tienePermiso } from '../middlewares/authMiddleware.js';
 
 
 
@@ -13,10 +14,12 @@ import { getAllPermisos } from '../controller/permisosController.js'
  *     responses:
  *       200:
  *         description: Devuelve el listado de todos los roles existentes.
+ *       403:
+ *         description: Careces de los permisos necesarios.
  *       500:
  *         description: Error interno del servidor.
  */
 
 
-router.get("/", getAllPermisos);
+router.get("/", [verificarToken, tienePermiso("perm:listarPermisos")] , getAllPermisos);
 export default router;

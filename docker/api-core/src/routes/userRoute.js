@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { postUser, getUserByUuid, getUsers, patchUser, login } from '../controller/userController.js' 
-import { verificarToken } from '../middlewares/authMiddleware.js';
+import { verificarToken, tienePermiso } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 // ESTE MÉTODO SIEMPRE ES PÚBLICO.
@@ -120,15 +120,17 @@ router.post('/login', login);
  *         description: Usuario creado correctamente
  *       400:
  *         description: Error en los datos enviados
+ *       403:
+ *         description: Careces de los permisos necesarios. 
  *       500:
  *         description: Error interno del servidor.
  */
 
-// router.post("/", postUser); Esta sería la petición normal sin verificar el token.
+// router.post("/", postUser);// Esta sería la petición normal sin verificar el token.
 
 // router.post("/", verificarToken, postUser);
 
-router.post("/", verificarToken, postUser);
+router.post("/", [verificarToken, tienePermiso("usr:crearUsuario")], postUser);
 
 /**
  * @swagger
@@ -150,13 +152,15 @@ router.post("/", verificarToken, postUser);
  *         description: Información del usuario encontrada correctamente.
  *       400:
  *         description: Error en los datos enviados.
+ *       403:
+ *         description: Careces de los permisos necesarios. 
  *       404:
  *         description: Usuario no encontrado.
  *       500:
  *         description: Error interno del servidor.
  */
 
-router.get("/:uuid", getUserByUuid);
+router.get("/:uuid", [verificarToken, tienePermiso("usr:getUsuario")] , getUserByUuid);
 
 
 
@@ -185,6 +189,8 @@ router.get("/:uuid", getUserByUuid);
  *     responses:
  *       200:
  *         description: Información de los usuarios encontrada correctamente.
+ *       403:
+ *         description: Careces de los permisos necesarios. 
  *       404:
  *         description: Usuario no encontrado con esa información.
  *       500:
@@ -192,7 +198,7 @@ router.get("/:uuid", getUserByUuid);
  */
 
 
-router.get("/", getUsers);
+router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
 
 /**
  * @swagger
@@ -225,13 +231,15 @@ router.get("/", getUsers);
  *     responses:
  *       200:
  *         description: Actualizado con éxito.
+ *       403:
+ *         description: Careces de los permisos necesarios. 
  *       404:
  *         description: Usuario no encontrado.
  *       500:
  *         description: Error interno del servidor.
  */
 
-router.patch('/:uuid', patchUser);
+router.patch('/:uuid', [verificarToken, tienePermiso("usr:editUsuario")] , patchUser);
 
 
 export default router;

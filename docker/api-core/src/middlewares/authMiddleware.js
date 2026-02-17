@@ -15,15 +15,14 @@ export const verificarToken = (req, res, next) => {
   }
 }
 
-export const tienePermiso = (accion, recurso, esDinamico = false) => {
+export const tienePermiso = (slugRequerido, esDinamico = false) => {
     return (req, res, next) => {
         const listaPermisos = req.user?.permisos;
         if (!Array.isArray(listaPermisos)) {
             return res.status(403).json({ error: "Token sin permisos válidos." });
         }
         // Construcción del alias a comprobar.
-        let slugRequerido = `${accion}:${recurso}`;
-
+        
         // Si es dependiente del recurso como servidorverservicios se le añade el servidor.
         if (esDinamico) {
             const { id } = req.params;
