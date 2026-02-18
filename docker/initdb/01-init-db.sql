@@ -48,7 +48,8 @@ CREATE TABLE IF NOT EXISTS medal.maquina(
   puertaEnlaceV4 VARCHAR(15) NOT NULL,
   puertaEnlaceV6 VARCHAR(39),
   ram INTEGER,
-  sistemaOperativo VARCHAR(100) NOT NULL
+  sistemaOperativo VARCHAR(100) NOT NULL,
+  esServidor BOOLEAN NOT NULL DEFAULT false 
 );
 
 
