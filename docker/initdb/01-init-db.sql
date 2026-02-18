@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS medal.usuario (
 -- 2. Maquina
 CREATE TABLE IF NOT EXISTS medal.maquina(
   idMaquina SERIAL PRIMARY KEY, 
-  nombre VARCHAR(50) NOT NULL UNIQUE,
+  nombre VARCHAR(300) NOT NULL UNIQUE,
   caducidadSSL DATE,
   certificadoSslActivo BOOLEAN DEFAULT FALSE,
   emisorSsl VARCHAR(100),
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS medal.rolesTiene (
 -- 11. PERMISOS
 CREATE TABLE IF NOT EXISTS medal.permisos(
   idPermiso SERIAL PRIMARY KEY,
-  alias VARCHAR(50) NOT NULL UNIQUE,
+  alias VARCHAR(300) NOT NULL UNIQUE,
   nombre VARCHAR(100) NOT NULL,
   descripcion VARCHAR(500),
   modulo VARCHAR(30) NOT NULL 
