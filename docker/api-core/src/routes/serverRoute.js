@@ -152,16 +152,8 @@ router.get("/", verificarToken, getMaquinas );
  *           type: string
  *           example: 65f2a9c8-d123-4abc-5678-ef9012345678
  *     responses:
- *       200:
+ *       204:
  *         description: Máquina eliminada correctamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Máquina eliminada correctamente
  *       403:
  *         description: No tienes permisos suficientes.
  *       404:
