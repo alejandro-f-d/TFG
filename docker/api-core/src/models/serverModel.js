@@ -32,6 +32,33 @@ class ServerModel {
     return { status: 'OK', uuid: uuidMaquina };
   }
 
+  static async getMaquinas(soloServidores, page = 1, limit = 10, filtroNombre = '') {
+      let query = `SELECT * FROM medal.maquina`;
+      let conditions = [];
+      const params = [];
+      if (soloServidores) {
+          conditions.push(`esservidor = true`);
+      }
+      if (filtroNombre) {
+          params.push(`%${filtroNombre}%`);
+          conditions.push(`nombre ILIKE $${params.length}`); 
+      }
+      if (conditions.length > 0) {
+          query += ` WHERE ` + conditions.join(' AND ');
+      }
+      const offset = (page - 1) * limit;
+      params.push(limit);
+      query += ` LIMIT $${params.length}`;
+      params.push(offset);
+      query += ` OFFSET $${params.length}`;
+      try {
+          const res = await pool.query(query, params);
+          return res.rows;
+      } catch (error) {
+          console.error("Error en getMaquinas Model:", error.message);
+          throw error;
+      }
+  }
 }
 export default ServerModel;
 

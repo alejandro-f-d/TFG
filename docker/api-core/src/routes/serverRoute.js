@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import { postMaquina } from '../controller/serverController.js' 
+import { postMaquina, getMaquinas } from '../controller/serverController.js' 
 import { verificarToken, tienePermiso } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
@@ -12,7 +12,7 @@ const router = express.Router();
  * /api/maquina:
  *   post:
  *     summary: Crear un nuevo servidor
- *     tags: [Servidores, Maquinas]
+ *     tags: [Máquina]
  *     requestBody:
  *       required: true
  *       content:
@@ -93,4 +93,46 @@ const router = express.Router();
  *         description: Error interno del servidor
  */
 router.post("/", [verificarToken, tienePermiso("maq:postMaquina")],  postMaquina);
+
+
+/**
+  * @swagger
+  * /api/maquina/:
+  *   get:
+  *     summary: Dependiendo de tus permisos obtienes un listado de todas las máquinas o solo de los servidores.
+  *     tags: [Máquina]
+  *     parameters:
+  *       - name: page
+  *         in: query
+  *         required: false
+  *         description: Número de página para paginación.
+  *         schema:
+  *           type: integer
+  *           example: 1
+  *       - name: limit
+  *         in: query
+  *         required: false
+  *         description: Número de registros por página.
+  *         schema:
+  *           type: integer
+  *           example: 10
+  *       - name: filtroNombre
+  *         in: query
+  *         required: false
+  *         description: Filtra las máquinas por nombre (búsqueda parcial).
+  *         schema:
+  *           type: string
+  *           example: athenea
+  *     responses:
+  *       200:
+  *         description: Devuelve el listado correspondiente.
+  *       403:
+  *         description: Careces de los permisos necesarios.
+  *       404:
+  *         description: Máquina o servicio no encontrado.
+  *       500:
+  *         description: Error interno del servidor.
+  *
+*/
+router.get("/", verificarToken, getMaquinas );
 export default router;

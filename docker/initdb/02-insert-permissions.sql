@@ -39,6 +39,10 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('perm:list
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('maq:postMaquina', 'Creación de una nueva máquina.', 'Permite al usuario la creación de una nueva máquina.', 'maquina');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('maq:getAll', 'Listado de todas las máquinas.', 'Permite al usuario que lo posee el listado de todas las máquinas.', 'maquina');
+
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('maq:getServer', 'Listado de todos los servidores.', 'Permite al usuario listar únicamente los servidores.', 'maquina');
+
 
 -- ====================================
 -- Roles:

@@ -28,3 +28,34 @@ export const postMaquina = async (req, res) => {
   }
   
 }
+
+export const getMaquinas = async (req, res) => {
+  // En el route solo vamos a tener que verificar el token porque el resto lo hacemos aqui.
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const filtroNombre = req.query.filtroNombre || "";
+
+  try {
+    const permisos = req.user?.permisos || [];
+    let maquinas;
+    if(permisos.includes('admin:total') || permisos.includes('maq:getAll')){
+      maquinas = await ServerModel.getMaquinas(false, page, limit, filtroNombre);
+    } else if(permisos.includes('maq:getServer')) {
+      maquinas = await ServerModel.getMaquinas(true, page, limit, filtroNombre);
+    } else {
+      return res.status(403).json({error: "Careces de los permisos necesarios."});
+    }
+
+    if (maquinas.totalItems === 0) {
+      return res.status(404).json({
+        message: `No se han encontrado maquinas/servidores que coincidan con: ${filtroNombre}`
+      });
+    }
+
+
+    return res.status(200).json(maquinas);
+  } catch (error) {
+    console.error("Error al hacer un get de las máquinas.", error);
+    return res.status(500).json({error: "Error interno del servidor."});
+  }
+}
