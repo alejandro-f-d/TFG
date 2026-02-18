@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import { postMaquina, getMaquinas, deleteMaquina } from '../controller/serverController.js' 
+import { postMaquina, getMaquinas, getMaquina, deleteMaquina } from '../controller/serverController.js' 
 import { verificarToken, tienePermiso } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
@@ -135,6 +135,10 @@ router.post("/", [verificarToken, tienePermiso("maq:postMaquina")],  postMaquina
   *
 */
 router.get("/", verificarToken, getMaquinas );
+
+
+
+router.get("/:uuid", verificarToken, getMaquina);
 
 
 /**

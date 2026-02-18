@@ -60,6 +60,23 @@ export const getMaquinas = async (req, res) => {
   }
 }
 
+export const getMaquina = async (req, res) => {
+  const { uuid } = req.params;
+  try {
+    if(permisos.includes('admin:total') || permisos.includes('maq:getAll')){
+      maquinas = await ServerModel.getMaquina(false, uuid);
+    } else if(permisos.includes('maq:getServer')) {
+      maquinas = await ServerModel.getMaquina(true, uuid);
+    } else {
+      return res.status(403).json({error: "Careces de los permisos necesarios."});
+    }
+  } catch (error) {
+    console.error("Error al hacer un get de una máquina en específico.", error);
+    return res.status(500).json({error: "Error interno del servidor."});
+    
+  }
+}
+
 
 export const deleteMaquina = async (req, res) => {
   const { uuid } = req.params; 
