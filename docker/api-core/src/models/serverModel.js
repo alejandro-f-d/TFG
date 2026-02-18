@@ -59,6 +59,19 @@ class ServerModel {
           throw error;
       }
   }
+
+
+  static async deleteMaquina(uuid) {
+    const queryDelete = `DELETE FROM medal.maquina WHERE uuidmaquina = $1`;
+    try {
+      const resBorrado = await pool.query(queryDelete, [uuid]);
+      return resBorrado.rowCount > 0;
+    } catch (error) {
+      console.error("Error al hacer delete de una máquina", error.message);
+      throw error;
+    }
+
+  }
 }
 export default ServerModel;
 

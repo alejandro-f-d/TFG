@@ -43,6 +43,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('maq:getAl
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('maq:getServer', 'Listado de todos los servidores.', 'Permite al usuario listar únicamente los servidores.', 'maquina');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('maq:deleteServer', 'Borrar máquina.', 'Permite al usuario que lo posee el borrado de los servidores by uuid.', 'maquina');
+
 
 -- ====================================
 -- Roles:

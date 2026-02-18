@@ -59,3 +59,19 @@ export const getMaquinas = async (req, res) => {
     return res.status(500).json({error: "Error interno del servidor."});
   }
 }
+
+
+export const deleteMaquina = async (req, res) => {
+  const { uuid } = req.params; 
+  try {
+    const resBorrado = await ServerModel.deleteMaquina(uuid);
+    if(resBorrado) {
+      return res.status(204).send();
+    } else {
+      return res.status(404).json({message: "Máquina no encontrada."});
+    }
+  } catch (error) {
+    console.log("Error al hacer un borrado de una máquina.");
+    return res.status(500).json({error: "Error interno del servidor"});
+  }
+}

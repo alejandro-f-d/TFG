@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import { postMaquina, getMaquinas } from '../controller/serverController.js' 
+import { postMaquina, getMaquinas, deleteMaquina } from '../controller/serverController.js' 
 import { verificarToken, tienePermiso } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
@@ -135,4 +135,44 @@ router.post("/", [verificarToken, tienePermiso("maq:postMaquina")],  postMaquina
   *
 */
 router.get("/", verificarToken, getMaquinas );
+
+
+/**
+ * @swagger
+ * /api/maquina/{uuid}:
+ *   delete:
+ *     summary: Elimina una máquina por su UUID.
+ *     tags: [Máquina]
+ *     parameters:
+ *       - name: uuid
+ *         in: path
+ *         required: true
+ *         description: UUID de la máquina que se desea eliminar.
+ *         schema:
+ *           type: string
+ *           example: 65f2a9c8-d123-4abc-5678-ef9012345678
+ *     responses:
+ *       200:
+ *         description: Máquina eliminada correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Máquina eliminada correctamente
+ *       403:
+ *         description: No tienes permisos suficientes.
+ *       404:
+ *         description: Máquina no encontrada.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+
+
+
+
+router.delete("/:uuid", [verificarToken, tienePermiso("maq:deleteServer")], deleteMaquina);
+
 export default router;
