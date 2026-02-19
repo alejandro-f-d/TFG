@@ -137,6 +137,33 @@ router.post("/", [verificarToken, tienePermiso("maq:postMaquina")],  postMaquina
 router.get("/", verificarToken, getMaquinas );
 
 
+/**
+ * @swagger
+ * /api/maquina/{uuid}:
+ *   get:
+ *     summary: Obtienes una máquina por uuid.
+ *     tags: [Máquina]
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID de la máquina
+ *         example: 178529fe-3c6b-4a50-b318-9d9f01ae0054
+ *     responses:
+ *       200:
+ *         description: Información del máquina encontrada correctamente.
+ *       400:
+ *         description: Error en los datos enviados.
+ *       403:
+ *         description: Careces de los permisos necesarios. 
+ *       404:
+ *         description: Máquina no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
 
 router.get("/:uuid", verificarToken, getMaquina);
 

@@ -239,7 +239,7 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *         description: Error interno del servidor.
  */
 
-router.patch('/:uuid', [verificarToken, tienePermiso("usr:editUsuario")] , patchUser);
+router.patch('/:uuid', verificarToken , patchUser);
 
 
 export default router;

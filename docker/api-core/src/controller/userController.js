@@ -124,29 +124,38 @@ export const patchUser = async (req, res) => {
     const { uuid } = req.params;
     const camposCambiados = req.body;
     const darBaja = req.query.darBaja === 'true';
-    console.log(darBaja);
-    if(darBaja){
-      //Si está activo, solamente se pasa el usuario a que ya no está activo, el resto de campos se mantienen igual.
-      const resultado = await UserModel.darBaja(uuid);
-      if(resultado.rowCount === 0){
-        return res.status(404).json({ error: "Usuario al que se le quiere dar de baja no encontrado." });
+    // console.log(darBaja);
+    const permisos = req.user?.permisos || [];
+    const uuidDelToken = req.user?.uuid;
+
+    if(permisos.includes('admin:total') || permisos.includes('usr:editUsuario') || uuidDelToken === uuid ){
+      if (camposCambiados.contrasena) {
+        const salt = await bcrypt.genSalt(10);
+        camposCambiados.contrasena = await bcrypt.hash(camposCambiados.contrasena, salt);
+      }
+      if(darBaja){
+        //Si está activo, solamente se pasa el usuario a que ya no está activo, el resto de campos se mantienen igual.
+        const resultado = await UserModel.darBaja(uuid);
+        if(resultado.rowCount === 0){
+          return res.status(404).json({ error: "Usuario al que se le quiere dar de baja no encontrado." });
+        }
+        return res.status(204).json({
+          message: "Usuario dado de baja de manera correcta."
+        });
+      }
+      if (Object.keys(camposCambiados).length === 0) {
+        return res.status(400).json({ error: "No se han enviado campos a actualizar." });
+      }
+      const resultado = await UserModel.patchUser(uuid, camposCambiados);
+      if (resultado.rowCount === 0) {
+        return res.status(404).json({ error: "Usuario no encontrado." });
       }
       return res.status(204).json({
-        message: "Usuario dado de baja de manera correcta."
+        message: "Usuario actualizado."
       });
+    } else {
+      return res.status(403).json({error: "Careces de los permisos necesarios"});
     }
-
-
-    if (Object.keys(camposCambiados).length === 0) {
-      return res.status(400).json({ error: "No se han enviado campos a actualizar." });
-    }
-    const resultado = await UserModel.patchUser(uuid, camposCambiados);
-    if (resultado.rowCount === 0) {
-      return res.status(404).json({ error: "Usuario no encontrado." });
-    }
-    return res.status(204).json({
-      message: "Usuario actualizado."
-    });
   } catch (error) {
     console.error("Error en el patchUser", error);
     return res.status(500).json({error: "Error en el servidor."});

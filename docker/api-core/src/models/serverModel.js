@@ -94,23 +94,23 @@ class ServerModel {
 
 
     static async getMaquina(soloServidores, uuid) {
-        const verificarTipo = `SELECT esservidor FROM medal.maquina WHERE uuidmaquina = $1;`;
+        const verificarTipo = `SELECT * FROM medal.maquina WHERE uuidmaquina = $1;`;
 
         try {
-            const resTipo = await pool.query(verificarTipo, [uuid]);
-            if (resTipo.rows.length === 0) {
-                return 2;
-            } else if(resTipo.rows[0].esservidor){
-                
-            } else if(!resTipo.rows[0].esservidor && !soloServidores) {
-
+            const resQuery = await pool.query(verificarTipo, [uuid]);
+            if (resQuery.rows.length === 0) {
+                return 2; //404 NOT FOUND
+            } else if(resQuery.rows[0].esservidor){
+                return resQuery.rows[0];
+            } else if(!resQuery.rows[0].esservidor && !soloServidores) {
+                return resQuery.rows[0];
+            } else {
+                return 3; // 403 No tienes permisos.
             }
-
         } catch (error) {
-
+            console.error("Error al hacer el get de un servidor en específico", error);
+            throw error;
         }
-
-
     }
 
 

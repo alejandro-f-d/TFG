@@ -62,13 +62,26 @@ export const getMaquinas = async (req, res) => {
 
 export const getMaquina = async (req, res) => {
   const { uuid } = req.params;
+  if(!uuid){
+    return res.status(400).json({error: "Error con los parámetros del get máquina."});
+  }
+  let maquinas;
   try {
+    const permisos = req.user?.permisos || [];
+
     if(permisos.includes('admin:total') || permisos.includes('maq:getAll')){
       maquinas = await ServerModel.getMaquina(false, uuid);
     } else if(permisos.includes('maq:getServer')) {
       maquinas = await ServerModel.getMaquina(true, uuid);
     } else {
       return res.status(403).json({error: "Careces de los permisos necesarios."});
+    }
+    if(maquinas === 2){
+      return res.status(404).json({error: "Máquina no encontrada."});
+    } else if(maquinas == 3) {
+      return res.status(403).json({error: "Careces de los permisos necesarios."});
+    } else {
+      return res.status(200).json({message: "Máquina encontrada con éxito.", info: maquinas});
     }
   } catch (error) {
     console.error("Error al hacer un get de una máquina en específico.", error);
