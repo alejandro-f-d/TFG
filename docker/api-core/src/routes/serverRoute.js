@@ -1,11 +1,14 @@
 import express from "express";
 import dotenv from "dotenv";
-import { postMaquina, getMaquinas, getMaquina, deleteMaquina } from '../controller/serverController.js' 
-import { verificarToken, tienePermiso } from '../middlewares/authMiddleware.js';
+import {
+	postMaquina,
+	getMaquinas,
+	getMaquina,
+	deleteMaquina,
+	getServiciosPorMaquina,
+} from "../controller/serverController.js";
+import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 const router = express.Router();
-
-
-
 
 /**
  * @swagger
@@ -92,50 +95,52 @@ const router = express.Router();
  *       500:
  *         description: Error interno del servidor
  */
-router.post("/", [verificarToken, tienePermiso("maq:postMaquina")],  postMaquina);
-
+router.post(
+	"/",
+	[verificarToken, tienePermiso("maq:postMaquina")],
+	postMaquina,
+);
 
 /**
-  * @swagger
-  * /api/maquina/:
-  *   get:
-  *     summary: Dependiendo de tus permisos obtienes un listado de todas las máquinas o solo de los servidores.
-  *     tags: [Máquina]
-  *     parameters:
-  *       - name: page
-  *         in: query
-  *         required: false
-  *         description: Número de página para paginación.
-  *         schema:
-  *           type: integer
-  *           example: 1
-  *       - name: limit
-  *         in: query
-  *         required: false
-  *         description: Número de registros por página.
-  *         schema:
-  *           type: integer
-  *           example: 10
-  *       - name: filtroNombre
-  *         in: query
-  *         required: false
-  *         description: Filtra las máquinas por nombre (búsqueda parcial).
-  *         schema:
-  *           type: string
-  *           example: athenea
-  *     responses:
-  *       200:
-  *         description: Devuelve el listado correspondiente.
-  *       403:
-  *         description: Careces de los permisos necesarios.
-  *       404:
-  *         description: Máquina o servicio no encontrado.
-  *       500:
-  *         description: Error interno del servidor.
-  *
-*/
-router.get("/", verificarToken, getMaquinas );
-
+ * @swagger
+ * /api/maquina/:
+ *   get:
+ *     summary: Dependiendo de tus permisos obtienes un listado de todas las máquinas o solo de los servidores.
+ *     tags: [Máquina]
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         description: Número de página para paginación.
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         description: Número de registros por página.
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *       - name: filtroNombre
+ *         in: query
+ *         required: false
+ *         description: Filtra las máquinas por nombre (búsqueda parcial).
+ *         schema:
+ *           type: string
+ *           example: athenea
+ *     responses:
+ *       200:
+ *         description: Devuelve el listado correspondiente.
+ *       403:
+ *         description: Careces de los permisos necesarios.
+ *       404:
+ *         description: Máquina o servicio no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ *
+ */
+router.get("/", verificarToken, getMaquinas);
 
 /**
  * @swagger
@@ -158,7 +163,7 @@ router.get("/", verificarToken, getMaquinas );
  *       400:
  *         description: Error en los datos enviados.
  *       403:
- *         description: Careces de los permisos necesarios. 
+ *         description: Careces de los permisos necesarios.
  *       404:
  *         description: Máquina no encontrado.
  *       500:
@@ -166,7 +171,6 @@ router.get("/", verificarToken, getMaquinas );
  */
 
 router.get("/:uuid", verificarToken, getMaquina);
-
 
 /**
  * @swagger
@@ -193,9 +197,60 @@ router.get("/:uuid", verificarToken, getMaquina);
  *         description: Error interno del servidor.
  */
 
+router.delete(
+	"/:uuid",
+	[verificarToken, tienePermiso("maq:deleteServer")],
+	deleteMaquina,
+);
 
+/**
+ * @swagger
+ * /api/maquina/:uuid/servicios:
+ *   get:
+ *     summary: Obtienes lo servicios asociados a una máquina.
+ *     tags: [Máquina]
+ *     parameters:
+ *       - name: uuid
+ *         in: path
+ *         required: true
+ *         description: UUID de la máquina que se desea ver los servicios.
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         description: Número de página para paginación.
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         description: Número de registros por página.
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *       - name: filtroNombre
+ *         in: query
+ *         required: false
+ *         description: Filtra las máquinas por nombre (búsqueda parcial).
+ *         schema:
+ *           type: string
+ *           example: athenea
+ *     responses:
+ *       200:
+ *         description: Devuelve el listado correspondiente.
+ *       403:
+ *         description: Careces de los permisos necesarios.
+ *       404:
+ *         description: Máquina o servicio no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ *
+ */
 
-
-router.delete("/:uuid", [verificarToken, tienePermiso("maq:deleteServer")], deleteMaquina);
+router.get(
+	"/:uuid/servicios",
+	[verificarToken, tienePermiso("maquina:verServicios", true)],
+	getServiciosPorMaquina,
+);
 
 export default router;
