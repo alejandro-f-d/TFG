@@ -262,6 +262,14 @@ export const login = async (req, res) => {
 			correoInstitucional,
 			true,
 		);
+		const ipUpdated = await UserModel.updateIp(ip, correoInstitucional);
+		if (!ipUpdated) {
+			console.error(
+				"Ha ocurrido un error al actualizar la ip de un usuario.",
+				ip,
+				correoInstitucional,
+			);
+		}
 		return res.status(200).json({
 			message: "Login Correcto.",
 			token: token,
