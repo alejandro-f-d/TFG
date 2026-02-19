@@ -1,12 +1,24 @@
-import ServiciosModel from '../models/serviciosModel.js';
-import {v4 as uuidv4} from 'uuid';
+import ServiciosModel from "../models/serviciosModel.js";
+import { v4 as uuidv4 } from "uuid";
 
 export const getServicios = async (req, res) => {
-  try {
-    const resServicios = await ServiciosModel.getAllInfoServicios();
-    return res.status(200).json({message: "Listado de los servicios obtenido correctamente.", info: resServicios});
-  } catch (error) {
-    console.log("Error al hacer un get de los servicios.", error);
-    return res.status(500).json({error: "Error interno del servidor"});
-  } 
-}
+	const page = parseInt(req.query.page) || 1;
+	const limit = parseInt(req.query.limit) || 5;
+	const filtroNombre = req.query.filtroNombre || "";
+	try {
+		const resServicios = await ServiciosModel.getAllInfoServicios(
+			page,
+			limit,
+			filtroNombre,
+		);
+		return res
+			.status(200)
+			.json({
+				message: "Listado de los servicios obtenido correctamente.",
+				info: resServicios,
+			});
+	} catch (error) {
+		console.log("Error al hacer un get de los servicios.", error);
+		return res.status(500).json({ error: "Error interno del servidor" });
+	}
+};

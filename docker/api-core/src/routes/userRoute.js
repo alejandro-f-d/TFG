@@ -1,44 +1,45 @@
 import express from "express";
 import dotenv from "dotenv";
-import { postUser, getUserByUuid, getUsers, patchUser, login } from '../controller/userController.js' 
-import { verificarToken, tienePermiso } from '../middlewares/authMiddleware.js';
+import {
+	postUser,
+	getUserByUuid,
+	getUsers,
+	patchUser,
+	login,
+} from "../controller/userController.js";
+import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 // ESTE MÉTODO SIEMPRE ES PÚBLICO.
 /**
-  * @swagger
-  * /api/user/login:
-  *   post:
-  *     summary: Obtienes un token de dos horas de duración para interactuar con el sistema.
-  *     tags: [User]
-  *     requestBody:
-  *       required: true
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             properties:
-  *               correoInstitucional:
-  *                 type: string
-  *                 example: alejandro.fisac.contact@gmail.com
-  *               contrasena:
-  *                 type: string
-  *                 example: password
-  *     responses:
-  *       200:
-  *         description: Devuelve el token de acceso debido a un login correcto.
-  *       401:
-  *         description: Error en la identificación.
-  *       500:
-  *         description: Error interno del servidor.
-*/
+ * @swagger
+ * /api/user/login:
+ *   post:
+ *     summary: Obtienes un token de dos horas de duración para interactuar con el sistema.
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               correoInstitucional:
+ *                 type: string
+ *                 example: alejandro.fisac.contact@gmail.com
+ *               contrasena:
+ *                 type: string
+ *                 example: password
+ *     responses:
+ *       200:
+ *         description: Devuelve el token de acceso debido a un login correcto.
+ *       401:
+ *         description: Error en la identificación.
+ *       500:
+ *         description: Error interno del servidor.
+ */
 
-
-router.post('/login', login);
-
-
-
-
+router.post("/login", login);
 
 /**
  * @swagger
@@ -121,7 +122,7 @@ router.post('/login', login);
  *       400:
  *         description: Error en los datos enviados
  *       403:
- *         description: Careces de los permisos necesarios. 
+ *         description: Careces de los permisos necesarios.
  *       500:
  *         description: Error interno del servidor.
  */
@@ -153,16 +154,18 @@ router.post("/", [verificarToken, tienePermiso("usr:crearUsuario")], postUser);
  *       400:
  *         description: Error en los datos enviados.
  *       403:
- *         description: Careces de los permisos necesarios. 
+ *         description: Careces de los permisos necesarios.
  *       404:
  *         description: Usuario no encontrado.
  *       500:
  *         description: Error interno del servidor.
  */
 
-router.get("/:uuid", [verificarToken, tienePermiso("usr:getUsuario")] , getUserByUuid);
-
-
+router.get(
+	"/:uuid",
+	[verificarToken, tienePermiso("usr:getUsuario")],
+	getUserByUuid,
+);
 
 /**
  * @swagger
@@ -190,13 +193,12 @@ router.get("/:uuid", [verificarToken, tienePermiso("usr:getUsuario")] , getUserB
  *       200:
  *         description: Información de los usuarios encontrada correctamente.
  *       403:
- *         description: Careces de los permisos necesarios. 
+ *         description: Careces de los permisos necesarios.
  *       404:
  *         description: Usuario no encontrado con esa información.
  *       500:
  *         description: Error interno del servidor.
  */
-
 
 router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
 
@@ -239,7 +241,6 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *         description: Error interno del servidor.
  */
 
-router.patch('/:uuid', verificarToken , patchUser);
-
+router.patch("/:uuid", verificarToken, patchUser);
 
 export default router;

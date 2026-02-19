@@ -1,10 +1,9 @@
-import pool from '../bbdd/conexion.js';
-import { v4 as uuidv4 } from 'uuid';
-
+import pool from "../bbdd/conexion.js";
+import { v4 as uuidv4 } from "uuid";
 
 class ServiciosModel {
-  static async getAllInfoServicios(){
-    const queryGetInfoServicios = `SELECT 
+	static async getAllInfoServicios(page = 1, limit = 10, filtroNombre = "") {
+		const queryGetInfoServicios = `SELECT 
     s.*, 
     p.uuidPeticion, 
     maq.uuidMaquina,
@@ -31,14 +30,24 @@ WHERE
     s.idPeticion = p.idPeticion 
     AND c.idServicio = s.idServicio 
     AND maq.idMaquina = c.idMaquina
-    AND s.idServicio = puertos_agg.idServicio;`; 
-    try {
-      const res = await pool.query(queryGetInfoServicios, []);
-      return res.rows[0];
-    } catch (error) {
-      console.error("Un error ha ocurrido cuando se hacía un get de todos los servicios.", error);
-      throw error;
-    } 
-  }
+    AND s.idServicio = puertos_agg.idServicio AND nombreservicio ILIKE $3 ORDER BY nombreservicio ASC LIMIT $1 OFFSET $2;`;
+		try {
+			const offset = (page - 1) * limit;
+			const busqueda = `%${filtroNombre}%`;
+
+			const res = await pool.query(queryGetInfoServicios, [
+				limit,
+				offset,
+				busqueda,
+			]);
+			return res.rows[0];
+		} catch (error) {
+			console.error(
+				"Un error ha ocurrido cuando se hacía un get de todos los servicios.",
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default ServiciosModel;
