@@ -70,11 +70,19 @@ WHERE
 		try {
 			await client.query("BEGIN");
 
+			const queryGetIdServidor = `SELECT idmaquina FROM medal.maquina WHERE uuidmaquina = $1`;
+			const resIdMaq = await client.query(queryGetIdServidor, [uuid]); // IMPORTANTE: Usar client, no pool
+
+			if (resIdMaq.rows.length === 0) {
+				throw new Error("La máquina principal no existe.");
+			}
+			const idMaquinaPrincipal = resIdMaq.rows[0].idmaquina;
+
 			const queryPostServicio = `
-            INSERT INTO medal.servicio(nombreServicio, descripcionTecnica, entorno, publico, softwareBase, activo, nivelSeveridad, idUsuario, idPeticion, uuidservicio) 
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
-            RETURNING idservicio;
-        `;
+        INSERT INTO medal.servicio(nombreServicio, descripcionTecnica, entorno, publico, softwareBase, activo, nivelSeveridad, idUsuario, idPeticion, uuidservicio) 
+        VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+        RETURNING idservicio;
+    `;
 			const resServicio = await client.query(queryPostServicio, [
 				nombreServicio,
 				descripcionTecnica,
@@ -87,18 +95,20 @@ WHERE
 				idPeticion,
 				uuidServicio,
 			]);
-
 			const idServicio = resServicio.rows[0].idservicio;
 
+			const listaMaquinas = new Set(servidores || []);
+			listaMaquinas.add(idMaquinaPrincipal);
+
 			const queryInsertarServer = `INSERT INTO medal.corre(idServicio, idMaquina) VALUES($1, $2);`;
-			for (const idMaquina of servidores) {
-				await client.query(queryInsertarServer, [idServicio, idMaquina]);
+			for (const idMaq of listaMaquinas) {
+				await client.query(queryInsertarServer, [idServicio, idMaq]);
 			}
 
 			const queryInsertarPuertos = `
-            INSERT INTO medal.puertosabiertos(numeroPuertoMaquina, protocolo, nombreServicio, puertovirtual, idservicio) 
-            VALUES($1, $2, $3, $4, $5);
-        `;
+        INSERT INTO medal.puertosabiertos(numeroPuertoMaquina, protocolo, nombreServicio, puertovirtual, idservicio) 
+        VALUES($1, $2, $3, $4, $5);
+    `;
 			for (const puerto of puertosAbiertos) {
 				await client.query(queryInsertarPuertos, [
 					puerto.numeroPuertoMaquina,
