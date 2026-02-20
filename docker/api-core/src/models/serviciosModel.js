@@ -49,5 +49,45 @@ WHERE
 			throw error;
 		}
 	}
+	static async postServicio(uuid, req) {
+		const queryPostServicio = `INSERT INTO medal.servicio(nombreServicio, descripcionTecnica, entorno, publico, softwareBase, activo, nivelSeveridad, idUsuario, idPeticion) values($1, $2, $3, $4, $5, $6, $7, $8, $9);
+	    `;
+		const queryInsertarServer = ``;
+		const queryInsertarPuertos = ``;
+		const {
+			nombreServicio,
+			descripcionTecnica,
+			entorno,
+			publico, // boolean
+			softwareBase,
+			activo, //boolean
+			nivelSeveridad,
+			idUsuario,
+			idPeticion,
+			servidores, //Arrray de integers. Relación de corre.
+			puertosAbiertos, // Contiene diferente información => numeroPuertoMaquina, protocolo, nombreServicio, puertoVirtual Relación conecta.
+		} = req.body;
+		try {
+			const valuesQueryPostServicios = [
+				nombreServicio,
+				descripcionTecnica,
+				entorno,
+				publico,
+				softwareBase,
+				activo,
+				nivelSeveridad,
+				idUsuario,
+				idPeticion,
+			];
+			await pool.query(queryPostServicio, valuesQueryPostServicios);
+		} catch (error) {
+			console.error(
+				"Error al hacer el post de un servicio para un servidor.",
+				uuid,
+				req,
+			);
+			throw error;
+		}
+	}
 }
 export default ServiciosModel;

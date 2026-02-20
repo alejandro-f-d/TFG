@@ -7,6 +7,7 @@ import {
 	deleteMaquina,
 	getServiciosPorMaquina,
 } from "../controller/serverController.js";
+import { postServicio } from "../controller/serviciosController.js";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
@@ -253,4 +254,9 @@ router.get(
 	getServiciosPorMaquina,
 );
 
+router.post(
+	"/:uuid/servicios",
+	[verificarToken, tienePermiso("maquina:crearServicios", true)],
+	postServicio,
+);
 export default router;
