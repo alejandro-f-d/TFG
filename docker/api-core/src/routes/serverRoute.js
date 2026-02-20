@@ -254,6 +254,95 @@ router.get(
 	getServiciosPorMaquina,
 );
 
+/**
+ * @swagger
+ * /api/maquina/{uuid}/servicios:
+ *   post:
+ *     summary: Crear un nuevo servicio asociado a una máquina
+ *     tags:
+ *       - Servicios
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID de la máquina
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nombreServicio
+ *               - idUsuario
+ *               - idPeticion
+ *             properties:
+ *               nombreServicio:
+ *                 type: string
+ *                 example: Servidor Web de Pruebas
+ *               descripcionTecnica:
+ *                 type: string
+ *                 example: Instancia de Apache para el despliegue del microservicio de auditoría.
+ *               entorno:
+ *                 type: string
+ *                 enum: [Desarrollo, QA, Produccion]
+ *                 example: Desarrollo
+ *               publico:
+ *                 type: boolean
+ *                 example: true
+ *               softwareBase:
+ *                 type: string
+ *                 example: Apache/2.4.41 (Ubuntu)
+ *               activo:
+ *                 type: boolean
+ *                 example: true
+ *               nivelSeveridad:
+ *                 type: string
+ *                 enum: [bajo, medio, alto, critico]
+ *                 example: bajo
+ *               idUsuario:
+ *                 type: integer
+ *                 example: 1
+ *               idPeticion:
+ *                 type: integer
+ *                 example: 1
+ *               servidores:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 example: [1, 2]
+ *               puertosAbiertos:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     numeroPuertoMaquina:
+ *                       type: integer
+ *                       example: 80
+ *                     protocolo:
+ *                       type: string
+ *                       example: TCP
+ *                     nombreServicio:
+ *                       type: string
+ *                       example: HTTP
+ *                     puertoVirtual:
+ *                       type: integer
+ *                       example: 8080
+ *     responses:
+ *       201:
+ *         description: Servicio creado correctamente
+ *       400:
+ *         description: Petición mal formada
+ *       403:
+ *         description: Usuario no autorizado
+ *       404:
+ *         description: Máquina no encontrada
+ *       500:
+ *         description: Error interno del servidor
+ */
+
 router.post(
 	"/:uuid/servicios",
 	[verificarToken, tienePermiso("maquina:crearServicios", true)],

@@ -37,7 +37,7 @@ export const postServicios = async (req, res) => {
 		puertosAbiertos, // Contiene diferente información => numeroPuertoMaquina, protocolo, nombreServicio, puertoVirtual Relación conecta.
 	} = req.body;
 
-	if (!nombreServicio || !idPeticion || !idUsuario || !servidores) {
+	if (!nombreServicio || !idPeticion || !idUsuario) {
 		return res.status(400).json({ error: "Petición mal formada." });
 	}
 	const uuidRegex =
