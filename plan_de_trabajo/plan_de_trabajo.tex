@@ -1,0 +1,120 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- Paquetes de configuración ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{pgfgantt} % Para el diagrama de Gantt
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+% --- Configuración de cabecera ---
+\title{Plan de Trabajo: Plataforma web para la gestión de usuarios y servicios asociados en un grupo de investigación}
+\author{Fisac Delgado, Alejandro}
+\date{Febrero 2026}
+
+\begin{document}
+
+\maketitle
+
+% --- 1. DESCRIPCIÓN GENERAL Y OBJETIVOS ---
+\section{Descripción general del trabajo y objetivos}
+El proyecto, consiste en el diseño e implementación de una plataforma integral para la gestión, monitorización y control de infraestructura de red, servicios y activos de hardware. El sistema busca centralizar la administración de máquinas.
+
+Los objetivos principales del proyecto se desglosan en:
+\begin{itemize}[label=$\bullet$]
+    \item \textbf{Gestión de Infraestructura:} Implementar un inventariado completo de máquinas físicas y virtuales, detallando especificaciones de hardware (CPU, RAM, Discos) y conectividad (IPv4, IPv6).
+    \item \textbf{Control de Servicios y Puertos:} Desarrollar un sistema de orquestación para el seguimiento de servicios activos, incluyendo mapeo dinámico de puertos y protocolos.
+    \item \textbf{Seguridad y Auditoría:} Establecer un sistema de control de acceso basado en roles.
+    \item \textbf{Integración de Servicios Externos:} Integrar el manejo de herramientas externas del laboratorio a la página web.
+\end{itemize}
+
+% --- 2. LISTA DE TAREAS ---
+\section{Lista de tareas}
+El desarrollo se ha dividido en los siguientes bloques funcionales:
+
+\begin{enumerate}[label=\textbf{T\arabic*.}]
+    \item \textbf{Análisis de requisitos y diseño de BD:} Definición del esquema \textit{medal} en PostgreSQL, relaciones, constraints y lógica de integridad.
+    \item \textbf{Desarrollo del Core Backend:} Implementación de la API REST con Node.js, gestión de conexiones.
+    \item \textbf{Módulo de Seguridad:} Configuración de JWT, middleware de autenticación, hashing y validación de esquemas de datos.
+    \item \textbf{Módulo de Infraestructura:} Desarrollo de endpoints para la gestión de máquinas, servicios asociados y puertos.
+    \item \textbf{Interfaz de Usuario (Frontend):} Diseño de un Dashboard web para la visualización de datos en tiempo real y administración de recursos.
+    \item \textbf{Migración de usuarios:} Migración de los distintos usuarios a entornos aislados para evitar conflictos en el uso del servidor por parte de diferentes usuarios. 
+    \item \textbf{Integración de diferentes aplicaciones:} Integración de los servicios externos del laboratorio a la página web.
+    \item \textbf{Pruebas y Documentación:} Testeo de carga, validación de seguridad y redacción de la memoria final.
+\end{enumerate}
+
+% --- 3. DIAGRAMA DE GANTT ---
+\section{Diagrama de Gantt}
+A continuación se presenta la planificación temporal estimada para el desarrollo del proyecto durante el semestre:
+
+\begin{center}
+\begin{ganttchart}[
+    hgrid,
+    vgrid={*1{black!10}},
+    x unit=0.8cm,
+    y unit title=0.7cm,
+    y unit chart=0.8cm,
+    title label font=\footnotesize,
+    canvas/.style={draw=black!50, fill=white},
+    bar/.style={fill=blue!60},
+    bar height=0.5,
+    group periods=false
+    ]{1}{14}
+    \gantttitle{Semanas del Semestre}{14} \\
+    \gantttitlelist{1,...,14}{1} \\
+    \ganttbar{Análisis y BD}{1}{3} \\
+    \ganttbar{Backend y API}{3}{6} \\
+    \ganttbar{Seguridad}{6}{8} \\
+    \ganttbar{Gestión Máquinas}{8}{10} \\
+    \ganttbar{Frontend}{10}{13} \\
+    \ganttbar{Documentación}{12}{14}
+\end{ganttchart}
+\end{center}
+
+% --- 4. COPIA DE LA PROPUESTA DEL TUTOR ---
+\section{Propuesta de trabajo del tutor}
+
+\begin{quote}
+A continuación, se transcribe de forma literal la propuesta aprobada por el tutor responsable:
+
+\textbf{Título:} Plataforma web para la gestión de usuarios y servicios asociados en un grupo de investigación \\ 
+
+\textbf{Profesor responsable:} Alejandro Rodríguez González (alejandro.rg@upm.es) \\
+
+\textbf{Resumen:} \\
+El objetivo del TFG es desarrollar una plataforma web (un dashboard) que permita la gestión de usuarios de un grupo de investigación. Con una serie de detalles relativamente básicos del usuario (datos personales) y de su afiliación (tipo de afiliación y duración (fecha comienzo-fin)), se debe generar un panel que permita dar de alta y baja a usuarios, almacenándolos a una base de datos y pudiendo hacer modificaciones sobre el mismo. También se requiere que se puedan anexar documentos relativos a su inscripción al grupo, o a los servidores a los que va a tener acceso.
+El panel debe además permitir seleccionar a que servicios se le quiere dar acceso al usuario (por ejemplo: acceso a la VPN, acceso a servidores, acceso a servidor de ficheros, gitlab, acceso a Teams, etc.) y contar con un sistema que pueda dar de baja (o deshabilitar) los accesos a dichos servicios cuando el usuario deje de pertenecer al grupo (pase la fecha de fin o se le dé de baja). Para ello, el dashboard debe conectarse con los diferentes servicios que el grupo tenga desplegados en sus servidores y realizar estas operaciones.
+La plataforma también debe contar con medidas adecuadas de seguridad, tanto en lo referido al guardado de la información de usuarios como en lo relativo a la comunicación entre servicios y la plataforma.
+
+\textbf{Objetivos:}\\
+Desarrollar el sistema especificado en el resumen del TFG:
+
+\begin{itemize}
+    \item O1.- Análisis de requisitos del proyecto en general.
+    \item O2.- Diseño del sistema backend.
+    \item O3.- Diseño del frontend.
+    \item O4.- Desarrollo global del sistema.
+    \item O5.- Validación y pruebas.
+    \item O6.- Documentación general del proyecto. 
+\end{itemize}
+
+\textbf{Plan de Trabajo:} \\
+
+DEDICACIÓN TAREAS:
+
+\begin{itemize}
+    \item Formación: 7\%
+    \item Especificación de requisitos: 10\%
+    \item Análisis y diseño: 23\%
+    \item Implementación: 45\%
+    \item Elaboración de la documentación: 8\%
+    \item Elaboración de la memoria: 5\%
+    \item Elaboración de la presentación: 2\%
+\end{itemize}
+\textbf{Conocimientos previos para  recomendados para hacer el trabajo:}	Programación, Bases de datos, Desarrollo web, Seguridad
+\end{quote}
+
+\end{document}
