@@ -49,26 +49,33 @@ WHERE
 			throw error;
 		}
 	}
-	static async postServicio(uuid, req) {
-		const queryPostServicio = `INSERT INTO medal.servicio(nombreServicio, descripcionTecnica, entorno, publico, softwareBase, activo, nivelSeveridad, idUsuario, idPeticion) values($1, $2, $3, $4, $5, $6, $7, $8, $9);
-	    `;
-		const queryInsertarServer = ``;
-		const queryInsertarPuertos = ``;
+	static async postServicio(uuidMaquina, datos) {
+		const uuidServicio = uuidv4();
 		const {
 			nombreServicio,
 			descripcionTecnica,
 			entorno,
-			publico, // boolean
+			publico,
 			softwareBase,
-			activo, //boolean
+			activo,
 			nivelSeveridad,
 			idUsuario,
 			idPeticion,
-			servidores, //Arrray de integers. Relación de corre.
-			puertosAbiertos, // Contiene diferente información => numeroPuertoMaquina, protocolo, nombreServicio, puertoVirtual Relación conecta.
-		} = req.body;
+			servidores,
+			puertosAbiertos,
+		} = datos;
+
+		const client = await pool.connect();
+
 		try {
-			const valuesQueryPostServicios = [
+			await client.query("BEGIN");
+
+			const queryPostServicio = `
+            INSERT INTO medal.servicio(nombreServicio, descripcionTecnica, entorno, publico, softwareBase, activo, nivelSeveridad, idUsuario, idPeticion, uuidservicio) 
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+            RETURNING idservicio;
+        `;
+			const resServicio = await client.query(queryPostServicio, [
 				nombreServicio,
 				descripcionTecnica,
 				entorno,
@@ -78,15 +85,38 @@ WHERE
 				nivelSeveridad,
 				idUsuario,
 				idPeticion,
-			];
-			await pool.query(queryPostServicio, valuesQueryPostServicios);
+				uuidServicio,
+			]);
+
+			const idServicio = resServicio.rows[0].idservicio;
+
+			const queryInsertarServer = `INSERT INTO medal.corre(idServicio, idMaquina) VALUES($1, $2);`;
+			for (const idMaquina of servidores) {
+				await client.query(queryInsertarServer, [idServicio, idMaquina]);
+			}
+
+			const queryInsertarPuertos = `
+            INSERT INTO medal.puertosabiertos(numeroPuertoMaquina, protocolo, nombreServicio, puertovirtual, idservicio) 
+            VALUES($1, $2, $3, $4, $5);
+        `;
+			for (const puerto of puertosAbiertos) {
+				await client.query(queryInsertarPuertos, [
+					puerto.numeroPuertoMaquina,
+					puerto.protocolo,
+					puerto.nombreServicio,
+					puerto.puertoVirtual,
+					idServicio,
+				]);
+			}
+
+			await client.query("COMMIT");
+			return uuidServicio;
 		} catch (error) {
-			console.error(
-				"Error al hacer el post de un servicio para un servidor.",
-				uuid,
-				req,
-			);
+			await client.query("ROLLBACK");
+			console.error("Error en postServicio:", error.message);
 			throw error;
+		} finally {
+			client.release();
 		}
 	}
 }

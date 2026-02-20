@@ -51,7 +51,14 @@ export const postServicios = async (req, res) => {
 
 	try {
 		const resPostServicio = await ServiciosModel.postServicio(uuid, req.body);
-		// TODO: Hacer la respuesta 201 con su location.
+		return res
+			.status(201)
+			.location(`/api/maquina/${uuid}/servicios/${resPostServicio}`)
+			.json({
+				message: "Servicio creado con éxito",
+				id: resPostServicio,
+				url: `${process.env.API_DIRECTION}/api/maquina/${uuid}/servicios/${resPostServicio}`,
+			});
 	} catch (error) {
 		console.error("Un error ha ocurrido en el postServicio", error);
 		return res.status(500).json({ error: "Error interno del servidor." });
