@@ -7,7 +7,10 @@ import {
 	deleteMaquina,
 	getServiciosPorMaquina,
 } from "../controller/serverController.js";
-import { postServicios } from "../controller/serviciosController.js";
+import {
+	postServicios,
+	getServicioByUuid,
+} from "../controller/serviciosController.js";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
@@ -209,7 +212,7 @@ router.delete(
  * /api/maquina/:uuid/servicios:
  *   get:
  *     summary: Obtienes lo servicios asociados a una máquina.
- *     tags: [Máquina]
+ *     tags: [Servicios]
  *     parameters:
  *       - name: uuid
  *         in: path
@@ -348,4 +351,11 @@ router.post(
 	[verificarToken, tienePermiso("maquina:crearServicios", true)],
 	postServicios,
 );
+
+router.get(
+	"/:uuid/servicios/:uuidServicio",
+	[verificarToken, tienePermiso("maquina:verServicios", true)],
+	getServicioByUuid,
+);
+
 export default router;

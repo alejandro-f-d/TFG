@@ -51,6 +51,10 @@ export const postServicios = async (req, res) => {
 
 	try {
 		const resPostServicio = await ServiciosModel.postServicio(uuid, req.body);
+		if (resPostServicio === 2) {
+			return res.status(404).json({ error: "Maquina no encontrada." });
+		}
+
 		return res
 			.status(201)
 			.location(`/api/maquina/${uuid}/servicios/${resPostServicio}`)
@@ -61,6 +65,45 @@ export const postServicios = async (req, res) => {
 			});
 	} catch (error) {
 		console.error("Un error ha ocurrido en el postServicio", error);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
+
+export const getServicioByUuid = async (req, res) => {
+	const { uuid, uuidServicio } = req.params;
+	if (!uuid || !uuidServicio) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+	if (!uuidRegex.test(uuid) || !uuidRegex.test(uuidServicio)) {
+		return res.status(404).json({
+			error: "Máquina o servicio no encontrado (Formato de ID inválido).",
+		});
+	}
+	try {
+		const resGetServicioByUuid = await ServiciosModel.getServicioByUuid(
+			uuid,
+			uuidServicio,
+		);
+
+		if (resGetServicioByUuid === 2) {
+			return res.status(404).json({ error: "Máquina no encontrada." });
+		}
+		if (resGetServicioByUuid === 3) {
+			return res
+				.status(404)
+				.json({
+					error: "El servicio no existe o no está asociado a esta máquina.",
+				});
+		}
+
+		return res.status(200).json({
+			message: "Información obtenida de manera correcta.",
+			info: resGetServicioByUuid,
+		});
+	} catch (error) {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };

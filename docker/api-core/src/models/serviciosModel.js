@@ -71,10 +71,10 @@ WHERE
 			await client.query("BEGIN");
 
 			const queryGetIdServidor = `SELECT idmaquina FROM medal.maquina WHERE uuidmaquina = $1`;
-			const resIdMaq = await client.query(queryGetIdServidor, [uuid]); // IMPORTANTE: Usar client, no pool
+			const resIdMaq = await client.query(queryGetIdServidor, [uuidMaquina]);
 
 			if (resIdMaq.rows.length === 0) {
-				throw new Error("La máquina principal no existe.");
+				return 2;
 			}
 			const idMaquinaPrincipal = resIdMaq.rows[0].idmaquina;
 
@@ -124,6 +124,55 @@ WHERE
 		} catch (error) {
 			await client.query("ROLLBACK");
 			console.error("Error en postServicio:", error.message);
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
+	static async getServicioByUuid(uuidMaquina, uuidServicio) {
+		const queryGetServicioByUuid = `
+        SELECT 
+            s.*, 
+            p.uuidPeticion, 
+            maq.uuidMaquina,
+            COALESCE(puertos_agg.lista_puertos, '[]'::json) AS lista_puertos
+        FROM medal.servicio s
+        INNER JOIN medal.peticion p ON s.idPeticion = p.idPeticion
+        INNER JOIN medal.corre c ON c.idServicio = s.idServicio
+        INNER JOIN medal.maquina maq ON c.idMaquina = maq.idMaquina
+        LEFT JOIN (
+            SELECT idServicio, 
+                   json_agg(json_build_object(
+                       'id', idPuerto, 
+                       'puerto', numeroPuertoMaquina, 
+                       'protocolo', protocolo,
+                       'nombre', nombreServicio
+                   )) AS lista_puertos
+            FROM medal.puertosAbiertos
+            GROUP BY idServicio
+        ) AS puertos_agg ON s.idServicio = puertos_agg.idServicio
+        WHERE s.uuidservicio = $1 AND c.idmaquina = $2;
+    `;
+
+		const queryGetIdServidor = `SELECT idmaquina FROM medal.maquina WHERE uuidmaquina = $1;`;
+		const client = await pool.connect();
+
+		try {
+			const resIdMaq = await client.query(queryGetIdServidor, [uuidMaquina]);
+
+			if (resIdMaq.rows.length === 0) return 2; // Máquina no existe
+
+			const idMaquinaPrincipal = resIdMaq.rows[0].idmaquina;
+			const resDevolver = await client.query(queryGetServicioByUuid, [
+				uuidServicio,
+				idMaquinaPrincipal,
+			]);
+
+			if (resDevolver.rows.length === 0) return 3; // Servicio no encontrado para esa máquina
+
+			return resDevolver.rows[0];
+		} catch (error) {
+			console.error("Error en getServicioByUuid Model:", error);
 			throw error;
 		} finally {
 			client.release();
