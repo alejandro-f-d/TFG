@@ -10,6 +10,7 @@ import {
 import {
 	postServicios,
 	getServicioByUuid,
+	deleteServicioByUuid,
 } from "../controller/serviciosController.js";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 const router = express.Router();
@@ -392,6 +393,12 @@ router.get(
 	"/:uuid/servicios/:uuidServicio",
 	[verificarToken, tienePermiso("maquina:verServicios", true)],
 	getServicioByUuid,
+);
+
+router.delete(
+	"/:uuid/servicios/:uuidServicio",
+	[verificarToken, tienePermiso("maquina:borrarServicios", true)],
+	deleteServicioByUuid,
 );
 
 export default router;

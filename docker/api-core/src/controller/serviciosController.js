@@ -92,11 +92,9 @@ export const getServicioByUuid = async (req, res) => {
 			return res.status(404).json({ error: "Máquina no encontrada." });
 		}
 		if (resGetServicioByUuid === 3) {
-			return res
-				.status(404)
-				.json({
-					error: "El servicio no existe o no está asociado a esta máquina.",
-				});
+			return res.status(404).json({
+				error: "El servicio no existe o no está asociado a esta máquina.",
+			});
 		}
 
 		return res.status(200).json({
@@ -105,5 +103,42 @@ export const getServicioByUuid = async (req, res) => {
 		});
 	} catch (error) {
 		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
+
+export const deleteServicioByUuid = async (req, res) => {
+	const { uuid, uuidServicio } = req.params;
+
+	if (!uuid || !uuidServicio) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+	if (!uuidRegex.test(uuid) || !uuidRegex.test(uuidServicio)) {
+		return res.status(404).json({
+			error: "Máquina o servicio no encontrado (Formato de ID inválido).",
+		});
+	}
+	try {
+		const result = await ServiciosModel.deleteServicioByUuid(
+			uuid,
+			uuidServicio,
+		);
+
+		if (result === 2) {
+			return res.status(404).json({
+				error:
+					"No se puede eliminar: El servicio no existe o no pertenece a la máquina especificada.",
+			});
+		}
+
+		return res
+			.status(200)
+			.json({ message: "Servicio eliminado correctamente." });
+	} catch (error) {
+		return res
+			.status(500)
+			.json({ error: "Error interno al eliminar el servicio." });
 	}
 };

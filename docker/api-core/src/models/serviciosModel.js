@@ -178,5 +178,51 @@ WHERE
 			client.release();
 		}
 	}
+	static async deleteServicioByUuid(uuidMaquina, uuidServicio) {
+		const client = await pool.connect();
+		try {
+			await client.query("BEGIN");
+
+			const queryVerificar = `
+			SELECT s.idservicio, maq.idmaquina 
+			FROM 
+    			medal.servicio s, 
+    			medal.corre c, 
+    			medal.maquina maq
+			WHERE 
+    			s.idservicio = c.idservicio 
+    			AND maq.idmaquina = c.idmaquina 
+    			AND s.uuidservicio = $1 
+    			AND maq.uuidmaquina = $2;
+        `;
+
+			const resVerificar = await client.query(queryVerificar, [
+				uuidServicio,
+				uuidMaquina,
+			]);
+			if (resVerificar.rows.length === 0) {
+				await client.query("ROLLBACK");
+				return 2;
+			}
+			const idServicio = resVerificar.rows[0].idservicio;
+			const queryDeleteCorre = `DELETE FROM medal.corre WHERE idservicio = $1`;
+			await client.query(queryDeleteCorre, [idServicio]);
+			const queryDeletePuertos = `DELETE FROM medal.puertosabiertos WHERE idservicio = $1`;
+			await client.query(queryDeletePuertos, [idServicio]);
+			const queryDeleteServicio = `DELETE FROM medal.servicio WHERE idservicio = $1`;
+			const resDelete = await client.query(queryDeleteServicio, [idServicio]);
+			await client.query("COMMIT");
+			return resDelete.rowCount;
+		} catch (error) {
+			await client.query("ROLLBACK");
+			console.error(
+				"Error en deleteServicioByUuid con verificación de máquina:",
+				error.message,
+			);
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 }
 export default ServiciosModel;

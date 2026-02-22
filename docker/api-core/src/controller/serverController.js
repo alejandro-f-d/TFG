@@ -155,7 +155,7 @@ export const getServiciosPorMaquina = async (req, res) => {
 		if (resGetServiciosPorMaquina === 2) {
 			return res.status(404).json({ error: "Máquina no encontrada." });
 		}
-		console.log(resGetServiciosPorMaquina);
+		// console.log(resGetServiciosPorMaquina);
 		return res.status(200).json({
 			message: "Información de los servicios obtenida con éxito.",
 			info: resGetServiciosPorMaquina,
