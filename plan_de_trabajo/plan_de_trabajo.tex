@@ -9,6 +9,11 @@
 \usepackage{pgfgantt} % Para el diagrama de Gantt
 \usepackage{booktabs}
 \usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1cm]{geometry} % Márgenes mínimos para maximizar espacio
+\usepackage{pgfgantt}
+\usepackage{pdflscape} 
+
 
 % --- Configuración de cabecera ---
 \title{Plan de Trabajo: Plataforma web para la gestión de usuarios y servicios asociados en un grupo de investigación}
@@ -31,6 +36,8 @@ Los objetivos principales del proyecto se desglosan en:
     \item \textbf{Integración de Servicios Externos:} Integrar el manejo de herramientas externas del laboratorio a la página web.
 \end{itemize}
 
+El proyecto se va a dividir en 5 incrementos.
+
 % --- 2. LISTA DE TAREAS ---
 \section{Lista de tareas}
 El desarrollo se ha dividido en los siguientes bloques funcionales:
@@ -48,13 +55,15 @@ El desarrollo se ha dividido en los siguientes bloques funcionales:
 
 % --- 3. DIAGRAMA DE GANTT ---
 \section{Diagrama de Gantt}
-A continuación se presenta la planificación temporal estimada para el desarrollo del proyecto durante el semestre:
+A continuación se presenta la planificación temporal estimada para el desarrollo del proyecto durante el semestre: Este calendario empieza el día 01.01.2026
+
 
 \begin{center}
+\resizebox{\textwidth}{!}{
 \begin{ganttchart}[
     hgrid,
-    vgrid={*1{black!10}},
-    x unit=0.8cm,
+    vgrid,
+    x unit=0.5cm,
     y unit title=0.7cm,
     y unit chart=0.8cm,
     title label font=\footnotesize,
@@ -62,16 +71,25 @@ A continuación se presenta la planificación temporal estimada para el desarrol
     bar/.style={fill=blue!60},
     bar height=0.5,
     group periods=false
-    ]{1}{14}
-    \gantttitle{Semanas del Semestre}{14} \\
-    \gantttitlelist{1,...,14}{1} \\
-    \ganttbar{Análisis y BD}{1}{3} \\
-    \ganttbar{Backend y API}{3}{6} \\
-    \ganttbar{Seguridad}{6}{8} \\
-    \ganttbar{Gestión Máquinas}{8}{10} \\
-    \ganttbar{Frontend}{10}{13} \\
-    \ganttbar{Documentación}{12}{14}
+]{1}{24}
+
+\gantttitle{Semanas del Semestre}{24} \\
+\gantttitlelist{1,...,24}{1} \\
+
+\ganttbar{Análisis de los requisitos Incremento 1 y 2}{1}{3} \\
+\ganttbar{Base de datos Incremento 1}{3}{7} \\
+\ganttbar{Implementación de la base de datos y aprendizaje sobre JWT.}{7}{8} \\
+\ganttbar{Implementación de la API y Swagger de documentación. Pruebas asociadas a la API.}{9}{13} \\
+\ganttbar{Aprendizaje sobre los certificados web e incorporación en la misma.}{12}{13} \\
+\ganttbar{Diseño de la aplicación web en Figma}{13}{13} \\
+\ganttbar{Programación de la página web}{14}{17} \\
+\ganttbar{Migración de usuario y establecimiento de la API para crear los servicios basados en code-server en los servidores}{17}{19} \\
+\ganttbar{Incorporación de servicios externos en la plataforma web.}{20}{23} \\
+\ganttbar{Revisión y correcciones}{24}{24} \\
+\ganttbar{Documentación}{1}{24}
+
 \end{ganttchart}
+}
 \end{center}
 
 % --- 4. COPIA DE LA PROPUESTA DEL TUTOR ---
