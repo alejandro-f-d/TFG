@@ -352,6 +352,42 @@ router.post(
 	postServicios,
 );
 
+/**
+ * @swagger
+ * /api/maquinas/{uuid}/servicios/{uuidServicio}:
+ *   get:
+ *     summary: Obtener un servicio por UUID asociado a una máquina
+ *     description: Retorna la información de un servicio específico perteneciente a una máquina.
+ *     tags:
+ *       - Servicios
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID de la máquina
+ *       - in: path
+ *         name: uuidServicio
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID del servicio
+ *     responses:
+ *       200:
+ *         description: Servicio encontrado correctamente y retorno de la información asociada.
+ *       401:
+ *         description: Token no valido o ausente.
+ *       403:
+ *         description: Carece de los permisos necesarios.
+ *       404:
+ *         description: Servicio no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
 router.get(
 	"/:uuid/servicios/:uuidServicio",
 	[verificarToken, tienePermiso("maquina:verServicios", true)],
