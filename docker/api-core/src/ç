@@ -424,7 +424,7 @@ router.get(
  *       401:
  *         description: No autorizado - Token inválido o ausente
  *       403:
- *         description: Careces de los permisos necesarios.
+ *         description: Prohibido - No tiene permisos suficientes
  *       404:
  *         description: Máquina o servicio no encontrado
  *       500:
