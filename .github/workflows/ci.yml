@@ -34,8 +34,15 @@ jobs:
 
       - name: Wait for API to be ready
         run: |
-          sleep 15
-          curl -f http://localhost:8080 || exit 1
+          echo "Waiting for API to become ready..."
+          for i in {1..20}; do
+            if curl -s -f http://localhost:8080/api/healthcheck; then
+              echo "API is ready!"
+              break
+            fi
+            echo "API not ready yet, waiting 3s..."
+            sleep 3
+          done
 
       - name: Set up Python
         uses: actions/setup-python@v5
