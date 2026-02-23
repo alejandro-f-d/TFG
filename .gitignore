@@ -1,3 +1,6 @@
+## --- Archivos python ---
+*/*__pycache__
+
 ## --- Archivos de salida finales ---
 *.pdf
 *.ps
