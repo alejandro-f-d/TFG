@@ -267,6 +267,155 @@ class TestGestionUsuarios:
         
         assert nuevo_nombre == "Athenea Modificado"
         print(f"✅ Verificación exitosa: El nombre de la máquina es ahora '{nuevo_nombre}'")
+    uuid_servicio_creado = None
+    def test_16_post_crear_servicio_en_maquina(self):
+        """
+        Caso: Crear un nuevo servicio asociado al UUID de la máquina creada.
+        Endpoint: POST /api/maquina/{uuid}/servicios
+        Se espera: 201 Created.
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        assert mid is not None, "Error: No hay UUID de máquina para asociar el servicio."
+        
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/servicios"
+        
+        payload = {
+            "nombreServicio": "Servidor Web de Pruebas",
+            "descripcionTecnica": "Instancia de Apache para el despliegue del microservicio de auditoría.",
+            "entorno": "Desarrollo",
+            "publico": True,
+            "softwareBase": "Apache/2.4.41 (Ubuntu)",
+            "activo": True,
+            "nivelSeveridad": "bajo",
+            "idUsuario": 1,
+            "idPeticion": 1,
+            "servidores": [1, 2],
+            "puertosAbiertos": [
+                {
+                    "numeroPuertoMaquina": 80,
+                    "protocolo": "TCP",
+                    "nombreServicio": "HTTP",
+                    "puertoVirtual": 8080
+                }
+            ]
+        }
+        
+        res = requests.post(url, json=payload, headers=headers)
+        data = res.json()
+        # TestGestionUsuarios.uuid_servicio_creado = data["info"]["uuidServicio"]
+        
+        # Validación: El código 201 indica creación exitosa
+        if res.status_code != 201:
+            print(f"\n❌ Error {res.status_code} al crear servicio: {res.text}")
+            
+        assert res.status_code == 201
+        print(f"\n✅ Servicio '{payload['nombreServicio']}' creado con éxito para la máquina {mid}")
+    def test_17_get_servicios_de_maquina(self):
+        """
+        Caso: Obtener los servicios asociados a una máquina.
+        Soporta respuestas donde 'info' es un objeto único o una lista.
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        assert mid is not None
+        
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/servicios"
+        
+        params = {"page": 1, "limit": 10, "filtroNombre": "Servidor Web"}
+        res = requests.get(url, headers=headers, params=params)
+        
+        assert res.status_code == 200
+        data = res.json()
+        
+        # Extraemos 'info'
+        info_data = data.get("info", [])
+        
+        # Normalizamos: si es un dict, lo metemos en una lista; si es lista, se queda igual
+        servicios = [info_data] if isinstance(info_data, dict) else info_data
+        
+        assert isinstance(servicios, list), f"No se pudo procesar 'info' como lista. Tipo: {type(info_data)}"
+        assert len(servicios) > 0, "No se encontraron servicios en la máquina"
+        
+        # Verificamos el nombre (atención a posibles minúsculas en las llaves del JSON)
+        # Usamos .lower() para ser más flexibles con el nombre
+        nombres = [str(s.get("nombreServicio", s.get("nombreservicio", ""))) for s in servicios]
+        
+        assert any("Servidor Web" in n for n in nombres), f"No se encontró el servicio. Nombres en BD: {nombres}"
+        
+        print(f"✅ Servicios validados correctamente (formato {type(info_data).__name__}): {nombres}")
+        # Guardamos el uuid del servicio encontrado
+        primer_servicio = servicios[0]
+        uuid_servicio = primer_servicio.get("uuidServicio") or primer_servicio.get("uuidservicio")
+
+        assert uuid_servicio is not None, f"No se encontró uuidServicio en: {primer_servicio}"
+
+        TestGestionUsuarios.uuid_servicio_creado = uuid_servicio
+    def test_18_get_servicio_por_uuid(self):
+        """
+        Caso: Obtener un servicio específico por su UUID asociado a una máquina.
+        Endpoint: GET /api/maquina/{uuid}/servicios/{uuidServicio}
+        Se espera: 200 OK.
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        uuid_servicio = TestGestionUsuarios.uuid_servicio_creado
+        
+        assert mid is not None, "Error: No hay UUID de máquina disponible."
+        assert uuid_servicio is not None, "Error: No hay UUID de servicio disponible."
+        
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/servicios/{uuid_servicio}"
+        
+        res = requests.get(url, headers=headers)
+        
+        if res.status_code != 200:
+            print(f"\n❌ Error {res.status_code} al obtener servicio por UUID: {res.text}")
+        
+        assert res.status_code == 200
+        
+        data = res.json()
+        assert "info" in data, "La respuesta no contiene el campo 'info'"
+        
+        servicio = data["info"]
+        assert isinstance(servicio, dict), f"Se esperaba un objeto dict, se obtuvo {type(servicio)}"
+        
+        # Validamos algunos campos clave
+        nombre_servicio = servicio.get("nombreServicio", servicio.get("nombreservicio", ""))
+        assert nombre_servicio == "Servidor Web de Pruebas", \
+            f"El nombre del servicio no coincide. Recibido: {nombre_servicio}"
+        
+        print(f"✅ Servicio obtenido correctamente por UUID: {uuid_servicio}")
+    def test_19_delete_servicio_por_uuid(self):
+        """
+        Caso: Eliminar un servicio específico asociado a una máquina.
+        Endpoint: DELETE /api/maquina/{uuid}/servicios/{uuidServicio}
+        Se espera: 200 OK o 204 No Content.
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        uuid_servicio = TestGestionUsuarios.uuid_servicio_creado
+
+        assert mid is not None, "Error: No hay UUID de máquina disponible."
+        assert uuid_servicio is not None, "Error: No hay UUID de servicio disponible."
+
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/servicios/{uuid_servicio}"
+
+        res = requests.delete(url, headers=headers)
+
+        if res.status_code not in (200, 204):
+            print(f"\n❌ Error {res.status_code} al eliminar servicio: {res.text}")
+
+        assert res.status_code in (200, 204)
+
+        print(f"\n✅ DELETE enviado correctamente para el servicio: {uuid_servicio}")
+
+        # 🔎 Verificación: Intentar obtener el servicio eliminado debe devolver 404
+        res_check = requests.get(url, headers=headers)
+
+        assert res_check.status_code == 404, \
+            f"El servicio aún existe después del DELETE. Status: {res_check.status_code}"
+
+        print("✅ Verificación exitosa: El servicio ya no existe (404).")
     def test_15_delete_maquina(self):
         """
         Caso: Eliminar una máquina por su UUID.
