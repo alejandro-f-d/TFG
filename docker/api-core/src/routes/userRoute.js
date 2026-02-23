@@ -231,7 +231,7 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *               nombre: "Alejandro Modificado"
  *               activo: false
  *     responses:
- *       200:
+ *       204:
  *         description: Actualizado con éxito.
  *       403:
  *         description: Careces de los permisos necesarios. 

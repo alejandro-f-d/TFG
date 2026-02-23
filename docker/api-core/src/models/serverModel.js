@@ -192,5 +192,71 @@ WHERE
 			throw error;
 		}
 	}
+	static async patchServer(uuid, camposCambiados) {
+		const client = await pool.connect();
+
+		try {
+			const camposPermitidos = [
+				"nombre",
+				"caducidadssl",
+				"certificadosslactivo",
+				"emisorssl",
+				"direccionipprivadav4",
+				"direccionippublicav4",
+				"direccionipprivadav6",
+				"direccionippublicav6",
+				"puertaenlacev4",
+				"puertaenlacev6",
+				"ram",
+				"sistemaoperativo",
+				"esservidor",
+			];
+
+			const camposFiltrados = {};
+			Object.keys(camposCambiados).forEach((key) => {
+				if (camposPermitidos.includes(key)) {
+					camposFiltrados[key] = camposCambiados[key];
+				}
+			});
+
+			const keys = Object.keys(camposFiltrados);
+			if (keys.length === 0) {
+				const check = await client.query(
+					"SELECT 1 FROM medal.maquina WHERE uuidmaquina = $1",
+					[uuid],
+				);
+				await client.query("COMMIT");
+				return check.rowCount > 0 ? { status: "OK" } : 2;
+			}
+			if (keys.length > 0) {
+				const values = Object.values(camposFiltrados);
+				const setQuery = keys
+					.map((key, index) => `${key} = $${index + 1}`) // Nota mental: Lo que hace el index +1 es crearme las posiciones para los valores del array de entrada: $1, $2, ..., $n
+					.join(", ");
+				values.push(uuid);
+				const res = await client.query(
+					`UPDATE medal.maquina SET ${setQuery} WHERE uuidmaquina = $${values.length};`,
+					values,
+				);
+				if (res.rowCount === 0) {
+					await client.query("ROLLBACK");
+					return 2;
+				}
+			}
+			await client.query("COMMIT");
+			return { status: "OK" };
+		} catch (error) {
+			await client.query("ROLLBACK");
+			console.error(
+				"Se ha producido un error al hacer patch del server:",
+				uuid,
+				camposCambiados,
+				error,
+			);
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 }
 export default ServerModel;

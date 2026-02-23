@@ -6,6 +6,7 @@ import {
 	getMaquina,
 	deleteMaquina,
 	getServiciosPorMaquina,
+	patchServer,
 } from "../controller/serverController.js";
 import {
 	postServicios,
@@ -176,6 +177,45 @@ router.get("/", verificarToken, getMaquinas);
  */
 
 router.get("/:uuid", verificarToken, getMaquina);
+
+/**
+ * @swagger
+ * /api/maquina/{uuid}:
+ *   patch:
+ *     summary: Actualiza parcialmente una máquina.
+ *     tags: [Máquina]
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID de la máquina.
+
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             example:
+ *               nombre: "Athenea Modificado"
+ *     responses:
+ *       204:
+ *         description: Actualizado con éxito.
+ *       403:
+ *         description: Careces de los permisos necesarios. 
+ *       404:
+ *         description: Máquina no encontrada.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+
+router.patch(
+	"/:uuid",
+	[verificarToken, tienePermiso("maq:editServer")],
+	patchServer,
+);
 
 /**
  * @swagger
