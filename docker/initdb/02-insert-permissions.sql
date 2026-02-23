@@ -112,6 +112,7 @@ INSERT INTO medal.rolesTiene(idRole, idUsuario) values(3,3);
 
 INSERT INTO medal.operaCon(idRole, idPermiso) values(1,1);
 INSERT INTO medal.operaCon(idRole, idPermiso) values(2,3);
-INSERT INTO medal.operaCon(idRole, idPermiso) values(2,4);
+INSERT INTO medal.operaCon(idRole, idPermiso) values(2,7);
+INSERT INTO medal.operaCon(idRole, idPermiso) values(2,9);
 INSERT INTO medal.operaCon(idRole, idPermiso) values(3,2);
 

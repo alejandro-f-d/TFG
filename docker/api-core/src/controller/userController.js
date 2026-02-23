@@ -78,7 +78,7 @@ export const postUser = async (req, res) => {
 				.location(`/api/user/${resultado.id}`)
 				.json({
 					message: "Usuario creado con éxito",
-					id: resultado.id,
+					uuid: resultado.id,
 					url: `${process.env.API_DIRECTION}/api/user/${resultado.id}`,
 				});
 		} else {
@@ -240,6 +240,11 @@ export const login = async (req, res) => {
 		}
 		const resBbdd =
 			await UserModel.getPasswordByCorreoInstitucional(correoInstitucional);
+		if (!resBbdd) {
+			// El usuario no existe en la BD
+			await UserModel.intentoInicioSesion(ip, correoInstitucional, false);
+			return res.status(401).json({ error: "Credenciales inválidas." });
+		}
 		const contrasenaHashGuardada = resBbdd.contrasena;
 		const esValidaContrasena = await bcrypt.compare(
 			contrasena,
