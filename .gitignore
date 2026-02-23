@@ -1,5 +1,5 @@
 ## --- Archivos python ---
-*/*__pycache__
+__pycache__/
 
 ## --- Archivos de salida finales ---
 *.pdf

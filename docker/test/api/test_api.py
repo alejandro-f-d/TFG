@@ -232,3 +232,63 @@ class TestGestionUsuarios:
         
         assert nombre_actual == "test usuario modificado"
         print(f"✅ Verificación exitosa: El nombre en BD es ahora '{nombre_actual}'")
+    def test_13_patch_modificar_maquina(self):
+        """
+        Caso: Actualizar parcialmente el nombre de una máquina.
+        Endpoint: PATCH /api/maquina/{uuid}
+        Se espera: 204 No Content.
+        """
+        # Recuperamos el UUID de la máquina creada anteriormente
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        assert mid is not None, "Error: No se dispone de un UUID de máquina para modificar."
+        
+        # Usamos el token de admin (o el del dueño con permisos)
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}"
+        
+        payload = {
+            "nombre": "Athenea Modificado"
+        }
+        
+        # Ejecución de la petición PATCH
+        res = requests.patch(url, json=payload, headers=headers)
+        
+        # Validación: El código 204 indica éxito (sin contenido)
+        assert res.status_code == 204
+        print(f"\n✅ PATCH enviado correctamente a la máquina: {mid}")
+
+        # --- VERIFICACIÓN ---
+        # Realizamos un GET para confirmar que el nombre ha cambiado en la base de datos
+        res_check = requests.get(url, headers=headers)
+        assert res_check.status_code == 200
+        
+        data_check = res_check.json().get("info", res_check.json())
+        nuevo_nombre = data_check.get("nombre")
+        
+        assert nuevo_nombre == "Athenea Modificado"
+        print(f"✅ Verificación exitosa: El nombre de la máquina es ahora '{nuevo_nombre}'")
+    def test_15_delete_maquina(self):
+        """
+        Caso: Eliminar una máquina por su UUID.
+        Endpoint: DELETE /api/maquina/{uuid}
+        Se espera: 204 No Content.
+        """
+        # Recuperamos el UUID de la máquina que modificamos antes
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        assert mid is not None, "Error: No hay UUID de máquina para eliminar."
+        
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}"
+        
+        # Ejecución de la petición DELETE
+        res = requests.delete(url, headers=headers)
+        
+        # Validación: Código 204 indica eliminación exitosa
+        assert res.status_code == 204
+        print(f"\n✅ DELETE enviado correctamente para la máquina: {mid}")
+
+        # --- VERIFICACIÓN ---
+        # Al intentar obtenerla de nuevo, debería devolver 404
+        res_check = requests.get(url, headers=headers)
+        assert res_check.status_code == 404
+        print(f"✅ Verificación exitosa: La máquina ya no existe (404).")
