@@ -26,22 +26,37 @@ jobs:
           echo "API_PORT_EXTERNAL=8080" >> docker/.env
           echo "PORT=8080" >> docker/.env
           echo "JWT_SECRET=testsecret" >> docker/.env
+          
+          # Mostrar el .env creado
+          cat docker/.env
 
       - name: Start containers (DB + API)
         working-directory: docker
         run: |
           docker compose up -d medal-bdd-postgres medal-api-core
+          docker compose ps
+
+      - name: Debug - Check container logs
+        run: |
+          echo "=== Docker container status ==="
+          docker ps -a
+          echo "=== API container logs ==="
+          docker logs $(docker ps -q --filter "name=medal-api-core") || echo "No logs available"
+          echo "=== DB container logs ==="
+          docker logs $(docker ps -q --filter "name=medal-bdd-postgres") || echo "No logs available"
 
       - name: Wait for API to be ready
         run: |
           echo "Waiting for API to become ready..."
-          for i in {1..20}; do
-            if curl -s -f http://localhost:8080/api/healthcheck; then
-              echo "API is ready!"
+          for i in {1..30}; do
+            echo "Attempt $i: Checking API health..."
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/healthcheck | grep -q "200"; then
+              echo "✅ API is ready!"
+              curl -v http://localhost:8080/api/healthcheck
               break
             fi
-            echo "API not ready yet, waiting 3s..."
-            sleep 3
+            echo "API not ready yet (attempt $i/30), waiting 5s..."
+            sleep 5
           done
 
       - name: Set up Python
@@ -52,11 +67,19 @@ jobs:
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest requests
+          pip install pytest requests pytest-order
 
-      - name: Run tests
+      - name: Debug - Show test file
         run: |
-          pytest docker/test/api -v
+          echo "=== Test directory ==="
+          ls -la docker/test/api/
+          echo "=== Test file content ==="
+          cat docker/test/api/test_api.py
+
+      - name: Run tests with ordering
+        run: |
+          # Ejecutar tests en orden específico usando pytest-order
+          pytest docker/test/api/test_api.py -v -s --tb=short || true
 
       - name: Stop containers
         if: always()
