@@ -2,7 +2,7 @@ name: CI API Medal Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, incremento_ii ]
   pull_request:
     branches: [ main ]
 
