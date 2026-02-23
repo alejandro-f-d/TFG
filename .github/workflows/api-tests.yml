@@ -1,0 +1,67 @@
+name: CI API Tests
+
+on:
+  push:
+    branches: [ main, incremento_ii ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install pytest requests
+
+      - name: Crear archivo .env para Docker
+        working-directory: ./docker
+        run: |
+          # Creamos el archivo .env dinámicamente para GitHub Actions
+          echo "DB_USER=root" >> .env
+          echo "DB_PASSWORD=1" >> .env
+          echo "DB_NAME=medal" >> .env
+          echo "API_PORT_EXTERNAL=8080" >> .env
+          echo "DB_PORT_EXTERNAL=10001" >> .env
+          echo "DB_HOST=medal-bdd-postgres" >> .env
+          echo "DB_PORT_INTERNAL=5432" >> .env
+          echo "API_DIRECTION=http://localhost:8080" >> .env
+          echo "PORT=8080" >> .env
+          echo "JWT_SECRET=5e40edda6cd84b78d3944603a60d8a19fd736035765542a257f252dba23327ed" >> .env
+
+      - name: Levantar BDD y API
+        working-directory: ./docker
+        run: |
+          # Levantamos solo los servicios críticos
+          docker-compose up -d --build medal-bdd-postgres medal-api-core
+
+      - name: Esperar a que la API esté lista
+        run: |
+          # Reintenta contra el puerto 8080 (API_PORT_EXTERNAL)
+          timeout 60s bash -c 'until curl -s http://localhost:8080/api/user/login > /dev/null; do sleep 2; done'
+          echo "🚀 API Medal lista para recibir peticiones."
+
+      - name: Ejecutar Pytest
+        working-directory: ./docker/test/api
+        run: |
+          pytest test_api.py -v -s
+
+      - name: Debug si falla
+        if: failure()
+        run: |
+          docker ps
+          docker logs apiMedal
+          docker logs dbMedal
+
+      - name: Detener servicios
+        if: always()
+        working-directory: ./docker
+        run: docker-compose down
