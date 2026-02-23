@@ -168,7 +168,7 @@ class UserModel {
 		}
 	}
 
-	static async patchUser(uuid, campos) {
+	static async patchUser(uuid, campos, esUser) {
 		const client = await pool.connect();
 		try {
 			await client.query("BEGIN");
@@ -177,10 +177,41 @@ class UserModel {
 				campos;
 
 			let idUsuarioReal; // ID para tablas intermedias.
+			let camposPermitidos;
+			if (!esUser) {
+				camposPermitidos = [
+					"nombre",
+					"apellido1",
+					"apellido2",
+					"teams",
+					"esresponsable",
+					"usuariovpn",
+					"correoinstitucional",
+					"activo",
+					"fechafin",
+					"wifi",
+					"tarjetaacceso",
+					"diriplastlogin",
+					"contrasena",
+					"gitlab",
+					"responsable",
+					"jefelaboratorio",
+					"fotoPerfil",
+				];
+			} else {
+				camposPermitidos = ["nombre", "apellido1", "apellido2", "fotoPerfil"];
+			}
 
-			const keys = Object.keys(camposUsuario);
+			const camposFiltrados = {};
+			Object.keys(campos).forEach((key) => {
+				if (camposPermitidos.includes(key)) {
+					camposFiltrados[key] = campos[key];
+				}
+			});
+
+			const keys = Object.keys(camposFiltrados);
 			if (keys.length > 0) {
-				const values = Object.values(camposUsuario);
+				const values = Object.values(camposFiltrados);
 				const setQuery = keys
 					.map((key, index) => `${key} = $${index + 1}`)
 					.join(", ");
@@ -200,49 +231,52 @@ class UserModel {
 			}
 
 			if (!idUsuarioReal) throw new Error("Usuario no encontrado");
-			// --- Roles ---
-			if (roles !== undefined) {
-				await client.query(
-					"DELETE FROM medal.rolestiene WHERE idusuario = $1",
-					[idUsuarioReal],
-				);
-				if (Array.isArray(roles)) {
-					for (const rolId of roles) {
-						await client.query(
-							"INSERT INTO medal.rolestiene(idrole, idusuario) VALUES($1, $2)",
-							[rolId, idUsuarioReal],
-						);
+
+			if (!esUser) {
+				// --- Roles ---
+				if (roles !== undefined) {
+					await client.query(
+						"DELETE FROM medal.rolestiene WHERE idusuario = $1",
+						[idUsuarioReal],
+					);
+					if (Array.isArray(roles)) {
+						for (const rolId of roles) {
+							await client.query(
+								"INSERT INTO medal.rolestiene(idrole, idusuario) VALUES($1, $2)",
+								[rolId, idUsuarioReal],
+							);
+						}
 					}
 				}
-			}
 
-			// --- Puertas ---
-			if (puertasAutorizadas !== undefined) {
-				await client.query("DELETE FROM medal.accede WHERE idusuario = $1", [
-					idUsuarioReal,
-				]);
-				if (Array.isArray(puertasAutorizadas)) {
-					for (const pId of puertasAutorizadas) {
-						await client.query(
-							"INSERT INTO medal.accede(idusuario, idpuerta) VALUES($1, $2)",
-							[idUsuarioReal, pId],
-						);
+				// --- Puertas ---
+				if (puertasAutorizadas !== undefined) {
+					await client.query("DELETE FROM medal.accede WHERE idusuario = $1", [
+						idUsuarioReal,
+					]);
+					if (Array.isArray(puertasAutorizadas)) {
+						for (const pId of puertasAutorizadas) {
+							await client.query(
+								"INSERT INTO medal.accede(idusuario, idpuerta) VALUES($1, $2)",
+								[idUsuarioReal, pId],
+							);
+						}
 					}
 				}
-			}
 
-			// --- Máquinas ---
-			if (duenoMaquina !== undefined) {
-				await client.query(
-					"DELETE FROM medal.propietario WHERE idusuario = $1",
-					[idUsuarioReal],
-				);
-				if (Array.isArray(duenoMaquina)) {
-					for (const mId of duenoMaquina) {
-						await client.query(
-							"INSERT INTO medal.propietario(idusuario, idmaquina) VALUES($1, $2)",
-							[idUsuarioReal, mId],
-						);
+				// --- Máquinas ---
+				if (duenoMaquina !== undefined) {
+					await client.query(
+						"DELETE FROM medal.propietario WHERE idusuario = $1",
+						[idUsuarioReal],
+					);
+					if (Array.isArray(duenoMaquina)) {
+						for (const mId of duenoMaquina) {
+							await client.query(
+								"INSERT INTO medal.propietario(idusuario, idmaquina) VALUES($1, $2)",
+								[idUsuarioReal, mId],
+							);
+						}
 					}
 				}
 			}

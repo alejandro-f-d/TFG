@@ -178,7 +178,7 @@ export const patchUser = async (req, res) => {
 					salt,
 				);
 			}
-			if (darBaja) {
+			if (darBaja && !uuidDelToken === uuid) {
 				//Si está activo, solamente se pasa el usuario a que ya no está activo, el resto de campos se mantienen igual.
 				const resultado = await UserModel.darBaja(uuid);
 				if (resultado.rowCount === 0) {
@@ -195,7 +195,13 @@ export const patchUser = async (req, res) => {
 					.status(400)
 					.json({ error: "No se han enviado campos a actualizar." });
 			}
-			const resultado = await UserModel.patchUser(uuid, camposCambiados);
+			const resultado = await UserModel.patchUser(
+				uuid,
+				camposCambiados,
+				uuidDelToken === uuid &&
+					!permisos.includes("usr:editUsuario") &&
+					!permisos.includes("admin:total"),
+			);
 			if (resultado.rowCount === 0) {
 				return res.status(404).json({ error: "Usuario no encontrado." });
 			}

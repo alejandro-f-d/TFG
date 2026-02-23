@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS medal.usuario (
   wifi BOOLEAN DEFAULT FALSE,
   tarjetaAcceso VARCHAR(20), 
   dirIpLastLogin VARCHAR(39),
+  fotoPerfil BYTEA,
   uuidUsuario UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(), 
   contrasena VARCHAR(1000),
   gitlab VARCHAR(50) UNIQUE, 
