@@ -49,6 +49,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('maq:editS
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('servicios:getAll', 'Obtener todo el listado de servicios.', 'Permite al usuario obtener todo el listado de servicios.', 'servicios');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('gitlab:postProyecto', 'Creación de un nuevo proyecto.', 'Permite al usuario la creación de un nuevo proyecto de gitlab.', 'gitlab');
+
 
 -- ====================================
 -- Roles:
