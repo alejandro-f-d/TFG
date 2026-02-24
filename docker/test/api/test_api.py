@@ -634,3 +634,99 @@ class TestGestionUsuarios:
         
         assert res.status_code == 400
         print(f"✅ Error 400 validado correctamente ante datos insuficientes.")
+
+    def test_33_get_proyectos_gitlab_paginado(self):
+        """
+        Caso: Obtener lista de proyectos y validar estructura de respuesta y paginación.
+        """
+        base = self.BASE_URL.rstrip('/')
+        url = f"{base}/proyectosgitlab"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        params = {
+            "page": 1,
+            "limit": 5
+        }
+
+        res = requests.get(url, headers=headers, params=params)
+        
+        assert res.status_code == 200
+        data = res.json()
+        
+        # 1. Validar estructura de primer nivel
+        assert data["message"] == "Lista de proyectos de gitlab devuelta correctamente."
+        assert "info" in data
+        
+        # 2. Validar estructura de 'info'
+        info = data["info"]
+        assert info["status"] == "OK"
+        assert isinstance(info["rows"], list)
+        
+        # 3. Validar objeto de paginación (está en dos sitios según tu JSON)
+        pagination = data.get("pagination")
+        assert pagination is not None
+        assert "totalItems" in pagination
+        assert pagination["currentPage"] == 1
+        
+        print(f"✅ Lista recibida. Total items: {pagination['totalItems']}")
+
+    def test_34_get_proyectos_gitlab_filtro_nombre(self):
+        """
+        Caso: Filtrar por nombre y validar que los resultados coincidan.
+        """
+        base = self.BASE_URL.rstrip('/')
+        url = f"{base}/proyectosgitlab"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        nombre_a_buscar = "IA-Research"
+        params = {"filtroNombre": nombre_a_buscar}
+
+        res = requests.get(url, headers=headers, params=params)
+        assert res.status_code == 200
+        
+        data = res.json()
+        proyectos = data["info"]["rows"] # Acceso a la lista real
+
+        # Verificamos que los resultados contengan el filtro
+        for p in proyectos:
+            # PostgreSQL suele devolver las claves en minúsculas
+            nombre_proyecto = p.get("nombre", "")
+            assert nombre_a_buscar.lower() in nombre_proyecto.lower()
+            
+        print(f"✅ Filtro verificado. Se encontraron {len(proyectos)} coincidencias.")
+
+    def test_35_get_proyectos_gitlab_vacio(self):
+        """
+        Caso: Filtro que no coincide con nada.
+        """
+        base = self.BASE_URL.rstrip('/')
+        url = f"{base}/proyectosgitlab"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        params = {"filtroNombre": "NOMBRE_QUE_NO_EXISTE_123456"}
+        res = requests.get(url, headers=headers, params=params)
+        
+        assert res.status_code == 200
+        data = res.json()
+        # La API debería devolver una lista vacía en 'rows', no un error
+        assert len(data["info"]["rows"]) == 0
+        print("✅ Correcto: Lista vacía para filtro inexistente.")
+
+    def test_36_verificar_formato_uuid(self):
+        """
+        Caso: Verificar que los proyectos traen un UUID válido.
+        """
+        base = self.BASE_URL.rstrip('/')
+        url = f"{base}/proyectosgitlab"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        res = requests.get(url, headers=headers)
+        proyectos = res.json()["info"]["rows"]
+        
+        if len(proyectos) > 0:
+            uuid_proyecto = proyectos[0].get("uuidproyecto")
+            # Validamos formato básico de UUID (8-4-4-4-12 hex)
+            import re
+            regex = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            assert re.match(regex, uuid_proyecto.lower())
+            print(f"✅ Formato UUID verificado: {uuid_proyecto}")

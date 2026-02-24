@@ -160,6 +160,169 @@ router.post(
 	postProyectoGitlab,
 );
 
+/**
+ * @swagger
+ * /api/proyectosgitlab:
+ *   get:
+ *     summary: Obtiene lista paginada de proyectos GitLab
+ *     description: Retorna una lista paginada de proyectos GitLab con filtrado opcional por nombre
+ *     tags: [Proyectos GitLab]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número de página para paginación
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 5
+ *         description: Cantidad de proyectos por página (máx. 100)
+ *         example: 10
+ *       - in: query
+ *         name: filtroNombre
+ *         schema:
+ *           type: string
+ *         description: Filtro por nombre del proyecto (búsqueda parcial case-insensitive)
+ *         example: "proyecto"
+ *     responses:
+ *       200:
+ *         description: Lista de proyectos obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Lista de proyectos de gitlab devuelta correctamente."
+ *                 info:
+ *                   type: object
+ *                   properties:
+ *                     status:
+ *                       type: string
+ *                       example: "OK"
+ *                     rows:
+ *                       type: array
+ *                       description: Array de proyectos
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           idproyecto:
+ *                             type: integer
+ *                             description: ID interno del proyecto
+ *                             example: 1
+ *                           uuidproyecto:
+ *                             type: string
+ *                             format: uuid
+ *                             description: UUID del proyecto
+ *                             example: "123e4567-e89b-12d3-a456-426614174000"
+ *                           nombre:
+ *                             type: string
+ *                             description: Nombre del proyecto
+ *                             example: "Proyecto Alpha"
+ *                           descripcion:
+ *                             type: string
+ *                             description: Descripción del proyecto
+ *                             example: "Proyecto principal de desarrollo backend"
+ *                           fechainicio:
+ *                             type: string
+ *                             format: date
+ *                             description: Fecha de inicio
+ *                             example: "2024-01-15"
+ *                           fechafin:
+ *                             type: string
+ *                             format: date
+ *                             description: Fecha de finalización
+ *                             example: "2024-12-31"
+ *                           activo:
+ *                             type: boolean
+ *                             description: Estado del proyecto
+ *                             example: true
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                       description: Número total de proyectos que coinciden con el filtro
+ *                       example: 25
+ *                     totalPages:
+ *                       type: integer
+ *                       description: Número total de páginas
+ *                       example: 3
+ *                     currentPage:
+ *                       type: integer
+ *                       description: Página actual
+ *                       example: 1
+ *       400:
+ *         description: No se encontraron proyectos con el filtro especificado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No se han encontrado usuarios que coincidan con: proyecto"
+ *             examples:
+ *               sinResultados:
+ *                 summary: Búsqueda sin resultados
+ *                 value:
+ *                   message: "No se han encontrado usuarios que coincidan con: proyectoInexistente"
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *         headers:
+ *           WWW-Authenticate:
+ *             schema:
+ *               type: string
+ *             description: Indica el método de autenticación requerido
+ *             example: "Bearer"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
 router.get(
 	"/",
 	[verificarToken, tienePermiso("gitlab:getProyecto")],
