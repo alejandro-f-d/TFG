@@ -385,6 +385,129 @@ class TestGestionUsuarios:
             f"El nombre del servicio no coincide. Recibido: {nombre_servicio}"
         
         print(f"✅ Servicio obtenido correctamente por UUID: {uuid_servicio}")
+
+    def test_20_patch_servicio_exito(self):
+        """
+        Caso: Actualización exitosa (204) y verificación de persistencia (200).
+        """
+        # 1. Preparación de datos
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        sid = TestGestionUsuarios.uuid_servicio_creado
+        
+        assert mid is not None and sid is not None, "Error: UUIDs de máquina o servicio no encontrados"
+
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/servicios/{sid}"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # Valores que queremos actualizar
+        nuevo_nombre = "Apache Web Server v2.4 Updated"
+        nueva_desc = "Servidor optimizado para produccion"
+        
+        payload = {
+            "nombreServicio": nuevo_nombre,
+            "descripcionTecnica": nueva_desc,
+            "entorno": "produccion",
+            "publico": True,
+            "softwareBase": "Apache 2.4",
+            "activo": True,
+            "nivelSeveridad": "alto",
+            "servidores": [1, 2, 3], # Asegúrate de que estos IDs de servidor existen en tu DB de pruebas
+            "puertosAbiertos": [
+                {
+                    "numeroPuertoMaquina": 80,
+                    "protocolo": "TCP",
+                    "nombreServicio": "http",
+                    "puertoVirtual": 8080
+                }
+            ]
+        }
+
+        # 2. Ejecutar el PATCH
+        print(f"\nEnviando PATCH a: {url}")
+        res_patch = requests.patch(url, json=payload, headers=headers)
+        
+        # Validamos que el controlador responda 204 (No Content)
+        assert res_patch.status_code == 204
+        print(f"✅ PATCH exitoso (Status 204)")
+
+        # 3. Verificar la actualización con un GET
+        res_get = requests.get(url, headers=headers)
+        assert res_get.status_code == 200
+        
+        datos_api = res_get.json()
+        
+        # Extraemos el objeto 'info' según la estructura de tu API
+        info = datos_api.get("info", {})
+        
+        # Debug por si algo falla (ver con pytest -s)
+        print(f"DEBUG: Datos en 'info': {info}")
+
+        # 4. Validaciones de integridad (claves en minúscula por Postgres)
+        nombre_db = info.get("nombreservicio")
+        desc_db = info.get("descripciontecnica")
+        entorno_db = info.get("entorno")
+        puertos = info.get("lista_puertos", [])
+
+        assert nombre_db == nuevo_nombre, f"Fallo: se esperaba '{nuevo_nombre}', pero la DB tiene '{nombre_db}'"
+        assert desc_db == nueva_desc
+        assert entorno_db == "produccion"
+        
+        # Verificamos que al menos el puerto que enviamos esté presente
+        assert len(puertos) > 0, "La lista de puertos está vacía"
+        assert puertos[0]["puerto"] == 80
+        assert puertos[0]["protocolo"] == "TCP"
+
+        print(f"✅ VERIFICACIÓN OK: Los datos se han persistido correctamente en la DB.")
+    def test_21_patch_servicio_vacio_error(self):
+        """
+        Caso: Enviar un cuerpo vacío o sin campos de actualización.
+        Respuesta esperada: 400 Bad Request.
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        sid = TestGestionUsuarios.uuid_servicio_creado
+        
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/servicios/{sid}"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # Payload vacío para forzar el error 400
+        res = requests.patch(url, json={}, headers=headers)
+        
+        assert res.status_code == 400
+        data = res.json()
+        assert "error" in data
+        print(f"✅ Error 400 validado: {data['error']}")
+
+    def test_22_patch_servicio_no_encontrado(self):
+        """
+        Caso: Intentar actualizar un servicio con un UUID inexistente.
+        Respuesta esperada: 404 Not Found.
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        uuid_falso = "00000000-0000-0000-0000-000000000000"
+        
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/servicios/{uuid_falso}"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        payload = {"nombreServicio": "Inexistente"}
+        res = requests.patch(url, json=payload, headers=headers)
+        
+        assert res.status_code == 404
+        print("✅ Error 404 validado para servicio inexistente.")
+
+    def test_23_patch_servicio_sin_token(self):
+        """
+        Caso: Intentar actualizar sin proporcionar el token.
+        Respuesta esperada: 401 Unauthorized.
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        sid = TestGestionUsuarios.uuid_servicio_creado
+        
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/servicios/{sid}"
+        
+        res = requests.patch(url, json={"nombreServicio": "Sin Token"})
+        
+        assert res.status_code == 401
+        print("✅ Error 401 validado: No autorizado.")
     def test_19_delete_servicio_por_uuid(self):
         """
         Caso: Eliminar un servicio específico asociado a una máquina.

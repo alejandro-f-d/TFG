@@ -224,10 +224,12 @@ WHERE
 			client.release();
 		}
 	}
-	static async patchServer(uuidMaquina, uuidServicio, camposCambiados) {
+	static async patchServicio(uuidMaquina, uuidServicio, camposCambiados) {
 		const client = await pool.connect();
 		const { servidores, puertosAbiertos, ...camposServicio } = camposCambiados;
+
 		try {
+			await client.query("BEGIN");
 			const camposPermitidos = [
 				"nombreServicio",
 				"descripcionTecnica",
@@ -237,45 +239,54 @@ WHERE
 				"activo",
 				"nivelSeveridad",
 			];
+
 			const camposFiltrados = {};
 			Object.keys(camposServicio).forEach((key) => {
 				if (camposPermitidos.includes(key)) {
-					camposFiltrados[key] = camposCambiados[key];
+					camposFiltrados[key] = camposServicio[key];
 				}
 			});
-			// let idServicio;
 
-			// Verificación previa de que ese uuidServicio corre en esa máquina.
-
-			const queryVerificacion = `SELECT c.idmaquina, c.idservicio  FROM medal.corre c, medal.maquina m, medal.servicio s WHERE m.idmaquina = c.idmaquina AND s.idservicio = c.idservicio AND m.uuidmaquina = $1 AND s.uuidservicio = $2;`;
+			const queryVerificacion = `
+				SELECT c.idmaquina, c.idservicio 
+				FROM medal.corre c, medal.maquina m, medal.servicio s 
+				WHERE m.idmaquina = c.idmaquina 
+				  AND s.idservicio = c.idservicio 
+				  AND m.uuidmaquina = $1 
+				  AND s.uuidservicio = $2;`;
 
 			const resVerificacion = await client.query(queryVerificacion, [
 				uuidMaquina,
 				uuidServicio,
 			]);
+
 			if (resVerificacion.rowCount === 0) {
+				await client.query("ROLLBACK");
 				return 2;
 			}
+
 			const idServicio = resVerificacion.rows[0].idservicio;
 
 			const keys = Object.keys(camposFiltrados);
-			if (key.length > 0) {
-				// Esto es para la tabla propia de los servicios.
+			if (keys.length > 0) {
 				const values = Object.values(camposFiltrados);
 				const setQuery = keys
-					.map((key, index) => `${key} = $${index}`)
+					.map((key, index) => `${key} = $${index + 1}`)
 					.join(", ");
-				// values.push(uuidMaquina);
+
 				values.push(uuidServicio);
-				const res = await client.query(
-					`UPDATE medal.servicio SET ${setQuery} WHERE uuidServicio = $${values.length};`,
+
+				await client.query(
+					`UPDATE medal.servicio SET ${setQuery} WHERE uuidservicio = $${values.length};`,
 					values,
 				);
 			}
+
 			if (servidores !== undefined) {
-				await client.query("DELETE FROM medal.corre WHERE idmaquina = $1;", [
+				await client.query("DELETE FROM medal.corre WHERE idservicio = $1;", [
 					idServicio,
 				]);
+
 				if (Array.isArray(servidores)) {
 					for (const servidorId of servidores) {
 						await client.query(
@@ -285,17 +296,19 @@ WHERE
 					}
 				}
 			}
+
 			if (puertosAbiertos !== undefined) {
 				await client.query(
 					"DELETE FROM medal.puertosabiertos WHERE idservicio = $1",
 					[idServicio],
 				);
+
 				if (Array.isArray(puertosAbiertos)) {
 					for (const puerto of puertosAbiertos) {
 						await client.query(
 							`INSERT INTO medal.puertosabiertos
-         (numeropuertomaquina, protocolo, nombreservicio, puertovirtual, idservicio)
-         VALUES ($1, $2, $3, $4, $5)`,
+							(numeropuertomaquina, protocolo, nombreservicio, puertovirtual, idservicio)
+							VALUES ($1, $2, $3, $4, $5)`,
 							[
 								puerto.numeroPuertoMaquina,
 								puerto.protocolo,
@@ -311,12 +324,10 @@ WHERE
 			await client.query("COMMIT");
 			return { status: "OK" };
 		} catch (error) {
-			client.query("ROLLBACK");
+			await client.query("ROLLBACK");
 			console.error(
 				"Se ha producido un error al hacer el patch de un servicio:",
-				uuidMaquina,
-				uuidServicio,
-				camposCambiados,
+				error.message,
 			);
 			throw error;
 		} finally {

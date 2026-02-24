@@ -4,7 +4,9 @@ export const verificarToken = (req, res, next) => {
 	const authHeader = req.headers["authorization"];
 	const token = authHeader && authHeader.split(" ")[1];
 	if (!token) {
-		return res.status(403).json({ error: "Acceso denegado." });
+		return res
+			.status(401)
+			.json({ error: "Acceso denegado se requiere token." });
 	}
 	try {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verificamos que sea un token emitido por nosotros.
@@ -32,7 +34,7 @@ export const tienePermiso = (slugRequerido, esDinamico = false) => {
 				});
 			}
 			slugRequerido += `:${uuid}`;
-			console.log(slugRequerido);
+			// console.log(slugRequerido);
 		}
 		if (
 			listaPermisos.includes(slugRequerido) ||
