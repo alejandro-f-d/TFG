@@ -140,3 +140,43 @@ export const deleteServicioByUuid = async (req, res) => {
 			.json({ error: "Error interno al eliminar el servicio." });
 	}
 };
+
+export const patchServicio = async (req, res) => {
+	const { uuid, uuidServicio } = req.params;
+	if (!uuid || !uuidServicio) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+	if (!uuidRegex.test(uuid) || !uuidRegex.test(uuidServicio)) {
+		return res.status(404).json({
+			error: "Máquina o servicio no encontrado (Formato de ID inválido).",
+		});
+	}
+	const camposCambiados = req.body;
+	if (Object.keys(camposCambiados).length == 0) {
+		return res.status(400).json({ error: "Petición mal formada" });
+	}
+	try {
+		const resPatch = await ServiciosModel.patchServicio(
+			uuid,
+			uuidServicio,
+			camposCambiados,
+		);
+		if (resPatch == 2) {
+			return res
+				.status(404)
+				.json({ error: "Máquina o servicio no encontrado." });
+		}
+		return res.status(204).json({ message: "Servicio actualizado con éxito." });
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al realizar el patch a un servicio. ",
+			uuid,
+			uuidServicio,
+			error,
+		);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};

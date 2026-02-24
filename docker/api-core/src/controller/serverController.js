@@ -188,7 +188,7 @@ export const patchServer = async (req, res) => {
 	try {
 		const resPatch = await ServerModel.patchServer(uuid, camposCambiados);
 		if (resPatch == 2) {
-			return res.status(400).json({ error: "Máquina no encontrada" });
+			return res.status(404).json({ error: "Máquina no encontrada" });
 		}
 		return res.status(204).json({ message: "Máquina actualizada con éxito." });
 	} catch (error) {

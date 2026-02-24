@@ -12,6 +12,7 @@ import {
 	postServicios,
 	getServicioByUuid,
 	deleteServicioByUuid,
+	patchServicio,
 } from "../controller/serviciosController.js";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 const router = express.Router();
@@ -433,6 +434,12 @@ router.get(
 	"/:uuid/servicios/:uuidServicio",
 	[verificarToken, tienePermiso("maquina:verServicios", true)],
 	getServicioByUuid,
+);
+
+router.patch(
+	"/:uuid/servicios/:uuidServicio",
+	[verificarToken, tienePermiso("maquina:crearServicios", true)],
+	patchServicio,
 );
 
 /**

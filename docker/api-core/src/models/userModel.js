@@ -203,7 +203,7 @@ class UserModel {
 			}
 
 			const camposFiltrados = {};
-			Object.keys(campos).forEach((key) => {
+			Object.keys(camposUsuario).forEach((key) => {
 				if (camposPermitidos.includes(key)) {
 					camposFiltrados[key] = campos[key];
 				}
