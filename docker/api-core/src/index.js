@@ -50,7 +50,7 @@ app.use("/api/healthcheck", healthCheckRoute);
 app.use("/api/permisos", permisosRoute); // Para poder hacer un get de todos los permisos y poder mostrarlos en pantalla.
 app.use("/api/maquina", serverRoute);
 app.use("/api/servicios", serviciosRoute); // Para poder hacer un get de todos los servicios en todos los servidores.
-app.use("/api/proyectosGitlab", proyectosGitlabRoute);
+app.use("/api/proyectosgitlab", proyectosGitlabRoute);
 
 // Errores interno 500
 app.use((err, req, res, next) => {

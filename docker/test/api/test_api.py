@@ -6,6 +6,7 @@ class TestGestionUsuarios:
     BASE_URL_USER = "http://localhost:8080/api/user"
     LOGIN_URL = "http://localhost:8080/api/user/login"
     BASE_URL_MAQUINA = "http://localhost:8080/api/maquina"
+    BASE_URL = "http://localhost:8080/api"
     
     # Variables de clase para persistir datos entre tests
     token_admin = None
@@ -564,3 +565,72 @@ class TestGestionUsuarios:
         res_check = requests.get(url, headers=headers)
         assert res_check.status_code == 404
         print(f"✅ Verificación exitosa: La máquina ya no existe (404).")
+
+    def test_30_post_proyecto_gitlab_exito(self):
+        """
+        Caso: Creación exitosa de un proyecto de GitLab con participantes.
+        Respuesta esperada: 201 Created (o 200 OK).
+        """
+        url = f"{self.BASE_URL}/proyectosgitlab"
+        headers = {
+            "Authorization": f"Bearer {self.token_admin}",
+            "Content-Type": "application/json"
+        }
+        
+        # Datos según tu ejemplo de Swagger
+        payload = {
+            "nombre": "Proyecto Alpha",
+            "descripcion": "Proyecto principal de desarrollo backend para la migración de microservicios",
+            "fechaInicio": "2024-01-15",
+            "fechaFin": "2024-12-31",
+            "activo": True,
+            "participantes": [1, 2] # IDs de usuarios obtenidos previamente
+        }
+
+        print(f"\nCreando proyecto GitLab: {payload['nombre']}")
+        res = requests.post(url, json=payload, headers=headers)
+
+        # Verificamos el status code
+        # Nota: Si tu API devuelve 200 en lugar de 201, cambia esto.
+        assert res.status_code in [200, 201], f"Error al crear: {res.text}"
+        
+        data = res.json()
+        
+        # Validamos que la respuesta contenga un mensaje de éxito o el objeto creado
+        assert "error" not in data
+        print(f"✅ Proyecto creado con éxito. Respuesta: {data.get('message', 'OK')}")
+
+    def test_31_post_proyecto_gitlab_sin_token(self):
+        """
+        Caso: Intentar crear un proyecto sin cabecera de autorización.
+        Respuesta esperada: 401 Unauthorized.
+        """
+        url = f"{self.BASE_URL}/proyectosgitlab"
+        payload = {
+            "nombre": "Proyecto Fallido",
+            "participantes": []
+        }
+        
+        res = requests.post(url, json=payload)
+        
+        assert res.status_code == 401
+        print("✅ Error 401 validado correctamente al no enviar token.")
+
+    def test_32_post_proyecto_gitlab_datos_invalidos(self):
+        """
+        Caso: Intentar crear un proyecto sin el campo obligatorio 'nombre'.
+        Respuesta esperada: 400 Bad Request.
+        """
+        url = f"{self.BASE_URL}/proyectosgitlab"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # Enviamos payload sin 'nombre'
+        payload = {
+            "descripcion": "Sin nombre no debería crearse",
+            "activo": True
+        }
+        
+        res = requests.post(url, json=payload, headers=headers)
+        
+        assert res.status_code == 400
+        print(f"✅ Error 400 validado correctamente ante datos insuficientes.")
