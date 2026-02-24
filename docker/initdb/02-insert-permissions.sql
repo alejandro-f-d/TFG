@@ -51,6 +51,9 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('servicios
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('gitlab:postProyecto', 'Creación de un nuevo proyecto.', 'Permite al usuario la creación de un nuevo proyecto de gitlab.', 'gitlab');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('gitlab:getProyecto', 'Obtención de la lista de proyectos.', 'Permite al usuario obtener la lista de proyectos o un proyecto específico.', 'gitlab');
+
+
 
 -- ====================================
 -- Roles:

@@ -1,7 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
-import { postProyectoGitlab } from "../controller/proyectosGitlabController.js";
+import {
+	postProyectoGitlab,
+	getProyectoGitlab,
+} from "../controller/proyectosGitlabController.js";
 
 const router = express.Router();
 
@@ -155,6 +158,12 @@ router.post(
 	"/",
 	[verificarToken, tienePermiso("gitlab:postProyecto")],
 	postProyectoGitlab,
+);
+
+router.get(
+	"/",
+	[verificarToken, tienePermiso("gitlab:getProyecto")],
+	getProyectoGitlab,
 );
 
 export default router;

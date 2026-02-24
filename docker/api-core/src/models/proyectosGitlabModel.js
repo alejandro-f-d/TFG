@@ -52,6 +52,38 @@ class ProyectosGitlabModel {
 			client.release();
 		}
 	}
+
+	static async getAllProyects(page, limit, filtroNombre) {
+		const offset = (page - 1) * limit;
+		const busqueda = `%${filtroNombre}%`;
+		const query = `SELECT * FROM medal.proyectosgitlab WHERE nombre ILIKE $3 ORDER BY idproyecto ASC LIMIT $1 OFFSET $2;`;
+
+		try {
+			const res = await pool.query(query, [limit, offset, busqueda]);
+			const countQuery = `SELECT COUNT(*) FROM medal.proyectosgitlab WHERE nombre ILIKE $1;`;
+			const countRes = await pool.query(countQuery, [busqueda]);
+			const totalItems = parseInt(countRes.rows[0].count);
+			return {
+				status: "OK",
+				rows: res.rows,
+				pagination: {
+					totalItems,
+					totalPages: Math.ceil(totalItems / limit),
+					currentPage: page,
+					totalItems: totalItems,
+				},
+			};
+		} catch (error) {
+			console.error(
+				"Error al hacer un get de all proyects.",
+				page,
+				limit,
+				filtroNombre,
+				error,
+			);
+			throw error;
+		}
+	}
 }
 
 export default ProyectosGitlabModel;
