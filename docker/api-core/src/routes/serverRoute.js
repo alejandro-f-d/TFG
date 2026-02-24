@@ -436,6 +436,174 @@ router.get(
 	getServicioByUuid,
 );
 
+/**
+ * @swagger
+ * /api/maquinas/{uuid}/servicios/{uuidServicio}:
+ *   patch:
+ *     summary: Actualiza parcialmente un servicio de una máquina
+ *     tags: [Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID de la máquina
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *       - in: path
+ *         name: uuidServicio
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID del servicio a actualizar
+ *         example: "123e4567-e89b-12d3-a456-426614174001"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombreServicio:
+ *                 type: string
+ *                 description: Nombre del servicio
+ *                 example: "Apache Web Server"
+ *               descripcionTecnica:
+ *                 type: string
+ *                 description: Descripción técnica del servicio
+ *                 example: "Servidor web Apache versión 2.4"
+ *               entorno:
+ *                 type: string
+ *                 enum: [produccion, desarrollo, testing]
+ *                 description: Entorno donde se ejecuta el servicio
+ *                 example: "produccion"
+ *               publico:
+ *                 type: boolean
+ *                 description: Indica si el servicio es público
+ *                 example: true
+ *               softwareBase:
+ *                 type: string
+ *                 description: Software base del servicio
+ *                 example: "Apache 2.4"
+ *               activo:
+ *                 type: boolean
+ *                 description: Estado del servicio
+ *                 example: true
+ *               nivelSeveridad:
+ *                 type: string
+ *                 enum: [bajo, medio, alto, critico]
+ *                 description: Nivel de severidad del servicio
+ *                 example: "alto"
+ *               servidores:
+ *                 type: array
+ *                 description: IDs de los servidores asociados
+ *                 items:
+ *                   type: integer
+ *                 example: [1, 2, 3]
+ *               puertosAbiertos:
+ *                 type: array
+ *                 description: Puertos abiertos del servicio
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     numeroPuertoMaquina:
+ *                       type: integer
+ *                       description: Número de puerto en la máquina
+ *                       example: 80
+ *                     protocolo:
+ *                       type: string
+ *                       enum: [TCP, UDP]
+ *                       description: Protocolo del puerto
+ *                       example: "TCP"
+ *                     nombreServicio:
+ *                       type: string
+ *                       description: Nombre del servicio en el puerto
+ *                       example: "http"
+ *                     puertoVirtual:
+ *                       type: integer
+ *                       description: Puerto virtual asociado
+ *                       example: 8080
+ *                 example: [
+ *                   {
+ *                     "numeroPuertoMaquina": 80,
+ *                     "protocolo": "TCP",
+ *                     "nombreServicio": "http",
+ *                     "puertoVirtual": 8080
+ *                   }
+ *                 ]
+ *     responses:
+ *       204:
+ *         description: Servicio actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Máquina actualizada con éxito."
+ *       400:
+ *         description: Error en la petición
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No se han enviado los campos a actualizar."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene permisos suficientes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: Recurso no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   examples:
+ *                     formatoInvalido:
+ *                       value: "Máquina no encontrada (Formato de ID inválido)."
+ *                     maquinaNoEncontrada:
+ *                       value: "Máquina no encontrada"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
 router.patch(
 	"/:uuid/servicios/:uuidServicio",
 	[verificarToken, tienePermiso("maquina:crearServicios", true)],
