@@ -7,7 +7,7 @@ import healthCheckRoute from "./routes/healthCheckRoute.js";
 import permisosRoute from "./routes/permisosRoute.js";
 import serverRoute from "./routes/serverRoute.js";
 import serviciosRoute from "./routes/serviciosRoute.js";
-import proyectisGitlabRoute from "./routes/proyectosGitlabRoute.js";
+import proyectosGitlabRoute from "./routes/proyectosGitlabRoute.js";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
