@@ -835,3 +835,110 @@ class TestGestionUsuarios:
             print(f"✅ Estructura de participante válida: {p['nombre']} {p['apellidos']}")
         else:
             pytest.skip("El proyecto no tiene participantes para validar esta parte")
+
+    def test_35_patch_proyecto_datos_exito(self):
+        """
+        Caso: Actualizar nombre y descripción del proyecto.
+        Respuesta esperada: 204 No Content + Verificación con GET.
+        """
+        base = self.BASE_URL.rstrip('/')
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # 1. Obtenemos un UUID real para actualizar
+        res_lista = requests.get(f"{base}/proyectosgitlab", headers=headers)
+        proyectos = res_lista.json()["info"]["rows"]
+        assert len(proyectos) > 0, "No hay proyectos para actualizar"
+        
+        uuid_target = proyectos[0]["uuidproyecto"]
+        nuevo_nombre = "Proyecto Actualizado via Test"
+        nueva_desc = "Nueva descripción técnica corregida"
+
+        # 2. Realizamos el PATCH (solo campos de texto)
+        url = f"{base}/proyectosgitlab/{uuid_target}"
+        payload = {
+            "nombre": nuevo_nombre,
+            "descripcion": nueva_desc
+        }
+        
+        res_patch = requests.patch(url, json=payload, headers=headers)
+        assert res_patch.status_code == 204
+        print(f"✅ PATCH: Datos de texto actualizados (204).")
+
+        # 3. Verificamos que los cambios persistan
+        res_get = requests.get(url, headers=headers)
+        info = res_get.json()["info"]
+        assert info["nombre"] == nuevo_nombre
+        assert info["descripcion"] == nueva_desc
+        print("✅ VERIFICACIÓN: El GET confirma los nuevos datos.")
+
+    def test_36_patch_proyecto_participantes_exito(self):
+        """
+        Caso: Cambiar la lista de participantes (limpiar y asignar nuevos).
+        """
+        base = self.BASE_URL.rstrip('/')
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # Tomamos el mismo proyecto
+        res_lista = requests.get(f"{base}/proyectosgitlab", headers=headers)
+        uuid_target = res_lista.json()["info"]["rows"][0]["uuidproyecto"]
+        
+        # Supongamos que queremos asignar solo al usuario ID 1
+        url = f"{base}/proyectosgitlab/{uuid_target}"
+        payload = {
+            "participantes": [1] 
+        }
+
+        res_patch = requests.patch(url, json=payload, headers=headers)
+        assert res_patch.status_code == 204
+
+        # Verificamos
+        res_get = requests.get(url, headers=headers)
+        participantes = res_get.json()["info"]["participantes"]
+        
+        # Comprobamos que ahora solo hay 1 participante y su ID es el correcto
+        assert len(participantes) == 1
+        assert participantes[0]["idUsuario"] == 1
+        print("✅ VERIFICACIÓN: Participantes actualizados correctamente.")
+
+    def test_37_patch_proyecto_vacio(self):
+        """
+        Caso: Enviar un cuerpo vacío al PATCH.
+        Respuesta esperada: 400 Bad Request.
+        """
+        base = self.BASE_URL.rstrip('/')
+        # Usamos un UUID válido pero el body es {}
+        url = f"{base}/proyectosgitlab/123e4567-e89b-12d3-a456-426614174000"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+
+        res = requests.patch(url, json={}, headers=headers)
+        
+        assert res.status_code == 400
+        print("✅ Error 400 detectado ante cuerpo de petición vacío.")
+
+    def test_38_patch_proyecto_no_encontrado(self):
+        """
+        Caso: Intentar actualizar un proyecto que no existe.
+        Respuesta esperada: 404 Not Found.
+        """
+        base = self.BASE_URL.rstrip('/')
+        uuid_falso = "99999999-9999-9999-9999-999999999999"
+        url = f"{base}/proyectosgitlab/{uuid_falso}"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+
+        payload = {"nombre": "Inexistente"}
+        res = requests.patch(url, json=payload, headers=headers)
+        
+        assert res.status_code == 404
+        print("✅ Error 404 detectado para proyecto inexistente.")
+
+    def test_39_patch_proyecto_sin_permisos(self):
+        """
+        Caso: Intentar actualizar sin token.
+        Respuesta esperada: 401 Unauthorized.
+        """
+        base = self.BASE_URL.rstrip('/')
+        url = f"{base}/proyectosgitlab/123e4567-e89b-12d3-a456-426614174000"
+        
+        res = requests.patch(url, json={"nombre": "Hack"})
+        assert res.status_code == 401
+        print("✅ Seguridad: Denegado PATCH sin token.")

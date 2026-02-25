@@ -4,7 +4,8 @@ import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 import {
 	postProyectoGitlab,
 	getProyectoGitlab,
-	getProyectoGitlabByUuid
+	getProyectoGitlabByUuid,
+	patchProyectoGitlab
 } from "../controller/proyectosGitlabController.js";
 
 const router = express.Router();
@@ -492,5 +493,163 @@ router.get(
  *                   example: "Error interno del servidor."
  */
 router.get("/:uuid", [verificarToken, tienePermiso("gitlab:getProyecto")], getProyectoGitlabByUuid);
+
+/**
+ * @swagger
+ * /api/proyectosgitlab/{uuid}:
+ *   patch:
+ *     summary: Actualiza parcialmente un proyecto de GitLab
+ *     description: Permite modificar los campos de un proyecto existente y/o su lista de participantes. Solo se actualizan los campos proporcionados en el cuerpo de la petición.
+ *     tags: [Proyectos GitLab]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+ *         description: UUID del proyecto de GitLab a actualizar
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             minProperties: 1
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nombre del proyecto
+ *                 example: "Proyecto Alpha - Actualizado"
+ *               descripcion:
+ *                 type: string
+ *                 description: Descripción del proyecto
+ *                 example: "Descripción actualizada del proyecto"
+ *               fechainicio:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de inicio (YYYY-MM-DD)
+ *                 example: "2024-02-01"
+ *               fechafin:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de finalización (YYYY-MM-DD)
+ *                 example: "2024-11-30"
+ *               activo:
+ *                 type: boolean
+ *                 description: Estado activo del proyecto
+ *                 example: false
+ *               participantes:
+ *                 type: array
+ *                 description: Lista de IDs de usuarios participantes (reemplaza la lista completa)
+ *                 items:
+ *                   type: integer
+ *                   minimum: 1
+ *                 example: [2, 5, 8]
+ *           examples:
+ *             actualizarCampos:
+ *               summary: Actualizar solo campos del proyecto
+ *               value:
+ *                 nombre: "Proyecto Beta v2"
+ *                 activo: false
+ *             actualizarParticipantes:
+ *               summary: Actualizar solo participantes
+ *               value:
+ *                 participantes: [3, 7, 10]
+ *             actualizarTodo:
+ *               summary: Actualizar campos y participantes
+ *               value:
+ *                 nombre: "Proyecto Gamma"
+ *                 descripcion: "Nueva descripción"
+ *                 fechainicio: "2024-03-01"
+ *                 fechafin: "2024-10-31"
+ *                 activo: true
+ *                 participantes: [1, 4, 6]
+ *     responses:
+ *       204:
+ *         description: Proyecto actualizado exitosamente (sin contenido)
+ *         headers:
+ *           Location:
+ *             schema:
+ *               type: string
+ *             description: URL del recurso actualizado (opcional)
+ *             example: "/api/proyectosgitlab/123e4567-e89b-12d3-a456-426614174000"
+ *       400:
+ *         description: Error de validación en la solicitud
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               uuidFaltante:
+ *                 summary: UUID no proporcionado
+ *                 value:
+ *                   error: "Falta el parámetro UUID."
+ *               uuidInvalido:
+ *                 summary: Formato de UUID inválido
+ *                 value:
+ *                   error: "El formato del UUID proporcionado es inválido."
+ *               cuerpoVacio:
+ *                 summary: Cuerpo de la petición vacío
+ *                 value:
+ *                   error: "No se han enviado los campos a actualizar."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: Proyecto no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Proyecto gitlab no encontrado"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.patch("/:uuid", 	[verificarToken, tienePermiso("gitlab:postProyecto")], patchProyectoGitlab);
 
 export default router;

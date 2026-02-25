@@ -196,6 +196,7 @@ WHERE
 		const client = await pool.connect();
 
 		try {
+			await client.query("BEGIN");
 			const camposPermitidos = [
 				"nombre",
 				"caducidadssl",
