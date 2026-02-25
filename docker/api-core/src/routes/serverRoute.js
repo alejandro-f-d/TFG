@@ -17,6 +17,10 @@ import {
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
+import { validarTipos } from '../middlewares/validador.middleware.js';
+import { maquinaSchema, maquinaPatchSchema, servicioSchema, servicioPatchSchema } from '../schemas/index.js';
+
+
 /**
  * @swagger
  * /api/maquina:
@@ -104,7 +108,7 @@ const router = express.Router();
  */
 router.post(
 	"/",
-	[verificarToken, tienePermiso("maq:postMaquina")],
+	[verificarToken, tienePermiso("maq:postMaquina"), validarTipos(maquinaSchema)],
 	postMaquina,
 );
 
@@ -214,7 +218,7 @@ router.get("/:uuid", verificarToken, getMaquina);
 
 router.patch(
 	"/:uuid",
-	[verificarToken, tienePermiso("maq:editServer")],
+	[verificarToken, tienePermiso("maq:editServer"), validarTipos(maquinaPatchSchema)],
 	patchServer,
 );
 
@@ -390,7 +394,7 @@ router.get(
 
 router.post(
 	"/:uuid/servicios",
-	[verificarToken, tienePermiso("maquina:crearServicios", true)],
+	[verificarToken, tienePermiso("maquina:crearServicios", true), validarTipos(servicioSchema)],
 	postServicios,
 );
 
@@ -606,7 +610,7 @@ router.get(
 
 router.patch(
 	"/:uuid/servicios/:uuidServicio",
-	[verificarToken, tienePermiso("maquina:crearServicios", true)],
+	[verificarToken, tienePermiso("maquina:crearServicios", true), validarTipos(servicioPatchSchema)],
 	patchServicio,
 );
 

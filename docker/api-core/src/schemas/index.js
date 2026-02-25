@@ -27,60 +27,6 @@ export const usuarioSchema = Joi.object({
     gitlab: Joi.string().max(50).allow(null, '')
 });
 
-// --- MAQUINA (Tabla 2) ---
-export const maquinaSchema = Joi.object({
-    nombre: Joi.string().max(300).required(),
-    caducidadSSL: Joi.date().iso().allow(null),
-    certificadoSslActivo: Joi.boolean().default(false),
-    emisorSsl: Joi.string().max(100).allow(null, ''),
-    direccionIpPrivadaV4: Joi.string().ip({ version: ['ipv4'] }).max(15).required(),
-    direccionIpPublicaV4: Joi.string().ip({ version: ['ipv4'] }).max(15).allow(null, ''),
-    direccionIpPrivadaV6: Joi.string().ip({ version: ['ipv6'] }).max(39).allow(null, ''),
-    puertaEnlaceV4: Joi.string().ip({ version: ['ipv4'] }).max(15).required(),
-    ram: Joi.number().integer().allow(null),
-    sistemaOperativo: Joi.string().max(100).required(),
-    esServidor: Joi.boolean().default(false)
-});
-
-// --- PROYECTOS GITLAB (Tabla 7) ---
-export const proyectoGitlabSchema = Joi.object({
-    nombre: Joi.string().max(50).required(),
-    descripcion: Joi.string().max(500).allow(null, ''),
-    fechaInicio: Joi.date().iso().default(() => new Date()),
-    fechaFin: Joi.date().iso().min(Joi.ref('fechaInicio')).allow(null),
-    activo: Joi.boolean().default(true),
-    participantes: Joi.array().items(Joi.number().integer()).unique() // Para la tabla Participa
-});
-
-// --- MONITOREO WEB (Tabla 14) ---
-export const monitoreoWebSchema = Joi.object({
-    nombreObjetivo: Joi.string().max(50).required(),
-    direccion: Joi.string().max(100).required(),
-    valorEsperado: Joi.number().integer().allow(null),
-    timeoutMs: Joi.number().integer().default(500),
-    umbralReintentos: Joi.number().integer().default(5),
-    intervaloSegundos: Joi.number().integer().default(60),
-    idUsuario: Joi.number().integer().required(),
-    idMetodo: Joi.number().integer().required()
-});
-
-// --- DETALLE PETICIÓN ACCESO (Tabla 22) ---
-export const detallePeticionAccesoSchema = Joi.object({
-    cpuSolicitada: Joi.number().integer().required(),
-    gpuSolicitada: Joi.number().integer().required(),
-    nombreProyectoAsociado: Joi.string().max(50).required(),
-    nombreServicioAsociado: Joi.string().max(100).required(),
-    prioridadTarea: Joi.number().integer().required(),
-    docker: Joi.string().max(50).allow(null, ''),
-    sistemaOperativo: Joi.string().max(100).allow(null, ''),
-    comentariosAdicionales: Joi.string().max(500).allow(null, ''),
-    tiempoEstimadoTarea: Joi.number().integer().allow(null),
-    aceptaTos: Joi.boolean().default(true),
-    disco: Joi.number().integer().required(),
-    ram: Joi.number().integer().required(),
-    idPeticionReferencia: Joi.number().integer().required(),
-    idMomentoEjecucion: Joi.number().integer().required()
-});
 
 export const loginSchema = Joi.object({
     // Validamos que sea un string, formato email válido y obligatorio
@@ -106,3 +52,74 @@ export const usuarioPatchSchema = usuarioSchema.fork(
     Object.keys(usuarioSchema.describe().keys),
     (schema) => schema.optional()
 );
+
+export const maquinaSchema = Joi.object({
+    nombre: Joi.string().max(300).required(),
+    caducidadSsl: Joi.date().iso().allow(null), // Ojo: tu test usa Ssl con 'l' minúscula
+    certificadoSslActivo: Joi.boolean().default(false),
+    emisorSsl: Joi.string().max(100).allow(null, ''),
+    
+    // Objeto Red del test
+    red: Joi.object({
+        direccionIpPrivadaV4: Joi.string().ip({ version: ['ipv4'] }).required(),
+        direccionIpPublicaV4: Joi.string().ip({ version: ['ipv4'] }).allow(null, ''),
+        direccionIpPrivadaV6: Joi.string().ip({ version: ['ipv6'] }).allow(null, ''),
+        direccionIpPublicaV6: Joi.string().ip({ version: ['ipv6'] }).allow(null, ''),
+        puertaEnlaceV4: Joi.string().ip({ version: ['ipv4'] }).required(),
+        puertaEnlaceV6: Joi.string().ip({ version: ['ipv6'] }).allow(null, '')
+    }).required(),
+
+    // Objeto Especificaciones del test
+    especificaciones: Joi.object({
+        sistemaOperativo: Joi.string().max(100).required(),
+        ram: Joi.number().integer().min(0).allow(null),
+        esServidor: Joi.boolean().required()
+    }).required()
+});
+
+export const maquinaPatchSchema = maquinaSchema.fork(
+    Object.keys(maquinaSchema.describe().keys),
+    (schema) => schema.optional()
+);
+
+
+export const servicioSchema = Joi.object({
+    nombreServicio: Joi.string().max(100).required(),
+    descripcionTecnica: Joi.string().max(1000).allow(null, ''),
+    entorno: Joi.string().max(1000).allow(null, ''),
+    publico: Joi.boolean().default(false),
+    softwareBase: Joi.string().max(500).allow(null, ''),
+    activo: Joi.boolean().default(true),
+    nivelSeveridad: Joi.string().max(50).allow(null, ''),
+    idUsuario: Joi.number().integer().required(),
+    idPeticion: Joi.number().integer().required(),
+    
+    servidores: Joi.array().items(Joi.number().integer()),
+    puertosAbiertos: Joi.array().items(Joi.object({
+        numeroPuertoMaquina: Joi.number().integer().required(),
+        protocolo: Joi.string().max(50),
+        nombreServicio: Joi.string().max(100),
+        puertoVirtual: Joi.number().integer()
+    }))
+});
+
+export const servicioPatchSchema = Joi.object({
+    nombreServicio: Joi.string().max(100),
+    descripcionTecnica: Joi.string().max(1000).allow(null, ''),
+    entorno: Joi.string().max(1000).allow(null, ''),
+    publico: Joi.boolean(),  // no default
+    softwareBase: Joi.string().max(500).allow(null, ''),
+    activo: Joi.boolean(),   // no default
+    nivelSeveridad: Joi.string().max(50).allow(null, ''),
+    idUsuario: Joi.number().integer(),
+    idPeticion: Joi.number().integer(),
+    servidores: Joi.array().items(Joi.number().integer()),
+    puertosAbiertos: Joi.array().items(Joi.object({
+        numeroPuertoMaquina: Joi.number().integer().required(),
+        protocolo: Joi.string().max(50),
+        nombreServicio: Joi.string().max(100),
+        puertoVirtual: Joi.number().integer()
+    }))
+}).min(1).messages({
+    'object.min': 'Debe enviar al menos un campo para actualizar el servicio'
+});
