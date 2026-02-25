@@ -113,6 +113,7 @@ CREATE TABLE IF NOT EXISTS medal.participa (
 CREATE TABLE IF NOT EXISTS medal.roles(
   idRole SERIAL PRIMARY KEY,
   nombre VARCHAR(50) NOT NULL,
+  descripcion VARCHAR(500),
   uuidRole UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(), 
   fechaCreacion DATE NOT NULL DEFAULT CURRENT_DATE,
   idUsuario INTEGER NOT NULL, 

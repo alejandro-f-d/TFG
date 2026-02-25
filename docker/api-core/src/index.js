@@ -8,6 +8,7 @@ import permisosRoute from "./routes/permisosRoute.js";
 import serverRoute from "./routes/serverRoute.js";
 import serviciosRoute from "./routes/serviciosRoute.js";
 import proyectosGitlabRoute from "./routes/proyectosGitlabRoute.js";
+import rolRoute from "./routes/rolRoute.js";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
@@ -51,6 +52,7 @@ app.use("/api/permisos", permisosRoute); // Para poder hacer un get de todos los
 app.use("/api/maquina", serverRoute);
 app.use("/api/servicios", serviciosRoute); // Para poder hacer un get de todos los servicios en todos los servidores.
 app.use("/api/proyectosgitlab", proyectosGitlabRoute);
+app.use("/api/rol", rolRoute);
 
 // Errores interno 500
 app.use((err, req, res, next) => {
