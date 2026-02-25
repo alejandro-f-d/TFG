@@ -269,7 +269,7 @@ class TestGestionUsuarios:
         assert nuevo_nombre == "Athenea Modificado"
         print(f"✅ Verificación exitosa: El nombre de la máquina es ahora '{nuevo_nombre}'")
     uuid_servicio_creado = None
-    def test_16_post_crear_servicio_en_maquina(self):
+    def test_14_post_crear_servicio_en_maquina(self):
         """
         Caso: Crear un nuevo servicio asociado al UUID de la máquina creada.
         Endpoint: POST /api/maquina/{uuid}/servicios
@@ -312,7 +312,7 @@ class TestGestionUsuarios:
             
         assert res.status_code == 201
         print(f"\n✅ Servicio '{payload['nombreServicio']}' creado con éxito para la máquina {mid}")
-    def test_17_get_servicios_de_maquina(self):
+    def test_15_get_servicios_de_maquina(self):
         """
         Caso: Obtener los servicios asociados a una máquina.
         Soporta respuestas donde 'info' es un objeto único o una lista.
@@ -352,7 +352,7 @@ class TestGestionUsuarios:
         assert uuid_servicio is not None, f"No se encontró uuidServicio en: {primer_servicio}"
 
         TestGestionUsuarios.uuid_servicio_creado = uuid_servicio
-    def test_18_get_servicio_por_uuid(self):
+    def test_16_get_servicio_por_uuid(self):
         """
         Caso: Obtener un servicio específico por su UUID asociado a una máquina.
         Endpoint: GET /api/maquina/{uuid}/servicios/{uuidServicio}
@@ -387,7 +387,7 @@ class TestGestionUsuarios:
         
         print(f"✅ Servicio obtenido correctamente por UUID: {uuid_servicio}")
 
-    def test_20_patch_servicio_exito(self):
+    def test_17_patch_servicio_exito(self):
         """
         Caso: Actualización exitosa (204) y verificación de persistencia (200).
         """
@@ -459,7 +459,7 @@ class TestGestionUsuarios:
         assert puertos[0]["protocolo"] == "TCP"
 
         print(f"✅ VERIFICACIÓN OK: Los datos se han persistido correctamente en la DB.")
-    def test_21_patch_servicio_vacio_error(self):
+    def test_18_patch_servicio_vacio_error(self):
         """
         Caso: Enviar un cuerpo vacío o sin campos de actualización.
         Respuesta esperada: 400 Bad Request.
@@ -478,7 +478,7 @@ class TestGestionUsuarios:
         assert "error" in data
         print(f"✅ Error 400 validado: {data['error']}")
 
-    def test_22_patch_servicio_no_encontrado(self):
+    def test_19_patch_servicio_no_encontrado(self):
         """
         Caso: Intentar actualizar un servicio con un UUID inexistente.
         Respuesta esperada: 404 Not Found.
@@ -495,7 +495,7 @@ class TestGestionUsuarios:
         assert res.status_code == 404
         print("✅ Error 404 validado para servicio inexistente.")
 
-    def test_23_patch_servicio_sin_token(self):
+    def test_20_patch_servicio_sin_token(self):
         """
         Caso: Intentar actualizar sin proporcionar el token.
         Respuesta esperada: 401 Unauthorized.
@@ -509,7 +509,7 @@ class TestGestionUsuarios:
         
         assert res.status_code == 401
         print("✅ Error 401 validado: No autorizado.")
-    def test_19_delete_servicio_por_uuid(self):
+    def test_21_delete_servicio_por_uuid(self):
         """
         Caso: Eliminar un servicio específico asociado a una máquina.
         Endpoint: DELETE /api/maquina/{uuid}/servicios/{uuidServicio}
@@ -540,7 +540,7 @@ class TestGestionUsuarios:
             f"El servicio aún existe después del DELETE. Status: {res_check.status_code}"
 
         print("✅ Verificación exitosa: El servicio ya no existe (404).")
-    def test_15_delete_maquina(self):
+    def test_22_delete_maquina(self):
         """
         Caso: Eliminar una máquina por su UUID.
         Endpoint: DELETE /api/maquina/{uuid}
@@ -566,7 +566,7 @@ class TestGestionUsuarios:
         assert res_check.status_code == 404
         print(f"✅ Verificación exitosa: La máquina ya no existe (404).")
 
-    def test_30_post_proyecto_gitlab_exito(self):
+    def test_23_post_proyecto_gitlab_exito(self):
         """
         Caso: Creación exitosa de un proyecto de GitLab con participantes.
         Respuesta esperada: 201 Created (o 200 OK).
@@ -600,7 +600,7 @@ class TestGestionUsuarios:
         assert "error" not in data
         print(f"✅ Proyecto creado con éxito. Respuesta: {data.get('message', 'OK')}")
 
-    def test_31_post_proyecto_gitlab_sin_token(self):
+    def test_24_post_proyecto_gitlab_sin_token(self):
         """
         Caso: Intentar crear un proyecto sin cabecera de autorización.
         Respuesta esperada: 401 Unauthorized.
@@ -616,7 +616,7 @@ class TestGestionUsuarios:
         assert res.status_code == 401
         print("✅ Error 401 validado correctamente al no enviar token.")
 
-    def test_32_post_proyecto_gitlab_datos_invalidos(self):
+    def test_25_post_proyecto_gitlab_datos_invalidos(self):
         """
         Caso: Intentar crear un proyecto sin el campo obligatorio 'nombre'.
         Respuesta esperada: 400 Bad Request.
@@ -635,7 +635,7 @@ class TestGestionUsuarios:
         assert res.status_code == 400
         print(f"✅ Error 400 validado correctamente ante datos insuficientes.")
 
-    def test_33_get_proyectos_gitlab_paginado(self):
+    def test_26_get_proyectos_gitlab_paginado(self):
         """
         Caso: Obtener lista de proyectos y validar estructura de respuesta y paginación.
         """
@@ -670,7 +670,7 @@ class TestGestionUsuarios:
         
         print(f"✅ Lista recibida. Total items: {pagination['totalItems']}")
 
-    def test_34_get_proyectos_gitlab_filtro_nombre(self):
+    def test_27_get_proyectos_gitlab_filtro_nombre(self):
         """
         Caso: Filtrar por nombre y validar que los resultados coincidan.
         """
@@ -695,7 +695,7 @@ class TestGestionUsuarios:
             
         print(f"✅ Filtro verificado. Se encontraron {len(proyectos)} coincidencias.")
 
-    def test_35_get_proyectos_gitlab_vacio(self):
+    def test_28_get_proyectos_gitlab_vacio(self):
         """
         Caso: Filtro que no coincide con nada.
         """
@@ -712,7 +712,7 @@ class TestGestionUsuarios:
         assert len(data["info"]["rows"]) == 0
         print("✅ Correcto: Lista vacía para filtro inexistente.")
 
-    def test_36_verificar_formato_uuid(self):
+    def test_29_verificar_formato_uuid(self):
         """
         Caso: Verificar que los proyectos traen un UUID válido.
         """
@@ -730,3 +730,108 @@ class TestGestionUsuarios:
             regex = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
             assert re.match(regex, uuid_proyecto.lower())
             print(f"✅ Formato UUID verificado: {uuid_proyecto}")
+
+    def test_30_get_proyecto_uuid_exito(self):
+        """
+        Caso: Obtener el detalle de un proyecto existente.
+        Pasos: 1. Obtener lista, 2. Tomar un UUID real, 3. Pedir detalle.
+        """
+        base = self.BASE_URL.rstrip('/')
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # 1. Obtenemos un UUID real de la base de datos para que el test no falle
+        res_lista = requests.get(f"{base}/proyectosgitlab", headers=headers)
+        proyectos = res_lista.json()["info"]["rows"]
+        
+        assert len(proyectos) > 0, "No hay proyectos en la DB para probar el detalle"
+        uuid_real = proyectos[0]["uuidproyecto"]
+        nombre_esperado = proyectos[0]["nombre"]
+
+        # 2. Pedimos el detalle por UUID
+        url = f"{base}/proyectosgitlab/{uuid_real}"
+        res = requests.get(url, headers=headers)
+
+        assert res.status_code == 200
+        data = res.json()
+        
+        # 3. Validaciones de integridad
+        assert data["message"] == "Proyecto de GitLab encontrado correctamente."
+        info = data["info"]
+        assert info["uuidproyecto"] == uuid_real
+        assert info["nombre"] == nombre_esperado
+        
+        # Validar que los participantes vengan como lista (gracias al json_agg del model)
+        assert isinstance(info["participantes"], list)
+        
+        print(f"✅ Detalle verificado para: {nombre_esperado} ({len(info['participantes'])} participantes)")
+
+    def test_31_get_proyecto_uuid_formato_invalido(self):
+        """
+        Caso: Enviar un UUID con formato incorrecto (no sigue el patrón hex).
+        Respuesta esperada: 400 Bad Request.
+        """
+        base = self.BASE_URL.rstrip('/')
+        url = f"{base}/proyectosgitlab/esto-no-es-un-uuid"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+
+        res = requests.get(url, headers=headers)
+
+        assert res.status_code == 400
+        assert "error" in res.json()
+        assert "formato" in res.json()["error"].lower()
+        print("✅ Error 400 detectado ante UUID mal formado.")
+
+    def test_32_get_proyecto_uuid_no_existente(self):
+        """
+        Caso: UUID con formato válido pero que no existe en la base de datos.
+        Respuesta esperada: 404 Not Found.
+        """
+        base = self.BASE_URL.rstrip('/')
+        uuid_inventado = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        url = f"{base}/proyectosgitlab/{uuid_inventado}"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+
+        res = requests.get(url, headers=headers)
+
+        assert res.status_code == 404
+        # Validamos el mensaje que pusimos en el controlador corregido
+        assert f"No se ha encontrado ningún proyecto con el UUID: {uuid_inventado}" in res.json()["message"]
+        print("✅ Error 404 detectado correctamente para UUID inexistente.")
+
+    def test_33_get_proyecto_uuid_sin_token(self):
+        """
+        Caso: Acceder al detalle sin estar autenticado.
+        Respuesta esperada: 401 Unauthorized.
+        """
+        base = self.BASE_URL.rstrip('/')
+        # Usamos un UUID cualquiera
+        url = f"{base}/proyectosgitlab/123e4567-e89b-12d3-a456-426614174000"
+
+        res = requests.get(url) # Sin headers
+
+        assert res.status_code == 401
+        print("✅ Error 401 validado al no enviar token.")
+
+    def test_34_get_proyecto_uuid_verificar_participantes(self):
+        """
+        Caso: Verificar que los campos de los participantes son correctos (nombre y apellidos).
+        """
+        base = self.BASE_URL.rstrip('/')
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # Obtenemos el primer proyecto
+        res_lista = requests.get(f"{base}/proyectosgitlab", headers=headers)
+        uuid_real = res_lista.json()["info"]["rows"][0]["uuidproyecto"]
+
+        res = requests.get(f"{base}/proyectosgitlab/{uuid_real}", headers=headers)
+        participantes = res.json()["info"]["participantes"]
+
+        if len(participantes) > 0:
+            p = participantes[0]
+            # Según nuestra query: idUsuario, nombre, apellidos
+            assert "idUsuario" in p
+            assert "nombre" in p
+            assert "apellidos" in p
+            print(f"✅ Estructura de participante válida: {p['nombre']} {p['apellidos']}")
+        else:
+            pytest.skip("El proyecto no tiene participantes para validar esta parte")

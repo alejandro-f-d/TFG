@@ -51,3 +51,31 @@ export const getProyectoGitlab = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
+
+export const getProyectoGitlabByUuid = async (req, res) => {
+    const { uuid } = req.params;
+    if (!uuid) {
+        return res.status(400).json({ error: "Falta el parámetro UUID." });
+    }
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(uuid)) {
+        return res.status(400).json({ 
+            error: "El formato del UUID proporcionado es inválido." 
+        });
+    }
+    try {
+        const proyecto = await ProyectosGitlabModel.getProyectoGitlabByUuid(uuid);
+        if (!proyecto) {
+            return res.status(404).json({
+                message: `No se ha encontrado ningún proyecto con el UUID: ${uuid}`,
+            });
+        }
+        return res.status(200).json({
+            message: "Proyecto de GitLab encontrado correctamente.",
+            info: proyecto
+        }); 
+    } catch (error) {
+        console.error("Error al obtener proyecto por UUID:", { uuid, error: error.message });
+        return res.status(500).json({ error: "Error interno del servidor." });
+    }
+};

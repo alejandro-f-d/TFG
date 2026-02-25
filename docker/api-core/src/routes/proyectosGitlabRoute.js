@@ -4,6 +4,7 @@ import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 import {
 	postProyectoGitlab,
 	getProyectoGitlab,
+	getProyectoGitlabByUuid
 } from "../controller/proyectosGitlabController.js";
 
 const router = express.Router();
@@ -328,5 +329,168 @@ router.get(
 	[verificarToken, tienePermiso("gitlab:getProyecto")],
 	getProyectoGitlab,
 );
+
+/**
+ * @swagger
+ * /api/proyectosgitlab/{uuid}:
+ *   get:
+ *     summary: Obtiene un proyecto de GitLab por su UUID
+ *     description: Retorna los detalles de un proyecto específico incluyendo la lista de participantes
+ *     tags: [Proyectos GitLab]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+ *         description: UUID del proyecto de GitLab
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *     responses:
+ *       200:
+ *         description: Proyecto encontrado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Proyecto de GitLab encontrado correctamente."
+ *                 info:
+ *                   type: object
+ *                   properties:
+ *                     idproyecto:
+ *                       type: integer
+ *                       description: ID interno del proyecto
+ *                       example: 1
+ *                     nombre:
+ *                       type: string
+ *                       description: Nombre del proyecto
+ *                       example: "Proyecto Alpha"
+ *                     descripcion:
+ *                       type: string
+ *                       description: Descripción del proyecto
+ *                       example: "Proyecto principal de desarrollo backend"
+ *                     uuidproyecto:
+ *                       type: string
+ *                       format: uuid
+ *                       description: UUID del proyecto
+ *                       example: "123e4567-e89b-12d3-a456-426614174000"
+ *                     fechainicio:
+ *                       type: string
+ *                       format: date
+ *                       description: Fecha de inicio
+ *                       example: "2024-01-15"
+ *                     fechafin:
+ *                       type: string
+ *                       format: date
+ *                       description: Fecha de finalización
+ *                       example: "2024-12-31"
+ *                     activo:
+ *                       type: boolean
+ *                       description: Estado del proyecto
+ *                       example: true
+ *                     participantes:
+ *                       type: array
+ *                       description: Lista de participantes del proyecto
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           idUsuario:
+ *                             type: integer
+ *                             description: ID del usuario
+ *                             example: 5
+ *                           nombre:
+ *                             type: string
+ *                             description: Nombre del usuario
+ *                             example: "Juan"
+ *                           apellidos:
+ *                             type: string
+ *                             description: Apellidos completos del usuario
+ *                             example: "Pérez García"
+ *                       example: [
+ *                         {
+ *                           "idUsuario": 5,
+ *                           "nombre": "Juan",
+ *                           "apellidos": "Pérez García"
+ *                         },
+ *                         {
+ *                           "idUsuario": 8,
+ *                           "nombre": "María",
+ *                           "apellidos": "López Martínez"
+ *                         }
+ *                       ]
+ *       400:
+ *         description: Error de validación en el parámetro UUID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               uuidFaltante:
+ *                 summary: UUID no proporcionado
+ *                 value:
+ *                   error: "Falta el parámetro UUID."
+ *               uuidInvalido:
+ *                 summary: Formato de UUID inválido
+ *                 value:
+ *                   error: "El formato del UUID proporcionado es inválido."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: Proyecto no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No se ha encontrado ningún proyecto con el UUID: 123e4567-e89b-12d3-a456-426614174000"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+router.get("/:uuid", [verificarToken, tienePermiso("gitlab:getProyecto")], getProyectoGitlabByUuid);
 
 export default router;

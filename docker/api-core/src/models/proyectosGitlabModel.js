@@ -103,6 +103,45 @@ LIMIT $1 OFFSET $2;`;
 			throw error;
 		}
 	}
+	static async getProyectoGitlabByUuid(uuidProyecto) {
+    const query = `
+        SELECT 
+            g.idproyecto,
+            g.nombre,
+            g.descripcion,
+            g.uuidproyecto,
+            g.fechainicio,
+            g.fechafin,
+            g.activo,
+            -- Usamos FILTER para evitar que devuelva [null] si no hay participantes
+            COALESCE(
+                json_agg(
+                    json_build_object(
+                        'idUsuario', u.idusuario,
+                        'nombre', u.nombre,
+                        'apellidos', u.apellido1 || ' ' || COALESCE(u.apellido2, '')
+                    )
+                ) FILTER (WHERE u.idusuario IS NOT NULL), 
+                '[]'
+            ) AS participantes
+        FROM 
+            medal.proyectosgitlab g
+        LEFT JOIN medal.participa p ON g.idproyecto = p.idproyecto
+        LEFT JOIN medal.usuario u ON p.idusuario = u.idusuario
+        WHERE 
+            g.uuidproyecto = $1
+        GROUP BY 
+            g.idproyecto;
+    `;
+
+    try {
+        const res = await pool.query(query, [uuidProyecto]);
+        return res.rows[0]; 
+    } catch (error) {
+        console.error("Error en getProyectoGitlabByUuid:", error);
+        throw error;
+    }
+	}
 }
 
 export default ProyectosGitlabModel;
