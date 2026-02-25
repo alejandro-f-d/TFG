@@ -7,7 +7,8 @@ class TestGestionUsuarios:
     LOGIN_URL = "http://localhost:8080/api/user/login"
     BASE_URL_MAQUINA = "http://localhost:8080/api/maquina"
     BASE_URL = "http://localhost:8080/api"
-    
+    BASE_URL_ROL = "http://localhost:8080/api/rol"
+
     # Variables de clase para persistir datos entre tests
     token_admin = None
     token_role_2 = None
@@ -942,3 +943,63 @@ class TestGestionUsuarios:
         res = requests.patch(url, json={"nombre": "Hack"})
         assert res.status_code == 401
         print("✅ Seguridad: Denegado PATCH sin token.")
+
+    role_valido = {
+        "nombre": "Administrador de Proyectos",
+        "descripcion": "Rol con permisos para gestionar proyectos y usuarios",
+        "permisos": [1, 2, 3, 5]
+    }
+
+
+    def test_40_crear_rol_exitoso(self):
+        """Caso: Crear un rol con campos válidos. Se espera 201."""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        res = requests.post(self.BASE_URL_ROL, json=self.role_valido, headers=headers)
+        
+        assert res.status_code == 201
+        data = res.json()
+        assert data["message"] == "Rol creado con éxito."
+        assert "uuid" in data
+        assert f"/api/rol/{data['uuid']}" in res.headers.get("Location", "")
+        print(f"✅ Rol creado: {data['uuid']}")
+
+    def test_41_crear_rol_sin_nombre_error(self):
+        """Caso: Error 400 por falta de nombre."""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        payload = {"permisos": [1, 2], "descripcion": "Sin nombre"}
+        res = requests.post(self.BASE_URL_ROL, json=payload, headers=headers)
+        
+        assert res.status_code == 400
+        assert "error" in res.json()
+
+    def test_42_crear_rol_permisos_vacio_error(self):
+        """Caso: Error 400 por lista de permisos vacía."""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        payload = {"nombre": "Test Vacio", "permisos": []}
+        res = requests.post(self.BASE_URL_ROL, json=payload, headers=headers)
+        assert res.status_code == 400
+
+    def test_43_crear_rol_sin_token_error(self):
+        """Caso: Error 401 por falta de token."""
+        res = requests.post(self.BASE_URL_ROL, json=self.role_valido)
+        assert res.status_code == 401
+
+    def test_44_crear_rol_insuficiente_permiso(self):
+        """Caso: Error 403 (Usuario sin permiso 'roles:postRoles')."""
+        # Primero necesitamos el token del usuario sin roles creado en test_03/05
+        if not self.token_sin_roles:
+            pytest.skip("Token de usuario normal no disponible")
+            
+        headers = {"Authorization": f"Bearer {self.token_sin_roles}"}
+        res = requests.post(self.BASE_URL_ROL, json=self.role_valido, headers=headers)
+        assert res.status_code == 403
+
+    def test_45_asignar_admin_total_siendo_admin(self):
+        """Caso: Un admin asigna el ID de permiso 'admin:total' (asumiendo ID 1)."""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        payload = {
+            "nombre": "Rol Super Usuario",
+            "permisos": [1] # ID correspondiente a admin:total
+        }
+        res = requests.post(self.BASE_URL_ROL, json=payload, headers=headers)
+        assert res.status_code == 201

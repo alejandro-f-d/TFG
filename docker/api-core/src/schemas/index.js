@@ -168,3 +168,28 @@ export const proyectoPatchSchema = proyectoSchema
 		schema.optional(),
 	)
 	.min(1);
+
+export const rolSchema = Joi.object({
+	nombre: Joi.string().max(100).required().messages({
+		"string.empty": "El nombre del rol no puede estar vacío.",
+		"any.required": "El nombre del rol es obligatorio.",
+	}),
+
+	descripcion: Joi.string().max(500).allow(null, "").messages({
+		"string.max": "La descripción no puede superar los 500 caracteres.",
+	}),
+
+	permisos: Joi.array()
+		.items(Joi.number().integer().positive())
+		.min(1)
+		.required()
+		.messages({
+			"array.base": "Los permisos deben ser una lista (array).",
+			"array.min": "Debes asignar al menos un permiso al rol.",
+			"any.required": "La lista de permisos es obligatoria.",
+		}),
+});
+
+export const rolPatchSchema = rolSchema
+	.fork(["nombre", "descripcion", "permisos"], (schema) => schema.optional())
+	.min(1);
