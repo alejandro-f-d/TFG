@@ -56,7 +56,26 @@ class ProyectosGitlabModel {
 	static async getAllProyects(page, limit, filtroNombre) {
 		const offset = (page - 1) * limit;
 		const busqueda = `%${filtroNombre}%`;
-		const query = `SELECT * FROM medal.proyectosgitlab WHERE nombre ILIKE $3 ORDER BY idproyecto ASC LIMIT $1 OFFSET $2;`;
+		const query = `SELECT 
+    g.*, 
+    json_agg(
+        json_build_object(
+            'idUsuario', u.idusuario,
+            'nombre', u.nombre,
+            'apellidos', u.apellido1 || ' ' || COALESCE(u.apellido2, '')
+        )
+    ) AS participantes
+FROM 
+    medal.proyectosgitlab g
+INNER JOIN medal.participa p ON g.idproyecto = p.idproyecto
+INNER JOIN medal.usuario u ON p.idusuario = u.idusuario
+WHERE 
+    g.nombre ILIKE $3
+GROUP BY 
+    g.idproyecto
+ORDER BY 
+    g.idproyecto ASC
+LIMIT $1 OFFSET $2;`;
 
 		try {
 			const res = await pool.query(query, [limit, offset, busqueda]);
