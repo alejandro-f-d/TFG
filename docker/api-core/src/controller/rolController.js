@@ -33,3 +33,27 @@ export const postRole = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
+
+export const getRoles = async (req, res) => {
+	const page = parseInt(req.query.page) || 1;
+	const limit = parseInt(req.query.limit) || 5;
+	const filtroNombre = req.query.filtroNombre || "";
+	if (page < 1 || limit < 1) {
+		return res.status(400).json({ error: "Petición invalida" });
+	}
+	try {
+		const resGetAllRoles = await RolModel.getRoles(page, limit, filtroNombre);
+		if (resGetAllRoles.pagination.totalItems === 0) {
+			return res.status(404).json({
+				message: `No se han encontrado roles que coincidan con: ${filtroNombre}`,
+			});
+		}
+		return res.status(200).json(resGetAllRoles);
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al hacer el get de los roles",
+			error,
+		);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};

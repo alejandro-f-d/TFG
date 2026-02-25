@@ -39,6 +39,9 @@ export const getMaquinas = async (req, res) => {
 	const page = parseInt(req.query.page) || 1;
 	const limit = parseInt(req.query.limit) || 5;
 	const filtroNombre = req.query.filtroNombre || "";
+	if (page < 1 || limit < 1) {
+		return res.status(400).json({ error: "Petición invalida" });
+	}
 
 	try {
 		const permisos = req.user?.permisos || [];

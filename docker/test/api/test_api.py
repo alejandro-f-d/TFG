@@ -1003,3 +1003,96 @@ class TestGestionUsuarios:
         }
         res = requests.post(self.BASE_URL_ROL, json=payload, headers=headers)
         assert res.status_code == 201
+
+    def test_47_get_roles_paginado_exito(self):
+        """
+        Caso: Obtener lista de roles con paginación y validar estructura.
+        Se espera: 200 OK y presencia de lista de usuarios en cada rol.
+        """
+        url = f"{self.BASE_URL}/rol"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        params = {"page": 1, "limit": 5}
+
+        res = requests.get(url, headers=headers, params=params)
+        
+        assert res.status_code == 200
+        data = res.json()
+        
+        # Validar estructura principal
+        assert data["status"] == "OK"
+        assert isinstance(data["rows"], list)
+        
+        if len(data["rows"]) > 0:
+            rol = data["rows"][0]
+            # Validar campos del rol
+            assert "idrole" in rol
+            assert "nombre" in rol
+            assert "usuarios" in rol
+            
+            # Validar que 'usuarios' sea una lista (json_agg de la DB)
+            assert isinstance(rol["usuarios"], list)
+            
+            if len(rol["usuarios"]) > 0:
+                user = rol["usuarios"][0]
+                assert "nombre" in user
+                assert "apellido1" in user
+                print(f"✅ Usuario en rol detectado: {user['nombre']} {user['apellido1']}")
+
+        print(f"✅ Lista de roles obtenida. Total items: {data['pagination']['totalItems']}")
+
+    def test_48_get_roles_filtro_nombre(self):
+        """
+        Caso: Filtrar roles por nombre (case-insensitive).
+        """
+        url = f"{self.BASE_URL}/rol"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # Usamos el rol creado en test_40 o uno existente como 'Administrador'
+        nombre_filtro = "Administrador"
+        params = {"filtroNombre": nombre_filtro}
+
+        res = requests.get(url, headers=headers, params=params)
+        assert res.status_code == 200
+        
+        rows = res.json()["rows"]
+        for rol in rows:
+            assert nombre_filtro.lower() in rol["nombre"].lower()
+        
+        print(f"✅ Filtro por nombre '{nombre_filtro}' validado con {len(rows)} resultados.")
+
+    def test_49_get_roles_no_encontrado(self):
+        """
+        Caso: Filtro que no coincide con ningún rol.
+        Se espera: 404 Not Found según tu documentación.
+        """
+        url = f"{self.BASE_URL}/rol"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        filtro_falso = "ESTO_NO_EXISTE_PROBABLEMENTE_123"
+        
+        res = requests.get(url, headers=headers, params={"filtroNombre": filtro_falso})
+        
+        assert res.status_code == 404
+        assert f"No se han encontrado roles que coincidan con: {filtro_falso}" in res.json()["message"]
+        print("✅ Error 404 validado para búsqueda sin resultados.")
+
+    def test_50_get_roles_parametros_invalidos(self):
+        """
+        Caso: Enviar página negativa o límite excesivo.
+        Se espera: 400 Bad Request.
+        """
+        url = f"{self.BASE_URL}/rol"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # Prueba con página inválida
+        res = requests.get(url, headers=headers, params={"page": -1})
+        assert res.status_code == 400
+        print(f"✅ Error 400 validado para parámetros inválidos: {res.json().get('error')}")
+
+    def test_51_get_roles_sin_token(self):
+        """
+        Caso: Acceso no autenticado.
+        Se espera: 401 Unauthorized.
+        """
+        url = f"{self.BASE_URL}/rol"
+        res = requests.get(url)
+        assert res.status_code == 401

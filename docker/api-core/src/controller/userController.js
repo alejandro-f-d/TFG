@@ -128,6 +128,10 @@ export const getUsers = async (req, res) => {
 		const page = parseInt(req.query.page) || 1;
 		const limit = parseInt(req.query.limit) || 5;
 		const filtroNombre = req.query.filtroNombre || "";
+		if (page < 1 || limit < 1) {
+			return res.status(400).json({ error: "Petición invalida" });
+		}
+
 		const resultado = await UserModel.getAllUsers(page, limit, filtroNombre);
 		if (resultado.totalItems === 0) {
 			return res.status(404).json({

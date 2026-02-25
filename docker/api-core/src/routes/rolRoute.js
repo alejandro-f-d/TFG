@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
-import { postRole } from "../controller/rolController.js";
+import { postRole, getRoles } from "../controller/rolController.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
 import { rolSchema } from "../schemas/index.js";
 const router = express.Router();
@@ -165,4 +165,199 @@ router.post(
 	[verificarToken, tienePermiso("roles:postRoles"), validarTipos(rolSchema)],
 	postRole,
 );
+
+/**
+ * @swagger
+ * /api/rol:
+ *   get:
+ *     summary: Obtiene lista paginada de roles
+ *     description: |
+ *       Retorna una lista paginada de roles con sus usuarios asociados.
+ *       Incluye información de los usuarios que tienen asignado cada rol.
+ *       Permite filtrar por nombre del rol.
+ *     tags: [Roles]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número de página para paginación
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 5
+ *         description: Cantidad de roles por página (máx. 100)
+ *         example: 10
+ *       - in: query
+ *         name: filtroNombre
+ *         schema:
+ *           type: string
+ *         description: Filtro por nombre del rol (búsqueda parcial case-insensitive)
+ *         example: "admin"
+ *     responses:
+ *       200:
+ *         description: Lista de roles obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "OK"
+ *                 rows:
+ *                   type: array
+ *                   description: Array de roles con sus usuarios asociados
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       idrole:
+ *                         type: integer
+ *                         description: ID interno del rol
+ *                         example: 1
+ *                       uuidrole:
+ *                         type: string
+ *                         format: uuid
+ *                         description: UUID del rol
+ *                         example: "123e4567-e89b-12d3-a456-426614174000"
+ *                       nombre:
+ *                         type: string
+ *                         description: Nombre del rol
+ *                         example: "Administrador"
+ *                       descripcion:
+ *                         type: string
+ *                         description: Descripción del rol
+ *                         example: "Rol con permisos administrativos"
+ *                       idusuario:
+ *                         type: integer
+ *                         description: ID del usuario que creó el rol
+ *                         example: 5
+ *                       usuarios:
+ *                         type: array
+ *                         description: Lista de usuarios que tienen asignado este rol
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             idUsuario:
+ *                               type: integer
+ *                               description: ID del usuario
+ *                               example: 10
+ *                             nombre:
+ *                               type: string
+ *                               description: Nombre del usuario
+ *                               example: "Juan"
+ *                             apellido1:
+ *                               type: string
+ *                               description: Primer apellido
+ *                               example: "Pérez"
+ *                             apellido2:
+ *                               type: string
+ *                               description: Segundo apellido
+ *                               example: "García"
+ *                         example: [
+ *                           {
+ *                             "idUsuario": 10,
+ *                             "nombre": "Juan",
+ *                             "apellido1": "Pérez",
+ *                             "apellido2": "García"
+ *                           },
+ *                           {
+ *                             "idUsuario": 12,
+ *                             "nombre": "María",
+ *                             "apellido1": "López",
+ *                             "apellido2": "Martínez"
+ *                           }
+ *                         ]
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                       description: Número total de roles que coinciden con el filtro
+ *                       example: 25
+ *                     totalPages:
+ *                       type: integer
+ *                       description: Número total de páginas
+ *                       example: 3
+ *                     currentPage:
+ *                       type: integer
+ *                       description: Página actual
+ *                       example: 1
+ *       400:
+ *         description: Parámetros de consulta inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               pageInvalida:
+ *                 summary: Página no válida
+ *                 value:
+ *                   error: "El parámetro page debe ser un número positivo"
+ *               limitExcedido:
+ *                 summary: Límite excedido
+ *                 value:
+ *                   error: "El límite máximo es 100 registros por página"
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: No se encontraron roles con el filtro especificado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No se han encontrado roles que coincidan con: admin"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.get("/", [verificarToken, tienePermiso("roles:getRoles")], getRoles);
 export default router;

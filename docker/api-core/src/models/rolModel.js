@@ -74,6 +74,55 @@ class RolModel {
 			client.release();
 		}
 	}
+
+	static async getRoles(page, limit, filtroNombre) {
+		const offset = (page - 1) * limit;
+		const busqueda = `%${filtroNombre}%`;
+		const query = `SELECT 
+    r.*,
+    COALESCE(
+        json_agg(
+            json_build_object(
+                'idUsuario', u.idusuario,
+                'nombre', u.nombre,
+                'apellido1', u.apellido1,
+                'apellido2', u.apellido2
+            )
+        ) FILTER (WHERE u.idusuario IS NOT NULL), '[]'
+    ) AS usuarios
+FROM medal.roles r
+LEFT JOIN medal.rolestiene rt ON r.idrole = rt.idrole
+LEFT JOIN medal.usuario u ON rt.idusuario = u.idusuario
+WHERE r.nombre ILIKE $3
+GROUP BY r.idrole
+ORDER BY r.idrole ASC
+LIMIT $1 OFFSET $2;`;
+		try {
+			const res = await pool.query(query, [limit, offset, busqueda]);
+			const countQuery = `SELECT COUNT(*) FROM medal.roles WHERE nombre ILIKE $1`;
+			const countRes = await pool.query(countQuery, [busqueda]);
+			const totalItems = parseInt(countRes.rows[0].count);
+			return {
+				status: "OK",
+				rows: res.rows,
+				pagination: {
+					totalItems,
+					totalPages: Math.ceil(totalItems / limit),
+					currentPage: page,
+					totalItems: totalItems,
+				},
+			};
+		} catch (error) {
+			console.error(
+				"Se ha producido un error con el get de los roles",
+				page,
+				limit,
+				filtroNombre,
+				error,
+			);
+			throw error;
+		}
+	}
 }
 
 export default RolModel;
