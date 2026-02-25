@@ -8,6 +8,8 @@ import {
 	login,
 } from "../controller/userController.js";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
+import { validarTipos } from '../middlewares/validador.middleware.js';
+import { usuarioSchema, maquinaSchema, loginSchema, usuarioPatchSchema } from '../schemas/index.js';
 const router = express.Router();
 
 // ESTE MÉTODO SIEMPRE ES PÚBLICO.
@@ -39,7 +41,7 @@ const router = express.Router();
  *         description: Error interno del servidor.
  */
 
-router.post("/login", login);
+router.post("/login", validarTipos(loginSchema),login);
 
 /**
  * @swagger
@@ -131,7 +133,7 @@ router.post("/login", login);
 
 // router.post("/", verificarToken, postUser);
 
-router.post("/", [verificarToken, tienePermiso("usr:crearUsuario")], postUser);
+router.post("/", [verificarToken, tienePermiso("usr:crearUsuario"), validarTipos(usuarioSchema)], postUser);
 
 /**
  * @swagger
@@ -241,6 +243,6 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *         description: Error interno del servidor.
  */
 
-router.patch("/:uuid", verificarToken, patchUser);
+router.patch("/:uuid", [verificarToken, validarTipos(usuarioPatchSchema)], patchUser);
 
 export default router;
