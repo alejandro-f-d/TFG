@@ -7,23 +7,35 @@ export const ROL_QUERY = {
   INSERT_OPERA_CON: `INSERT INTO medal.operacon(idrole, idpermiso) VALUES ($1, $2)`,
   GET_ROLES: `SELECT 
     r.*,
+    -- Agregación de Usuarios
     COALESCE(
-        json_agg(
-            json_build_object(
-                'idUsuario', u.idusuario,
-                'nombre', u.nombre,
-                'apellido1', u.apellido1,
-                'apellido2', u.apellido2
-            )
-        ) FILTER (WHERE u.idusuario IS NOT NULL), '[]'
-    ) AS usuarios
-  FROM medal.roles r
-  LEFT JOIN medal.rolestiene rt ON r.idrole = rt.idrole
-  LEFT JOIN medal.usuario u ON rt.idusuario = u.idusuario
-  WHERE r.nombre ILIKE $3
-  GROUP BY r.idrole
-  ORDER BY r.idrole ASC
-  LIMIT $1 OFFSET $2;`,
+        (SELECT json_agg(json_build_object(
+            'idUsuario', u.idusuario,
+            'nombre', u.nombre,
+            'apellido1', u.apellido1,
+            'apellido2', u.apellido2
+        ))
+         FROM medal.rolestiene rt
+         JOIN medal.usuario u ON rt.idusuario = u.idusuario
+         WHERE rt.idrole = r.idrole
+        ), '[]'
+    ) AS usuarios,
+    -- Agregación de Permisos
+    COALESCE(
+        (SELECT json_agg(json_build_object(
+            'idPermiso', p.idpermiso,
+            'nombre', p.nombre,
+            'alias', p.alias
+        ))
+         FROM medal.operacon o
+         JOIN medal.permisos p ON o.idpermiso = p.idpermiso
+         WHERE o.idrole = r.idrole
+        ), '[]'
+    ) AS permisos
+    FROM medal.roles r
+    WHERE r.nombre ILIKE $3
+    ORDER BY r.idrole ASC
+    LIMIT $1 OFFSET $2;`,
   COUNT_ROLES: `SELECT COUNT(*) FROM medal.roles WHERE nombre ILIKE $1`,
   GET_ROLE_BY_UUID: `SELECT 
     r.*,
@@ -41,9 +53,24 @@ export const ROL_QUERY = {
         FROM medal.rolestiene rt
         JOIN medal.usuario u ON rt.idusuario = u.idusuario
         WHERE rt.idrole = r.idrole
-    ) AS usuarios
-		FROM medal.roles r
-		WHERE r.uuidrole = $1;`,
+    ) AS usuarios,
+    (
+        SELECT COALESCE(
+            json_agg(
+                json_build_object(
+                    'idPermiso', p.idpermiso,
+                    'nombre', p.nombre,
+                    'alias', p.alias,
+                    'modulo', p.modulo
+                )
+            ), '[]'
+        )
+        FROM medal.operacon o
+        JOIN medal.permisos p ON o.idpermiso = p.idpermiso
+        WHERE o.idrole = r.idrole
+    ) AS permisos
+    FROM medal.roles r
+    WHERE r.uuidrole = $1;`,
 	OBTENER_ID_ROL: `SELECT idrole FROM medal.roles WHERE uuidrole = $1;`,
 	BORRAR_PERTENCE: `DELETE FROM medal.rolestiene WHERE idrole = $1`,
 	BORRAR_PERMISOS: `DELETE FROM medal.operacon WHERE idRole = $1;`,

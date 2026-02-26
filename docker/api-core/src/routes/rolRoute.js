@@ -538,6 +538,160 @@ router.get("/", [verificarToken, tienePermiso("roles:getRoles")], getRoles);
 
 router.get("/:uuid", [verificarToken, tienePermiso("roles:getRoles")], getRolesByUuid);
 
+/**
+ * @swagger
+ * /api/rol/{uuid}:
+ *   patch:
+ *     summary: Actualiza parcialmente un rol
+ *     description: |
+ *       Permite modificar los campos de un rol existente y/o su lista de permisos.
+ *       - Los campos actualizables son: `nombre` y `descripcion`.
+ *       - Si se proporciona el array `permisos`, se reemplaza por completo la lista de permisos asociados al rol.
+ *       - Campos no permitidos serán ignorados.
+ *     tags: [Roles]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID del rol a actualizar
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             minProperties: 1
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nuevo nombre del rol
+ *                 example: "Supervisor"
+ *               descripcion:
+ *                 type: string
+ *                 description: Nueva descripción del rol
+ *                 example: "Rol con permisos de supervisión"
+ *               permisos:
+ *                 type: array
+ *                 description: |
+ *                   Lista completa de IDs de permisos que tendrá el rol.
+ *                   Si se envía, reemplaza todos los permisos existentes.
+ *                 items:
+ *                   type: integer
+ *                   minimum: 1
+ *                 example: [2, 5, 8]
+ *           examples:
+ *             soloNombre:
+ *               summary: Actualizar solo el nombre
+ *               value:
+ *                 nombre: "Administrador General"
+ *             nombreYDescripcion:
+ *               summary: Actualizar nombre y descripción
+ *               value:
+ *                 nombre: "Editor"
+ *                 descripcion: "Puede editar contenido pero no administrar usuarios"
+ *             soloPermisos:
+ *               summary: Reemplazar lista de permisos
+ *               value:
+ *                 permisos: [10, 11, 12]
+ *             todo:
+ *               summary: Actualizar todos los campos
+ *               value:
+ *                 nombre: "Gestor"
+ *                 descripcion: "Gestión de proyectos"
+ *                 permisos: [3, 7, 9]
+ *     responses:
+ *       204:
+ *         description: Rol actualizado exitosamente (sin contenido)
+ *       400:
+ *         description: |
+ *           Error en la solicitud. Puede deberse a:
+ *           * Falta el parámetro UUID
+ *           * Cuerpo de la petición vacío
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               uuidFaltante:
+ *                 summary: UUID no proporcionado
+ *                 value:
+ *                   error: "Petición mal formada."
+ *               cuerpoVacio:
+ *                 summary: Cuerpo de la petición vacío
+ *                 value:
+ *                   error: "Query mal formada."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: |
+ *           Rol no encontrado. Puede deberse a:
+ *           * Formato de UUID inválido
+ *           * UUID no existente en la base de datos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               formatoInvalido:
+ *                 summary: UUID con formato incorrecto
+ *                 value:
+ *                   error: "Máquina no encontrada (Formato de ID inválido)."
+ *               noExiste:
+ *                 summary: UUID válido pero no existe
+ *                 value:
+ *                   error: "Rol no encontrado."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+
 router.patch("/:uuid", [verificarToken, tienePermiso("roles:postRoles")], patchRolByUuid);
 
 

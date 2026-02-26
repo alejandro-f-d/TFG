@@ -158,12 +158,12 @@ class RolModel {
             const values = Object.values(camposFiltrados);
             values.push(uuid); 
 
-            const sqlUpdate = ROL_QUERIES.UPDATE_ROLE_DYNAMIC(keys);
+            const sqlUpdate = ROL_QUERY.UPDATE_ROLE_DYNAMIC(keys);
             const res = await client.query(sqlUpdate, values);
             
             idRole = res.rows[0]?.idrole;
         } else {
-            const res = await client.query(ROL_QUERIES.GET_ID_BY_UUID, [uuid]);
+            const res = await client.query(ROL_QUERY.GET_ID_BY_UUID, [uuid]);
             idRole = res.rows[0]?.idrole;
         }
 
@@ -173,10 +173,10 @@ class RolModel {
       	}
 
         if (permisos !== undefined) {
-            await client.query(ROL_QUERIES.DELETE_PERMISOS_ASIGNADOS, [idRole]);
+            await client.query(ROL_QUERY.DELETE_PERMISOS_ASIGNADOS, [idRole]);
             if (Array.isArray(permisos)) {
                 for (const permisoId of permisos) {
-                    await client.query(ROL_QUERIES.INSERT_PERMISO_ROL, [idRole, permisoId]);
+                    await client.query(ROL_QUERY.INSERT_PERMISO_ROL, [idRole, permisoId]);
                 }
             }
         }
@@ -190,7 +190,7 @@ class RolModel {
     } finally {
         client.release();
     }
-}
+	}
 }
 
 export default RolModel;
