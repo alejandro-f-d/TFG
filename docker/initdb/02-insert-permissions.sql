@@ -55,6 +55,7 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('gitlab:ge
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('roles:postRoles', 'Creación de roles', 'Permite al usuario crear roles en la plataforma con unos permisos determinados.', 'roles');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('roles:deleteRol', 'Eliminar rol especifico.', 'Permite al usuario eliminar un rol', 'roles');
 
 
 -- ====================================

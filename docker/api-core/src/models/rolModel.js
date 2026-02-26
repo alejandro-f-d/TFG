@@ -156,6 +156,31 @@ LIMIT $1 OFFSET $2;`;
 			throw error;		
 		}
 	}
+
+	static async deleteRolByUuid(uuid){
+		const queryObtenerIdRol = `SELECT idrole FROM medal.roles WHERE uuidrole = $1;`;
+		const queryBorrarUserPertenece = `DELETE FROM medal.rolestiene WHERE idrole = $1 `;
+		const queryBorrarRole = `DELETE from medal.roles WHERE uuidrole = $1;`;
+
+		const client = await pool.connect();
+		try {	
+			await client.query("BEGIN");
+			const resIdRole = await client.query(queryObtenerIdRol, [uuid]);
+			if(!(resIdRole.rowCount > 0)){
+				return 2; //404 no encontrado.
+			}
+			const idRole = resIdRole.rows[0]?.idrole
+			await client.query(queryBorrarUserPertenece, [idRole]);
+			await client.query(queryBorrarRole, [uuid]);
+			await client.query("COMMIT");
+		} catch (error) {
+			await client.query("ROLLBACK");
+			console.error("Se ha producido un error al borrar un role de la base de datos.", uuid, error);
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 }
 
 export default RolModel;

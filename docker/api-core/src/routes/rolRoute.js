@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
-import { postRole, getRoles, getRolesByUuid } from "../controller/rolController.js";
+import { postRole, getRoles, getRolesByUuid, deleteRolByUuid } from "../controller/rolController.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
 import { rolSchema } from "../schemas/index.js";
 const router = express.Router();
@@ -537,4 +537,95 @@ router.get("/", [verificarToken, tienePermiso("roles:getRoles")], getRoles);
 
 
 router.get("/:uuid", [verificarToken, tienePermiso("roles:getRoles")], getRolesByUuid);
+
+
+/**
+ * @swagger
+ * /api/rol/{uuid}:
+ *   delete:
+ *     summary: Elimina un rol por su UUID
+ *     description: |
+ *       Elimina un rol específico del sistema. Esta operación es irreversible.
+ *       Antes de eliminar el rol, se eliminan automáticamente todas las relaciones
+ *       con usuarios (tabla `rolestiene`) para mantener la integridad referencial.
+ *     tags: [Roles]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID del rol a eliminar
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *     responses:
+ *       204:
+ *         description: Rol eliminado exitosamente (sin contenido)
+ *         content: {}
+ *       400:
+ *         description: Petición mal formada (UUID no proporcionado)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición mal formada."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: Rol no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Rol no encontrado"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+
+router.delete("/:uuid", [verificarToken, tienePermiso("roles:deleteRol")], deleteRolByUuid); 
+
 export default router;

@@ -86,3 +86,20 @@ export const getRolesByUuid = async (req, res) => {
 		
 	}
 }
+
+export const deleteRolByUuid = async(req, res) => {
+	const { uuid } = req.params;
+	if(!uuid){
+		return res.status(400).json({error: "Petición mal formada."});
+	}
+	try {
+		const resBorrarRol = await RolModel.deleteRolByUuid(uuid);
+		if(resBorrarRol === 2){
+			return res.status(404).json({error: "Rol no encontrado"});
+		}
+		return res.status(204).json({message: "Rol borrado con éxito."});
+	} catch (error) {
+		console.error("Se ha producido un error al intentar borrar un rol.", uuid, error);
+		return res.status(500).json({error: "Error interno del servidor."});
+	}
+}
