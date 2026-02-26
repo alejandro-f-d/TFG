@@ -123,6 +123,39 @@ LIMIT $1 OFFSET $2;`;
 			throw error;
 		}
 	}
+	static async getRolesByUuid(uuid){
+
+		const queryGetRoleByUuid = `SELECT 
+    r.*,
+    (
+        SELECT COALESCE(
+            json_agg(
+                json_build_object(
+                    'idUsuario', u.idusuario,
+                    'nombre', u.nombre,
+                    'apellido1', u.apellido1,
+                    'apellido2', u.apellido2
+                )
+            ), '[]'
+        )
+        FROM medal.rolestiene rt
+        JOIN medal.usuario u ON rt.idusuario = u.idusuario
+        WHERE rt.idrole = r.idrole
+    ) AS usuarios
+		FROM medal.roles r
+		WHERE r.uuidrole = $1;`;
+		
+		try {
+			const resGet = await pool.query(queryGetRoleByUuid, [uuid]);	
+			if(resGet.rows.length === 0){
+				return 2;
+			}
+			return resGet.rows[0];
+		} catch (error) {
+			console.error("Se ha producido un error al hacer un get con un determinado uuid para los roles.");
+			throw error;		
+		}
+	}
 }
 
 export default RolModel;

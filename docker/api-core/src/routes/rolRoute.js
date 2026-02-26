@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
-import { postRole, getRoles } from "../controller/rolController.js";
+import { postRole, getRoles, getRolesByUuid } from "../controller/rolController.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
 import { rolSchema } from "../schemas/index.js";
 const router = express.Router();
@@ -360,4 +360,181 @@ router.post(
  */
 
 router.get("/", [verificarToken, tienePermiso("roles:getRoles")], getRoles);
+
+
+/**
+ * @swagger
+ * /api/rol/{uuid}:
+ *   get:
+ *     summary: Obtiene un rol por su UUID
+ *     description: |
+ *       Retorna la información detallada de un rol específico, incluyendo la lista de usuarios que tienen asignado dicho rol.
+ *     tags: [Roles]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID del rol a consultar
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *     responses:
+ *       200:
+ *         description: Rol encontrado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Role encontrado con éxito."
+ *                 info:
+ *                   type: object
+ *                   properties:
+ *                     idrole:
+ *                       type: integer
+ *                       description: ID interno del rol
+ *                       example: 1
+ *                     uuidrole:
+ *                       type: string
+ *                       format: uuid
+ *                       description: UUID del rol
+ *                       example: "123e4567-e89b-12d3-a456-426614174000"
+ *                     nombre:
+ *                       type: string
+ *                       description: Nombre del rol
+ *                       example: "Administrador"
+ *                     descripcion:
+ *                       type: string
+ *                       description: Descripción del rol
+ *                       example: "Rol con permisos administrativos"
+ *                     idusuario:
+ *                       type: integer
+ *                       description: ID del usuario que creó el rol
+ *                       example: 5
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Fecha de creación del rol
+ *                       example: "2024-01-15T10:30:00Z"
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Fecha de última actualización
+ *                       example: "2024-02-20T15:45:00Z"
+ *                     usuarios:
+ *                       type: array
+ *                       description: Lista de usuarios que tienen asignado este rol
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           idUsuario:
+ *                             type: integer
+ *                             description: ID del usuario
+ *                             example: 10
+ *                           nombre:
+ *                             type: string
+ *                             description: Nombre del usuario
+ *                             example: "Juan"
+ *                           apellido1:
+ *                             type: string
+ *                             description: Primer apellido
+ *                             example: "Pérez"
+ *                           apellido2:
+ *                             type: string
+ *                             description: Segundo apellido
+ *                             example: "García"
+ *                       example: [
+ *                         {
+ *                           "idUsuario": 10,
+ *                           "nombre": "Juan",
+ *                           "apellido1": "Pérez",
+ *                           "apellido2": "García"
+ *                         },
+ *                         {
+ *                           "idUsuario": 12,
+ *                           "nombre": "María",
+ *                           "apellido1": "López",
+ *                           "apellido2": "Martínez"
+ *                         }
+ *                       ]
+ *       400:
+ *         description: Petición mal formada (UUID no proporcionado)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición mal formada."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: |
+ *           Rol no encontrado. Puede deberse a:
+ *           * Formato de UUID inválido
+ *           * UUID no existente en la base de datos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               formatoInvalido:
+ *                 summary: UUID con formato incorrecto
+ *                 value:
+ *                   error: "Role no encontrado (Formato de ID inválido)."
+ *               noExiste:
+ *                 summary: UUID válido pero no existe
+ *                 value:
+ *                   error: "Role no encontrado."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+
+
+router.get("/:uuid", [verificarToken, tienePermiso("roles:getRoles")], getRolesByUuid);
 export default router;

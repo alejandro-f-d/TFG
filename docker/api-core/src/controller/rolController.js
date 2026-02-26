@@ -57,3 +57,32 @@ export const getRoles = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
+
+export const getRolesByUuid = async (req, res) => {
+	const { uuid } = req.params;
+	if(!uuid) {
+		return res.status(400).json({error: "Petición mal formada."});
+	}
+	try {
+			const uuidRegex =
+			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+		if (!uuidRegex.test(uuid)) {
+			return res
+				.status(404)
+				.json({ error: "Role no encontrado (Formato de ID inválido)." });
+		}
+
+		const resGetRoleByUuid = await RolModel.getRolesByUuid(uuid);
+
+		if(resGetRoleByUuid == 2){
+			return res.status(404).json({error: "Role no encontrado."});
+		}
+		
+		return res.status(200).json({message: "Role encontrado con éxito.", info: resGetRoleByUuid});
+	} catch (error) {
+		console.error("Se ha producido un error al hacer el get de un role por uuid.", uuid, error);
+		
+		
+	}
+}

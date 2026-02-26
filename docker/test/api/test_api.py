@@ -17,6 +17,7 @@ class TestGestionUsuarios:
     uuid_user_sin_roles = None
     uuid_user_role_2 = None
     uuid_maquina_creada = None
+    uuid_rol_creado = None
 
     # --- BLOQUE 1: AUTENTICACIÓN (LOGIN) ---
 
@@ -958,6 +959,7 @@ class TestGestionUsuarios:
         
         assert res.status_code == 201
         data = res.json()
+        TestGestionUsuarios.uuid_rol_creado = data["uuid"]
         assert data["message"] == "Rol creado con éxito."
         assert "uuid" in data
         assert f"/api/rol/{data['uuid']}" in res.headers.get("Location", "")
@@ -1095,4 +1097,53 @@ class TestGestionUsuarios:
         """
         url = f"{self.BASE_URL}/rol"
         res = requests.get(url)
+        assert res.status_code == 401
+
+    def test_52_get_role_by_uuid_exito(self):
+        """Caso: Obtener un rol específico usando un UUID válido y existente."""
+        if not self.uuid_rol_creado:
+            pytest.skip("No hay un UUID de rol creado para probar")
+
+        url = f"{self.BASE_URL_ROL}/{self.uuid_rol_creado}"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        res = requests.get(url, headers=headers)
+        
+        assert res.status_code == 200
+        data = res.json()
+        assert data["message"] == "Role encontrado con éxito."
+        assert data["info"]["uuidrole"] == self.uuid_rol_creado
+        # Validamos que incluya la lista de usuarios (aunque esté vacía)
+        assert "usuarios" in data["info"]
+        assert isinstance(data["info"]["usuarios"], list)
+
+    def test_53_get_role_error_formato_uuid(self):
+        """Caso: Error 404 al enviar un UUID con formato string inválido."""
+        url = f"{self.BASE_URL_ROL}/uuid-invalido-123"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        res = requests.get(url, headers=headers)
+        
+        assert res.status_code == 404
+        assert "Formato de ID inválido" in res.json()["error"]
+
+    def test_54_get_role_no_existente(self):
+        """Caso: Error 404 al enviar un UUID válido pero que no existe en DB."""
+        uuid_inexistente = "00000000-0000-4000-a000-000000000000"
+        url = f"{self.BASE_URL_ROL}/{uuid_inexistente}"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        res = requests.get(url, headers=headers)
+        
+        assert res.status_code == 404
+        assert res.json()["error"] == "Role no encontrado."
+
+    def test_55_get_role_sin_token_error(self):
+        """Caso: Error 401 al intentar consultar sin estar autenticado."""
+        if not self.uuid_rol_creado:
+            pytest.skip("No hay un UUID de rol para probar")
+
+        url = f"{self.BASE_URL_ROL}/{self.uuid_rol_creado}"
+        res = requests.get(url)
+        
         assert res.status_code == 401
