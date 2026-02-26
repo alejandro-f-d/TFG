@@ -1,352 +1,189 @@
 import pool from "../bbdd/conexion.js";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
+import { USER_QUERIES } from "../querys/userQuery.js";
 
 class UserModel {
-	static async guardarBdd(datos, userId) {
-		// --- 1. ROLES ---
-		if (Array.isArray(datos.roles)) {
-			const queryRoles = `INSERT INTO medal.rolestiene(idrole, idusuario) values($1, $2);`;
-			for (const rolId of datos.roles) {
-				try {
-					await pool.query(queryRoles, [rolId, userId]);
-				} catch (error) {
-					console.error(
-						"Error en la inserción del role: " + rolId,
-						error.message,
-					);
-				}
-			}
-		}
+    static async guardarBdd(datos, userId, client = pool) {
+        if (Array.isArray(datos.roles)) {
+            for (const rolId of datos.roles) {
+                await client.query(USER_QUERIES.INSERT_ROL_RELACION, [rolId, userId]);
+            }
+        }
+        if (Array.isArray(datos.puertasAutorizadas)) {
+            for (const puertaId of datos.puertasAutorizadas) {
+                await client.query(USER_QUERIES.INSERT_PUERTA_RELACION, [userId, puertaId]);
+            }
+        }
+        if (Array.isArray(datos.duenoMaquina)) {
+            for (const maquinaId of datos.duenoMaquina) {
+                await client.query(USER_QUERIES.INSERT_MAQUINA_RELACION, [userId, maquinaId]);
+            }
+        }
+    }
 
-		// --- 2. PUERTAS ---
-		if (Array.isArray(datos.puertasAutorizadas)) {
-			const queryPuertas = `INSERT INTO medal.accede(idusuario, idpuerta) values($1, $2);`;
-			for (const puertaId of datos.puertasAutorizadas) {
-				try {
-					await pool.query(queryPuertas, [userId, puertaId]);
-				} catch (error) {
-					console.error(
-						"Error en la inserción de la puerta: " + puertaId,
-						error.message,
-					);
-				}
-			}
-		}
+    static async postUserUpm(datos) {
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+            const uuid = uuidv4();
+            const valores = [
+                datos.nombre, datos.apellido1, datos.apellido2 || null, datos.teams || false,
+                datos.esResponsable || false, datos.usuarioVpn || null, datos.correoInstitucional,
+                datos.activo, datos.fechaIncorporacion, datos.fechaFin || null, datos.wifi || false,
+                datos.tarjetaAcceso || null, uuid, datos.gitlab || null, datos.profesorResponsable || null,
+                datos.jefeLaboratorio || false
+            ];
 
-		// --- 3. MAQUINAS ---
-		if (Array.isArray(datos.duenoMaquina)) {
-			const queryPropietario = `INSERT INTO medal.propietario(idusuario, idmaquina) values($1, $2);`;
-			for (const maquinaId of datos.duenoMaquina) {
-				try {
-					await pool.query(queryPropietario, [userId, maquinaId]);
-				} catch (error) {
-					console.error(
-						"Error en la inserción de duenoMaquina: " + maquinaId,
-						error.message,
-					);
-				}
-			}
-		}
-	}
+            const res = await client.query(USER_QUERIES.POST_USER(false), valores);
+            await this.guardarBdd(datos, res.rows[0].idusuario, client);
+            
+            await client.query("COMMIT");
+            return { status: "OK", id: uuid };
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
 
-	static async postUserUpm(datos) {
-		const uuid = uuidv4();
-		const queryUser = `INSERT INTO medal.usuario(nombre, apellido1, apellido2, teams, esresponsable, usuariovpn, correoinstitucional, activo, fechaincorporacion, fechafin, wifi, tarjetaacceso, uuidusuario, gitlab, responsable, jefelaboratorio) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING uuidusuario, idusuario;`;
+    static async postUser(datos) {
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+            const uuid = uuidv4();
+            const passwordHaseada = await bcrypt.hash(datos.contrasena, 10);
+            const valores = [
+                datos.nombre, datos.apellido1, datos.apellido2 || null, datos.teams || false,
+                datos.esResponsable || false, datos.usuarioVpn || null, datos.correoInstitucional,
+                datos.activo, datos.fechaIncorporacion, datos.fechaFin || null, datos.wifi || false,
+                datos.tarjetaAcceso || null, uuid, datos.gitlab || null, datos.profesorResponsable || null,
+                datos.jefeLaboratorio || false, passwordHaseada
+            ];
 
-		const valoresQuery1 = [
-			datos.nombre,
-			datos.apellido1,
-			datos.apellido2 || null,
-			datos.teams || false,
-			datos.esResponsable || false,
-			datos.usuarioVpn || null,
-			datos.correoInstitucional,
-			datos.activo,
-			datos.fechaIncorporacion,
-			datos.fechaFin || null,
-			datos.wifi || false,
-			datos.tarjetaAcceso || null,
-			uuid,
-			datos.gitlab || null,
-			datos.profesorResponsable || null,
-			datos.jefeLaboratorio || false,
-		];
+            const res = await client.query(USER_QUERIES.POST_USER(true), valores);
+            await this.guardarBdd(datos, res.rows[0].idusuario, client);
 
-		try {
-			const resCreateUser = await pool.query(queryUser, valoresQuery1);
-			const userId = resCreateUser.rows[0].idusuario;
-			const userUuid = resCreateUser.rows[0].uuidusuario;
+            await client.query("COMMIT");
+            return { status: "OK", id: uuid };
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
 
-			await this.guardarBdd(datos, userId);
+    static async getUserByUuid(uuid) {
+        try {
+            const res = await pool.query(USER_QUERIES.GET_BY_UUID, [uuid]);
+            return { status: "OK", info: res };
+        } catch (error) {
+            throw error;
+        }
+    }
 
-			return { status: "OK", id: userUuid };
-		} catch (error) {
-			console.error("Error en DB postUserUpm:", error);
-			return { status: "ERR", error: error.message };
-		}
-	}
+    static async getAllUsers(page, limit, filtroNombre) {
+        try {
+            const offset = (page - 1) * limit;
+            const busqueda = `%${filtroNombre}%`;
+            const res = await pool.query(USER_QUERIES.GET_ALL_PAGINADO, [limit, offset, busqueda]);
+            const countRes = await pool.query(USER_QUERIES.COUNT_BY_NOMBRE, [busqueda]);
+            
+            const totalItems = parseInt(countRes.rows[0].count);
+            return {
+                status: "OK",
+                rows: res.rows,
+                pagination: {
+                    totalItems,
+                    totalPages: Math.ceil(totalItems / limit),
+                    currentPage: page
+                },
+            };
+        } catch (error) {
+            throw error;
+        }
+    }
 
-	static async postUser(datos) {
-		const uuid = uuidv4();
-		const saltRounds = 10;
-		const passwordHaseada = await bcrypt.hash(datos.contrasena, saltRounds);
-		const queryUser = `INSERT INTO medal.usuario(nombre, apellido1, apellido2, teams, esresponsable, usuariovpn, correoinstitucional, activo, fechaincorporacion, fechafin, wifi, tarjetaacceso, uuidusuario, gitlab, responsable, jefelaboratorio, contrasena) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING uuidusuario, idusuario;`;
+    static async patchUser(uuid, campos, esUser) {
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+            const { roles, puertasAutorizadas, duenoMaquina, ...camposUsuario } = campos;
+            
+            const camposPermitidos = esUser 
+                ? ["nombre", "apellido1", "apellido2", "fotoPerfil"]
+                : ["nombre", "apellido1", "apellido2", "teams", "esresponsable", "usuariovpn", "correoinstitucional", "activo", "fechafin", "wifi", "tarjetaacceso", "diriplastlogin", "contrasena", "gitlab", "responsable", "jefelaboratorio", "fotoPerfil"];
 
-		const valoresQuery1 = [
-			datos.nombre,
-			datos.apellido1,
-			datos.apellido2 || null,
-			datos.teams || false,
-			datos.esResponsable || false,
-			datos.usuarioVpn || null,
-			datos.correoInstitucional,
-			datos.activo,
-			datos.fechaIncorporacion,
-			datos.fechaFin || null,
-			datos.wifi || false,
-			datos.tarjetaAcceso || null,
-			uuid,
-			datos.gitlab || null,
-			datos.profesorResponsable || null,
-			datos.jefeLaboratorio || false,
-			passwordHaseada,
-		];
+            const camposFiltrados = {};
+            Object.keys(camposUsuario).forEach(key => {
+                if (camposPermitidos.includes(key)) camposFiltrados[key.toLowerCase()] = camposUsuario[key];
+            });
 
-		try {
-			const resCreateUser = await pool.query(queryUser, valoresQuery1);
-			const userId = resCreateUser.rows[0].idusuario;
-			const userUuid = resCreateUser.rows[0].uuidusuario;
+            let idUsuarioReal;
+            const keys = Object.keys(camposFiltrados);
+            if (keys.length > 0) {
+                const values = Object.values(camposFiltrados);
+                values.push(uuid);
+                const res = await client.query(USER_QUERIES.UPDATE_DYNAMIC(keys), values);
+                idUsuarioReal = res.rows[0]?.idusuario;
+            } else {
+                const res = await client.query(USER_QUERIES.GET_ID_BY_UUID, [uuid]);
+                idUsuarioReal = res.rows[0]?.idusuario;
+            }
 
-			await this.guardarBdd(datos, userId);
-			return { status: "OK", id: userUuid };
-		} catch (error) {
-			console.error("Error en DB postUser (Externo):", error);
-			return { status: "ERR", error: error.message };
-		}
-	}
+            if (!idUsuarioReal) return 2;
 
-	static async getUserByUuid(uuid) {
-		const queryGetUserByUuid = `SELECT * FROM medal.usuario WHERE uuidusuario = $1;`;
-		try {
-			const values = [uuid];
-			const resGetUserByUuid = await pool.query(queryGetUserByUuid, values);
-			return { status: "OK", info: resGetUserByUuid };
-		} catch (error) {
-			console.error("Error al hacer un get de usuario por uuid: ", error);
-			return { status: "ERR", error: error.message };
-		}
-	}
+            if (!esUser) {
+                if (roles !== undefined) {
+                    await client.query(USER_QUERIES.DELETE_ROLES_USER, [idUsuarioReal]);
+                    if (Array.isArray(roles)) {
+                        for (const rId of roles) await client.query(USER_QUERIES.INSERT_ROL_RELACION, [rId, idUsuarioReal]);
+                    }
+                }
+                if (puertasAutorizadas !== undefined) {
+                    await client.query(USER_QUERIES.DELETE_PUERTAS_USER, [idUsuarioReal]);
+                    if (Array.isArray(puertasAutorizadas)) {
+                        for (const pId of puertasAutorizadas) await client.query(USER_QUERIES.INSERT_PUERTA_RELACION, [idUsuarioReal, pId]);
+                    }
+                }
+                if (duenoMaquina !== undefined) {
+                    await client.query(USER_QUERIES.DELETE_MAQUINAS_USER, [idUsuarioReal]);
+                    if (Array.isArray(duenoMaquina)) {
+                        for (const mId of duenoMaquina) await client.query(USER_QUERIES.INSERT_MAQUINA_RELACION, [idUsuarioReal, mId]);
+                    }
+                }
+            }
 
-	static async getAllUsers(page, limit, filtroNombre) {
-		const offset = (page - 1) * limit;
-		const busqueda = `%${filtroNombre}%`;
-		const query = `
-        SELECT * FROM medal.usuario 
-        WHERE nombre ILIKE $3
-        ORDER BY idusuario ASC 
-        LIMIT $1 OFFSET $2;
-      `; // Se usa ILIKE para que no sea caseSensitive.
+            await client.query("COMMIT");
+            return { status: "OK" };
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
 
-		try {
-			const res = await pool.query(query, [limit, offset, busqueda]);
-			const countQuery = `SELECT COUNT(*) FROM medal.usuario WHERE nombre ILIKE $1`;
-			const countRes = await pool.query(countQuery, [busqueda]);
-			const totalItems = parseInt(countRes.rows[0].count);
-			return {
-				status: "OK",
-				rows: res.rows,
-				pagination: {
-					totalItems,
-					totalPages: Math.ceil(totalItems / limit),
-					currentPage: page,
-					totalItems: totalItems,
-				},
-			};
-		} catch (error) {
-			throw error;
-		}
-	}
+    static async darBaja(uuid) {
+        return await pool.query(USER_QUERIES.DAR_BAJA, [uuid]);
+    }
 
-	static async patchUser(uuid, campos, esUser) {
-		const client = await pool.connect();
-		try {
-			await client.query("BEGIN");
+    static async getPasswordByCorreoInstitucional(correo) {
+        const res = await pool.query(USER_QUERIES.GET_AUTH_DATA, [correo]);
+        return res.rows[0];
+    }
 
-			const { roles, puertasAutorizadas, duenoMaquina, ...camposUsuario } =
-				campos;
+    static async intentoInicioSesion(ip, correo, exitoso) {
+        await pool.query(USER_QUERIES.REGISTRAR_INTENTO_LOGIN, [ip, correo, exitoso]);
+        return { status: "Ok" };
+    }
 
-			let idUsuarioReal; // ID para tablas intermedias.
-			let camposPermitidos;
-			if (!esUser) {
-				camposPermitidos = [
-					"nombre",
-					"apellido1",
-					"apellido2",
-					"teams",
-					"esresponsable",
-					"usuariovpn",
-					"correoinstitucional",
-					"activo",
-					"fechafin",
-					"wifi",
-					"tarjetaacceso",
-					"diriplastlogin",
-					"contrasena",
-					"gitlab",
-					"responsable",
-					"jefelaboratorio",
-					"fotoPerfil",
-				];
-			} else {
-				camposPermitidos = ["nombre", "apellido1", "apellido2", "fotoPerfil"];
-			}
-
-			const camposFiltrados = {};
-			Object.keys(camposUsuario).forEach((key) => {
-				if (camposPermitidos.includes(key)) {
-					camposFiltrados[key] = campos[key];
-				}
-			});
-
-			const keys = Object.keys(camposFiltrados);
-			if (keys.length > 0) {
-				const values = Object.values(camposFiltrados);
-				const setQuery = keys
-					.map((key, index) => `${key} = $${index + 1}`)
-					.join(", ");
-				values.push(uuid);
-
-				const res = await client.query(
-					`UPDATE medal.usuario SET ${setQuery} WHERE uuidusuario = $${values.length} RETURNING idusuario`,
-					values,
-				);
-				idUsuarioReal = res.rows[0]?.idusuario;
-			} else {
-				const res = await client.query(
-					"SELECT idusuario FROM medal.usuario WHERE uuidusuario = $1",
-					[uuid],
-				);
-				idUsuarioReal = res.rows[0]?.idusuario;
-			}
-
-			if (!idUsuarioReal){
-				return 2;
-			} 
-
-			if (!esUser) {
-				// --- Roles ---
-				if (roles !== undefined) {
-					await client.query(
-						"DELETE FROM medal.rolestiene WHERE idusuario = $1",
-						[idUsuarioReal],
-					);
-					if (Array.isArray(roles)) {
-						for (const rolId of roles) {
-							await client.query(
-								"INSERT INTO medal.rolestiene(idrole, idusuario) VALUES($1, $2)",
-								[rolId, idUsuarioReal],
-							);
-						}
-					}
-				}
-
-				// --- Puertas ---
-				if (puertasAutorizadas !== undefined) {
-					await client.query("DELETE FROM medal.accede WHERE idusuario = $1", [
-						idUsuarioReal,
-					]);
-					if (Array.isArray(puertasAutorizadas)) {
-						for (const pId of puertasAutorizadas) {
-							await client.query(
-								"INSERT INTO medal.accede(idusuario, idpuerta) VALUES($1, $2)",
-								[idUsuarioReal, pId],
-							);
-						}
-					}
-				}
-
-				// --- Máquinas ---
-				if (duenoMaquina !== undefined) {
-					await client.query(
-						"DELETE FROM medal.propietario WHERE idusuario = $1",
-						[idUsuarioReal],
-					);
-					if (Array.isArray(duenoMaquina)) {
-						for (const mId of duenoMaquina) {
-							await client.query(
-								"INSERT INTO medal.propietario(idusuario, idmaquina) VALUES($1, $2)",
-								[idUsuarioReal, mId],
-							);
-						}
-					}
-				}
-			}
-			await client.query("COMMIT");
-			return { status: "OK" };
-		} catch (error) {
-			await client.query("ROLLBACK");
-			console.error("Error en patchUser:", error.message);
-			throw error;
-		} finally {
-			client.release();
-		}
-	}
-
-	static async darBaja(uuid) {
-		const queryDarBaja = `UPDATE medal.usuario SET activo = false WHERE uuidusuario = $1;`;
-		try {
-			return await pool.query(queryDarBaja, [uuid]);
-		} catch (error) {
-			throw error;
-		}
-	}
-	static async getPasswordByCorreoInstitucional(correoInstitucional) {
-		try {
-			const queryGetPasswordByCorreoInstitucional = `SELECT 
-     u.contrasena, 
-     u.uuidusuario, 
-     array_agg(perm.alias) AS permisos
-      FROM 
-          medal.usuario u, 
-          medal.rolestiene r, medal.operacon p, medal.permisos perm 
-      WHERE 
-          u.idusuario = r.idusuario AND r.idrole = p.idrole and p.idpermiso = perm.idpermiso
-          AND u.correoinstitucional = $1 
-          AND u.activo = true
-      GROUP BY 
-     u.idusuario, u.contrasena, u.uuidusuario;`; // Si el usuario no es un usuario activo no puede entrar en la plataforma.
-			const res = await pool.query(queryGetPasswordByCorreoInstitucional, [
-				correoInstitucional,
-			]);
-			return res.rows[0];
-		} catch (error) {
-			throw error;
-		}
-	}
-	static async intentoInicioSesion(ip, correoInstitucional, exitoso) {
-		const queryIntentoLogin = `INSERT INTO medal.intentosLogin(iporigen, emailintentado, exitoso) values($1, $2, $3);`;
-		try {
-			await pool.query(queryIntentoLogin, [ip, correoInstitucional, exitoso]);
-			return { status: "Ok" };
-		} catch (error) {
-			throw error;
-		}
-	}
-	static async updateIp(ip, correoInstitucional) {
-		const queryUpdateIp = `
-    UPDATE medal.usuario 
-    SET dirIpLastLogin = $1 
-    WHERE correoInstitucional = $2
-  `;
-		try {
-			const res = await pool.query(queryUpdateIp, [ip, correoInstitucional]);
-			return res.rowCount > 0;
-		} catch (error) {
-			console.error("Error al actualizar la IP del usuario:", error.message);
-			throw error;
-		}
-	}
+    static async updateIp(ip, correo) {
+        const res = await pool.query(USER_QUERIES.UPDATE_LAST_IP, [ip, correo]);
+        return res.rowCount > 0;
+    }
 }
 
 export default UserModel;

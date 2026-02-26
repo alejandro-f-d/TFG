@@ -1,23 +1,10 @@
 import pool from "../bbdd/conexion.js";
 import { v4 as uuidv4 } from "uuid";
+import { MAQUINA_QUERIES } from '../querys/maquinaQuery.js'
 class ServerModel {
 	static async postMaquina(datos) {
+
 		const uuidMaquina = uuidv4();
-		const queryServerPost = `
-        INSERT INTO medal.maquina(
-            uuidMaquina, nombre, caducidadssl, certificadosslactivo, emisorssl, 
-            direccionipprivadav4, direccionippublicav4, direccionipprivadav6, 
-            direccionippublicav6, puertaenlacev4, puertaenlacev6, ram, 
-            sistemaoperativo, esservidor
-        ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`;
-
-		const queryCrearPermisos = `
-        INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) 
-        VALUES 
-        ($1, 'Ver servicios', 'Ver servicios asociados a la máquina', 'servicios'),
-        ($2, 'Crear servicios', 'Permite la creación de servicios en esta máquina', 'servicios'),
-        ($3, 'Eliminar servicios', 'Eliminar servicios asociados a la máquina', 'servicios');`;
-
 		const valuesAlias = [
 			`maquina:verServicios:${uuidMaquina}`,
 			`maquina:crearServicios:${uuidMaquina}`,
@@ -46,10 +33,10 @@ class ServerModel {
 		try {
 			await client.query("BEGIN");
 
-			await client.query(queryServerPost, valuesPostServer);
-			if (datos.especificaciones.esServidor)
-				await client.query(queryCrearPermisos, valuesAlias);
-
+			await client.query(MAQUINA_QUERIES.SERVER_POST , valuesPostServer);
+			if (datos.especificaciones.esServidor){
+				await client.query(MAQUINA_QUERIES.CREAR_PERMISOS, valuesAlias);
+			}
 			await client.query("COMMIT");
 			return { status: "OK", uuid: uuidMaquina };
 		} catch (error) {
@@ -61,52 +48,47 @@ class ServerModel {
 		}
 	}
 
-	static async getMaquinas(
-		soloServidores,
-		page = 1,
-		limit = 10,
-		filtroNombre = "",
-	) {
-		let query = `SELECT * FROM medal.maquina`;
-		let conditions = [];
-		const params = [];
-		if (soloServidores) {
-			conditions.push(`esservidor = true`);
-		}
-		if (filtroNombre) {
-			params.push(`%${filtroNombre}%`);
-			conditions.push(`nombre ILIKE $${params.length}`);
-		}
-		if (conditions.length > 0) {
-			query += ` WHERE ` + conditions.join(" AND ");
-		}
-		const offset = (page - 1) * limit;
-		params.push(limit);
-		query += ` LIMIT $${params.length}`;
-		params.push(offset);
-		query += ` OFFSET $${params.length}`;
-		try {
-			const res = await pool.query(query, params);
-			return res.rows;
-		} catch (error) {
-			console.error("Error en getMaquinas Model:", error.message);
-			throw error;
-		}
-	}
+static async getMaquinas(soloServidores, page = 1, limit = 10, filtroNombre = "") {
+    const params = [];
+    const conditions = [];
+    if (soloServidores) {
+        conditions.push(`esservidor = true`);
+    }
+
+    if (filtroNombre) {
+        params.push(`%${filtroNombre}%`);
+        conditions.push(`nombre ILIKE $${params.length}`);
+    }
+
+    const offset = (page - 1) * limit;
+    params.push(limit);
+    const limitIndex = params.length;
+    
+    params.push(offset);
+    const offsetIndex = params.length;
+
+    try {
+        const query = MAQUINA_QUERIES.BUILD_GET_ALL(conditions, limitIndex, offsetIndex);
+        
+        const res = await pool.query(query, params);
+        return res.rows;
+    } catch (error) {
+        console.error("Error en getMaquinas Model:", error.message);
+        throw error;
+    }
+}
 
 	static async getMaquina(soloServidores, uuid) {
-		const verificarTipo = `SELECT * FROM medal.maquina WHERE uuidmaquina = $1;`;
-
 		try {
-			const resQuery = await pool.query(verificarTipo, [uuid]);
+			const resQuery = await pool.query(MAQUINA_QUERIES.GET_MAQUINA_UUID, [uuid]);
 			if (resQuery.rows.length === 0) {
-				return 2; //404 NOT FOUND
+				return 2; 
 			} else if (resQuery.rows[0].esservidor) {
 				return resQuery.rows[0];
 			} else if (!resQuery.rows[0].esservidor && !soloServidores) {
 				return resQuery.rows[0];
 			} else {
-				return 3; // 403 No tienes permisos.
+				return 3; 
 			}
 		} catch (error) {
 			console.error(
@@ -118,146 +100,85 @@ class ServerModel {
 	}
 
 	static async deleteMaquina(uuid) {
-		const queryDeletePerms = `DELETE FROM medal.permisos WHERE alias ILIKE $1`;
-		const queryDeleteMaquina = `DELETE FROM medal.maquina WHERE uuidmaquina = $1`;
+		const queryDeletePerms = ``;
+		const queryDeleteMaquina = ``;
 		try {
 			const filtroPermiso = `%${uuid}%`;
-			await pool.query(queryDeletePerms, [filtroPermiso]);
-			const resBorrado = await pool.query(queryDeleteMaquina, [uuid]);
+			await pool.query(MAQUINA_QUERIES.DELETE_PERMS, [filtroPermiso]);
+			const resBorrado = await pool.query(MAQUINA_QUERIES.DELETE_MAQ, [uuid]);
 			return resBorrado.rowCount > 0;
 		} catch (error) {
 			console.error("Error al hacer delete de una máquina:", error.message);
 			throw error;
 		}
 	}
-	static async getServiciosMaquina(
-		page = 1,
-		limit = 10,
-		filtroNombre = "",
-		uuid,
-	) {
-		const queryVerificarMaquinaExiste = `SELECT uuidMaquina FROM medal.maquina WHERE uuidMaquina = $1;`;
+	static async getServiciosMaquina(page = 1, limit = 10, filtroNombre = "", uuid) {
+    try {
+        const resExiste = await pool.query(MAQUINA_QUERIES.VERIFICAR_EXISTE, [uuid]);
+        if (resExiste.rows.length === 0) return 2;
+        const offset = (page - 1) * limit;
+        const busqueda = `%${filtroNombre}%`;
+        const res = await pool.query(MAQUINA_QUERIES.GET_SERVICIOS_DETALLE, [
+            limit,
+            offset,
+            busqueda,
+            uuid
+        ]);
+        return res.rows; 
+    } catch (error) {
+        console.error("Error al obtener servicios de máquina:", error.message);
+        throw error;
+    }
+}
 
-		const queryGetInfoServicios = `SELECT 
-    s.*, 
-    p.uuidPeticion, 
-    maq.uuidMaquina,
-    -- Agrupamos los puertos en un objeto JSON para que cada servicio sea una sola fila
-    puertos_agg.lista_puertos
-FROM 
-    medal.servicio s, 
-    medal.peticion p, 
-    medal.maquina maq, 
-    medal.corre c,
-    (
-        -- Subconsulta para agrupar los puertos antes de unir con el resto
-        SELECT idServicio, 
-               json_agg(json_build_object(
-                   'id', idPuerto, 
-                   'puerto', numeroPuertoMaquina, 
-                   'protocolo', protocolo,
-                   'nombre', nombreServicio
-               )) AS lista_puertos
-        FROM medal.puertosAbiertos
-        GROUP BY idServicio
-    ) AS puertos_agg
-WHERE 
-    s.idPeticion = p.idPeticion 
-    AND c.idServicio = s.idServicio 
-    AND maq.idMaquina = c.idMaquina
-    AND s.idServicio = puertos_agg.idServicio
-    AND maq.uuidMaquina = $4
-    AND nombreservicio ILIKE $3 ORDER BY nombreservicio ASC LIMIT $1 OFFSET $2;`;
-		try {
-			const resExisteMaquina = await pool.query(queryVerificarMaquinaExiste, [
-				uuid,
-			]);
-			if (resExisteMaquina.rows.length === 0) {
-				return 2;
-			}
-			const offset = (page - 1) * limit;
-			const busqueda = `%${filtroNombre}%`;
+static async patchServer(uuid, camposCambiados) {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
 
-			const res = await pool.query(queryGetInfoServicios, [
-				limit,
-				offset,
-				busqueda,
-				uuid,
-			]);
-			return res.rows[0];
-		} catch (error) {
-			console.error(
-				"Error inesparado al obtener los servicios de un servidor en concreto.",
-			);
-			throw error;
-		}
-	}
-	static async patchServer(uuid, camposCambiados) {
-		const client = await pool.connect();
+        const camposPermitidos = [
+            "nombre", "caducidadssl", "certificadosslactivo", "emisorssl",
+            "direccionipprivadav4", "direccionippublicav4", "direccionipprivadav6",
+            "direccionippublicav6", "puertaenlacev4", "puertaenlacev6",
+            "ram", "sistemaoperativo", "esservidor"
+        ];
 
-		try {
-			await client.query("BEGIN");
-			const camposPermitidos = [
-				"nombre",
-				"caducidadssl",
-				"certificadosslactivo",
-				"emisorssl",
-				"direccionipprivadav4",
-				"direccionippublicav4",
-				"direccionipprivadav6",
-				"direccionippublicav6",
-				"puertaenlacev4",
-				"puertaenlacev6",
-				"ram",
-				"sistemaoperativo",
-				"esservidor",
-			];
+        const camposFiltrados = {};
+        Object.keys(camposCambiados).forEach((key) => {
+            if (camposPermitidos.includes(key)) {
+                camposFiltrados[key] = camposCambiados[key];
+            }
+        });
 
-			const camposFiltrados = {};
-			Object.keys(camposCambiados).forEach((key) => {
-				if (camposPermitidos.includes(key)) {
-					camposFiltrados[key] = camposCambiados[key];
-				}
-			});
+        const keys = Object.keys(camposFiltrados);
+        
+        if (keys.length === 0) {
+            const check = await client.query(MAQUINA_QUERIES.VERIFICAR_EXISTE, [uuid]);
+            await client.query("COMMIT");
+            return check.rows.length > 0 ? { status: "OK" } : 2;
+        }
 
-			const keys = Object.keys(camposFiltrados);
-			if (keys.length === 0) {
-				const check = await client.query(
-					"SELECT 1 FROM medal.maquina WHERE uuidmaquina = $1",
-					[uuid],
-				);
-				await client.query("COMMIT");
-				return check.rowCount > 0 ? { status: "OK" } : 2;
-			}
-			if (keys.length > 0) {
-				const values = Object.values(camposFiltrados);
-				const setQuery = keys
-					.map((key, index) => `${key} = $${index + 1}`) // Nota mental: Lo que hace el index +1 es crearme las posiciones para los valores del array de entrada: $1, $2, ..., $n
-					.join(", ");
-				values.push(uuid);
-				const res = await client.query(
-					`UPDATE medal.maquina SET ${setQuery} WHERE uuidmaquina = $${values.length};`,
-					values,
-				);
-				if (res.rowCount === 0) {
-					await client.query("ROLLBACK");
-					return 2;
-				}
-			}
-			await client.query("COMMIT");
-			return { status: "OK" };
-		} catch (error) {
-			await client.query("ROLLBACK");
-			console.error(
-				"Se ha producido un error al hacer patch del server:",
-				uuid,
-				camposCambiados,
-				error,
-			);
-			throw error;
-		} finally {
-			client.release();
-		}
+        const values = Object.values(camposFiltrados);
+        values.push(uuid);
+        
+        const sql = MAQUINA_QUERIES.UPDATE_SERVER_DYNAMIC(keys);
+        const res = await client.query(sql, values);
+
+        if (res.rowCount === 0) {
+            await client.query("ROLLBACK");
+            return 2;
+        }
+
+        await client.query("COMMIT");
+        return { status: "OK" };
+
+    } catch (error) {
+        await client.query("ROLLBACK");
+        console.error("Error en patchServer (Model):", uuid, error.message);
+        throw error;
+    } finally {
+        client.release();
+    }
 	}
 }
 export default ServerModel;
