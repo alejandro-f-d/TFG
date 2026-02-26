@@ -103,3 +103,33 @@ export const deleteRolByUuid = async(req, res) => {
 		return res.status(500).json({error: "Error interno del servidor."});
 	}
 }
+
+export const patchRolByUuid = async(req, res) => {
+	const { uuid } = req.params;
+	if(!uuid){
+		return res.status(400).json({error: "Petición mal formada."});
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+	if (!uuidRegex.test(uuid)) {
+		return res
+			.status(404)
+			.json({ error: "Máquina no encontrada (Formato de ID inválido)." });
+	}
+	const camposCambiados = req.body;
+	if(Object.keys(camposCambiados).length == 0){
+		return res.status(400).json({message: "Query mal formada."});
+	}
+	try {
+		const resPatch = await RolModel.patchRole(uuid, camposCambiados);
+		if(resPatch == 2){
+			return res.status(404).json({error: "Rol no encontrado."});
+		}
+		return res.status(204).json({message: "Rol actualizado con éxito"});
+	} catch (error) {
+		console.error("Se ha producido un error al hacer un patch a un rol", uuid, camposCambiados, error);
+		return res.status(500).json({error: "Error interno del servidor."});
+	}
+
+}

@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
-import { postRole, getRoles, getRolesByUuid, deleteRolByUuid } from "../controller/rolController.js";
+import { postRole, getRoles, getRolesByUuid, deleteRolByUuid, patchRolByUuid } from "../controller/rolController.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
 import { rolSchema } from "../schemas/index.js";
 const router = express.Router();
@@ -537,6 +537,8 @@ router.get("/", [verificarToken, tienePermiso("roles:getRoles")], getRoles);
 
 
 router.get("/:uuid", [verificarToken, tienePermiso("roles:getRoles")], getRolesByUuid);
+
+router.patch("/:uuid", [verificarToken, tienePermiso("roles:postRoles")], patchRolByUuid);
 
 
 /**

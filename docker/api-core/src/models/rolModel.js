@@ -160,6 +160,7 @@ LIMIT $1 OFFSET $2;`;
 	static async deleteRolByUuid(uuid){
 		const queryObtenerIdRol = `SELECT idrole FROM medal.roles WHERE uuidrole = $1;`;
 		const queryBorrarUserPertenece = `DELETE FROM medal.rolestiene WHERE idrole = $1 `;
+		const queryBorrarPermisos = `DELETE FROM medal.operacon WHERE idRole = $1;`;
 		const queryBorrarRole = `DELETE from medal.roles WHERE uuidrole = $1;`;
 
 		const client = await pool.connect();
@@ -171,11 +172,72 @@ LIMIT $1 OFFSET $2;`;
 			}
 			const idRole = resIdRole.rows[0]?.idrole
 			await client.query(queryBorrarUserPertenece, [idRole]);
+			await client.query(queryBorrarPermisos, [idRole]);
 			await client.query(queryBorrarRole, [uuid]);
 			await client.query("COMMIT");
 		} catch (error) {
 			await client.query("ROLLBACK");
 			console.error("Se ha producido un error al borrar un role de la base de datos.", uuid, error);
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
+	
+	static async patchRole(uuid, camposCambiados){
+		
+		const { permisos, ...camposRoles  } = camposCambiados;
+		const client = await pool.connect();
+		let idRole;
+		try {
+			const camposPermitidos = [
+				"nombre",
+				"descripcion"
+			];
+			const camposFiltrados = {};
+			Object.keys(camposRoles).forEach((key) => {
+				if (camposPermitidos.includes(key)) {
+					camposFiltrados[key] = camposCambiados[key];
+				}
+			});
+
+			await client.query("BEGIN");
+			const keys = Object.keys(camposFiltrados);
+			if (keys.length > 0) {
+				const values = Object.values(camposFiltrados);
+				const setQuery = keys
+					.map((key, index) => `${key} = $${index + 1}`)
+					.join(", ");
+				values.push(uuid);
+				const res = await client.query(
+					`UPDATE medal.roles SET ${setQuery} where uuidrole = $${values.length} RETURNING idrole;`,
+					values
+				);
+				idRole = res.rows[0]?.idrole;
+			} else {
+				const res = await client.query("SELECT idrole FROM medal.roles WHERE uuidrole = $1", [uuid]);
+				idRole = res.rows[0]?.idrole;
+			}
+			
+			if(!idRole){
+				return 2; //404
+			}
+			
+			if(permisos !== undefined){
+				await client.query("DELETE FROM medal.operacon WHERE idRole = $1;", [idRole]);
+				if(Array.isArray(permisos)){
+					for (const permisoId of permisos){
+						await client.query("INSERT INTO medal.operacon(idrole, idpermiso) VALUES($1, $2)", [idRole, permisoId]);
+					}
+				}
+			}
+
+			await client.query("COMMIT");
+			return { status: "OK" };
+
+		} catch (error) {
+			await client.query("ROLLBACK");
+			console.error("Se ha producido un error al hacer el patch del servidor.");
 			throw error;
 		} finally {
 			client.release();

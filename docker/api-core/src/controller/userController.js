@@ -185,6 +185,9 @@ export const patchUser = async (req, res) => {
 			if (darBaja && !uuidDelToken === uuid) {
 				//Si está activo, solamente se pasa el usuario a que ya no está activo, el resto de campos se mantienen igual.
 				const resultado = await UserModel.darBaja(uuid);
+				if(resultado == 2){
+					return res.status(404).json({error: "Usuario no encontrado."});
+				}
 				if (resultado.rowCount === 0) {
 					return res.status(404).json({
 						error: "Usuario al que se le quiere dar de baja no encontrado.",
@@ -209,6 +212,10 @@ export const patchUser = async (req, res) => {
 			if (resultado.rowCount === 0) {
 				return res.status(404).json({ error: "Usuario no encontrado." });
 			}
+			if(resultado == 2){
+				return res.status(404).json({error: "Usuario no encontrado."});
+			}
+
 			return res.status(204).json({
 				message: "Usuario actualizado.",
 			});

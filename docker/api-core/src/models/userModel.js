@@ -230,7 +230,9 @@ class UserModel {
 				idUsuarioReal = res.rows[0]?.idusuario;
 			}
 
-			if (!idUsuarioReal) throw new Error("Usuario no encontrado");
+			if (!idUsuarioReal){
+				return 2;
+			} 
 
 			if (!esUser) {
 				// --- Roles ---
