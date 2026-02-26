@@ -1,5 +1,6 @@
 import pool from "../bbdd/conexion.js";
 import { v4 as uuidv4 } from "uuid";
+import { ROL_QUERY } from '../querys/rolQuery.js'
 
 class RolModel {
 	static async postRole(permisosUsuario, usuarioUuid, data) {
@@ -9,7 +10,7 @@ class RolModel {
 			await client.query("BEGIN");
 
 			const resUser = await client.query(
-				"SELECT idusuario FROM medal.usuario WHERE uuidusuario = $1",
+				ROL_QUERY.GET_ID_USR,
 				[usuarioUuid],
 			);
 
@@ -19,22 +20,16 @@ class RolModel {
 			const idUsuarioNumerico = resUser.rows[0].idusuario;
 
 			const uuidNuevoRol = uuidv4();
-			const queryPostRole = `
-            INSERT INTO medal.roles(nombre, descripcion, idusuario, uuidrole) 
-            VALUES($1, $2, $3, $4) 
-            RETURNING idrole;
-        `;
-
-			const resPostRole = await client.query(queryPostRole, [
+			const resPostRole = await client.query(ROL_QUERY.POST_ROLE, [
 				data.nombre,
 				data.descripcion,
 				idUsuarioNumerico,
 				uuidNuevoRol,
-			]);
+		]);
 			const idRole = resPostRole.rows[0].idrole;
 
 			const resEspeciales = await client.query(
-				"SELECT idpermiso, alias FROM medal.permisos WHERE alias IN ('null:null', 'admin:total');",
+				ROL_QUERY.OBTENER_ID_ESPECIALES, []
 			);
 			const pNull = resEspeciales.rows.find((p) => p.alias === "null:null");
 			const pAdmin = resEspeciales.rows.find((p) => p.alias === "admin:total");
@@ -60,7 +55,7 @@ class RolModel {
 					continue;
 				}
 				await client.query(
-					"INSERT INTO medal.operacon(idrole, idpermiso) VALUES ($1, $2)",
+					ROL_QUERY.INSERT_OPERA_CON,
 					[idRole, idPermiso],
 				);
 			}
@@ -78,29 +73,9 @@ class RolModel {
 	static async getRoles(page, limit, filtroNombre) {
 		const offset = (page - 1) * limit;
 		const busqueda = `%${filtroNombre}%`;
-		const query = `SELECT 
-    r.*,
-    COALESCE(
-        json_agg(
-            json_build_object(
-                'idUsuario', u.idusuario,
-                'nombre', u.nombre,
-                'apellido1', u.apellido1,
-                'apellido2', u.apellido2
-            )
-        ) FILTER (WHERE u.idusuario IS NOT NULL), '[]'
-    ) AS usuarios
-FROM medal.roles r
-LEFT JOIN medal.rolestiene rt ON r.idrole = rt.idrole
-LEFT JOIN medal.usuario u ON rt.idusuario = u.idusuario
-WHERE r.nombre ILIKE $3
-GROUP BY r.idrole
-ORDER BY r.idrole ASC
-LIMIT $1 OFFSET $2;`;
 		try {
-			const res = await pool.query(query, [limit, offset, busqueda]);
-			const countQuery = `SELECT COUNT(*) FROM medal.roles WHERE nombre ILIKE $1`;
-			const countRes = await pool.query(countQuery, [busqueda]);
+			const res = await pool.query(ROL_QUERY.GET_ROLES, [limit, offset, busqueda]);
+			const countRes = await pool.query(ROL_QUERY.COUNT_ROLES, [busqueda]);
 			const totalItems = parseInt(countRes.rows[0].count);
 			return {
 				status: "OK",
@@ -124,29 +99,9 @@ LIMIT $1 OFFSET $2;`;
 		}
 	}
 	static async getRolesByUuid(uuid){
-
-		const queryGetRoleByUuid = `SELECT 
-    r.*,
-    (
-        SELECT COALESCE(
-            json_agg(
-                json_build_object(
-                    'idUsuario', u.idusuario,
-                    'nombre', u.nombre,
-                    'apellido1', u.apellido1,
-                    'apellido2', u.apellido2
-                )
-            ), '[]'
-        )
-        FROM medal.rolestiene rt
-        JOIN medal.usuario u ON rt.idusuario = u.idusuario
-        WHERE rt.idrole = r.idrole
-    ) AS usuarios
-		FROM medal.roles r
-		WHERE r.uuidrole = $1;`;
-		
+	
 		try {
-			const resGet = await pool.query(queryGetRoleByUuid, [uuid]);	
+			const resGet = await pool.query(ROL_QUERY.GET_ROLE_BY_UUID, [uuid]);	
 			if(resGet.rows.length === 0){
 				return 2;
 			}
@@ -158,22 +113,18 @@ LIMIT $1 OFFSET $2;`;
 	}
 
 	static async deleteRolByUuid(uuid){
-		const queryObtenerIdRol = `SELECT idrole FROM medal.roles WHERE uuidrole = $1;`;
-		const queryBorrarUserPertenece = `DELETE FROM medal.rolestiene WHERE idrole = $1 `;
-		const queryBorrarPermisos = `DELETE FROM medal.operacon WHERE idRole = $1;`;
-		const queryBorrarRole = `DELETE from medal.roles WHERE uuidrole = $1;`;
 
 		const client = await pool.connect();
 		try {	
 			await client.query("BEGIN");
-			const resIdRole = await client.query(queryObtenerIdRol, [uuid]);
+			const resIdRole = await client.query(ROL_QUERY.OBTENER_ID_ROL, [uuid]);
 			if(!(resIdRole.rowCount > 0)){
 				return 2; //404 no encontrado.
 			}
 			const idRole = resIdRole.rows[0]?.idrole
-			await client.query(queryBorrarUserPertenece, [idRole]);
-			await client.query(queryBorrarPermisos, [idRole]);
-			await client.query(queryBorrarRole, [uuid]);
+			await client.query(ROL_QUERY.BORRAR_PERTENCE, [idRole]);
+			await client.query(ROL_QUERY.BORRAR_PERMISOS, [idRole]);
+			await client.query(ROL_QUERY.BORRAR_ROL, [uuid]);
 			await client.query("COMMIT");
 		} catch (error) {
 			await client.query("ROLLBACK");
@@ -184,65 +135,62 @@ LIMIT $1 OFFSET $2;`;
 		}
 	}
 	
-	static async patchRole(uuid, camposCambiados){
-		
-		const { permisos, ...camposRoles  } = camposCambiados;
-		const client = await pool.connect();
-		let idRole;
-		try {
-			const camposPermitidos = [
-				"nombre",
-				"descripcion"
-			];
-			const camposFiltrados = {};
-			Object.keys(camposRoles).forEach((key) => {
-				if (camposPermitidos.includes(key)) {
-					camposFiltrados[key] = camposCambiados[key];
-				}
-			});
+	static async patchRole(uuid, camposCambiados) {
+    const { permisos, ...camposRoles } = camposCambiados;
+    const client = await pool.connect();
+    let idRole;
 
-			await client.query("BEGIN");
-			const keys = Object.keys(camposFiltrados);
-			if (keys.length > 0) {
-				const values = Object.values(camposFiltrados);
-				const setQuery = keys
-					.map((key, index) => `${key} = $${index + 1}`)
-					.join(", ");
-				values.push(uuid);
-				const res = await client.query(
-					`UPDATE medal.roles SET ${setQuery} where uuidrole = $${values.length} RETURNING idrole;`,
-					values
-				);
-				idRole = res.rows[0]?.idrole;
-			} else {
-				const res = await client.query("SELECT idrole FROM medal.roles WHERE uuidrole = $1", [uuid]);
-				idRole = res.rows[0]?.idrole;
-			}
-			
-			if(!idRole){
-				return 2; //404
-			}
-			
-			if(permisos !== undefined){
-				await client.query("DELETE FROM medal.operacon WHERE idRole = $1;", [idRole]);
-				if(Array.isArray(permisos)){
-					for (const permisoId of permisos){
-						await client.query("INSERT INTO medal.operacon(idrole, idpermiso) VALUES($1, $2)", [idRole, permisoId]);
-					}
-				}
-			}
+    try {
+        await client.query("BEGIN");
 
-			await client.query("COMMIT");
-			return { status: "OK" };
+        const camposPermitidos = ["nombre", "descripcion"];
+        const camposFiltrados = {};
+        
+        Object.keys(camposRoles).forEach((key) => {
+            if (camposPermitidos.includes(key)) {
+                camposFiltrados[key] = camposRoles[key];
+            }
+        });
 
-		} catch (error) {
-			await client.query("ROLLBACK");
-			console.error("Se ha producido un error al hacer el patch del servidor.");
-			throw error;
-		} finally {
-			client.release();
-		}
-	}
+        const keys = Object.keys(camposFiltrados);
+
+        if (keys.length > 0) {
+            const values = Object.values(camposFiltrados);
+            values.push(uuid); 
+
+            const sqlUpdate = ROL_QUERIES.UPDATE_ROLE_DYNAMIC(keys);
+            const res = await client.query(sqlUpdate, values);
+            
+            idRole = res.rows[0]?.idrole;
+        } else {
+            const res = await client.query(ROL_QUERIES.GET_ID_BY_UUID, [uuid]);
+            idRole = res.rows[0]?.idrole;
+        }
+
+        if (!idRole) {
+            await client.query("ROLLBACK");
+            return 2; 
+      	}
+
+        if (permisos !== undefined) {
+            await client.query(ROL_QUERIES.DELETE_PERMISOS_ASIGNADOS, [idRole]);
+            if (Array.isArray(permisos)) {
+                for (const permisoId of permisos) {
+                    await client.query(ROL_QUERIES.INSERT_PERMISO_ROL, [idRole, permisoId]);
+                }
+            }
+        }
+        await client.query("COMMIT");
+        return { status: "OK" };
+
+    } catch (error) {
+        await client.query("ROLLBACK");
+        console.error("Error en patchRole (Model):", { uuid, error: error.message });
+        throw error;
+    } finally {
+        client.release();
+    }
+}
 }
 
 export default RolModel;
