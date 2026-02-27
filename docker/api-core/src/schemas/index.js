@@ -207,3 +207,28 @@ export const puertaSchema = Joi.object({
 		"any.required": "Petición mal formada.",
 	}),
 });
+
+export const dispositivoSchema = Joi.object({
+	nombre: Joi.string().max(200).trim().required().messages({
+		"any.required": "Petición mal formada",
+		"string.empty": "El nombre es obligatorio",
+	}),
+
+	idTipoDispositivo: Joi.number().integer().positive().required().messages({
+		"any.required": "Petición mal formada",
+		"number.base": "idTipoDispositivo debe ser un número",
+	}),
+
+	idMaquina: Joi.number().integer().positive().required().messages({
+		"any.required": "Petición mal formada",
+		"number.base": "idMaquina debe ser un número",
+	}),
+
+	puntoMontaje: Joi.string().max(100).trim().allow(null, ""),
+
+	capacidad: Joi.number().integer().min(0).allow(null),
+
+	capacidadUsada: Joi.number().integer().min(0).allow(null),
+
+	tecnologia: Joi.string().max(200).trim().allow(null, ""),
+});

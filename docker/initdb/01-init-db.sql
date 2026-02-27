@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS medal.tipoDispositivo(
 -- 3. DISPOSITIVOS
 CREATE TABLE IF NOT EXISTS medal.dispositivos(
   idDispositivo SERIAL PRIMARY KEY,
+  nombre VARCHAR(200) NOT NULL,
   puntoMontaje VARCHAR(100),
   capacidad INTEGER, 
   capacidadUsada INTEGER, 

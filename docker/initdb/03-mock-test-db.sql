@@ -25,20 +25,16 @@ VALUES
 -- =========================
 -- 3. TIPO DISPOSITIVO
 -- =========================
-INSERT INTO medal.tipoDispositivo(nombre,descripcion)
-VALUES
-('SSD','Disco sólido NVMe'),
-('HDD','Disco mecánico SATA');
 
 
 -- =========================
 -- 4. DISPOSITIVOS
 -- =========================
 INSERT INTO medal.dispositivos
-(puntoMontaje,capacidad,capacidadUsada,tecnologia,idMaquina,idTipoDispositivo)
+(nombre, puntoMontaje,capacidad,capacidadUsada,tecnologia,idMaquina,idTipoDispositivo)
 VALUES
-('/var/lib/docker',1000,450,'NVMe',1,1),
-('/data',4000,1200,'SATA',2,2);
+('Docker', '/var/lib/docker',1000,450,'NVMe',1,1),
+('ultradisk','/data',4000,1200,'SATA',2,2);
 
 
 -- =========================

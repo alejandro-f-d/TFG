@@ -10,6 +10,7 @@ import serviciosRoute from "./routes/serviciosRoute.js";
 import proyectosGitlabRoute from "./routes/proyectosGitlabRoute.js";
 import rolRoute from "./routes/rolRoute.js";
 import puertasRoute from "./routes/puertasRoute.js";
+import dispositivosRoute from "./routes/dispositivosRoute.js";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
@@ -55,6 +56,7 @@ app.use("/api/servicios", serviciosRoute); // Para poder hacer un get de todos l
 app.use("/api/proyectosgitlab", proyectosGitlabRoute);
 app.use("/api/rol", rolRoute);
 app.use("/api/puertas", puertasRoute);
+app.use("/api/dispositivos", dispositivosRoute);
 
 // Errores interno 500
 app.use((err, req, res, next) => {

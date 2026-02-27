@@ -61,6 +61,45 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('puertas:p
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('puertas:getPuertas', 'Listado de puertas.', 'Obtiene el listado de todas las puertas.', 'puertas');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('dispositivo:postDispositivo', 'Creación  de dispositivos.', 'Permite al usuario la creación de dispositivos.', 'dispostivos');
+
+ 
+
+INSERT INTO medal.tipodispositivo (idtipodispositivo, nombre, descripcion) VALUES
+-- TUS REGISTROS ORIGINALES
+(1, 'SSD', 'Disco de estado sólido (SATA/NVMe)'),
+(2, 'HDD', 'Disco duro mecánico tradicional'),
+
+-- ALMACENAMIENTO Y LEGADO
+(3, 'Cinta Magnética', 'Unidad de respaldo LTO o similares'),
+(4, 'NAS', 'Almacenamiento conectado en red'),
+(5, 'Pendrive', 'Memoria USB flash de almacenamiento'),
+(6, 'Disquetera External', 'Unidad de lectura de discos de 3.5 pulgadas'),
+
+-- REDES Y CABLEADO
+(7, 'Cable de Red', 'Latiguillo Ethernet (Cat 5e, 6, 6a, 7)'),
+(8, 'Switch', 'Conmutador de red de datos'),
+(9, 'Router', 'Enrutador de comunicaciones/Gateway'),
+(10, 'Access Point', 'Punto de acceso inalámbrico'),
+(11, 'Transceptor SFP', 'Módulo de conexión para fibra óptica'),
+
+-- PERIFÉRICOS Y CAPTURA
+(12, 'Cámara', 'Cámara de seguridad, webcam o digital'),
+(13, 'Escáner', 'Digitalizador de documentos o fotos'),
+(14, 'Lector QR/Barras', 'Escáner para gestión de inventarios'),
+(15, 'Monitor', 'Pantalla de visualización (LCD, LED, OLED)'),
+(16, 'Impresora Térmica', 'Impresora de tickets o etiquetas'),
+
+-- INFRAESTRUCTURA Y PROTECCIÓN
+(17, 'SAI/UPS', 'Sistema de alimentación ininterrumpida'),
+(18, 'PDU', 'Unidad de distribución de energía para rack'),
+(19, 'KVM Switch', 'Control de múltiples CPUs con un monitor/teclado'),
+
+-- OTROS / RAROS
+(20, 'Raspberry Pi', 'Microordenador de placa única'),
+(21, 'Dongle Licencia', 'Llave USB física para software (HASP)'),
+(22, 'Docking Station', 'Base de expansión para ordenadores portátiles'),
+(23, 'Bridge', 'Puente de conexión entre protocolos de red');
 
 -- ====================================
 -- Roles:
