@@ -1147,3 +1147,97 @@ class TestGestionUsuarios:
         res = requests.get(url)
         
         assert res.status_code == 401
+
+    def test_56_update_rol_exito(self):
+        """
+        Caso: Actualizar nombre, descripción y reemplazar permisos de un rol.
+        Endpoint: PATCH /api/rol/{uuid}
+        Se espera: 204 No Content y que el GET posterior refleje los cambios.
+        """
+        rid = TestGestionUsuarios.uuid_rol_creado 
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_ROL}/{rid}"
+
+        # Usamos el ID del permiso admin:total (asumiendo que es el 1 según tu ejemplo)
+        # y añadimos otros para probar el reemplazo total
+        payload = {
+            "nombre": "Modificación del nombre",
+            "descripcion": "Modificación de la descripción",
+            "permisos": [1, 2] 
+        }
+
+        res = requests.patch(url, json=payload, headers=headers)
+        assert res.status_code == 204
+
+        # --- Verificación con GET ---
+        res_get = requests.get(url, headers=headers)
+        assert res_get.status_code == 200
+        
+        data = res_get.json()
+        info = data.get("info", {})
+
+        # Validamos campos básicos
+        assert info["nombre"] == "Modificación del nombre"
+        assert info["descripcion"] == "Modificación de la descripción"
+        assert info["uuidrole"] == rid
+        
+        # Validamos la estructura de usuarios (debe ser lista)
+        assert isinstance(info["usuarios"], list)
+        
+        # Validamos la estructura detallada de permisos
+        permisos = info.get("permisos", [])
+        assert isinstance(permisos, list)
+        assert len(permisos) >= 2
+        
+        # Comprobamos que el permiso 1 esté presente y tenga sus claves
+        ids_permisos = [p["idPermiso"] for p in permisos]
+        assert 1 in ids_permisos
+        
+        permiso_admin = next(p for p in permisos if p["idPermiso"] == 1)
+        assert permiso_admin["alias"] == "admin:total"
+        assert "nombre" in permiso_admin
+        assert "modulo" in permiso_admin
+
+    def test_57_update_rol_solo_nombre(self):
+        """Caso: Actualizar únicamente el nombre del rol (Patch parcial)."""
+        rid = TestGestionUsuarios.uuid_rol_creado
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_ROL}/{rid}"
+
+        payload = {"nombre": "Solo Nombre Modificado"}
+        res = requests.patch(url, json=payload, headers=headers)
+        
+        assert res.status_code == 204
+
+                # --- Verificación con GET ---
+        res_get = requests.get(url, headers=headers)
+        assert res_get.status_code == 200
+        
+        data = res_get.json()
+        info = data.get("info", {})
+
+        # Validamos campos básicos
+        assert info["nombre"] == "Solo Nombre Modificado"
+
+
+
+    def test_58_update_rol_404_no_existe(self):
+        """Caso: Intentar actualizar un UUID que no existe."""
+        uuid_falso = "00000000-0000-0000-0000-000000000000"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_ROL}/{uuid_falso}"
+
+        payload = {"nombre": "Inexistente"}
+        res = requests.patch(url, json=payload, headers=headers)
+        
+        assert res.status_code == 404
+
+    def test_update_rol_400_vacio(self):
+        """Caso: Cuerpo de petición vacío."""
+        rid = TestGestionUsuarios.uuid_rol_creado
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_ROL}/{rid}"
+
+        res = requests.patch(url, json={}, headers=headers)
+        
+        assert res.status_code == 400

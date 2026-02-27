@@ -1,6 +1,6 @@
 import pool from "../bbdd/conexion.js";
 import { v4 as uuidv4 } from "uuid";
-import { ROL_QUERY } from '../querys/rolQuery.js'
+import { ROL_QUERY } from "../querys/rolQuery.js";
 
 class RolModel {
 	static async postRole(permisosUsuario, usuarioUuid, data) {
@@ -9,10 +9,7 @@ class RolModel {
 		try {
 			await client.query("BEGIN");
 
-			const resUser = await client.query(
-				ROL_QUERY.GET_ID_USR,
-				[usuarioUuid],
-			);
+			const resUser = await client.query(ROL_QUERY.GET_ID_USR, [usuarioUuid]);
 
 			if (resUser.rows.length === 0) {
 				throw new Error(`Usuario con UUID ${usuarioUuid} no existe en la DB`);
@@ -25,11 +22,12 @@ class RolModel {
 				data.descripcion,
 				idUsuarioNumerico,
 				uuidNuevoRol,
-		]);
+			]);
 			const idRole = resPostRole.rows[0].idrole;
 
 			const resEspeciales = await client.query(
-				ROL_QUERY.OBTENER_ID_ESPECIALES, []
+				ROL_QUERY.OBTENER_ID_ESPECIALES,
+				[],
 			);
 			const pNull = resEspeciales.rows.find((p) => p.alias === "null:null");
 			const pAdmin = resEspeciales.rows.find((p) => p.alias === "admin:total");
@@ -54,10 +52,7 @@ class RolModel {
 					);
 					continue;
 				}
-				await client.query(
-					ROL_QUERY.INSERT_OPERA_CON,
-					[idRole, idPermiso],
-				);
+				await client.query(ROL_QUERY.INSERT_OPERA_CON, [idRole, idPermiso]);
 			}
 
 			await client.query("COMMIT");
@@ -74,7 +69,11 @@ class RolModel {
 		const offset = (page - 1) * limit;
 		const busqueda = `%${filtroNombre}%`;
 		try {
-			const res = await pool.query(ROL_QUERY.GET_ROLES, [limit, offset, busqueda]);
+			const res = await pool.query(ROL_QUERY.GET_ROLES, [
+				limit,
+				offset,
+				busqueda,
+			]);
 			const countRes = await pool.query(ROL_QUERY.COUNT_ROLES, [busqueda]);
 			const totalItems = parseInt(countRes.rows[0].count);
 			return {
@@ -98,98 +97,131 @@ class RolModel {
 			throw error;
 		}
 	}
-	static async getRolesByUuid(uuid){
-	
+	static async getRolesByUuid(uuid) {
 		try {
-			const resGet = await pool.query(ROL_QUERY.GET_ROLE_BY_UUID, [uuid]);	
-			if(resGet.rows.length === 0){
+			const resGet = await pool.query(ROL_QUERY.GET_ROLE_BY_UUID, [uuid]);
+			if (resGet.rows.length === 0) {
 				return 2;
 			}
 			return resGet.rows[0];
 		} catch (error) {
-			console.error("Se ha producido un error al hacer un get con un determinado uuid para los roles.");
-			throw error;		
+			console.error(
+				"Se ha producido un error al hacer un get con un determinado uuid para los roles.",
+			);
+			throw error;
 		}
 	}
 
-	static async deleteRolByUuid(uuid){
-
+	static async deleteRolByUuid(uuid) {
 		const client = await pool.connect();
-		try {	
+		try {
 			await client.query("BEGIN");
 			const resIdRole = await client.query(ROL_QUERY.OBTENER_ID_ROL, [uuid]);
-			if(!(resIdRole.rowCount > 0)){
+			if (!(resIdRole.rowCount > 0)) {
 				return 2; //404 no encontrado.
 			}
-			const idRole = resIdRole.rows[0]?.idrole
+			const idRole = resIdRole.rows[0]?.idrole;
 			await client.query(ROL_QUERY.BORRAR_PERTENCE, [idRole]);
 			await client.query(ROL_QUERY.BORRAR_PERMISOS, [idRole]);
 			await client.query(ROL_QUERY.BORRAR_ROL, [uuid]);
 			await client.query("COMMIT");
 		} catch (error) {
 			await client.query("ROLLBACK");
-			console.error("Se ha producido un error al borrar un role de la base de datos.", uuid, error);
+			console.error(
+				"Se ha producido un error al borrar un role de la base de datos.",
+				uuid,
+				error,
+			);
 			throw error;
 		} finally {
 			client.release();
 		}
 	}
-	
-	static async patchRole(uuid, camposCambiados) {
-    const { permisos, ...camposRoles } = camposCambiados;
-    const client = await pool.connect();
-    let idRole;
 
-    try {
-        await client.query("BEGIN");
+	static async patchRole(uuid, camposCambiados, permisosUsuarioLogueado = []) {
+		const { permisos, ...camposRoles } = camposCambiados;
+		const client = await pool.connect();
+		let idRole;
 
-        const camposPermitidos = ["nombre", "descripcion"];
-        const camposFiltrados = {};
-        
-        Object.keys(camposRoles).forEach((key) => {
-            if (camposPermitidos.includes(key)) {
-                camposFiltrados[key] = camposRoles[key];
-            }
-        });
+		try {
+			await client.query("BEGIN");
 
-        const keys = Object.keys(camposFiltrados);
+			const camposPermitidos = ["nombre", "descripcion"];
+			const camposFiltrados = {};
 
-        if (keys.length > 0) {
-            const values = Object.values(camposFiltrados);
-            values.push(uuid); 
+			Object.keys(camposRoles).forEach((key) => {
+				if (camposPermitidos.includes(key)) {
+					camposFiltrados[key] = camposRoles[key];
+				}
+			});
 
-            const sqlUpdate = ROL_QUERY.UPDATE_ROLE_DYNAMIC(keys);
-            const res = await client.query(sqlUpdate, values);
-            
-            idRole = res.rows[0]?.idrole;
-        } else {
-            const res = await client.query(ROL_QUERY.GET_ID_BY_UUID, [uuid]);
-            idRole = res.rows[0]?.idrole;
-        }
+			const keys = Object.keys(camposFiltrados);
 
-        if (!idRole) {
-            await client.query("ROLLBACK");
-            return 2; 
-      	}
+			if (keys.length > 0) {
+				const values = Object.values(camposFiltrados);
+				values.push(uuid);
 
-        if (permisos !== undefined) {
-            await client.query(ROL_QUERY.DELETE_PERMISOS_ASIGNADOS, [idRole]);
-            if (Array.isArray(permisos)) {
-                for (const permisoId of permisos) {
-                    await client.query(ROL_QUERY.INSERT_PERMISO_ROL, [idRole, permisoId]);
-                }
-            }
-        }
-        await client.query("COMMIT");
-        return { status: "OK" };
+				const sqlUpdate = ROL_QUERY.UPDATE_ROLE_DYNAMIC(keys);
+				const res = await client.query(sqlUpdate, values);
+				idRole = res.rows[0]?.idrole;
+			} else {
+				const res = await client.query(ROL_QUERY.GET_ID_BY_UUID, [uuid]);
+				idRole = res.rows[0]?.idrole;
+			}
 
-    } catch (error) {
-        await client.query("ROLLBACK");
-        console.error("Error en patchRole (Model):", { uuid, error: error.message });
-        throw error;
-    } finally {
-        client.release();
-    }
+			if (!idRole) {
+				await client.query("ROLLBACK");
+				return 2;
+			}
+
+			if (permisos !== undefined) {
+				// 1. Obtener IDs de permisos especiales para comparar
+				const resEspeciales = await client.query(
+					ROL_QUERY.OBTENER_ID_ESPECIALES,
+				);
+				const pNull = resEspeciales.rows.find((p) => p.alias === "null:null");
+				const pAdmin = resEspeciales.rows.find(
+					(p) => p.alias === "admin:total",
+				);
+
+				// 2. Limpiar permisos actuales
+				await client.query(ROL_QUERY.DELETE_PERMISOS_ASIGNADOS, [idRole]);
+
+				// 3. Forzar el permiso null:null si existe
+				if (pNull && !permisos.includes(Number(pNull.idpermiso))) {
+					permisos.push(Number(pNull.idpermiso));
+				}
+
+				if (Array.isArray(permisos)) {
+					const tieneAdminTotal =
+						permisosUsuarioLogueado.includes("admin:total");
+
+					for (const permisoId of permisos) {
+						if (pAdmin && Number(permisoId) === Number(pAdmin.idpermiso)) {
+							if (!tieneAdminTotal) {
+								continue;
+							}
+						}
+						await client.query(ROL_QUERY.INSERT_PERMISO_ROL, [
+							idRole,
+							permisoId,
+						]);
+					}
+				}
+			}
+
+			await client.query("COMMIT");
+			return { status: "OK" };
+		} catch (error) {
+			await client.query("ROLLBACK");
+			console.error("Error en patchRole (Model):", {
+				uuid,
+				error: error.message,
+			});
+			throw error;
+		} finally {
+			client.release();
+		}
 	}
 }
 

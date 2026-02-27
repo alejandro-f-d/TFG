@@ -60,11 +60,11 @@ export const getRoles = async (req, res) => {
 
 export const getRolesByUuid = async (req, res) => {
 	const { uuid } = req.params;
-	if(!uuid) {
-		return res.status(400).json({error: "Petición mal formada."});
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
 	}
 	try {
-			const uuidRegex =
+		const uuidRegex =
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 		if (!uuidRegex.test(uuid)) {
@@ -75,39 +75,47 @@ export const getRolesByUuid = async (req, res) => {
 
 		const resGetRoleByUuid = await RolModel.getRolesByUuid(uuid);
 
-		if(resGetRoleByUuid == 2){
-			return res.status(404).json({error: "Role no encontrado."});
+		if (resGetRoleByUuid == 2) {
+			return res.status(404).json({ error: "Role no encontrado." });
 		}
-		
-		return res.status(200).json({message: "Role encontrado con éxito.", info: resGetRoleByUuid});
-	} catch (error) {
-		console.error("Se ha producido un error al hacer el get de un role por uuid.", uuid, error);
-		
-		
-	}
-}
 
-export const deleteRolByUuid = async(req, res) => {
+		return res
+			.status(200)
+			.json({ message: "Role encontrado con éxito.", info: resGetRoleByUuid });
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al hacer el get de un role por uuid.",
+			uuid,
+			error,
+		);
+	}
+};
+
+export const deleteRolByUuid = async (req, res) => {
 	const { uuid } = req.params;
-	if(!uuid){
-		return res.status(400).json({error: "Petición mal formada."});
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
 	}
 	try {
 		const resBorrarRol = await RolModel.deleteRolByUuid(uuid);
-		if(resBorrarRol === 2){
-			return res.status(404).json({error: "Rol no encontrado"});
+		if (resBorrarRol === 2) {
+			return res.status(404).json({ error: "Rol no encontrado" });
 		}
-		return res.status(204).json({message: "Rol borrado con éxito."});
+		return res.status(204).json({ message: "Rol borrado con éxito." });
 	} catch (error) {
-		console.error("Se ha producido un error al intentar borrar un rol.", uuid, error);
-		return res.status(500).json({error: "Error interno del servidor."});
+		console.error(
+			"Se ha producido un error al intentar borrar un rol.",
+			uuid,
+			error,
+		);
+		return res.status(500).json({ error: "Error interno del servidor." });
 	}
-}
+};
 
-export const patchRolByUuid = async(req, res) => {
+export const patchRolByUuid = async (req, res) => {
 	const { uuid } = req.params;
-	if(!uuid){
-		return res.status(400).json({error: "Petición mal formada."});
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
 	}
 	const uuidRegex =
 		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -118,18 +126,26 @@ export const patchRolByUuid = async(req, res) => {
 			.json({ error: "Máquina no encontrada (Formato de ID inválido)." });
 	}
 	const camposCambiados = req.body;
-	if(Object.keys(camposCambiados).length == 0){
-		return res.status(400).json({message: "Query mal formada."});
+	if (Object.keys(camposCambiados).length == 0) {
+		return res.status(400).json({ message: "Query mal formada." });
 	}
 	try {
-		const resPatch = await RolModel.patchRole(uuid, camposCambiados);
-		if(resPatch == 2){
-			return res.status(404).json({error: "Rol no encontrado."});
+		const resPatch = await RolModel.patchRole(
+			uuid,
+			camposCambiados,
+			req.user?.permisos,
+		);
+		if (resPatch == 2) {
+			return res.status(404).json({ error: "Rol no encontrado." });
 		}
-		return res.status(204).json({message: "Rol actualizado con éxito"});
+		return res.status(204).json({ message: "Rol actualizado con éxito" });
 	} catch (error) {
-		console.error("Se ha producido un error al hacer un patch a un rol", uuid, camposCambiados, error);
-		return res.status(500).json({error: "Error interno del servidor."});
+		console.error(
+			"Se ha producido un error al hacer un patch a un rol",
+			uuid,
+			camposCambiados,
+			error,
+		);
+		return res.status(500).json({ error: "Error interno del servidor." });
 	}
-
-}
+};
