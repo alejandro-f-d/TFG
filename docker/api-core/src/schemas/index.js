@@ -219,8 +219,7 @@ export const dispositivoSchema = Joi.object({
 		"number.base": "idTipoDispositivo debe ser un número",
 	}),
 
-	idMaquina: Joi.number().integer().positive().required().messages({
-		"any.required": "Petición mal formada",
+	idMaquina: Joi.number().integer().positive().allow(null).empty("").messages({
 		"number.base": "idMaquina debe ser un número",
 	}),
 

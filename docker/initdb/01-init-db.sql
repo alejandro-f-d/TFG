@@ -70,11 +70,11 @@ CREATE TABLE IF NOT EXISTS medal.dispositivos(
   capacidadUsada INTEGER, 
   tecnologia VARCHAR(200),
   uuidDispositivo UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-  idMaquina INTEGER NOT NULL,
+  idMaquina INTEGER,
   CONSTRAINT fk_pertenece_Maquina 
     FOREIGN KEY (idMaquina)
     REFERENCES medal.Maquina(idMaquina)
-    ON DELETE CASCADE,
+    ON DELETE SET NULL,
   idTipoDispositivo INTEGER NOT NULL,
   CONSTRAINT fk_tipo_dispositivo
     FOREIGN KEY (idTipoDispositivo)

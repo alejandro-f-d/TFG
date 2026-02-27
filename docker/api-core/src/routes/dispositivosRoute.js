@@ -5,6 +5,7 @@ import {
 	postDispositivo,
 	getAllDispositivos,
 	getDispositivoByUuid,
+	deleteDispositivoByUuid,
 } from "../controller/dispositivosController.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
 import { dispositivoSchema } from "../schemas/index.js";
@@ -474,6 +475,116 @@ router.get(
 	"/:uuid",
 	[verificarToken, tienePermiso("dispositivo:getDispositivo")],
 	getDispositivoByUuid,
+);
+
+/**
+ * @swagger
+ * /api/dispositivos/{uuid}:
+ *   delete:
+ *     summary: Elimina un dispositivo por su UUID
+ *     description: |
+ *       Elimina un dispositivo específico del sistema.
+ *       Esta operación es irreversible.
+ *       No requiere eliminar relaciones previas ya que el dispositivo no tiene dependencias foráneas que requieran limpieza adicional.
+ *     tags: [Dispositivos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+ *         description: UUID del dispositivo a eliminar
+ *         example: "7eb66568-620d-4212-b9cc-c15c04134b20"
+ *     responses:
+ *       200:
+ *         description: Dispositivo eliminado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Dispositivo borrado correctamente."
+ *       400:
+ *         description: |
+ *           Error de validación. Puede deberse a:
+ *           * UUID no proporcionado
+ *           * Formato de UUID inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               uuidFaltante:
+ *                 summary: UUID no proporcionado
+ *                 value:
+ *                   error: "Petición mal formada"
+ *               uuidInvalido:
+ *                 summary: Formato de UUID inválido
+ *                 value:
+ *                   error: "El formato del UUID proporcionado es inválido."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: Dispositivo no encontrado para el UUID proporcionado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Dispositivo no encontrado."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.delete(
+	"/:uuid",
+	[verificarToken, tienePermiso("dispositivo:deleteDispositivo")],
+	deleteDispositivoByUuid,
 );
 
 export default router;

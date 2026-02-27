@@ -50,5 +50,20 @@ class DispositivosModel {
 			throw error;
 		}
 	}
+	static async deleteByUuid(uuid) {
+		try {
+			const res = await pool.query(DISPOSITIVOS_QUERY.DELETE_BY_UUID, [uuid]);
+			if (res.rowCount === 0) {
+				return 2;
+			}
+			return { status: "OK" };
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al borrar un dispositivo.",
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default DispositivosModel;

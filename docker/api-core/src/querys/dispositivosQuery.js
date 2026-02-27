@@ -18,4 +18,5 @@ export const DISPOSITIVOS_QUERY = {
     JOIN medal.tipodispositivo t ON d.idtipodispositivo = t.idtipodispositivo
     WHERE d.uuiddispositivo = $1;
 	`,
+	DELETE_BY_UUID: `DELETE FROM medal.dispositivos WHERE uuiddispositivo = $1`,
 };

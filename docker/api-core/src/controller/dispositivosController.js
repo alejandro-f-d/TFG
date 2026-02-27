@@ -80,3 +80,28 @@ export const getDispositivoByUuid = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
+export const deleteDispositivoByUuid = async (req, res) => {
+	const { uuid } = req.params;
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada" });
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(uuid)) {
+		return res.status(400).json({
+			error: "El formato del UUID proporcionado es inválido.",
+		});
+	}
+	try {
+		const resDeleteDispositivo = await DispositivosModel.deleteByUuid(uuid);
+		if (resDeleteDispositivo == 2) {
+			return res.status(404).json({ error: "Dispositivo no encontrado." });
+		}
+		return res
+			.status(200)
+			.json({ message: "Dispositivo borrado correctamente." });
+	} catch (error) {
+		console.error("Se ha producido un error al borrar un dispositivo.", error);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
