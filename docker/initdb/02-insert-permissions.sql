@@ -59,6 +59,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('roles:del
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('puertas:postPuerta', 'Agregar una nueva puerta', 'Permite al usuario crear una nueva puerta.', 'puertas');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('puertas:getPuertas', 'Listado de puertas.', 'Obtiene el listado de todas las puertas.', 'puertas');
+
 
 -- ====================================
 -- Roles:

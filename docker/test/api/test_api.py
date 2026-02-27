@@ -8,6 +8,7 @@ class TestGestionUsuarios:
     BASE_URL_MAQUINA = "http://localhost:8080/api/maquina"
     BASE_URL = "http://localhost:8080/api"
     BASE_URL_ROL = "http://localhost:8080/api/rol"
+    BASE_URL_PUERTA = "http://localhost:8080/api/puertas"
 
     # Variables de clase para persistir datos entre tests
     token_admin = None
@@ -18,6 +19,8 @@ class TestGestionUsuarios:
     uuid_user_role_2 = None
     uuid_maquina_creada = None
     uuid_rol_creado = None
+    uuid_puerta_creada = None
+
 
     # --- BLOQUE 1: AUTENTICACIÓN (LOGIN) ---
 
@@ -1241,3 +1244,196 @@ class TestGestionUsuarios:
         res = requests.patch(url, json={}, headers=headers)
         
         assert res.status_code == 400
+
+
+
+    def test_60_post_crear_puerta_exito(self):
+        """
+        Caso: Crear una puerta con datos válidos.
+        Se espera: 201 Created y JSON con el nuevo UUID.
+        """
+        headers = {
+            "Authorization": f"Bearer {self.token_admin}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "nombre": "Acceso Servidores - Rack 4",
+            "ubicacion": "Sótano 1, Sala de Datos"
+        }
+
+        res = requests.post(self.BASE_URL_PUERTA, json=payload, headers=headers)
+        
+        # Validación de código de estado
+        assert res.status_code == 201
+        
+        data = res.json()
+        # Captura de UUID siguiendo tu lógica multiclave
+        uid = data.get("uuid") or data.get("id") or (data.get("info", {}) if isinstance(data.get("info"), dict) else {}).get("uuid")
+        
+        TestGestionUsuarios.uuid_puerta_creada = uid
+        assert TestGestionUsuarios.uuid_puerta_creada is not None
+        assert data["message"] == "Puerta creada con éxito."
+        
+        # Validar Header Location si lo implementaste
+        assert f"/api/puertas/{uid}" in res.headers.get("Location", "")
+        
+        print(f"\n✅ Puerta creada correctamente con UUID: {uid}")
+
+    def test_61_crear_puerta_400_vacio(self):
+        """
+        Caso: Enviar un cuerpo vacío (debe ser parado por el Joi/Middleware).
+        Se espera: 400 Bad Request.
+        """
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        res = requests.post(self.BASE_URL_PUERTA, json={}, headers=headers)
+        
+        assert res.status_code == 400
+        assert res.json()["error"] == "Petición mal formada."
+        print("✅ Error 400 validado correctamente para cuerpo vacío.")
+
+    def test_62_crear_puerta_401_sin_token(self):
+        """Caso: Error 401 por falta de token."""
+        payload = {"nombre": "Puerta Hack", "ubicacion": "Desconocida"}
+        res = requests.post(self.BASE_URL_PUERTA, json=payload)
+        assert res.status_code == 401
+        print("✅ Seguridad: Denegado POST sin token.")
+
+    def test_63_get_puerta_por_uuid_verificacion(self):
+        """
+        Caso: Verificar que la puerta creada existe y tiene los datos correctos.
+        Usa el GET_BY_UUID adaptado anteriormente.
+        """
+        uid = TestGestionUsuarios.uuid_puerta_creada
+        assert uid is not None
+        
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_PUERTA}/{uid}"
+        
+        res = requests.get(url, headers=headers)
+        assert res.status_code == 200
+        
+        # Según tu estructura de respuesta para GET individual
+        data = res.json().get("info", res.json())
+        
+        assert data["nombre"] == "Acceso Servidores - Rack 4"
+        assert data["ubicacion"] == "Sótano 1, Sala de Datos"
+        print(f"✅ Verificación GET exitosa para la puerta: {uid}")
+
+    def test_64_crear_puerta_403_insuficiente_permiso(self):
+        """Caso: Usuario normal no puede crear puertas."""
+        headers = {"Authorization": f"Bearer {self.token_sin_roles}"}
+        payload = {"nombre": "Puerta Prohibida", "ubicacion": "Lab"}
+        
+        res = requests.post(self.BASE_URL_PUERTA, json=payload, headers=headers)
+        assert res.status_code == 403
+        print("✅ Seguridad: Usuario sin permisos recibió 403.")
+
+
+    def test_65_get_puertas_usuarios_uuid(self):
+        """
+        Caso: Listar puertas y verificar que los usuarios autorizados traigan su UUID.
+        Estructura esperada: { "info": [ {...}, {...} ] }
+        """
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        # Buscamos la puerta que creamos anteriormente (o todas)
+        params = {"filtroNombre": "Acceso Servidores"}
+    
+        res = requests.get(self.BASE_URL_PUERTA, headers=headers, params=params)
+        assert res.status_code == 200
+    
+        data = res.json()
+        
+        # 'info' es una lista, así que accedemos directamente
+        puertas = data.get("info", [])
+        
+        # Validamos que efectivamente sea una lista
+        assert isinstance(puertas, list), f"Se esperaba una lista en 'info', se recibió: {type(puertas)}"
+        
+        if len(puertas) > 0:
+            # Buscamos una puerta que tenga usuarios para poder validar el objeto interno
+            # Si no hay ninguna con usuarios, usamos la primera por defecto
+            puerta_test = next((p for p in puertas if len(p.get("usuarios_autorizados", [])) > 0), puertas[0])
+            
+            print(f"\nValidando puerta: {puerta_test.get('nombre')}")
+            
+            usuarios = puerta_test.get("usuarios_autorizados", [])
+            
+            if len(usuarios) > 0:
+                primer_usuario = usuarios[0]
+                
+                # Verificamos los campos exactos del JSON que nos diste
+                assert "uuid" in primer_usuario, "Falta el campo 'uuid' en el usuario autorizado"
+                assert "nombre" in primer_usuario, "Falta el campo 'nombre' en el usuario autorizado"
+                assert "apellidos" in primer_usuario, "Falta el campo 'apellidos' en el usuario autorizado"
+                
+                # Validar que el UUID tenga la longitud estándar
+                assert len(primer_usuario["uuid"]) == 36
+                print(f"✅ Usuario detectado: {primer_usuario['nombre']} {primer_usuario['apellidos']} ({primer_usuario['uuid']})")
+            else:
+                print("ℹ️ La puerta seleccionada no tiene usuarios autorizados para validar el objeto interno.")
+        else:
+            pytest.skip("No se encontraron puertas en la base de datos para realizar la validación.")
+
+    def test_70_delete_puerta_exito(self):
+        """
+        Caso: Eliminar una puerta existente con token de administrador.
+        Se espera: 204 No Content.
+        """
+        uid = TestGestionUsuarios.uuid_puerta_creada
+        assert uid is not None, "Error: No hay UUID de puerta para eliminar."
+
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_PUERTA}/{uid}"
+
+        res = requests.delete(url, headers=headers)
+
+        # Según tu documentación, aunque el ejemplo muestra un JSON, 
+        # el código 204 indica "No Content" (sin cuerpo).
+        assert res.status_code == 204
+        print(f"\n✅ Puerta {uid} eliminada exitosamente (204).")
+
+    def test_71_verificar_puerta_eliminada_404(self):
+        """
+        Caso: Intentar obtener la puerta recién eliminada.
+        Se espera: 404 Not Found.
+        """
+        uid = TestGestionUsuarios.uuid_puerta_creada
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_PUERTA}/{uid}"
+
+        res = requests.get(url, headers=headers)
+        
+        assert res.status_code == 404
+        print("✅ Verificación post-borrado: La puerta ya no existe (404).")
+
+    def test_72_delete_puerta_404_inexistente(self):
+        """
+        Caso: Intentar eliminar un UUID que no existe en la base de datos.
+        Se espera: 404 Not Found.
+        """
+        uuid_falso = "00000000-0000-0000-0000-000000000000"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_PUERTA}/{uuid_falso}"
+
+        res = requests.delete(url, headers=headers)
+        
+        assert res.status_code == 404
+        assert "error" in res.json()
+        print("✅ Error 404 validado para UUID inexistente.")
+
+    def test_73_delete_puerta_403_sin_permiso(self):
+        """
+        Caso: Usuario sin permisos intenta eliminar una puerta.
+        Se espera: 403 Forbidden.
+        """
+        # Usamos el UUID de una puerta que sepamos que existe (o una genérica)
+        uid = "74bb89e3-7d8b-4626-a86d-c16db78b4a02" # ID de tu ejemplo anterior
+        headers = {"Authorization": f"Bearer {self.token_sin_roles}"}
+        url = f"{self.BASE_URL_PUERTA}/{uid}"
+
+        res = requests.delete(url, headers=headers)
+        
+        assert res.status_code == 403
+        print("✅ Seguridad: Usuario sin permisos recibió 403 al intentar borrar.")

@@ -57,8 +57,14 @@ class ProyectosGitlabModel {
 		const busqueda = `%${filtroNombre}%`;
 
 		try {
-			const res = await pool.query(PROYECTOS_QUERY.GET_ALL_PROYECTS, [limit, offset, busqueda]);
-			const countRes = await pool.query(PROYECTOS_QUERY.COUNT_NOMBRE, [busqueda]);
+			const res = await pool.query(PROYECTOS_QUERY.GET_ALL_PROYECTS, [
+				limit,
+				offset,
+				busqueda,
+			]);
+			const countRes = await pool.query(PROYECTOS_QUERY.COUNT_NOMBRE, [
+				busqueda,
+			]);
 			const totalItems = parseInt(countRes.rows[0].count);
 			return {
 				status: "OK",
@@ -82,67 +88,85 @@ class ProyectosGitlabModel {
 		}
 	}
 	static async getProyectoGitlabByUuid(uuidProyecto) {
-    try {
-        const res = await pool.query(PROYECTOS_QUERY.GET_PROYECTO_UUID, [uuidProyecto]);
-        return res.rows[0]; 
-    } catch (error) {
-        console.error("Error en getProyectoGitlabByUuid:", error);
-        throw error;
-    }
+		try {
+			const res = await pool.query(PROYECTOS_QUERY.GET_PROYECTO_UUID, [
+				uuidProyecto,
+			]);
+			return res.rows[0];
+		} catch (error) {
+			console.error("Error en getProyectoGitlabByUuid:", error);
+			throw error;
+		}
 	}
-	
+
 	static async patchProyecto(uuidProyecto, camposCambiados) {
-    const client = await pool.connect();
-    const { participantes, ...restoCampos } = camposCambiados;
-    
-    try {
-      await client.query("BEGIN");
+		const client = await pool.connect();
+		const { participantes, ...restoCampos } = camposCambiados;
 
-      const camposPermitidos = ["nombre", "descripcion", "fechainicio", "fechafin", "activo"];
-      const camposFiltrados = {};
-      
-      Object.keys(restoCampos).forEach((key) => {
-          if (camposPermitidos.includes(key)) {
-              camposFiltrados[key] = restoCampos[key];
-          }
-      });
+		try {
+			await client.query("BEGIN");
 
-      const keys = Object.keys(camposFiltrados);
-      let idProyecto;
+			const camposPermitidos = [
+				"nombre",
+				"descripcion",
+				"fechainicio",
+				"fechafin",
+				"activo",
+			];
+			const camposFiltrados = {};
 
-      if (keys.length === 0) {
-          const check = await client.query(PROYECTOS_QUERY.GET_ID_PROYECTO, [uuidProyecto]);
-          if (check.rows.length === 0) return 2; 
-          idProyecto = check.rows[0].idproyecto;
-      } else {
-          const values = Object.values(camposFiltrados);
-          values.push(uuidProyecto); 
-          const sqlUpdate = PROYECTOS_QUERY.UPDATE_PROYECTO_GITLAB(keys);
-          const res = await client.query(sqlUpdate, values);
+			Object.keys(restoCampos).forEach((key) => {
+				if (camposPermitidos.includes(key)) {
+					camposFiltrados[key] = restoCampos[key];
+				}
+			});
 
-          if (res.rowCount === 0) return 2;   
-        	idProyecto = res.rows[0].idproyecto;
-      }
+			const keys = Object.keys(camposFiltrados);
+			let idProyecto;
 
-      if (participantes !== undefined) {
-          await client.query(PROYECTOS_QUERY.DELETE_PARTICIPANTES, [idProyecto]);
+			if (keys.length === 0) {
+				const check = await client.query(PROYECTOS_QUERY.GET_ID_PROYECTO, [
+					uuidProyecto,
+				]);
+				if (check.rows.length === 0) return 2;
+				idProyecto = check.rows[0].idproyecto;
+			} else {
+				const values = Object.values(camposFiltrados);
+				values.push(uuidProyecto);
+				const sqlUpdate = PROYECTOS_QUERY.UPDATE_PROYECTO_GITLAB(keys);
+				const res = await client.query(sqlUpdate, values);
 
-          if (Array.isArray(participantes)) {
-              for (const participanteId of participantes) {
-                  await client.query(PROYECTOS_QUERY.INSERT_PARTICIPANTE, [participanteId, idProyecto]);
-              }
-          }
-      }
-      await client.query("COMMIT");
-      return { status: "OK", idProyecto }; 
+				if (res.rowCount === 0) {
+					await client.query("ROLLBACK");
+					return 2;
+				}
+				idProyecto = res.rows[0].idproyecto;
+			}
 
-    } catch (error) {
-        await client.query("ROLLBACK");
-        console.error("Error en patchProyecto (Model):", { uuidProyecto, error: error.message });
-        throw error;
-    } finally {
-        client.release();
-    }
+			if (participantes !== undefined) {
+				await client.query(PROYECTOS_QUERY.DELETE_PARTICIPANTES, [idProyecto]);
+
+				if (Array.isArray(participantes)) {
+					for (const participanteId of participantes) {
+						await client.query(PROYECTOS_QUERY.INSERT_PARTICIPANTE, [
+							participanteId,
+							idProyecto,
+						]);
+					}
+				}
+			}
+			await client.query("COMMIT");
+			return { status: "OK", idProyecto };
+		} catch (error) {
+			await client.query("ROLLBACK");
+			console.error("Error en patchProyecto (Model):", {
+				uuidProyecto,
+				error: error.message,
+			});
+			throw error;
+		} finally {
+			client.release();
+		}
 	}
 }
 

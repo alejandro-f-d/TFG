@@ -4,186 +4,265 @@ import bcrypt from "bcrypt";
 import { USER_QUERIES } from "../querys/userQuery.js";
 
 class UserModel {
-    static async guardarBdd(datos, userId, client = pool) {
-        if (Array.isArray(datos.roles)) {
-            for (const rolId of datos.roles) {
-                await client.query(USER_QUERIES.INSERT_ROL_RELACION, [rolId, userId]);
-            }
-        }
-        if (Array.isArray(datos.puertasAutorizadas)) {
-            for (const puertaId of datos.puertasAutorizadas) {
-                await client.query(USER_QUERIES.INSERT_PUERTA_RELACION, [userId, puertaId]);
-            }
-        }
-        if (Array.isArray(datos.duenoMaquina)) {
-            for (const maquinaId of datos.duenoMaquina) {
-                await client.query(USER_QUERIES.INSERT_MAQUINA_RELACION, [userId, maquinaId]);
-            }
-        }
-    }
+	static async guardarBdd(datos, userId, client = pool) {
+		if (Array.isArray(datos.roles)) {
+			for (const rolId of datos.roles) {
+				await client.query(USER_QUERIES.INSERT_ROL_RELACION, [rolId, userId]);
+			}
+		}
+		if (Array.isArray(datos.puertasAutorizadas)) {
+			for (const puertaId of datos.puertasAutorizadas) {
+				await client.query(USER_QUERIES.INSERT_PUERTA_RELACION, [
+					userId,
+					puertaId,
+				]);
+			}
+		}
+		if (Array.isArray(datos.duenoMaquina)) {
+			for (const maquinaId of datos.duenoMaquina) {
+				await client.query(USER_QUERIES.INSERT_MAQUINA_RELACION, [
+					userId,
+					maquinaId,
+				]);
+			}
+		}
+	}
 
-    static async postUserUpm(datos) {
-        const client = await pool.connect();
-        try {
-            await client.query("BEGIN");
-            const uuid = uuidv4();
-            const valores = [
-                datos.nombre, datos.apellido1, datos.apellido2 || null, datos.teams || false,
-                datos.esResponsable || false, datos.usuarioVpn || null, datos.correoInstitucional,
-                datos.activo, datos.fechaIncorporacion, datos.fechaFin || null, datos.wifi || false,
-                datos.tarjetaAcceso || null, uuid, datos.gitlab || null, datos.profesorResponsable || null,
-                datos.jefeLaboratorio || false
-            ];
+	static async postUserUpm(datos) {
+		const client = await pool.connect();
+		try {
+			await client.query("BEGIN");
+			const uuid = uuidv4();
+			const valores = [
+				datos.nombre,
+				datos.apellido1,
+				datos.apellido2 || null,
+				datos.teams || false,
+				datos.esResponsable || false,
+				datos.usuarioVpn || null,
+				datos.correoInstitucional,
+				datos.activo,
+				datos.fechaIncorporacion,
+				datos.fechaFin || null,
+				datos.wifi || false,
+				datos.tarjetaAcceso || null,
+				uuid,
+				datos.gitlab || null,
+				datos.profesorResponsable || null,
+				datos.jefeLaboratorio || false,
+			];
 
-            const res = await client.query(USER_QUERIES.POST_USER(false), valores);
-            await this.guardarBdd(datos, res.rows[0].idusuario, client);
-            
-            await client.query("COMMIT");
-            return { status: "OK", id: uuid };
-        } catch (error) {
-            await client.query("ROLLBACK");
-            throw error;
-        } finally {
-            client.release();
-        }
-    }
+			const res = await client.query(USER_QUERIES.POST_USER(false), valores);
+			await this.guardarBdd(datos, res.rows[0].idusuario, client);
 
-    static async postUser(datos) {
-        const client = await pool.connect();
-        try {
-            await client.query("BEGIN");
-            const uuid = uuidv4();
-            const passwordHaseada = await bcrypt.hash(datos.contrasena, 10);
-            const valores = [
-                datos.nombre, datos.apellido1, datos.apellido2 || null, datos.teams || false,
-                datos.esResponsable || false, datos.usuarioVpn || null, datos.correoInstitucional,
-                datos.activo, datos.fechaIncorporacion, datos.fechaFin || null, datos.wifi || false,
-                datos.tarjetaAcceso || null, uuid, datos.gitlab || null, datos.profesorResponsable || null,
-                datos.jefeLaboratorio || false, passwordHaseada
-            ];
+			await client.query("COMMIT");
+			return { status: "OK", id: uuid };
+		} catch (error) {
+			await client.query("ROLLBACK");
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 
-            const res = await client.query(USER_QUERIES.POST_USER(true), valores);
-            await this.guardarBdd(datos, res.rows[0].idusuario, client);
+	static async postUser(datos) {
+		const client = await pool.connect();
+		try {
+			await client.query("BEGIN");
+			const uuid = uuidv4();
+			const passwordHaseada = await bcrypt.hash(datos.contrasena, 10);
+			const valores = [
+				datos.nombre,
+				datos.apellido1,
+				datos.apellido2 || null,
+				datos.teams || false,
+				datos.esResponsable || false,
+				datos.usuarioVpn || null,
+				datos.correoInstitucional,
+				datos.activo,
+				datos.fechaIncorporacion,
+				datos.fechaFin || null,
+				datos.wifi || false,
+				datos.tarjetaAcceso || null,
+				uuid,
+				datos.gitlab || null,
+				datos.profesorResponsable || null,
+				datos.jefeLaboratorio || false,
+				passwordHaseada,
+			];
 
-            await client.query("COMMIT");
-            return { status: "OK", id: uuid };
-        } catch (error) {
-            await client.query("ROLLBACK");
-            throw error;
-        } finally {
-            client.release();
-        }
-    }
+			const res = await client.query(USER_QUERIES.POST_USER(true), valores);
+			await this.guardarBdd(datos, res.rows[0].idusuario, client);
 
-    static async getUserByUuid(uuid) {
-        try {
-            const res = await pool.query(USER_QUERIES.GET_BY_UUID, [uuid]);
-            return { status: "OK", info: res };
-        } catch (error) {
-            throw error;
-        }
-    }
+			await client.query("COMMIT");
+			return { status: "OK", id: uuid };
+		} catch (error) {
+			await client.query("ROLLBACK");
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 
-    static async getAllUsers(page, limit, filtroNombre) {
-        try {
-            const offset = (page - 1) * limit;
-            const busqueda = `%${filtroNombre}%`;
-            const res = await pool.query(USER_QUERIES.GET_ALL_PAGINADO, [limit, offset, busqueda]);
-            const countRes = await pool.query(USER_QUERIES.COUNT_BY_NOMBRE, [busqueda]);
-            
-            const totalItems = parseInt(countRes.rows[0].count);
-            return {
-                status: "OK",
-                rows: res.rows,
-                pagination: {
-                    totalItems,
-                    totalPages: Math.ceil(totalItems / limit),
-                    currentPage: page
-                },
-            };
-        } catch (error) {
-            throw error;
-        }
-    }
+	static async getUserByUuid(uuid) {
+		try {
+			const res = await pool.query(USER_QUERIES.GET_BY_UUID, [uuid]);
+			return { status: "OK", info: res };
+		} catch (error) {
+			throw error;
+		}
+	}
 
-    static async patchUser(uuid, campos, esUser) {
-        const client = await pool.connect();
-        try {
-            await client.query("BEGIN");
-            const { roles, puertasAutorizadas, duenoMaquina, ...camposUsuario } = campos;
-            
-            const camposPermitidos = esUser 
-                ? ["nombre", "apellido1", "apellido2", "fotoPerfil"]
-                : ["nombre", "apellido1", "apellido2", "teams", "esresponsable", "usuariovpn", "correoinstitucional", "activo", "fechafin", "wifi", "tarjetaacceso", "diriplastlogin", "contrasena", "gitlab", "responsable", "jefelaboratorio", "fotoPerfil"];
+	static async getAllUsers(page, limit, filtroNombre) {
+		try {
+			const offset = (page - 1) * limit;
+			const busqueda = `%${filtroNombre}%`;
+			const res = await pool.query(USER_QUERIES.GET_ALL_PAGINADO, [
+				limit,
+				offset,
+				busqueda,
+			]);
+			const countRes = await pool.query(USER_QUERIES.COUNT_BY_NOMBRE, [
+				busqueda,
+			]);
 
-            const camposFiltrados = {};
-            Object.keys(camposUsuario).forEach(key => {
-                if (camposPermitidos.includes(key)) camposFiltrados[key.toLowerCase()] = camposUsuario[key];
-            });
+			const totalItems = parseInt(countRes.rows[0].count);
+			return {
+				status: "OK",
+				rows: res.rows,
+				pagination: {
+					totalItems,
+					totalPages: Math.ceil(totalItems / limit),
+					currentPage: page,
+				},
+			};
+		} catch (error) {
+			throw error;
+		}
+	}
 
-            let idUsuarioReal;
-            const keys = Object.keys(camposFiltrados);
-            if (keys.length > 0) {
-                const values = Object.values(camposFiltrados);
-                values.push(uuid);
-                const res = await client.query(USER_QUERIES.UPDATE_DYNAMIC(keys), values);
-                idUsuarioReal = res.rows[0]?.idusuario;
-            } else {
-                const res = await client.query(USER_QUERIES.GET_ID_BY_UUID, [uuid]);
-                idUsuarioReal = res.rows[0]?.idusuario;
-            }
+	static async patchUser(uuid, campos, esUser) {
+		const client = await pool.connect();
+		try {
+			await client.query("BEGIN");
+			const { roles, puertasAutorizadas, duenoMaquina, ...camposUsuario } =
+				campos;
 
-            if (!idUsuarioReal) return 2;
+			const camposPermitidos = esUser
+				? ["nombre", "apellido1", "apellido2", "fotoPerfil"]
+				: [
+						"nombre",
+						"apellido1",
+						"apellido2",
+						"teams",
+						"esresponsable",
+						"usuariovpn",
+						"correoinstitucional",
+						"activo",
+						"fechafin",
+						"wifi",
+						"tarjetaacceso",
+						"diriplastlogin",
+						"contrasena",
+						"gitlab",
+						"responsable",
+						"jefelaboratorio",
+						"fotoPerfil",
+					];
 
-            if (!esUser) {
-                if (roles !== undefined) {
-                    await client.query(USER_QUERIES.DELETE_ROLES_USER, [idUsuarioReal]);
-                    if (Array.isArray(roles)) {
-                        for (const rId of roles) await client.query(USER_QUERIES.INSERT_ROL_RELACION, [rId, idUsuarioReal]);
-                    }
-                }
-                if (puertasAutorizadas !== undefined) {
-                    await client.query(USER_QUERIES.DELETE_PUERTAS_USER, [idUsuarioReal]);
-                    if (Array.isArray(puertasAutorizadas)) {
-                        for (const pId of puertasAutorizadas) await client.query(USER_QUERIES.INSERT_PUERTA_RELACION, [idUsuarioReal, pId]);
-                    }
-                }
-                if (duenoMaquina !== undefined) {
-                    await client.query(USER_QUERIES.DELETE_MAQUINAS_USER, [idUsuarioReal]);
-                    if (Array.isArray(duenoMaquina)) {
-                        for (const mId of duenoMaquina) await client.query(USER_QUERIES.INSERT_MAQUINA_RELACION, [idUsuarioReal, mId]);
-                    }
-                }
-            }
+			const camposFiltrados = {};
+			Object.keys(camposUsuario).forEach((key) => {
+				if (camposPermitidos.includes(key))
+					camposFiltrados[key.toLowerCase()] = camposUsuario[key];
+			});
 
-            await client.query("COMMIT");
-            return { status: "OK" };
-        } catch (error) {
-            await client.query("ROLLBACK");
-            throw error;
-        } finally {
-            client.release();
-        }
-    }
+			let idUsuarioReal;
+			const keys = Object.keys(camposFiltrados);
+			if (keys.length > 0) {
+				const values = Object.values(camposFiltrados);
+				values.push(uuid);
+				const res = await client.query(
+					USER_QUERIES.UPDATE_DYNAMIC(keys),
+					values,
+				);
+				idUsuarioReal = res.rows[0]?.idusuario;
+			} else {
+				const res = await client.query(USER_QUERIES.GET_ID_BY_UUID, [uuid]);
+				idUsuarioReal = res.rows[0]?.idusuario;
+			}
 
-    static async darBaja(uuid) {
-        return await pool.query(USER_QUERIES.DAR_BAJA, [uuid]);
-    }
+			if (!idUsuarioReal) {
+				await client.query("ROLLBACK");
+				return 2;
+			}
 
-    static async getPasswordByCorreoInstitucional(correo) {
-        const res = await pool.query(USER_QUERIES.GET_AUTH_DATA, [correo]);
-        return res.rows[0];
-    }
+			if (!esUser) {
+				if (roles !== undefined) {
+					await client.query(USER_QUERIES.DELETE_ROLES_USER, [idUsuarioReal]);
+					if (Array.isArray(roles)) {
+						for (const rId of roles)
+							await client.query(USER_QUERIES.INSERT_ROL_RELACION, [
+								rId,
+								idUsuarioReal,
+							]);
+					}
+				}
+				if (puertasAutorizadas !== undefined) {
+					await client.query(USER_QUERIES.DELETE_PUERTAS_USER, [idUsuarioReal]);
+					if (Array.isArray(puertasAutorizadas)) {
+						for (const pId of puertasAutorizadas)
+							await client.query(USER_QUERIES.INSERT_PUERTA_RELACION, [
+								idUsuarioReal,
+								pId,
+							]);
+					}
+				}
+				if (duenoMaquina !== undefined) {
+					await client.query(USER_QUERIES.DELETE_MAQUINAS_USER, [
+						idUsuarioReal,
+					]);
+					if (Array.isArray(duenoMaquina)) {
+						for (const mId of duenoMaquina)
+							await client.query(USER_QUERIES.INSERT_MAQUINA_RELACION, [
+								idUsuarioReal,
+								mId,
+							]);
+					}
+				}
+			}
 
-    static async intentoInicioSesion(ip, correo, exitoso) {
-        await pool.query(USER_QUERIES.REGISTRAR_INTENTO_LOGIN, [ip, correo, exitoso]);
-        return { status: "Ok" };
-    }
+			await client.query("COMMIT");
+			return { status: "OK" };
+		} catch (error) {
+			await client.query("ROLLBACK");
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 
-    static async updateIp(ip, correo) {
-        const res = await pool.query(USER_QUERIES.UPDATE_LAST_IP, [ip, correo]);
-        return res.rowCount > 0;
-    }
+	static async darBaja(uuid) {
+		return await pool.query(USER_QUERIES.DAR_BAJA, [uuid]);
+	}
+
+	static async getPasswordByCorreoInstitucional(correo) {
+		const res = await pool.query(USER_QUERIES.GET_AUTH_DATA, [correo]);
+		return res.rows[0];
+	}
+
+	static async intentoInicioSesion(ip, correo, exitoso) {
+		await pool.query(USER_QUERIES.REGISTRAR_INTENTO_LOGIN, [
+			ip,
+			correo,
+			exitoso,
+		]);
+		return { status: "Ok" };
+	}
+
+	static async updateIp(ip, correo) {
+		const res = await pool.query(USER_QUERIES.UPDATE_LAST_IP, [ip, correo]);
+		return res.rowCount > 0;
+	}
 }
 
 export default UserModel;
