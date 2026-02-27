@@ -193,3 +193,17 @@ export const rolSchema = Joi.object({
 export const rolPatchSchema = rolSchema
 	.fork(["nombre", "descripcion", "permisos"], (schema) => schema.optional())
 	.min(1);
+
+export const puertaSchema = Joi.object({
+	nombre: Joi.string().max(250).trim().required().messages({
+		"string.empty": "El nombre es obligatorio.",
+		"string.max": "El nombre no puede exceder los 250 caracteres.",
+		"any.required": "Petición mal formada.",
+	}),
+
+	ubicacion: Joi.string().max(500).trim().required().messages({
+		"string.empty": "La ubicación es obligatoria.",
+		"string.max": "La ubicación no puede exceder los 500 caracteres.",
+		"any.required": "Petición mal formada.",
+	}),
+});

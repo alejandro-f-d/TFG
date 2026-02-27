@@ -57,6 +57,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('roles:pos
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('roles:deleteRol', 'Eliminar rol especifico.', 'Permite al usuario eliminar un rol', 'roles');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('puertas:postPuerta', 'Agregar una nueva puerta', 'Permite al usuario crear una nueva puerta.', 'puertas');
+
 
 -- ====================================
 -- Roles:

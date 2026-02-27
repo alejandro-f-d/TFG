@@ -1,5 +1,5 @@
 export const SERVICIOS_QUERIES = {
-    GET_ALL_INFO: `
+	GET_ALL_INFO: `
         SELECT s.*, p.uuidpeticion, maq.uuidmaquina, puertos_agg.lista_puertos
         FROM medal.servicio s
         JOIN medal.peticion p ON s.idpeticion = p.idpeticion
@@ -17,19 +17,19 @@ export const SERVICIOS_QUERIES = {
         WHERE s.nombreservicio ILIKE $3 
         ORDER BY s.nombreservicio ASC LIMIT $1 OFFSET $2;`,
 
-    GET_ID_MAQUINA: `SELECT idmaquina FROM medal.maquina WHERE uuidmaquina = $1;`,
+	GET_ID_MAQUINA: `SELECT idmaquina FROM medal.maquina WHERE uuidmaquina = $1;`,
 
-    POST_SERVICIO: `
+	POST_SERVICIO: `
         INSERT INTO medal.servicio(nombreservicio, descripciontecnica, entorno, publico, softwarebase, activo, nivelseveridad, idusuario, idpeticion, uuidservicio) 
         VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING idservicio;`,
 
-    INSERT_CORRE: `INSERT INTO medal.corre(idservicio, idmaquina) VALUES($1, $2);`,
+	INSERT_CORRE: `INSERT INTO medal.corre(idservicio, idmaquina) VALUES($1, $2);`,
 
-    INSERT_PUERTO: `
+	INSERT_PUERTO: `
         INSERT INTO medal.puertosabiertos(numeropuertomaquina, protocolo, nombreservicio, puertovirtual, idservicio) 
         VALUES($1, $2, $3, $4, $5);`,
 
-    GET_BY_UUID_COMPLETO: `
+	GET_BY_UUID_COMPLETO: `
         SELECT s.*, p.uuidpeticion, maq.uuidmaquina, COALESCE(puertos_agg.lista_puertos, '[]'::json) AS lista_puertos
         FROM medal.servicio s
         INNER JOIN medal.peticion p ON s.idpeticion = p.idpeticion
@@ -45,19 +45,21 @@ export const SERVICIOS_QUERIES = {
         ) AS puertos_agg ON s.idservicio = puertos_agg.idservicio
         WHERE s.uuidservicio = $1 AND maq.idmaquina = $2;`,
 
-    VERIFICAR_RELACION: `
+	VERIFICAR_RELACION: `
         SELECT s.idservicio, maq.idmaquina 
         FROM medal.servicio s
         JOIN medal.corre c ON s.idservicio = c.idservicio
         JOIN medal.maquina maq ON maq.idmaquina = c.idmaquina
         WHERE s.uuidservicio = $1 AND maq.uuidmaquina = $2;`,
 
-    DELETE_CORRE: `DELETE FROM medal.corre WHERE idservicio = $1;`,
-    DELETE_PUERTOS: `DELETE FROM medal.puertosabiertos WHERE idservicio = $1;`,
-    DELETE_SERVICIO: `DELETE FROM medal.servicio WHERE idservicio = $1;`,
+	DELETE_CORRE: `DELETE FROM medal.corre WHERE idservicio = $1;`,
+	DELETE_PUERTOS: `DELETE FROM medal.puertosabiertos WHERE idservicio = $1;`,
+	DELETE_SERVICIO: `DELETE FROM medal.servicio WHERE idservicio = $1;`,
 
-    UPDATE_DYNAMIC: (keys) => {
-        const setClause = keys.map((key, index) => `${key} = $${index + 1}`).join(", ");
-        return `UPDATE medal.servicio SET ${setClause} WHERE uuidservicio = $${keys.length + 1};`;
-    }
+	UPDATE_DYNAMIC: (keys) => {
+		const setClause = keys
+			.map((key, index) => `${key} = $${index + 1}`)
+			.join(", ");
+		return `UPDATE medal.servicio SET ${setClause} WHERE uuidservicio = $${keys.length + 1};`;
+	},
 };

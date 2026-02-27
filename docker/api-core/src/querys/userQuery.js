@@ -1,44 +1,148 @@
 export const USER_QUERIES = {
-    // Inserciones de relaciones
-    INSERT_ROL_RELACION: `INSERT INTO medal.rolestiene(idrole, idusuario) VALUES($1, $2);`,
-    INSERT_PUERTA_RELACION: `INSERT INTO medal.accede(idusuario, idpuerta) VALUES($1, $2);`,
-    INSERT_MAQUINA_RELACION: `INSERT INTO medal.propietario(idusuario, idmaquina) VALUES($1, $2);`,
+	// Inserciones de relaciones
+	INSERT_ROL_RELACION: `INSERT INTO medal.rolestiene(idrole, idusuario) VALUES($1, $2);`,
+	INSERT_PUERTA_RELACION: `INSERT INTO medal.accede(idusuario, idpuerta) VALUES($1, $2);`,
+	INSERT_MAQUINA_RELACION: `INSERT INTO medal.propietario(idusuario, idmaquina) VALUES($1, $2);`,
 
-    // Borrado de relaciones
-    DELETE_ROLES_USER: `DELETE FROM medal.rolestiene WHERE idusuario = $1;`,
-    DELETE_PUERTAS_USER: `DELETE FROM medal.accede WHERE idusuario = $1;`,
-    DELETE_MAQUINAS_USER: `DELETE FROM medal.propietario WHERE idusuario = $1;`,
+	// Borrado de relaciones
+	DELETE_ROLES_USER: `DELETE FROM medal.rolestiene WHERE idusuario = $1;`,
+	DELETE_PUERTAS_USER: `DELETE FROM medal.accede WHERE idusuario = $1;`,
+	DELETE_MAQUINAS_USER: `DELETE FROM medal.propietario WHERE idusuario = $1;`,
 
-    // Usuarios
-    POST_USER: (conContrasena = false) => `
+	// Usuarios
+	POST_USER: (conContrasena = false) => `
         INSERT INTO medal.usuario(
             nombre, apellido1, apellido2, teams, esresponsable, usuariovpn, 
             correoinstitucional, activo, fechaincorporacion, fechafin, wifi, 
             tarjetaacceso, uuidusuario, gitlab, responsable, jefelaboratorio
-            ${conContrasena ? ', contrasena' : ''}
-        ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16 ${conContrasena ? ', $17' : ''}) 
+            ${conContrasena ? ", contrasena" : ""}
+        ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16 ${conContrasena ? ", $17" : ""}) 
         RETURNING uuidusuario, idusuario;`,
 
-    GET_BY_UUID: `SELECT * FROM medal.usuario WHERE uuidusuario = $1;`,
+	GET_BY_UUID: `
+    SELECT 
+        u.*,
+        -- Peticiones asociadas
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', p.idpeticion,
+                'uuid', p.uuidpeticion,
+                'proyecto', dp.nombreproyectoasociado,
+                'estado', p.estado
+            ))
+            FROM medal.peticion p
+            LEFT JOIN medal.detallepeticionacceso dp ON p.idpeticion = dp.idpetacceso
+            WHERE p.usuariopeticion = u.idusuario
+            ), '[]'
+        ) AS peticiones,
+        -- Acceso a Puertas
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', pu.idpuerta,
+                'nombre', pu.nombre
+            ))
+            FROM medal.accede a
+            JOIN medal.puertas pu ON a.idpuerta = pu.idpuerta
+            WHERE a.idusuario = u.idusuario
+            ), '[]'
+        ) AS puertas,
+        -- Máquinas en propiedad
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', m.idmaquina,
+                'nombre', m.nombre
+            ))
+            FROM medal.propietario prop
+            JOIN medal.maquina m ON prop.idmaquina = m.idmaquina
+            WHERE prop.idusuario = u.idusuario
+            ), '[]'
+        ) AS maquinas_propiedad,
+        -- Participación en Proyectos GitLab
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', pg.idproyecto,
+                'nombre', pg.nombre,
+                'uuid', pg.uuidproyecto,
+                'activo', pg.activo
+            ))
+            FROM medal.participa part
+            JOIN medal.proyectosgitlab pg ON part.idproyecto = pg.idproyecto
+            WHERE part.idusuario = u.idusuario
+            ), '[]'
+        ) AS proyectos_gitlab
+    FROM medal.usuario u
+    WHERE u.uuidusuario = $1;`,
 
-    GET_ALL_PAGINADO: `
-        SELECT * FROM medal.usuario 
-        WHERE nombre ILIKE $3 
-        ORDER BY idusuario ASC 
-        LIMIT $1 OFFSET $2;`,
+	GET_ALL_PAGINADO: `
+    SELECT 
+        u.*,
+        -- Peticiones asociadas
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', p.idpeticion,
+                'uuid', p.uuidpeticion,
+                'proyecto', dp.nombreproyectoasociado,
+                'estado', p.estado
+            ))
+            FROM medal.peticion p
+            LEFT JOIN medal.detallepeticionacceso dp ON p.idpeticion = dp.idpetacceso
+            WHERE p.usuariopeticion = u.idusuario
+            ), '[]'
+        ) AS peticiones,
+        -- Acceso a Puertas
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', pu.idpuerta,
+                'nombre', pu.nombre
+            ))
+            FROM medal.accede a
+            JOIN medal.puertas pu ON a.idpuerta = pu.idpuerta
+            WHERE a.idusuario = u.idusuario
+            ), '[]'
+        ) AS puertas,
+        -- Máquinas en propiedad
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', m.idmaquina,
+                'nombre', m.nombre
+            ))
+            FROM medal.propietario prop
+            JOIN medal.maquina m ON prop.idmaquina = m.idmaquina
+            WHERE prop.idusuario = u.idusuario
+            ), '[]'
+        ) AS maquinas_propiedad,
+        -- Participación en Proyectos GitLab
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', pg.idproyecto,
+                'nombre', pg.nombre,
+                'uuid', pg.uuidproyecto,
+                'activo', pg.activo
+            ))
+            FROM medal.participa part
+            JOIN medal.proyectosgitlab pg ON part.idproyecto = pg.idproyecto
+            WHERE part.idusuario = u.idusuario
+            ), '[]'
+        ) AS proyectos_gitlab
+    FROM medal.usuario u
+    WHERE u.nombre ILIKE $3
+    ORDER BY u.idusuario ASC
+    LIMIT $1 OFFSET $2;`,
 
-    COUNT_BY_NOMBRE: `SELECT COUNT(*) FROM medal.usuario WHERE nombre ILIKE $1;`,
+	COUNT_BY_NOMBRE: `SELECT COUNT(*) FROM medal.usuario WHERE nombre ILIKE $1;`,
 
-    GET_ID_BY_UUID: `SELECT idusuario FROM medal.usuario WHERE uuidusuario = $1;`,
+	GET_ID_BY_UUID: `SELECT idusuario FROM medal.usuario WHERE uuidusuario = $1;`,
 
-    UPDATE_DYNAMIC: (keys) => {
-        const setClause = keys.map((key, index) => `${key} = $${index + 1}`).join(", ");
-        return `UPDATE medal.usuario SET ${setClause} WHERE uuidusuario = $${keys.length + 1} RETURNING idusuario;`;
-    },
+	UPDATE_DYNAMIC: (keys) => {
+		const setClause = keys
+			.map((key, index) => `${key} = $${index + 1}`)
+			.join(", ");
+		return `UPDATE medal.usuario SET ${setClause} WHERE uuidusuario = $${keys.length + 1} RETURNING idusuario;`;
+	},
 
-    DAR_BAJA: `UPDATE medal.usuario SET activo = false WHERE uuidusuario = $1;`,
+	DAR_BAJA: `UPDATE medal.usuario SET activo = false WHERE uuidusuario = $1;`,
 
-    GET_AUTH_DATA: `
+	GET_AUTH_DATA: `
         SELECT u.contrasena, u.uuidusuario, array_agg(perm.alias) AS permisos
         FROM medal.usuario u
         JOIN medal.rolestiene r ON u.idusuario = r.idusuario
@@ -47,7 +151,7 @@ export const USER_QUERIES = {
         WHERE u.correoinstitucional = $1 AND u.activo = true
         GROUP BY u.idusuario, u.contrasena, u.uuidusuario;`,
 
-    REGISTRAR_INTENTO_LOGIN: `INSERT INTO medal.intentosLogin(iporigen, emailintentado, exitoso) VALUES($1, $2, $3);`,
+	REGISTRAR_INTENTO_LOGIN: `INSERT INTO medal.intentosLogin(iporigen, emailintentado, exitoso) VALUES($1, $2, $3);`,
 
-    UPDATE_LAST_IP: `UPDATE medal.usuario SET dirIpLastLogin = $1 WHERE correoInstitucional = $2;`
+	UPDATE_LAST_IP: `UPDATE medal.usuario SET dirIpLastLogin = $1 WHERE correoInstitucional = $2;`,
 };

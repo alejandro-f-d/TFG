@@ -1,11 +1,11 @@
 export const ROL_QUERY = {
-  GET_ID_USR: `SELECT idusuario FROM medal.usuario WHERE uuidusuario = $1`,
-  POST_ROLE: `INSERT INTO medal.roles(nombre, descripcion, idusuario, uuidrole) 
+	GET_ID_USR: `SELECT idusuario FROM medal.usuario WHERE uuidusuario = $1`,
+	POST_ROLE: `INSERT INTO medal.roles(nombre, descripcion, idusuario, uuidrole) 
             VALUES($1, $2, $3, $4) 
             RETURNING idrole;`,
-  OBTENER_ID_ESPECIALES: `SELECT idpermiso, alias FROM medal.permisos WHERE alias IN ('null:null', 'admin:total');`,
-  INSERT_OPERA_CON: `INSERT INTO medal.operacon(idrole, idpermiso) VALUES ($1, $2)`,
-  GET_ROLES: `SELECT 
+	OBTENER_ID_ESPECIALES: `SELECT idpermiso, alias FROM medal.permisos WHERE alias IN ('null:null', 'admin:total');`,
+	INSERT_OPERA_CON: `INSERT INTO medal.operacon(idrole, idpermiso) VALUES ($1, $2)`,
+	GET_ROLES: `SELECT 
     r.*,
     -- Agregación de Usuarios
     COALESCE(
@@ -36,8 +36,8 @@ export const ROL_QUERY = {
     WHERE r.nombre ILIKE $3
     ORDER BY r.idrole ASC
     LIMIT $1 OFFSET $2;`,
-  COUNT_ROLES: `SELECT COUNT(*) FROM medal.roles WHERE nombre ILIKE $1`,
-  GET_ROLE_BY_UUID: `SELECT 
+	COUNT_ROLES: `SELECT COUNT(*) FROM medal.roles WHERE nombre ILIKE $1`,
+	GET_ROLE_BY_UUID: `SELECT 
     r.*,
     (
         SELECT COALESCE(
@@ -79,24 +79,24 @@ export const ROL_QUERY = {
         SELECT idrole FROM medal.roles WHERE uuidrole = $1;
     `,
 
-    UPDATE_ROLE_DYNAMIC: (keys) => {
-        const setClause = keys
-            .map((key, index) => `${key} = $${index + 1}`)
-            .join(", ");
-        
-        return `
+	UPDATE_ROLE_DYNAMIC: (keys) => {
+		const setClause = keys
+			.map((key, index) => `${key} = $${index + 1}`)
+			.join(", ");
+
+		return `
             UPDATE medal.roles 
             SET ${setClause} 
             WHERE uuidrole = $${keys.length + 1} 
             RETURNING idrole;
         `;
-    },
+	},
 
-    DELETE_PERMISOS_ASIGNADOS: `
+	DELETE_PERMISOS_ASIGNADOS: `
         DELETE FROM medal.operacon WHERE idrole = $1;
     `,
-    INSERT_PERMISO_ROL: `
+	INSERT_PERMISO_ROL: `
         INSERT INTO medal.operacon (idrole, idpermiso) 
         VALUES ($1, $2);
-    `
-}
+    `,
+};

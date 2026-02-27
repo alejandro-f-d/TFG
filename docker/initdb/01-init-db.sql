@@ -462,7 +462,8 @@ CREATE TABLE IF NOT EXISTS medal.puertosAbiertos(
 CREATE TABLE IF NOT EXISTS medal.puertas(
   idPuerta SERIAL PRIMARY KEY,
   nombre VARCHAR(250),
-  ubicacion VARCHAR(500)
+  ubicacion VARCHAR(500),
+  uuidPuerta UUID NOT NULL UNIQUE DEFAULT gen_random_uuid()
 );
 
 CREATE TABLE IF NOT EXISTS medal.accede(
