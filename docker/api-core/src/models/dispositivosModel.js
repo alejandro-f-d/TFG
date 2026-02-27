@@ -65,5 +65,43 @@ class DispositivosModel {
 			throw error;
 		}
 	}
+	static async patchDispositivo(uuid, camposCambiados) {
+		try {
+			const camposPermitidos = [
+				"nombre",
+				"puntomontaje",
+				"capacidad",
+				"capacidadusada",
+				"tecnologia",
+				"idmaquina",
+				"idtipodispositivo",
+			];
+			const camposFiltrados = {};
+
+			Object.keys(camposCambiados).forEach((key) => {
+				if (camposPermitidos.includes(key)) {
+					camposFiltrados[key] = camposCambiados[key];
+				}
+			});
+			const keys = Object.keys(camposFiltrados);
+			const values = Object.values(camposFiltrados);
+			values.push(uuid);
+			const sqlUpdate = DISPOSITIVOS_QUERY.UPDATE_DISPOSITIVO(keys);
+			const res = await pool.query(sqlUpdate, values);
+			if (res.rowCount === 0) {
+				return 2;
+			}
+			return { status: "OK" };
+		} catch (error) {
+			console.error(
+				"Se ha producido un error con el patch de dispositivo:",
+				uuid,
+				camposCambiados,
+				error,
+			);
+			throw error;
+		}
+	}
 }
+
 export default DispositivosModel;

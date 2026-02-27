@@ -6,9 +6,10 @@ import {
 	getAllDispositivos,
 	getDispositivoByUuid,
 	deleteDispositivoByUuid,
+	patchDispositivo,
 } from "../controller/dispositivosController.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
-import { dispositivoSchema } from "../schemas/index.js";
+import { dispositivoSchema, dispositivoPatchSchema } from "../schemas/index.js";
 
 const router = express.Router();
 
@@ -585,6 +586,165 @@ router.delete(
 	"/:uuid",
 	[verificarToken, tienePermiso("dispositivo:deleteDispositivo")],
 	deleteDispositivoByUuid,
+);
+
+/**
+ * @swagger
+ * /api/dispositivos/{uuid}:
+ *   patch:
+ *     summary: Actualiza parcialmente un dispositivo
+ *     description: |
+ *       Permite modificar uno o más campos de un dispositivo existente.
+ *       Solo se actualizan los campos proporcionados en el cuerpo de la petición.
+ *       Los campos permitidos son: nombre, puntomontaje, capacidad, capacidadusada, tecnologia, idmaquina, idtipodispositivo.
+ *     tags: [Dispositivos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+ *         description: UUID del dispositivo a actualizar
+ *         example: "7eb66568-620d-4212-b9cc-c15c04134b20"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             minProperties: 1
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nombre del dispositivo
+ *                 example: "ultradisk-pro"
+ *               puntomontaje:
+ *                 type: string
+ *                 description: Punto de montaje
+ *                 example: "/mnt/data"
+ *               capacidad:
+ *                 type: integer
+ *                 description: Capacidad total en GB
+ *                 example: 8000
+ *               capacidadusada:
+ *                 type: integer
+ *                 description: Capacidad utilizada en GB
+ *                 example: 2500
+ *               tecnologia:
+ *                 type: string
+ *                 description: Tecnología del dispositivo (SSD, HDD, NVMe, etc.)
+ *                 example: "NVMe"
+ *               idmaquina:
+ *                 type: integer
+ *                 description: ID de la máquina asociada
+ *                 example: 3
+ *               idtipodispositivo:
+ *                 type: integer
+ *                 description: ID del tipo de dispositivo
+ *                 example: 1
+ *           examples:
+ *             ejemploBasico:
+ *               summary: Actualizar nombre y capacidad
+ *               value:
+ *                 nombre: "disco-backup"
+ *                 capacidad: 2000
+ *             ejemploCompleto:
+ *               summary: Actualizar varios campos
+ *               value:
+ *                 puntomontaje: "/storage"
+ *                 tecnologia: "SSD"
+ *                 idmaquina: 5
+ *     responses:
+ *       204:
+ *         description: Dispositivo actualizado exitosamente (sin contenido)
+ *       400:
+ *         description: |
+ *           Error de validación. Puede deberse a:
+ *           * UUID no proporcionado
+ *           * Formato de UUID inválido
+ *           * Cuerpo de la petición vacío
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               uuidFaltante:
+ *                 summary: UUID no proporcionado
+ *                 value:
+ *                   error: "Petición mal formada"
+ *               uuidInvalido:
+ *                 summary: Formato de UUID inválido
+ *                 value:
+ *                   error: "El formato del UUID proporcionado es inválido."
+ *               cuerpoVacio:
+ *                 summary: Cuerpo de la petición vacío
+ *                 value:
+ *                   error: "No se han enviado los campos a actualizar."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: Dispositivo no encontrado para el UUID proporcionado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Dispositivo no encontrado."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.patch(
+	"/:uuid",
+	[
+		verificarToken,
+		tienePermiso("dispositivo:postDispositivo"),
+		validarTipos(dispositivoPatchSchema),
+	],
+	patchDispositivo,
 );
 
 export default router;

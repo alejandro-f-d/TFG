@@ -19,4 +19,10 @@ export const DISPOSITIVOS_QUERY = {
     WHERE d.uuiddispositivo = $1;
 	`,
 	DELETE_BY_UUID: `DELETE FROM medal.dispositivos WHERE uuiddispositivo = $1`,
+	UPDATE_DISPOSITIVO: (columns) => {
+		const setClause = columns
+			.map((col, index) => `${col} = $${index + 1}`)
+			.join(", ");
+		return `UPDATE medal.dispositivos SET ${setClause} WHERE uuiddispositivo = $${columns.length + 1};`;
+	},
 };

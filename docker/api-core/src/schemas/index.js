@@ -231,3 +231,35 @@ export const dispositivoSchema = Joi.object({
 
 	tecnologia: Joi.string().max(200).trim().allow(null, ""),
 });
+
+export const dispositivoPatchSchema = Joi.object({
+	// Todos son opcionales (.optional()), pero si vienen, deben cumplir la regla
+	nombre: Joi.string().max(200).trim().messages({
+		"string.max": "El nombre no puede exceder los 200 caracteres",
+	}),
+
+	idTipoDispositivo: Joi.number().integer().positive().messages({
+		"number.base": "idTipoDispositivo debe ser un número",
+	}),
+
+	idMaquina: Joi.number()
+		.integer()
+		.positive()
+		.allow(null)
+		.empty("") // Si llega cadena vacía, lo trata como null/undefined
+		.messages({
+			"number.base": "idMaquina debe ser un número",
+		}),
+
+	puntoMontaje: Joi.string().max(100).trim().allow(null, ""),
+
+	capacidad: Joi.number().integer().min(0).allow(null),
+
+	capacidadUsada: Joi.number().integer().min(0).allow(null),
+
+	tecnologia: Joi.string().max(200).trim().allow(null, ""),
+})
+	.min(1)
+	.messages({
+		"object.min": "Debe enviar al menos un campo para actualizar",
+	});

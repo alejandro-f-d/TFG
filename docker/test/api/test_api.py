@@ -1516,3 +1516,78 @@ class TestGestionUsuarios:
         
         assert res.status_code == 403
         print("✅ Seguridad: Acceso denegado (403) a usuario no autorizado.")
+        
+    # --- CONTINUACIÓN BLOQUE 8: DISPOSITIVOS (PATCH y DELETE) ---
+
+    def test_84_patch_dispositivo_parcial(self):
+        """Caso: Actualizar parcialmente el nombre y capacidad del dispositivo."""
+        if not TestGestionUsuarios.uuid_dispositivo_creado:
+            pytest.skip("No hay UUID de dispositivo para actualizar")
+
+        uid = TestGestionUsuarios.uuid_dispositivo_creado
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_DISPOSITIVO}/{uid}"
+        
+        payload = {
+            "nombre": "disco-backup-editado",
+            "capacidad": 4096
+        }
+
+        res = requests.patch(url, headers=headers, json=payload)
+        
+        # Según tu doc, el éxito devuelve 204 (No Content)
+        assert res.status_code == 204
+        print(f"✅ PATCH exitoso (204): Dispositivo {uid} actualizado.")
+
+    def test_85_patch_dispositivo_error_404(self):
+        """Caso: Intentar actualizar un UUID que no existe."""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        uuid_falso = "00000000-0000-0000-0000-000000000000"
+        url = f"{self.BASE_URL_DISPOSITIVO}/{uuid_falso}"
+        
+        payload = {"nombre": "No existo"}
+        res = requests.patch(url, headers=headers, json=payload)
+        
+        assert res.status_code == 404
+        assert res.json()["error"] == "Dispositivo no encontrado."
+        print("✅ Error 404 validado para PATCH con UUID inexistente.")
+
+    def test_86_delete_dispositivo_exito(self):
+        """Caso: Eliminar el dispositivo creado previamente."""
+        if not TestGestionUsuarios.uuid_dispositivo_creado:
+            pytest.skip("No hay UUID de dispositivo para eliminar")
+
+        uid = TestGestionUsuarios.uuid_dispositivo_creado
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_DISPOSITIVO}/{uid}"
+
+        res = requests.delete(url, headers=headers)
+        
+        # Según tu doc, el éxito devuelve 200 con mensaje
+        assert res.status_code == 200
+        assert res.json()["message"] == "Dispositivo borrado correctamente."
+        print(f"✅ DELETE exitoso: Dispositivo {uid} eliminado.")
+
+    def test_87_delete_dispositivo_404(self):
+        """Caso: Intentar eliminar un dispositivo ya borrado o inexistente."""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        uuid_falso = "00000000-0000-0000-0000-000000000000"
+        url = f"{self.BASE_URL_DISPOSITIVO}/{uuid_falso}"
+
+        res = requests.delete(url, headers=headers)
+        
+        assert res.status_code == 404
+        assert res.json()["error"] == "Dispositivo no encontrado."
+        print("✅ Error 404 validado para DELETE con UUID inexistente.")
+
+    def test_88_delete_dispositivo_403_sin_permiso(self):
+        """Caso: Usuario sin permisos intenta borrar un dispositivo."""
+        uid = "7eb66568-620d-4212-b9cc-c15c04134b20" # UUID de ejemplo
+        headers = {"Authorization": f"Bearer {self.token_sin_roles}"}
+        url = f"{self.BASE_URL_DISPOSITIVO}/{uid}"
+
+        res = requests.delete(url, headers=headers)
+        
+        assert res.status_code == 403
+        assert res.json()["error"] == "No tienes el permiso necesario: dispositivo:deleteDispositivo"
+        print("✅ Seguridad: Bloqueado DELETE a usuario no autorizado.")
