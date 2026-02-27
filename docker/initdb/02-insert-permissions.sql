@@ -63,6 +63,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('puertas:g
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('dispositivo:postDispositivo', 'Creación  de dispositivos.', 'Permite al usuario la creación de dispositivos.', 'dispostivos');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('dispositivo:getDispositivo', 'Listado de dispositivos.', 'Permite al usuario acceder al inventariaje de dispositivos.', 'dispositivos');
+
  
 
 INSERT INTO medal.tipodispositivo (idtipodispositivo, nombre, descripcion) VALUES

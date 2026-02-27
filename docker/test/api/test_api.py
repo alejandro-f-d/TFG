@@ -9,6 +9,7 @@ class TestGestionUsuarios:
     BASE_URL = "http://localhost:8080/api"
     BASE_URL_ROL = "http://localhost:8080/api/rol"
     BASE_URL_PUERTA = "http://localhost:8080/api/puertas"
+    BASE_URL_DISPOSITIVO = "http://localhost:8080/api/dispositivos"
 
     # Variables de clase para persistir datos entre tests
     token_admin = None
@@ -20,6 +21,7 @@ class TestGestionUsuarios:
     uuid_maquina_creada = None
     uuid_rol_creado = None
     uuid_puerta_creada = None
+    uuid_dispositivo_creado = None
 
 
     # --- BLOQUE 1: AUTENTICACIÓN (LOGIN) ---
@@ -1437,3 +1439,80 @@ class TestGestionUsuarios:
         
         assert res.status_code == 403
         print("✅ Seguridad: Usuario sin permisos recibió 403 al intentar borrar.")
+
+    def test_80_post_dispositivo_completo(self):
+        """Caso: Crear un dispositivo con todos los campos opcionales."""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        payload = {
+            "nombre": "Disco NVMe 512GB",
+            "idTipoDispositivo": 1,
+            "idMaquina": 1,
+            "puntoMontaje": "/dev/nvme0n1",
+            "capacidad": 512,
+            "capacidadUsada": 200,
+            "tecnologia": "NVMe"
+        }
+
+        res = requests.post(self.BASE_URL_DISPOSITIVO, headers=headers, json=payload)
+        
+        assert res.status_code == 201
+        data = res.json()
+        assert "uuid" in data
+        assert data["message"] == "Dispositivo creado con éxito."
+        
+        # Persistimos el UUID para futuros tests de detalle o borrado
+        TestGestionUsuarios.uuid_dispositivo_creado = data["uuid"]
+        print(f"\n✅ Dispositivo creado exitosamente: {data['uuid']}")
+
+    def test_81_post_dispositivo_error_validacion(self):
+        """Caso: Error 400 por falta de campos obligatorios (nombre o idTipoDispositivo)."""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        # Enviamos un body que no cumple con el esquema Joi (falta idTipoDispositivo)
+        payload = {
+            "nombre": "Disco Incompleto",
+            "idMaquina": 1
+        }
+
+        res = requests.post(self.BASE_URL_DISPOSITIVO, headers=headers, json=payload)
+        assert res.status_code == 400
+        assert res.json()["error"] == "Error de validación de tipos"
+        print("✅ Seguridad: Error 400 validado ante esquema Joi inválido.")
+
+    def test_82_get_dispositivos_paginado_y_filtro(self):
+        """
+        Caso: Obtener lista de dispositivos con paginación y filtro de nombre.
+        Verifica que se incluya el nombre del tipo de dispositivo del JOIN.
+        """
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        params = {
+            "page": 1,
+            "limit": 5,
+            "filtroNombre": "NVMe"
+        }
+
+        res = requests.get(self.BASE_URL_DISPOSITIVO, headers=headers, params=params)
+        
+        assert res.status_code == 200
+        data = res.json()
+        
+        # Validar estructura de respuesta según tu especificación
+        assert "info" in data
+        lista = data["info"]
+        assert isinstance(lista, list)
+        
+        if len(lista) > 0:
+            dispo = lista[0]
+            # Validamos campos clave y el alias del JOIN
+            assert "uuiddispositivo" in dispo
+            assert "tipo_dispositivo_nombre" in dispo
+            print(f"✅ Lista obtenida. Ejemplo: {dispo['nombre']} es de tipo {dispo['tipo_dispositivo_nombre']}")
+        else:
+            print("ℹ️ Listado vacío (sin coincidencias para el filtro 'NVMe').")
+
+    def test_83_get_dispositivos_seguridad_403(self):
+        """Caso: Usuario sin permisos específicos recibe 403 Forbidden."""
+        headers = {"Authorization": f"Bearer {self.token_sin_roles}"}
+        res = requests.get(self.BASE_URL_DISPOSITIVO, headers=headers)
+        
+        assert res.status_code == 403
+        print("✅ Seguridad: Acceso denegado (403) a usuario no autorizado.")

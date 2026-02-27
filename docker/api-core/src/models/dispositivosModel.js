@@ -26,5 +26,29 @@ class DispositivosModel {
 			throw error;
 		}
 	}
+	static async getAllDispositivos(page, limit, filtroNombre) {
+		try {
+			const offset = (page - 1) * limit;
+			const busqueda = `%${filtroNombre}%`;
+			const res = await pool.query(DISPOSITIVOS_QUERY.GET_ALL_PAGINADO, [
+				limit,
+				offset,
+				busqueda,
+			]);
+			return res.rows;
+		} catch (error) {
+			console.error("Error en getAllDispositivos:", error.message);
+			throw error;
+		}
+	}
+	static async getDispositivoByUuid(uuid) {
+		try {
+			const res = await pool.query(DISPOSITIVOS_QUERY.GET_BY_UUID, [uuid]);
+			return res.rows[0];
+		} catch (error) {
+			console.error("Error en getDispositivoByUuid:", error);
+			throw error;
+		}
+	}
 }
 export default DispositivosModel;
