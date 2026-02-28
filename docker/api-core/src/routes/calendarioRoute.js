@@ -5,6 +5,7 @@ import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 import {
 	getAllEventosCalendario,
 	getDetalleReserva,
+	deleteReserva,
 } from "../controller/calendarioController.js";
 
 /**
@@ -351,4 +352,118 @@ router.get(
  */
 
 router.get("/:uuid", [verificarToken], getDetalleReserva);
+
+/**
+ * @swagger
+ * /api/calendario/{uuid}:
+ *   delete:
+ *     summary: Elimina una reserva específica
+ *     description: |
+ *       Elimina una reserva del calendario.
+ *       La reserva solo podrá ser eliminada si el usuario autenticado es el responsable
+ *       de la misma o tiene permisos administrativos (la validación se realiza en la query DELETE_RESERVA_SEGURA).
+ *       Esta operación es irreversible.
+ *     tags: [Reservas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID de la reserva a eliminar
+ *         example: "c486dd7d-22a5-4636-8c8f-b1dd516d2a9a"
+ *     responses:
+ *       204:
+ *         description: Reserva eliminada correctamente (sin contenido)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Reserva eliminada correctamente."
+ *                 uuid:
+ *                   type: string
+ *                   format: uuid
+ *                   description: UUID de la reserva eliminada
+ *                   example: "c486dd7d-22a5-4636-8c8f-b1dd516d2a9a"
+ *       400:
+ *         description: |
+ *           Error de validación. Puede deberse a:
+ *           * UUID no proporcionado
+ *           * Formato de UUID inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               uuidFaltante:
+ *                 summary: UUID no proporcionado
+ *                 value:
+ *                   error: "Petición mal formada."
+ *               uuidInvalido:
+ *                 summary: Formato de UUID inválido
+ *                 value:
+ *                   error: "Formato de identificador de reserva inválido."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene permisos para eliminar la reserva
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: |
+ *           Reserva no encontrada o sin permisos para eliminarla.
+ *           El mismo mensaje se devuelve en ambos casos por seguridad.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Reserva no encontrada o no tienes permisos para eliminarla."
+ *       500:
+ *         description: Error interno al intentar eliminar la reserva
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno al intentar eliminar la reserva."
+ */
+
+router.delete("/:uuid", [verificarToken], deleteReserva);
 export default router;

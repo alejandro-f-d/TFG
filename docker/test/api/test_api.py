@@ -1789,12 +1789,32 @@ class TestGestionUsuarios:
         Se espera: 400 Bad Request.
         """
         headers = {"Authorization": f"Bearer {self.token_admin}"}
-        url = f"{self.BASE_URL}/reserva/esto-no-es-un-uuid"
+        url = f"{self.BASE_URL}/reservas/esto-no-es-un-uuid"
 
         res = requests.get(url, headers=headers)
         
-        assert res.status_code == 404 # Es 404 para que no se sepa si es que no existe o no tiene permisos para verlo.
+        assert res.status_code == 400 # Es 404 para que no se sepa si es que no existe o no tiene permisos para verlo.
         print("✅ Error 404 validado para formato de UUID incorrecto.")
+
+    def test_101_delete_reserva_seguridad_fallida(self):
+        """Caso: Usuario sin permisos intenta borrar la reserva de otro. Se espera 404."""
+        rid = TestGestionUsuarios.uuid_reserva_creada
+        headers = {"Authorization": f"Bearer {self.token_sin_roles}"} # No puede ni saber que existe.
+        url = f"{self.BASE_URL}/reservas/{rid}"
+
+        res = requests.delete(url, headers=headers)
+        assert res.status_code == 404
+        print("✅ Seguridad DELETE validada: 404 para uuid no valida.")
+
+    def test_102_delete_reserva_exito_admin(self):
+        """Caso: Admin borra la reserva. Se espera 200."""
+        rid = TestGestionUsuarios.uuid_reserva_creada
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL}/reservas/{rid}"
+
+        res = requests.delete(url, headers=headers)
+        assert res.status_code == 204
+        print("✅ Borrado exitoso por parte del Administrador.")
 
     def test_22_delete_maquina(self):
         """

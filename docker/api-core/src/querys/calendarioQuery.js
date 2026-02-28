@@ -33,26 +33,27 @@ export const CALENDAR_QUERY = {
 	GET_USER_ID: `SELECT idusuario FROM medal.usuario WHERE uuidusuario = $1;`,
 	POST_RESERVA: `INSERT INTO medal.reservacalendario(fechainicio, nombre, descripcion, fechafin, idusuario, idmaquina, uuidcalendario) VALUES($1, $2, $3, $4, $5, $6, $7);`,
 	GET_RESERVA_CON_PERMISO: `
-        SELECT 
-            rc.uuidcalendario,
-            rc.nombre AS nombre_reserva,
-            rc.descripcion,
-            rc.fechainicio,
-            rc.fechafin,
-            m.nombre AS nombre_maquina,
-            m.uuidmaquina,
-            u.uuidusuario AS uuid_responsable,
-            u.idusuario AS id_responsable,
-            COALESCE(u.nombre, '') || ' ' || COALESCE(u.apellido1, '') || ' ' || COALESCE(u.apellido2, '') AS nombre_completo_responsable
+    SELECT 
+        rc.idcalendario,
+        rc.uuidcalendario,
+        rc.nombre AS nombre_reserva,
+        rc.descripcion,
+        rc.fechainicio,
+        rc.fechafin,
+        m.nombre AS nombre_maquina,
+        m.uuidmaquina,
+        u.uuidusuario AS uuid_responsable,
+        u.idusuario AS id_responsable,
+        TRIM(COALESCE(u.nombre, '') || ' ' || COALESCE(u.apellido1, '') || ' ' || COALESCE(u.apellido2, '')) AS nombre_completo_responsable
         FROM medal.reservacalendario rc
         INNER JOIN medal.maquina m ON m.idmaquina = rc.idmaquina
         LEFT JOIN medal.usuario u ON u.idusuario = rc.idusuario
         WHERE rc.uuidcalendario = $1
         AND (
-            -- 1. El usuario que consulta ($2) es el responsable de la reserva
+            -- CASO 1: Es el dueño
             rc.idusuario = $2 
             OR 
-            -- 2. El usuario tiene el permiso de administrador O el permiso específico de esta máquina
+            -- CASO 2: Tiene permisos (Admin o Específico)
             EXISTS (
                 SELECT 1 
                 FROM medal.rolesTiene rt
@@ -62,9 +63,27 @@ export const CALENDAR_QUERY = {
                 AND (
                     p.alias = 'admin:total' 
                     OR 
-                    p.alias = 'maquina:calendario:' || m.uuidmaquina
+                    p.alias = CONCAT('maquina:calendario:', m.uuidmaquina)
                 )
             )
         );
+    `,
+	DELETE_RESERVA_SEGURA: `
+        DELETE FROM medal.reservacalendario
+        WHERE uuidcalendario = $1
+        AND (
+            -- Condición A: El usuario que solicita es el dueño
+            idusuario = $2 
+            OR 
+            -- Condición B: El usuario que solicita tiene el permiso admin:total
+            EXISTS (
+                SELECT 1 
+                FROM medal.rolesTiene rt
+                INNER JOIN medal.operaCon oc ON oc.idRole = rt.idRole
+                INNER JOIN medal.permisos p ON p.idPermiso = oc.idPermiso
+                WHERE rt.idUsuario = $2 AND p.alias = 'admin:total'
+            )
+        )
+        RETURNING uuidcalendario;
     `,
 };

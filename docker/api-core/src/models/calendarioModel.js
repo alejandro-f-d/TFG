@@ -100,6 +100,23 @@ class CalendarioModel {
 			throw error;
 		}
 	}
+	static async deleteReserva(uuidReserva, idUsuario) {
+		try {
+			const res = await pool.query(CALENDAR_QUERY.DELETE_RESERVA_SEGURA, [
+				uuidReserva,
+				idUsuario,
+			]);
+
+			if (res.rowCount === 0) {
+				return 2;
+			}
+
+			return res.rows[0];
+		} catch (error) {
+			console.error("Error en deleteReserva:", error);
+			throw error;
+		}
+	}
 }
 
 export default CalendarioModel;

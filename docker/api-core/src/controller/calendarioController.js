@@ -103,3 +103,41 @@ export const getDetalleReserva = async (req, res) => {
 		});
 	}
 };
+
+export const deleteReserva = async (req, res) => {
+	const { uuid } = req.params;
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(uuid)) {
+		return res.status(400).json({
+			error: "Formato de identificador de reserva inválido.",
+		});
+	}
+	const idUsuario = req.user?.idUsuario;
+
+	try {
+		const resultado = await CalendarioModel.deleteReserva(uuid, idUsuario);
+		if (resultado == 2) {
+			return res.status(404).json({
+				error: "Reserva no encontrada o no tienes permisos para eliminarla.",
+			});
+		}
+		return res.status(204).json({
+			message: "Reserva eliminada correctamente.",
+			uuid: uuid,
+		});
+	} catch (error) {
+		console.error(
+			"Se ha producido en error al borrar una reserva por uuid.",
+			uuid,
+			error,
+		);
+
+		return res
+			.status(500)
+			.json({ error: "Error interno al intentar eliminar la reserva." });
+	}
+};
