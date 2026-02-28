@@ -48,7 +48,13 @@ export const getRoles = async (req, res) => {
 				message: `No se han encontrado roles que coincidan con: ${filtroNombre}`,
 			});
 		}
-		return res.status(200).json(resGetAllRoles);
+		return res
+			.status(200)
+			.json({
+				message: "Listado de roles obtenido con éxito",
+				info: resGetAllRoles,
+				pagination: resGetAllRoles.pagination,
+			});
 	} catch (error) {
 		console.error(
 			"Se ha producido un error al hacer el get de los roles",

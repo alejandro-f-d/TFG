@@ -267,8 +267,8 @@ CREATE TABLE IF NOT EXISTS medal.auditoria(
 
 );
 
--- 20. reservaClaendario
-CREATE TABLE IF NOT EXISTS medal.reservaClaendario(
+-- 20. reservaCalendario
+CREATE TABLE IF NOT EXISTS medal.reservaCalendario(
   idCalendario SERIAL PRIMARY KEY,
   fechaInicio DATE NOT NULL,
   uuidCalendario UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),

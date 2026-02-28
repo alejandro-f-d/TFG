@@ -11,7 +11,7 @@ import proyectosGitlabRoute from "./routes/proyectosGitlabRoute.js";
 import rolRoute from "./routes/rolRoute.js";
 import puertasRoute from "./routes/puertasRoute.js";
 import dispositivosRoute from "./routes/dispositivosRoute.js";
-// import calendarioRoute from "./routes/calendarioRoute.js";
+import calendarioRoute from "./routes/calendarioRoute.js";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
@@ -58,7 +58,7 @@ app.use("/api/proyectosgitlab", proyectosGitlabRoute);
 app.use("/api/rol", rolRoute);
 app.use("/api/puertas", puertasRoute);
 app.use("/api/dispositivos", dispositivosRoute);
-// app.use("/api/calendario", calendarioRoute);
+app.use("/api/calendario", calendarioRoute);
 
 // Errores interno 500
 app.use((err, req, res, next) => {

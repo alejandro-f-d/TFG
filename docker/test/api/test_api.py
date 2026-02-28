@@ -1015,9 +1015,10 @@ class TestGestionUsuarios:
         """
         Caso: Obtener lista de roles con paginación y validar estructura.
         Se espera: 200 OK y presencia de lista de usuarios en cada rol.
+        Estructura: res.json()["info"]["rows"]
         """
         url = f"{self.BASE_URL}/rol"
-        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        headers = {"Authorization": f"Bearer {TestGestionUsuarios.token_admin}"}
         params = {"page": 1, "limit": 5}
 
         res = requests.get(url, headers=headers, params=params)
@@ -1025,19 +1026,24 @@ class TestGestionUsuarios:
         assert res.status_code == 200
         data = res.json()
         
-        # Validar estructura principal
-        assert data["status"] == "OK"
-        assert isinstance(data["rows"], list)
+        # Accedemos a 'info' que contiene la lógica de negocio
+        info = data.get("info", {})
+        assert info["status"] == "OK"
+        assert isinstance(info["rows"], list)
         
-        if len(data["rows"]) > 0:
-            rol = data["rows"][0]
-            # Validar campos del rol
+        if len(info["rows"]) > 0:
+            rol = info["rows"][0]
+            # Validar campos del rol (idrole, nombre, uuidrole)
             assert "idrole" in rol
             assert "nombre" in rol
             assert "usuarios" in rol
             
-            # Validar que 'usuarios' sea una lista (json_agg de la DB)
+            # Validar que 'usuarios' sea una lista
             assert isinstance(rol["usuarios"], list)
+            
+            # Validar permisos (nueva estructura detectada en tu JSON)
+            assert "permisos" in rol
+            assert isinstance(rol["permisos"], list)
             
             if len(rol["usuarios"]) > 0:
                 user = rol["usuarios"][0]
@@ -1045,23 +1051,29 @@ class TestGestionUsuarios:
                 assert "apellido1" in user
                 print(f"✅ Usuario en rol detectado: {user['nombre']} {user['apellido1']}")
 
-        print(f"✅ Lista de roles obtenida. Total items: {data['pagination']['totalItems']}")
+        # La paginación está en data["info"]["pagination"] o data["pagination"]
+        total = data["pagination"]["totalItems"]
+        print(f"✅ Lista de roles obtenida. Total items: {total}")
 
     def test_48_get_roles_filtro_nombre(self):
         """
         Caso: Filtrar roles por nombre (case-insensitive).
         """
         url = f"{self.BASE_URL}/rol"
-        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        headers = {"Authorization": f"Bearer {TestGestionUsuarios.token_admin}"}
         
-        # Usamos el rol creado en test_40 o uno existente como 'Administrador'
-        nombre_filtro = "Administrador"
+        # En tu JSON el rol 1 se llama "admin"
+        nombre_filtro = "admin"
         params = {"filtroNombre": nombre_filtro}
 
         res = requests.get(url, headers=headers, params=params)
         assert res.status_code == 200
         
-        rows = res.json()["rows"]
+        # Acceso a través de info -> rows
+        rows = res.json().get("info", {}).get("rows", [])
+        
+        assert len(rows) > 0, f"No se encontraron roles con el filtro: {nombre_filtro}"
+        
         for rol in rows:
             assert nombre_filtro.lower() in rol["nombre"].lower()
         
@@ -1591,3 +1603,106 @@ class TestGestionUsuarios:
         assert res.status_code == 403
         assert res.json()["error"] == "No tienes el permiso necesario: dispositivo:deleteDispositivo"
         print("✅ Seguridad: Bloqueado DELETE a usuario no autorizado.")
+
+    def test_90_get_calendario_paginado_exito(self):
+        """
+        Caso: Obtener lista de eventos con paginación y validar estructura.
+        Se espera: 200 OK y presencia de datos de usuario y máquina.
+        """
+        url = f"{self.BASE_URL}/calendario"
+        headers = {"Authorization": f"Bearer {TestGestionUsuarios.token_admin}"}
+        params = {"page": 1, "limit": 5}
+
+        res = requests.get(url, headers=headers, params=params)
+        
+        assert res.status_code == 200
+        data = res.json()
+        
+        # Validar estructura principal
+        assert data["message"] == "Información de los eventos obtenida con éxito."
+        assert "info" in data
+        assert data["info"]["status"] == "OK"
+        
+        # Validar paginación (presente en info y en raíz según tu esquema)
+        assert "pagination" in data
+        assert data["pagination"]["totalItems"] >= 0
+        
+        rows = data["info"]["rows"]
+        assert isinstance(rows, list)
+        
+        if len(rows) > 0:
+            evento = rows[0]
+            # Validar campos del JOIN (usuario y máquina)
+            assert "idcalendario" in evento
+            assert "nombre_reserva" in evento
+            assert "nombre_completo_usuario" in evento
+            assert "nombre_maquina" in evento
+            assert "uuidcalendario" in evento
+            
+            print(f"\n✅ Evento detectado: {evento['nombre_reserva']} para la máquina {evento['nombre_maquina']}")
+
+    def test_91_get_calendario_filtro_nombre(self):
+        """
+        Caso: Filtrar eventos por nombre de reserva (case-insensitive).
+        """
+        url = f"{self.BASE_URL}/calendario"
+        headers = {"Authorization": f"Bearer {TestGestionUsuarios.token_admin}"}
+        
+        # Probamos con el ejemplo 'IA' de tu documentación
+        nombre_filtro = "IA"
+        params = {"filtroNombre": nombre_filtro}
+
+        res = requests.get(url, headers=headers, params=params)
+        
+        # Si no hay resultados, tu documentación indica un 404
+        if res.status_code == 404:
+            assert f"No se han encontrado eventos que coincidan con: {nombre_filtro}" in res.json()["message"]
+            print(f"✅ Filtro '{nombre_filtro}' validado (Sin resultados - 404).")
+        else:
+            assert res.status_code == 200
+            rows = res.json()["info"]["rows"]
+            for evento in rows:
+                # Verificamos que el filtro funcione en el nombre de la reserva
+                assert nombre_filtro.lower() in evento["nombre_reserva"].lower()
+            print(f"✅ Filtro '{nombre_filtro}' validado con {len(rows)} resultados.")
+
+    def test_92_get_calendario_error_parametros_invalidos(self):
+        """
+        Caso: Enviar página o límite inválidos.
+        Se espera: 400 Bad Request.
+        """
+        url = f"{self.BASE_URL}/calendario"
+        headers = {"Authorization": f"Bearer {TestGestionUsuarios.token_admin}"}
+        params = {"page": -1, "limit": "muchos"}
+
+        res = requests.get(url, headers=headers, params=params)
+        
+        assert res.status_code == 400
+        assert res.json()["error"] == "Petición invalida"
+        print("✅ Error 400 validado para parámetros de paginación incorrectos.")
+
+    def test_93_get_calendario_401_sin_token(self):
+        """
+        Caso: Intento de acceso sin token.
+        Se espera: 401 Unauthorized.
+        """
+        url = f"{self.BASE_URL}/calendario"
+        res = requests.get(url)
+        
+        assert res.status_code == 401
+        print("✅ Seguridad: Error 401 detectado sin cabecera Authorization.")
+
+    def test_94_get_calendario_403_sin_permiso(self):
+        """
+        Caso: Usuario sin roles intenta acceder al calendario.
+        Se espera: 403 Forbidden.
+        """
+        url = f"{self.BASE_URL}/calendario"
+        # Usamos el token del usuario creado en test_05 que no tiene permisos
+        headers = {"Authorization": f"Bearer {TestGestionUsuarios.token_sin_roles}"}
+        
+        res = requests.get(url, headers=headers)
+        
+        assert res.status_code == 403
+        assert res.json()["error"] == "No tienes el permiso necesario: calendar:getAllEventos"
+        print("✅ Seguridad: Error 403 detectado para usuario no autorizado.")

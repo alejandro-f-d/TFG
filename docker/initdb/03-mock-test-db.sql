@@ -122,7 +122,7 @@ VALUES
 -- =========================
 -- 10. RESERVA
 -- =========================
-INSERT INTO medal.reservaClaendario(fechaInicio,fechaFin,descripcion,nombre,idUsuario,idMaquina)
+INSERT INTO medal.reservaCalendario(fechaInicio,fechaFin,descripcion,nombre,idUsuario,idMaquina)
 VALUES
 ('2026-03-01','2026-03-05','Reserva para pruebas GPU','Reserva IA',2,2);
 

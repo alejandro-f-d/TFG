@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import pool from "../bbdd/conexion.js";
+import { AUTH_MIDDLEWARE_QUERY } from "../querys/authMiddlewareQuery.js";
 
 export const verificarToken = async (req, res, next) => {
 	try {
@@ -18,17 +19,9 @@ export const verificarToken = async (req, res, next) => {
 			return res.status(403).json({ error: "Token sin usuario válido." });
 		}
 
-		const query = `
-			SELECT p.alias
-			FROM medal.usuario u
-			INNER JOIN medal.rolesTiene rt ON rt.idUsuario = u.idUsuario
-			INNER JOIN medal.roles r ON r.idRole = rt.idRole
-			INNER JOIN medal.operaCon oc ON oc.idRole = r.idRole
-			INNER JOIN medal.permisos p ON p.idPermiso = oc.idPermiso
-			WHERE u.uuidusuario = $1
-		`;
-
-		const { rows } = await pool.query(query, [uuidUsuario]);
+		const { rows } = await pool.query(AUTH_MIDDLEWARE_QUERY.GET_PERMS, [
+			uuidUsuario,
+		]);
 		const permisosUsuario = rows.map((r) => r.alias);
 
 		req.user = {
