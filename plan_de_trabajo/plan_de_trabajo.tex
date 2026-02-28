@@ -53,6 +53,69 @@ El desarrollo se ha dividido en los siguientes bloques funcionales:
     \item \textbf{Pruebas y Documentación:} Testeo de carga, validación de seguridad y redacción de la memoria final.
 \end{enumerate}
 
+\section{Distribución de horas (270 horas totales)}
+
+Basado en la propuesta de trabajo del tutor, las 270 horas totales del proyecto se distribuyen de la siguiente manera entre las tareas definidas:
+
+\begin{itemize}
+    \item \textbf{Formación:} 7\% (~19 horas)
+    \item \textbf{Especificación de requisitos:} 10\% (~27 horas)
+    \item \textbf{Análisis y diseño:} 23\% (~62 horas)
+    \item \textbf{Implementación:} 45\% (~122 horas)
+    \item \textbf{Elaboración de la documentación:} 8\% (~22 horas)
+    \item \textbf{Elaboración de la memoria:} 5\% (~13 horas)
+    \item \textbf{Elaboración de la presentación:} 2\% (~5 horas)
+\end{itemize}
+
+Aplicando estos porcentajes a tu lista de tareas (T1-T8), el desglose horario quedaría así:
+
+\subsection*{T1. Análisis de requisitos y diseño de BD (62 horas)}
+\begin{itemize}
+    \item \textbf{Especificación de requisitos (27h):} Reuniones con el tutor, análisis de necesidades del grupo de investigación, definición de casos de uso, especificación de requisitos funcionales y no funcionales.
+    \item \textbf{Análisis y diseño (35h):} Diseño del esquema de base de datos en PostgreSQL, definición de relaciones, constraints, lógica de integridad y preparación del modelo de datos.
+\end{itemize}
+
+\subsection*{T2. Desarrollo del Core Backend (30 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (30h):} Configuración inicial del proyecto con Node.js, creación de la estructura base de la API REST, gestión de conexiones a la base de datos, implementación de los primeros endpoints y lógica de negocio fundamental.
+\end{itemize}
+
+\subsection*{T3. Módulo de Seguridad (30 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (25h):} Configuración de autenticación mediante JWT, desarrollo de middleware para la protección de rutas, implementación de hashing de contraseñas y validación de esquemas de datos de entrada/salida.
+    \item \textbf{Formación (5h):} Estudio de buenas prácticas de seguridad en aplicaciones web y manejo de librerías específicas.
+\end{itemize}
+
+\subsection*{T4. Módulo de Infraestructura (30 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (30h):} Desarrollo de los endpoints específicos para la gestión de máquinas (físicas y virtuales), servicios asociados y puertos. Integración con la lógica de negocio para el inventariado.
+\end{itemize}
+
+\subsection*{T5. Interfaz de Usuario (Frontend) (32 horas)}
+\begin{itemize}
+    \item \textbf{Análisis y diseño (15h):} Diseño de la interfaz de usuario (wireframes, mockups), definición de la experiencia de usuario (UX) para el dashboard, selección del framework frontend.
+    \item \textbf{Implementación (17h):} Desarrollo del dashboard web, creación de componentes, conexión con la API backend para la visualización de datos en tiempo real y administración de recursos.
+\end{itemize}
+
+\subsection*{T6. Migración de usuarios (12 horas)}
+\begin{itemize}
+    \item \textbf{Análisis y diseño (5h):} Análisis de los sistemas actuales, diseño de la estrategia de migración a entornos aislados para evitar conflictos.
+    \item \textbf{Implementación (7h):} Ejecución de la migración de usuarios, configuración de los entornos aislados y verificación del proceso.
+\end{itemize}
+
+\subsection*{T7. Integración de diferentes aplicaciones (20 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (20h):} Integración de los servicios externos del laboratorio (VPN, GitLab, etc.) con el dashboard. Desarrollo de la lógica para dar de alta/baja automáticamente los accesos a estos servicios.
+\end{itemize}
+
+\subsection*{T8. Pruebas y Documentación (39 horas)}
+\begin{itemize}
+    \item \textbf{Pruebas (10h):} Testeo de carga, validación de seguridad, pruebas de integración y de sistema para asegurar el correcto funcionamiento.
+    \item \textbf{Documentación (22h):} Redacción de la memoria final del proyecto (incluyendo introducción, objetivos, decisiones técnicas, manuales de usuario, etc.).
+    \item \textbf{Presentación (5h):} Preparación de la presentación y defensa del trabajo ante el tribunal.
+    \item \textbf{Formación (2h):} Formación continua a lo largo del proyecto para resolver dudas técnicas específicas.
+\end{itemize}
+
 % --- 3. DIAGRAMA DE GANTT ---
 \section{Diagrama de Gantt}
 A continuación se presenta la planificación temporal estimada para el desarrollo del proyecto durante el semestre: Este calendario empieza el día 01.01.2026
@@ -92,22 +155,24 @@ A continuación se presenta la planificación temporal estimada para el desarrol
 }
 \end{center}
 
+\small
+
 % --- 4. COPIA DE LA PROPUESTA DEL TUTOR ---
 \section{Propuesta de trabajo del tutor}
 
 \begin{quote}
 A continuación, se transcribe de forma literal la propuesta aprobada por el tutor responsable:
 
-\textbf{Título:} Plataforma web para la gestión de usuarios y servicios asociados en un grupo de investigación \\ 
+\textbf{Título:} Plataforma web para la gestión de usuarios y servicios asociados en un grupo de investigación 
 
-\textbf{Profesor responsable:} Alejandro Rodríguez González (alejandro.rg@upm.es) \\
+\textbf{Profesor responsable:} Alejandro Rodríguez González (alejandro.rg@upm.es) 
 
-\textbf{Resumen:} \\
+\textbf{Resumen:} 
 El objetivo del TFG es desarrollar una plataforma web (un dashboard) que permita la gestión de usuarios de un grupo de investigación. Con una serie de detalles relativamente básicos del usuario (datos personales) y de su afiliación (tipo de afiliación y duración (fecha comienzo-fin)), se debe generar un panel que permita dar de alta y baja a usuarios, almacenándolos a una base de datos y pudiendo hacer modificaciones sobre el mismo. También se requiere que se puedan anexar documentos relativos a su inscripción al grupo, o a los servidores a los que va a tener acceso.
 El panel debe además permitir seleccionar a que servicios se le quiere dar acceso al usuario (por ejemplo: acceso a la VPN, acceso a servidores, acceso a servidor de ficheros, gitlab, acceso a Teams, etc.) y contar con un sistema que pueda dar de baja (o deshabilitar) los accesos a dichos servicios cuando el usuario deje de pertenecer al grupo (pase la fecha de fin o se le dé de baja). Para ello, el dashboard debe conectarse con los diferentes servicios que el grupo tenga desplegados en sus servidores y realizar estas operaciones.
 La plataforma también debe contar con medidas adecuadas de seguridad, tanto en lo referido al guardado de la información de usuarios como en lo relativo a la comunicación entre servicios y la plataforma.
 
-\textbf{Objetivos:}\\
+\textbf{Objetivos:}
 Desarrollar el sistema especificado en el resumen del TFG:
 
 \begin{itemize}
@@ -119,7 +184,7 @@ Desarrollar el sistema especificado en el resumen del TFG:
     \item O6.- Documentación general del proyecto. 
 \end{itemize}
 
-\textbf{Plan de Trabajo:} \\
+\textbf{Plan de Trabajo:} 
 
 DEDICACIÓN TAREAS:
 
@@ -135,4 +200,5 @@ DEDICACIÓN TAREAS:
 \textbf{Conocimientos previos para  recomendados para hacer el trabajo:}	Programación, Bases de datos, Desarrollo web, Seguridad
 \end{quote}
 
+\normalsize
 \end{document}
