@@ -74,3 +74,32 @@ export const postCalendario = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
+
+export const getDetalleReserva = async (req, res) => {
+	const { uuid } = req.params;
+	const idUsuarioAutenticado = req.user?.idUsuario;
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(uuid)) {
+		return res.status(400).json({
+			error: "Formato de identificador de reserva inválido.",
+		});
+	}
+	try {
+		const reserva = await CalendarioModel.getReservaById(
+			uuid,
+			idUsuarioAutenticado,
+		);
+		if (!reserva) {
+			return res.status(404).json({
+				error: "Reserva no encontrada o no tienes permisos para verla.",
+			});
+		}
+		return res.status(200).json(reserva);
+	} catch (error) {
+		console.error("Error en getDetalleReserva:", error);
+		return res.status(500).json({
+			error: "Se ha producido un error interno al consultar la reserva.",
+		});
+	}
+};

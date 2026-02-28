@@ -83,6 +83,23 @@ class CalendarioModel {
 			client.release();
 		}
 	}
+	static async getReservaById(uuidReserva, idUsuario) {
+		try {
+			const res = await pool.query(CALENDAR_QUERY.GET_RESERVA_CON_PERMISO, [
+				uuidReserva,
+				idUsuario,
+			]);
+
+			if (res.rows.length === 0) {
+				return null;
+			}
+
+			return res.rows[0];
+		} catch (error) {
+			console.error("Error en getReservaById:", error);
+			throw error;
+		}
+	}
 }
 
 export default CalendarioModel;

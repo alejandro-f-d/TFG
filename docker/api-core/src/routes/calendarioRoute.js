@@ -2,7 +2,10 @@ import express from "express";
 import dotenv from "dotenv";
 const router = express.Router();
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
-import { getAllEventosCalendario } from "../controller/calendarioController.js";
+import {
+	getAllEventosCalendario,
+	getDetalleReserva,
+} from "../controller/calendarioController.js";
 
 /**
  * @swagger
@@ -209,4 +212,143 @@ router.get(
 	[verificarToken, tienePermiso("calendar:getAllEventos")],
 	getAllEventosCalendario,
 );
+
+/**
+ * @swagger
+ * /api/reservas/{uuid}:
+ *   get:
+ *     summary: Obtiene el detalle de una reserva específica
+ *     description: |
+ *       Retorna la información detallada de una reserva del calendario.
+ *       La reserva solo será visible si el usuario autenticado tiene permisos para verla
+ *       (es el creador o tiene permisos administrativos).
+ *     tags: [Reservas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID de la reserva a consultar
+ *         example: "c486dd7d-22a5-4636-8c8f-b1dd516d2a9a"
+ *     responses:
+ *       200:
+ *         description: Detalle de la reserva obtenido correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 uuidcalendario:
+ *                   type: string
+ *                   format: uuid
+ *                   description: UUID único de la reserva
+ *                   example: "c486dd7d-22a5-4636-8c8f-b1dd516d2a9a"
+ *                 nombre_reserva:
+ *                   type: string
+ *                   description: Nombre o título de la reserva
+ *                   example: "Pruebas de estrés GPU"
+ *                 descripcion:
+ *                   type: string
+ *                   description: Descripción detallada de la reserva
+ *                   example: "Análisis de temperatura bajo carga máxima"
+ *                 fechainicio:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Fecha y hora de inicio de la reserva (ISO 8601)
+ *                   example: "2026-03-10T00:00:00.000Z"
+ *                 fechafin:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Fecha y hora de fin de la reserva (ISO 8601)
+ *                   example: "2026-03-10T00:00:00.000Z"
+ *                 nombre_maquina:
+ *                   type: string
+ *                   description: Nombre de la máquina reservada
+ *                   example: "srv-gpu-01"
+ *                 uuidmaquina:
+ *                   type: string
+ *                   format: uuid
+ *                   description: UUID de la máquina reservada
+ *                   example: "0e9d49a4-037f-4b0f-8c37-3f43cb51651e"
+ *                 uuid_responsable:
+ *                   type: string
+ *                   format: uuid
+ *                   description: UUID del usuario responsable/creador de la reserva
+ *                   example: "2eede16d-a882-4907-91e1-c7260f50c7ab"
+ *                 id_responsable:
+ *                   type: integer
+ *                   description: ID interno del usuario responsable
+ *                   example: 1
+ *                 nombre_completo_responsable:
+ *                   type: string
+ *                   description: Nombre completo del responsable
+ *                   example: "Alejandro Fisac Delgado"
+ *       400:
+ *         description: Formato de UUID de reserva inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Formato de identificador de reserva inválido."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene permisos para ver la reserva
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: |
+ *           Reserva no encontrada o sin permisos para verla.
+ *           El mismo mensaje se devuelve en ambos casos por seguridad.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Reserva no encontrada o no tienes permisos para verla."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Se ha producido un error interno al consultar la reserva."
+ */
+
+router.get("/:uuid", [verificarToken], getDetalleReserva);
 export default router;
