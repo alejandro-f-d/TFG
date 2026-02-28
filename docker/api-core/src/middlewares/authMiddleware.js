@@ -1,50 +1,83 @@
 import jwt from "jsonwebtoken";
-export const verificarToken = (req, res, next) => {
-	// Esto hace uso de una técnica llamada Bearer Token.
-	const authHeader = req.headers["authorization"];
-	const token = authHeader && authHeader.split(" ")[1];
-	if (!token) {
-		return res
-			.status(401)
-			.json({ error: "Acceso denegado se requiere token." });
-	}
+import pool from "../bbdd/conexion.js";
+
+export const verificarToken = async (req, res, next) => {
 	try {
-		const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verificamos que sea un token emitido por nosotros.
-		req.user = decoded;
+		const authHeader = req.headers["authorization"];
+		const token = authHeader && authHeader.split(" ")[1];
+		if (!token) {
+			return res
+				.status(401)
+				.json({ error: "Acceso denegado se requiere token." });
+		}
+
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		const uuidUsuario = decoded.uuidUsuario;
+
+		if (!uuidUsuario) {
+			return res.status(403).json({ error: "Token sin usuario válido." });
+		}
+
+		const query = `
+			SELECT p.alias
+			FROM medal.usuario u
+			INNER JOIN medal.rolesTiene rt ON rt.idUsuario = u.idUsuario
+			INNER JOIN medal.roles r ON r.idRole = rt.idRole
+			INNER JOIN medal.operaCon oc ON oc.idRole = r.idRole
+			INNER JOIN medal.permisos p ON p.idPermiso = oc.idPermiso
+			WHERE u.uuidusuario = $1
+		`;
+
+		const { rows } = await pool.query(query, [uuidUsuario]);
+		const permisosUsuario = rows.map((r) => r.alias);
+
+		req.user = {
+			...decoded,
+			permisos: permisosUsuario,
+		};
+
 		next();
 	} catch (error) {
+		console.error("Error verificando token:", error);
 		return res.status(401).json({ error: "Token inválido o expirado." });
 	}
 };
 
 export const tienePermiso = (slugRequerido, esDinamico = false) => {
 	return (req, res, next) => {
-		const listaPermisos = req.user?.permisos;
-		if (!Array.isArray(listaPermisos)) {
-			return res.status(403).json({ error: "Token sin permisos válidos." });
-		}
-		// Construcción del alias a comprobar.
+		try {
+			const permisosUsuario = req.user?.permisos;
 
-		// Si es dependiente del recurso como servidorverservicios se le añade el servidor.
-		if (esDinamico) {
-			const { uuid } = req.params;
-			if (!uuid) {
-				return res.status(400).json({
-					error: "Falta el uuid del recurso para validar el permiso.",
-				});
+			if (!Array.isArray(permisosUsuario)) {
+				return res.status(403).json({ error: "Usuario sin permisos válidos." });
 			}
-			slugRequerido += `:${uuid}`;
-			// console.log(slugRequerido);
+
+			let aliasFinal = slugRequerido;
+			if (esDinamico) {
+				const { uuid } = req.params;
+				if (!uuid) {
+					return res.status(400).json({
+						error: "Falta el uuid del recurso para validar el permiso.",
+					});
+				}
+				aliasFinal = `${slugRequerido}:${uuid}`;
+			}
+
+			if (
+				permisosUsuario.includes(aliasFinal) ||
+				permisosUsuario.includes("admin:total")
+			) {
+				return next();
+			}
+
+			return res.status(403).json({
+				error: `No tienes el permiso necesario: ${aliasFinal}`,
+			});
+		} catch (error) {
+			console.error("Error validando permisos:", error);
+			return res
+				.status(500)
+				.json({ error: "Error interno validando permisos." });
 		}
-		if (
-			listaPermisos.includes(slugRequerido) ||
-			listaPermisos.includes("admin:total")
-		) {
-			// Creación del todopoderosisimo admin:total.
-			return next();
-		}
-		return res.status(403).json({
-			error: `No tienes el permiso necesario: ${slugRequerido}`,
-		});
 	};
 };

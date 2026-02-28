@@ -14,7 +14,7 @@ export const postRole = async (req, res) => {
 	try {
 		const resPostRole = await RolModel.postRole(
 			req.user?.permisos,
-			req.user?.id,
+			req.user?.uuidUsuario,
 			req.body,
 		);
 
