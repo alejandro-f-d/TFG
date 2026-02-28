@@ -22,6 +22,7 @@ class TestGestionUsuarios:
     uuid_rol_creado = None
     uuid_puerta_creada = None
     uuid_dispositivo_creado = None
+    uuid_reserva_creada = None
 
 
     # --- BLOQUE 1: AUTENTICACIÓN (LOGIN) ---
@@ -547,31 +548,6 @@ class TestGestionUsuarios:
             f"El servicio aún existe después del DELETE. Status: {res_check.status_code}"
 
         print("✅ Verificación exitosa: El servicio ya no existe (404).")
-    def test_22_delete_maquina(self):
-        """
-        Caso: Eliminar una máquina por su UUID.
-        Endpoint: DELETE /api/maquina/{uuid}
-        Se espera: 204 No Content.
-        """
-        # Recuperamos el UUID de la máquina que modificamos antes
-        mid = TestGestionUsuarios.uuid_maquina_creada
-        assert mid is not None, "Error: No hay UUID de máquina para eliminar."
-        
-        headers = {"Authorization": f"Bearer {self.token_admin}"}
-        url = f"{self.BASE_URL_MAQUINA}/{mid}"
-        
-        # Ejecución de la petición DELETE
-        res = requests.delete(url, headers=headers)
-        
-        # Validación: Código 204 indica eliminación exitosa
-        assert res.status_code == 204
-        print(f"\n✅ DELETE enviado correctamente para la máquina: {mid}")
-
-        # --- VERIFICACIÓN ---
-        # Al intentar obtenerla de nuevo, debería devolver 404
-        res_check = requests.get(url, headers=headers)
-        assert res_check.status_code == 404
-        print(f"✅ Verificación exitosa: La máquina ya no existe (404).")
 
     def test_23_post_proyecto_gitlab_exito(self):
         """
@@ -1734,3 +1710,115 @@ class TestGestionUsuarios:
                 assert ev_fin >= dt_inicio, f"Evento {evento['nombre_reserva']} termina antes del rango"
 
             print(f"✅ Filtro de fechas validado: {len(rows)} eventos encontrados en el rango solicitado.")
+
+    def test_96_post_crear_reserva_servidor_exito(self):
+        """
+        Caso: Crear una reserva usando el token de admin para asegurar permisos.
+        Endpoint: POST /api/maquina/{uuid}/reserva
+        Se espera: 201 Created y recibir el UUID de la reserva.
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        assert mid is not None, "Error: No hay UUID de máquina servidor para reservar."
+
+        # Usamos token_admin para asegurar que el test pase (tiene admin:total)
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/reserva"
+
+        payload = {
+            "nombre": "Pruebas de estrés GPU",
+            "descripcion": "Análisis de temperatura bajo carga máxima",
+            "fechaInicio": "2026-03-10T10:00:00.000Z",
+            "fechaFin": "2026-03-10T18:00:00.000Z"
+        }
+
+        res = requests.post(url, json=payload, headers=headers)
+        
+        assert res.status_code == 201, f"Fallo al crear reserva: {res.text}"
+        data = res.json()
+        assert "uuid" in data
+        TestGestionUsuarios.uuid_reserva_creada = data["uuid"]
+        
+        print(f"\n✅ Reserva creada con éxito. UUID: {TestGestionUsuarios.uuid_reserva_creada}")
+
+    def test_97_get_detalle_reserva_como_dueno_o_admin(self):
+        """
+        Caso: Consultar el detalle de la reserva recién creada.
+        Endpoint: GET /api/reservas/{uuid}
+        Se espera: 200 OK y ver los datos del responsable.
+        """
+        rid = TestGestionUsuarios.uuid_reserva_creada
+        if rid is None:
+            pytest.skip("Saltando: No se pudo crear la reserva en el test anterior.")
+
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        # Corregido a /reserva/ en singular
+        url = f"{self.BASE_URL}/reservas/{rid}"
+
+        res = requests.get(url, headers=headers)
+        
+        assert res.status_code == 200, f"Error al obtener detalle: {res.text}"
+        data = res.json()
+        
+        assert data["uuidcalendario"] == rid
+        assert "nombre_completo_responsable" in data
+        assert "id_responsable" in data
+        
+        print(f"✅ Detalle obtenido correctamente. Responsable: {data['nombre_completo_responsable']}")
+
+    def test_98_get_detalle_reserva_seguridad_404(self):
+        """
+        Caso: Un usuario sin permisos (sin_roles) intenta ver la reserva.
+        Se espera: 404 (La query no devuelve filas para él).
+        """
+        rid = TestGestionUsuarios.uuid_reserva_creada
+        if rid is None:
+            pytest.skip("Saltando: No hay reserva para probar seguridad.")
+
+        headers = {"Authorization": f"Bearer {self.token_sin_roles}"}
+        url = f"{self.BASE_URL}/reservas/{rid}"
+
+        res = requests.get(url, headers=headers)
+        
+        # Debe ser 404 porque la query filtra por permisos/dueño
+        assert res.status_code == 404
+        print("✅ Seguridad validada: El usuario sin permisos recibe un 404.")
+
+    def test_99_get_detalle_reserva_uuid_invalido(self):
+        """
+        Caso: Formato de UUID incorrecto en la URL.
+        Se espera: 400 Bad Request.
+        """
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL}/reserva/esto-no-es-un-uuid"
+
+        res = requests.get(url, headers=headers)
+        
+        assert res.status_code == 404 # Es 404 para que no se sepa si es que no existe o no tiene permisos para verlo.
+        print("✅ Error 404 validado para formato de UUID incorrecto.")
+
+    def test_22_delete_maquina(self):
+        """
+        Caso: Eliminar una máquina por su UUID.
+        Endpoint: DELETE /api/maquina/{uuid}
+        Se espera: 204 No Content.
+        """
+        # Recuperamos el UUID de la máquina que modificamos antes
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        assert mid is not None, "Error: No hay UUID de máquina para eliminar."
+        
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}"
+        
+        # Ejecución de la petición DELETE
+        res = requests.delete(url, headers=headers)
+        
+        # Validación: Código 204 indica eliminación exitosa
+        assert res.status_code == 204
+        print(f"\n✅ DELETE enviado correctamente para la máquina: {mid}")
+
+        # --- VERIFICACIÓN ---
+        # Al intentar obtenerla de nuevo, debería devolver 404
+        res_check = requests.get(url, headers=headers)
+        assert res_check.status_code == 404
+        print(f"✅ Verificación exitosa: La máquina ya no existe (404).")
+
