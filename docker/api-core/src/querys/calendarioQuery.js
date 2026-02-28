@@ -18,9 +18,13 @@ export const CALENDAR_QUERY = {
         LEFT JOIN medal.usuario u ON u.idusuario = rc.idusuario
         LEFT JOIN medal.maquina m ON m.idmaquina = rc.idmaquina
         WHERE (
-            rc.nombre ILIKE $3 
-            OR u.nombre ILIKE $3 
-            OR m.nombre ILIKE $3 
+            ($3::TEXT IS NULL OR rc.nombre ILIKE $3 OR u.nombre ILIKE $3 OR m.nombre ILIKE $3)
+        )
+        AND (
+            -- Si no se pasan fechas, no filtra. Si se pasan, busca solapamientos.
+            ($4::TIMESTAMP IS NULL OR rc.fechafin >= $4)
+            AND 
+            ($5::TIMESTAMP IS NULL OR rc.fechainicio <= $5)
         )
         ORDER BY rc.fechainicio DESC
         LIMIT $1 OFFSET $2;

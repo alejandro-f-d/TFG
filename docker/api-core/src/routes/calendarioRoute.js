@@ -6,14 +6,14 @@ import { getAllEventosCalendario } from "../controller/calendarioController.js";
 
 /**
  * @swagger
- * /api/calendario:
+ * /api/reservas:
  *   get:
  *     summary: Obtiene lista paginada de eventos del calendario
  *     description: |
  *       Retorna una lista paginada de eventos/reservas del calendario.
  *       Incluye información del usuario que realizó la reserva y la máquina asociada.
  *       Permite filtrar por nombre de la reserva.
- *     tags: [Calendario]
+ *     tags: [Reservas]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -203,9 +203,6 @@ import { getAllEventosCalendario } from "../controller/calendarioController.js";
  *                   type: string
  *                   example: "Error interno del servidor."
  */
-
-// Nota: El permiso requerido es "calendar:getAllEventos"
-// Middlewares aplicados: verificarToken, tienePermiso("calendar:getAllEventos")
 
 router.get(
 	"/",

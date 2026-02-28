@@ -186,3 +186,41 @@ VALUES
 ('Puerta CPD','Edificio A - Planta Baja');
 
 INSERT INTO medal.accede VALUES (1,1),(2,1);
+
+
+
+-- 1. Reserva para el test de filtro por nombre "IA"
+INSERT INTO medal.reservacalendario (
+    uuidcalendario, nombre, descripcion, fechainicio, fechafin, idusuario, idmaquina
+) VALUES (
+    'ba7cc39d-1dc2-4090-acb2-592708f9bfcd', 
+    'Reserva IA profunda', 
+    'Pruebas de modelos LLM en GPU', 
+    '2026-03-01 09:00:00', 
+    '2026-03-01 18:00:00', 
+    1, 1
+);
+
+-- 2. Reserva a mitad de marzo (para el test de rango de fechas)
+INSERT INTO medal.reservacalendario (
+    uuidcalendario, nombre, descripcion, fechainicio, fechafin, idusuario, idmaquina
+) VALUES (
+    'c123e456-e89b-12d3-a456-426614174000', 
+    'Mantenimiento preventivo', 
+    'Revisión trimestral de nodos', 
+    '2026-03-15 08:00:00', 
+    '2026-03-15 12:00:00', 
+    1, 1
+);
+
+-- 3. Reserva fuera de rango (Febrero) para verificar que el filtro excluye
+INSERT INTO medal.reservacalendario (
+    uuidcalendario, nombre, descripcion, fechainicio, fechafin, idusuario, idmaquina
+) VALUES (
+    'd789f123-a456-4266-b789-426614174111', 
+    'Reserva antigua', 
+    'Esta no debería salir en el filtro de marzo', 
+    '2026-02-10 10:00:00', 
+    '2026-02-10 20:00:00', 
+    1, 1
+);
