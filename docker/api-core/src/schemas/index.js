@@ -263,3 +263,17 @@ export const dispositivoPatchSchema = Joi.object({
 	.messages({
 		"object.min": "Debe enviar al menos un campo para actualizar",
 	});
+
+export const reservaSchema = Joi.object({
+	nombre: Joi.string().min(3).max(100).required().messages({
+		"string.empty": "El nombre de la reserva es obligatorio.",
+		"string.min": "El nombre debe tener al menos 3 caracteres.",
+	}),
+	descripcion: Joi.string().max(500).allow("", null),
+	fechaInicio: Joi.date().iso().required().messages({
+		"date.format": "La fecha de inicio debe ser un formato ISO válido.",
+	}),
+	fechaFin: Joi.date().iso().min(Joi.ref("fechaInicio")).required().messages({
+		"date.min": "La fecha de fin no puede ser anterior a la de inicio.",
+	}),
+});

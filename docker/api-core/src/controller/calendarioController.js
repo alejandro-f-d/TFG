@@ -2,15 +2,11 @@ import CalendarioModel from "../models/calendarioModel.js";
 
 export const getAllEventosCalendario = async (req, res) => {
 	const { page, limit, filtroNombre, fechaInicio, fechaFin } = req.query;
-
-	// Validación estricta para que el test_92 reciba el 400 esperado
 	if ((page && parseInt(page) < 1) || (limit && isNaN(parseInt(limit)))) {
 		return res.status(400).json({ error: "Petición invalida" });
 	}
-
 	const validPage = parseInt(page) || 1;
 	const validLimit = parseInt(limit) || 5;
-
 	try {
 		const resGetAllEvents = await CalendarioModel.getAllEventos(
 			validPage,
@@ -26,13 +22,55 @@ export const getAllEventosCalendario = async (req, res) => {
 			});
 		}
 
-		// Asegúrate de enviar este objeto exactamente así
 		return res.status(200).json({
 			status: "OK",
 			rows: resGetAllEvents.rows,
 			pagination: resGetAllEvents.pagination,
 		});
 	} catch (error) {
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
+
+export const postCalendario = async (req, res) => {
+	const { uuid } = req.params;
+
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(uuid)) {
+		return res
+			.status(400)
+			.json({ error: "Formato de ID de máquina inválido." });
+	}
+
+	try {
+		const idUsuario = req.user?.idUsuario;
+		const resultado = await CalendarioModel.postReserva(
+			req.body,
+			uuid,
+			idUsuario,
+		);
+
+		if (resultado === 2) {
+			return res.status(404).json({
+				error:
+					"La máquina especificada no existe o no es un servidor. Las reservas solo se pueden realizar en servidores.",
+			});
+		}
+
+		return res
+			.status(201)
+			.location(`/api/reservas/${resultado.uuid}`)
+			.json({
+				message: "Reserva creada con éxito.",
+				uuid: resultado.uuid,
+				url: `${process.env.API_DIRECTION}/api/reservas/${resultado.uuid}`,
+			});
+	} catch (error) {
+		if (error.message === "USUARIO_NO_IDENTIFICADO") {
+			return res.status(401).json({ error: "Sesión de usuario no válida." });
+		}
+		console.error("Error al procesar reserva:", error);
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };

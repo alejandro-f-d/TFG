@@ -24,9 +24,11 @@ export const verificarToken = async (req, res, next) => {
 		]);
 		const permisosUsuario = rows.map((r) => r.alias);
 
+		const idUsuarioInterno = rows.length > 0 ? rows[0].idusuario : null;
 		req.user = {
 			...decoded,
 			permisos: permisosUsuario,
+			idUsuario: idUsuarioInterno,
 		};
 
 		next();

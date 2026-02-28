@@ -14,12 +14,18 @@ import {
 	deleteServicioByUuid,
 	patchServicio,
 } from "../controller/serviciosController.js";
+import { postCalendario } from "../controller/calendarioController.js";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
-import { validarTipos } from '../middlewares/validador.middleware.js';
-import { maquinaSchema, maquinaPatchSchema, servicioSchema, servicioPatchSchema } from '../schemas/index.js';
-
+import { validarTipos } from "../middlewares/validador.middleware.js";
+import {
+	maquinaSchema,
+	maquinaPatchSchema,
+	servicioSchema,
+	servicioPatchSchema,
+	reservaSchema,
+} from "../schemas/index.js";
 
 /**
  * @swagger
@@ -108,7 +114,11 @@ import { maquinaSchema, maquinaPatchSchema, servicioSchema, servicioPatchSchema 
  */
 router.post(
 	"/",
-	[verificarToken, tienePermiso("maq:postMaquina"), validarTipos(maquinaSchema)],
+	[
+		verificarToken,
+		tienePermiso("maq:postMaquina"),
+		validarTipos(maquinaSchema),
+	],
 	postMaquina,
 );
 
@@ -218,7 +228,11 @@ router.get("/:uuid", verificarToken, getMaquina);
 
 router.patch(
 	"/:uuid",
-	[verificarToken, tienePermiso("maq:editServer"), validarTipos(maquinaPatchSchema)],
+	[
+		verificarToken,
+		tienePermiso("maq:editServer"),
+		validarTipos(maquinaPatchSchema),
+	],
 	patchServer,
 );
 
@@ -394,7 +408,11 @@ router.get(
 
 router.post(
 	"/:uuid/servicios",
-	[verificarToken, tienePermiso("maquina:crearServicios", true), validarTipos(servicioSchema)],
+	[
+		verificarToken,
+		tienePermiso("maquina:crearServicios", true),
+		validarTipos(servicioSchema),
+	],
 	postServicios,
 );
 
@@ -610,7 +628,11 @@ router.get(
 
 router.patch(
 	"/:uuid/servicios/:uuidServicio",
-	[verificarToken, tienePermiso("maquina:crearServicios", true), validarTipos(servicioPatchSchema)],
+	[
+		verificarToken,
+		tienePermiso("maquina:crearServicios", true),
+		validarTipos(servicioPatchSchema),
+	],
 	patchServicio,
 );
 
@@ -654,6 +676,180 @@ router.delete(
 	"/:uuid/servicios/:uuidServicio",
 	[verificarToken, tienePermiso("maquina:borrarServicios", true)],
 	deleteServicioByUuid,
+);
+
+//--------------------------------
+//------- Calendario -------------
+//--------------------------------
+
+/**
+ * @swagger
+ * /api/maquina/{uuid}/reserva:
+ *   post:
+ *     summary: Crea una nueva reserva en el calendario para una máquina
+ *     description: |
+ *       Crea una reserva para una máquina específica (solo servidores).
+ *       Requiere autenticación y el permiso "maquina:calendario".
+ *       El usuario autenticado quedará registrado como el creador de la reserva.
+ *       Las reservas solo pueden realizarse en máquinas que sean servidores.
+ *     tags: [Reservas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID de la máquina (servidor) a reservar
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - fechaInicio
+ *               - nombre
+ *               - fechaFin
+ *             properties:
+ *               fechaInicio:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Fecha y hora de inicio de la reserva (formato ISO 8601)
+ *                 example: "2026-03-01T10:00:00.000Z"
+ *               fechaFin:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Fecha y hora de fin de la reserva (formato ISO 8601)
+ *                 example: "2026-03-05T18:00:00.000Z"
+ *               nombre:
+ *                 type: string
+ *                 description: Nombre o título de la reserva
+ *                 example: "Reserva para pruebas GPU"
+ *               descripcion:
+ *                 type: string
+ *                 description: Descripción detallada de la reserva (opcional)
+ *                 example: "Pruebas de rendimiento con modelos de IA"
+ *           examples:
+ *             ejemploCompleto:
+ *               summary: Reserva con todos los campos
+ *               value:
+ *                 fechaInicio: "2026-03-01T10:00:00.000Z"
+ *                 fechaFin: "2026-03-05T18:00:00.000Z"
+ *                 nombre: "Reserva IA"
+ *                 descripcion: "Reserva para pruebas GPU con TensorFlow"
+ *     responses:
+ *       201:
+ *         description: Reserva creada exitosamente
+ *         headers:
+ *           Location:
+ *             schema:
+ *               type: string
+ *             description: URL relativa del recurso creado
+ *             example: "/api/reservas/987c3bdb-50c5-4ae5-8356-a18f17856ceb"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Reserva creada con éxito."
+ *                 uuid:
+ *                   type: string
+ *                   format: uuid
+ *                   description: UUID único de la reserva creada
+ *                   example: "987c3bdb-50c5-4ae5-8356-a18f17856ceb"
+ *                 url:
+ *                   type: string
+ *                   format: uri
+ *                   description: URL completa del recurso creado
+ *                   example: "https://api.ejemplo.com/api/reservas/987c3bdb-50c5-4ae5-8356-a18f17856ceb"
+ *       400:
+ *         description: Error de validación - Formato de UUID de máquina inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Formato de ID de máquina inválido."
+ *       401:
+ *         description: |
+ *           No autorizado. Puede deberse a:
+ *           * Token no proporcionado o inválido
+ *           * Sesión de usuario no válida (ID de usuario no identificado)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               tokenInvalido:
+ *                 summary: Token inválido o no proporcionado
+ *                 value:
+ *                   error: "No autorizado"
+ *               sesionInvalida:
+ *                 summary: ID de usuario no identificado
+ *                 value:
+ *                   error: "Sesión de usuario no válida."
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: |
+ *           Máquina no encontrada o no es un servidor.
+ *           Las reservas solo se pueden realizar en servidores.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "La máquina especificada no existe o no es un servidor. Las reservas solo se pueden realizar en servidores."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.post(
+	"/:uuid/reserva",
+	[
+		verificarToken,
+		tienePermiso("maquina:calendario", true),
+		validarTipos(reservaSchema),
+	],
+	postCalendario,
 );
 
 export default router;

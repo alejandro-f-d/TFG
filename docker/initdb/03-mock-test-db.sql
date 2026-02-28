@@ -16,10 +16,10 @@
 -- 2. MAQUINAS
 -- =========================
 INSERT INTO medal.maquina
-(nombre,caducidadSSL,certificadoSslActivo,emisorSsl,direccionIpPrivadaV4,direccionIpPublicaV4,puertaEnlaceV4,ram,sistemaOperativo)
+(nombre,caducidadSSL,certificadoSslActivo,emisorSsl,direccionIpPrivadaV4,direccionIpPublicaV4,puertaEnlaceV4,ram,sistemaOperativo, esservidor)
 VALUES
-('srv-docker-01','2026-12-31',true,'LetsEncrypt','192.168.1.10','80.80.80.10','192.168.1.1',64,'Ubuntu 22.04'),
-('srv-gpu-01','2026-06-30',true,'LetsEncrypt','192.168.1.20','80.80.80.20','192.168.1.1',128,'Ubuntu 20.04');
+('srv-docker-01','2026-12-31',true,'LetsEncrypt','192.168.1.10','80.80.80.10','192.168.1.1',64,'Ubuntu 22.04', 'false'),
+('srv-gpu-01','2026-06-30',true,'LetsEncrypt','192.168.1.20','80.80.80.20','192.168.1.1',128,'Ubuntu 20.04', 'true');
 
 
 -- =========================

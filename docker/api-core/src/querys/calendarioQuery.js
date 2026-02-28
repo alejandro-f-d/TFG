@@ -29,4 +29,7 @@ export const CALENDAR_QUERY = {
         ORDER BY rc.fechainicio DESC
         LIMIT $1 OFFSET $2;
     `,
+	GET_MAQUINA_ID: `SELECT idmaquina FROM medal.maquina WHERE uuidmaquina = $1 AND esservidor = true;`,
+	GET_USER_ID: `SELECT idusuario FROM medal.usuario WHERE uuidusuario = $1;`,
+	POST_RESERVA: `INSERT INTO medal.reservacalendario(fechainicio, nombre, descripcion, fechafin, idusuario, idmaquina, uuidcalendario) VALUES($1, $2, $3, $4, $5, $6, $7);`,
 };
