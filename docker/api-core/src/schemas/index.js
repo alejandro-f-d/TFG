@@ -277,3 +277,38 @@ export const reservaSchema = Joi.object({
 		"date.min": "La fecha de fin no puede ser anterior a la de inicio.",
 	}),
 });
+
+export const patchReservaBodySchema = Joi.object({
+	nombre: Joi.string().min(3).max(100).trim().messages({
+		"string.min": "El nombre de la reserva debe tener al menos 3 caracteres.",
+		"string.max":
+			"El nombre de la reserva no puede exceder los 100 caracteres.",
+	}),
+
+	descripcion: Joi.string().max(500).allow("", null).trim().messages({
+		"string.max": "La descripción no puede exceder los 500 caracteres.",
+	}),
+
+	fechaInicio: Joi.date().iso().messages({
+		"date.format": "La fecha de inicio debe tener un formato ISO válido.",
+	}),
+
+	fechaFin: Joi.date().iso().greater(Joi.ref("fechainicio")).messages({
+		"date.format": "La fecha de fin debe tener un formato ISO válido.",
+		"date.greater": "La fecha de fin debe ser posterior a la fecha de inicio.",
+	}),
+})
+	.min(1)
+	.messages({
+		"object.min": "Debes proporcionar al menos un campo para actualizar.",
+	});
+
+export const patchReservaParamsSchema = Joi.object({
+	uuid: Joi.string()
+		.guid({ version: ["uuidv4"] })
+		.required()
+		.messages({
+			"string.guid": "El identificador de la reserva debe ser un UUID válido.",
+			"any.required": "El UUID de la reserva es obligatorio.",
+		}),
+});

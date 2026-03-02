@@ -165,14 +165,42 @@ export const getReservasMaquina = async (req, res) => {
 			fechaFin,
 		);
 
-		return res
-			.status(200)
-			.json({
-				message: "Listado de reservas obtenido con éxito.",
-				info: reservas,
-			});
+		return res.status(200).json({
+			message: "Listado de reservas obtenido con éxito.",
+			info: reservas,
+		});
 	} catch (error) {
 		console.error(error);
 		return res.status(500).json({ error: "Error al obtener el calendario." });
+	}
+};
+
+export const patchReserva = async (req, res) => {
+	const { uuid } = req.params;
+	const idUsuario = req.user.idUsuario;
+	const camposCambiados = req.body;
+
+	try {
+		const resultado = await CalendarioModel.patchReserva(
+			uuid,
+			idUsuario,
+			camposCambiados,
+		);
+
+		if (resultado === 2) {
+			return res.status(404).json({
+				error: "Reserva no encontrada o no tienes permisos para editarla.",
+			});
+		}
+
+		return res.status(204).json({
+			message: "Reserva actualizada con éxito.",
+			status: "OK",
+		});
+	} catch (error) {
+		console.error("Error en patchReserva (Controller):", error);
+		return res
+			.status(500)
+			.json({ error: "Error interno del servidor al actualizar la reserva." });
 	}
 };

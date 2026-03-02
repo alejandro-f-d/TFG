@@ -135,6 +135,59 @@ class CalendarioModel {
 			throw error;
 		}
 	}
+	static async patchReserva(uuid, idUsuario, camposCambiados) {
+		const client = await pool.connect();
+		try {
+			await client.query("BEGIN");
+
+			const camposPermitidosDB = [
+				"nombre",
+				"descripcion",
+				"fechainicio",
+				"fechafin",
+			];
+
+			const camposFiltrados = {};
+			Object.keys(camposCambiados).forEach((key) => {
+				const keyDB = key.toLowerCase();
+
+				if (camposPermitidosDB.includes(keyDB)) {
+					camposFiltrados[keyDB] = camposCambiados[key];
+				}
+			});
+
+			const keys = Object.keys(camposFiltrados);
+
+			if (keys.length === 0) {
+				const check = await client.query(
+					CALENDAR_QUERY.VERIFICAR_EXISTE_RESERVA,
+					[uuid],
+				);
+				await client.query("COMMIT");
+				return check.rows.length > 0 ? { status: "OK" } : 2;
+			}
+
+			const values = [uuid, idUsuario, ...Object.values(camposFiltrados)];
+
+			const sql = CALENDAR_QUERY.UPDATE_RESERVA_DYNAMIC(keys);
+
+			const res = await client.query(sql, values);
+
+			if (res.rowCount === 0) {
+				await client.query("ROLLBACK");
+				return 2;
+			}
+
+			await client.query("COMMIT");
+			return { status: "OK" };
+		} catch (error) {
+			await client.query("ROLLBACK");
+			console.error("Error en patchReserva (Model):", uuid, error.message);
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 }
 
 export default CalendarioModel;

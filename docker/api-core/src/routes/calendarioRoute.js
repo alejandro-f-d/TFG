@@ -6,7 +6,11 @@ import {
 	getAllEventosCalendario,
 	getDetalleReserva,
 	deleteReserva,
+	patchReserva,
 } from "../controller/calendarioController.js";
+
+import { patchReservaBodySchema } from "../schemas/index.js";
+import { validarTipos } from "../middlewares/validador.middleware.js";
 
 /**
  * @swagger
@@ -466,4 +470,168 @@ router.get("/:uuid", [verificarToken], getDetalleReserva);
  */
 
 router.delete("/:uuid", [verificarToken], deleteReserva);
+
+/**
+ * @swagger
+ * /api/reservas/{uuid}:
+ *   patch:
+ *     summary: Actualiza parcialmente una reserva existente
+ *     description: |
+ *       Permite modificar uno o más campos de una reserva específica.
+ *       La reserva solo podrá ser actualizada si el usuario autenticado es el responsable
+ *       de la misma o tiene permisos de administrador (admin:total).
+ *       Los campos permitidos son: nombre, descripcion, fechainicio, fechafin.
+ *     tags: [Reservas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID de la reserva a actualizar
+ *         example: "342e1c0a-137b-4980-b7b3-d815f935c28f"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             minProperties: 1
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nuevo nombre o título de la reserva
+ *                 example: "Reserva IA - Actualizada"
+ *               descripcion:
+ *                 type: string
+ *                 description: Nueva descripción de la reserva
+ *                 example: "Pruebas de rendimiento con modelos actualizados"
+ *               fechainicio:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Nueva fecha de inicio (ISO 8601)
+ *                 example: "2026-03-02T10:00:00.000Z"
+ *               fechafin:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Nueva fecha de fin (ISO 8601)
+ *                 example: "2026-03-06T18:00:00.000Z"
+ *           examples:
+ *             ejemploBasico:
+ *               summary: Actualizar solo el nombre
+ *               value:
+ *                 nombre: "Reserva Prioritaria"
+ *             ejemploFechas:
+ *               summary: Actualizar solo las fechas
+ *               value:
+ *                 fechainicio: "2026-03-15T09:00:00.000Z"
+ *                 fechafin: "2026-03-20T17:00:00.000Z"
+ *             ejemploCompleto:
+ *               summary: Actualizar todos los campos
+ *               value:
+ *                 nombre: "Pruebas Extendidas"
+ *                 descripcion: "Ampliación del período de pruebas"
+ *                 fechainicio: "2026-04-01T08:00:00.000Z"
+ *                 fechafin: "2026-04-15T20:00:00.000Z"
+ *     responses:
+ *       204:
+ *         description: Reserva actualizada exitosamente (sin contenido)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Reserva actualizada con éxito."
+ *                 status:
+ *                   type: string
+ *                   example: "OK"
+ *       400:
+ *         description: |
+ *           Error de validación. Puede deberse a:
+ *           * Cuerpo de la petición vacío
+ *           * Datos inválidos según el esquema de validación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               cuerpoVacio:
+ *                 summary: Cuerpo de la petición vacío
+ *                 value:
+ *                   error: "No se han enviado los campos a actualizar."
+ *               validacionJoi:
+ *                 summary: Error de validación de esquema
+ *                 value:
+ *                   error: "fechainicio debe ser una fecha válida"
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: |
+ *           Reserva no encontrada o sin permisos para editarla.
+ *           El mismo mensaje se devuelve en ambos casos por seguridad.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Reserva no encontrada o no tienes permisos para editarla."
+ *       500:
+ *         description: Error interno del servidor al actualizar la reserva
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor al actualizar la reserva."
+ */
+
+router.patch(
+	"/:uuid",
+	[
+		verificarToken,
+		tienePermiso("maquina:calendario", true),
+		validarTipos(patchReservaBodySchema),
+	],
+	patchReserva,
+);
+
 export default router;

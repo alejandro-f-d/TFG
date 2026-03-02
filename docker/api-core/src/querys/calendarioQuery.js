@@ -125,4 +125,28 @@ export const CALENDAR_QUERY = {
     )
     ORDER BY rc.fechainicio ASC;
     `,
+	VERIFICAR_EXISTE_RESERVA: `
+        SELECT 1 FROM medal.reservacalendario WHERE uuidcalendario = $1
+    `,
+
+	UPDATE_RESERVA_DYNAMIC: (keys) => {
+		// Mapea los campos: nombre = $3, descripcion = $4, etc.
+		const setClause = keys.map((key, i) => `${key} = $${i + 3}`).join(", ");
+
+		return `
+            UPDATE medal.reservacalendario
+            SET ${setClause}
+            WHERE uuidcalendario = $1
+            AND (
+                idusuario = $2 -- Es el dueño (Dueño OR Admin)
+                OR EXISTS (
+                    SELECT 1 FROM medal.rolesTiene rt
+                    INNER JOIN medal.operaCon oc ON oc.idRole = rt.idRole
+                    INNER JOIN medal.permisos p ON p.idPermiso = oc.idPermiso
+                    WHERE rt.idUsuario = $2 AND p.alias = 'admin:total'
+                )
+            )
+            RETURNING uuidcalendario;
+        `;
+	},
 };

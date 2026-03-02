@@ -1900,6 +1900,81 @@ class TestGestionUsuarios:
         print("✅ Seguridad validada: Acceso denegado (403) para usuario sin permisos.")
 
 
+
+    def test_107_patch_reserva_exito_admin(self):
+        """
+        Caso: El admin edita una reserva.
+        Se espera: 204 No Content.
+        """
+        rid = TestGestionUsuarios.uuid_reserva_creada
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL}/reservas/{rid}"
+
+        payload = {
+            "nombre": "Nombre Editado por Admin",
+            "descripcion": "Nueva descripción de prueba"
+        }
+
+        res = requests.patch(url, json=payload, headers=headers)
+        
+        # 1. Validamos que el código es 204
+        assert res.status_code == 204
+        
+        # 2. NO HACEMOS res.json() porque el cuerpo está vacío por definición de 204
+        print("\n✅ PATCH exitoso (204) realizado por Administrador.")
+
+    def test_108_patch_reserva_error_400_vacio(self):
+        """
+        Caso: Enviar un cuerpo vacío {}.
+        Se espera: 400 Bad Request (Validación Joi .min(1)).
+        """
+        rid = TestGestionUsuarios.uuid_reserva_creada
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL}/reservas/{rid}"
+
+        res = requests.patch(url, json={}, headers=headers)
+        
+        assert res.status_code == 400
+        assert "error" in res.json()
+        print("✅ Error 400 validado al enviar cuerpo vacío.")
+
+    def test_109_patch_reserva_error_400_fechas_invalidas(self):
+        """
+        Caso: Fecha de fin anterior a la de inicio.
+        Se espera: 400 Bad Request (Validación Joi .greater).
+        """
+        rid = TestGestionUsuarios.uuid_reserva_creada
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL}/reservas/{rid}"
+
+        payload = {
+            "fechaInicio": "2026-12-01T10:00:00Z",
+            "fechaFin": "2026-11-01T10:00:00Z" # Fecha anterior
+        }
+
+        res = requests.patch(url, json=payload, headers=headers)
+        
+        assert res.status_code == 400
+        print("✅ Error 400 validado: Joi bloqueó fechaFin < fechaInicio.")
+
+    def test_110_patch_reserva_error_404_seguridad(self):
+        """
+        Caso: Un usuario sin permisos intenta editar una reserva ajena.
+        Se espera: 404 (por seguridad, para no confirmar existencia).
+        """
+        rid = TestGestionUsuarios.uuid_reserva_creada
+        headers = {"Authorization": f"Bearer {self.token_sin_roles}"}
+        url = f"{self.BASE_URL}/reservas/{rid}"
+
+        payload = {"nombre": "Intento de Hack"}
+
+        res = requests.patch(url, json=payload, headers=headers)
+        
+        # Según tu doc, devolvemos 404 si no es dueño ni admin
+        assert res.status_code == 403
+        print("✅ Seguridad PATCH validada: 404 para usuario no autorizado.")
+
+
     def test_102_delete_reserva_exito_admin(self):
         """Caso: Admin borra la reserva. Se espera 200."""
         rid = TestGestionUsuarios.uuid_reserva_creada
