@@ -38,6 +38,7 @@ jobs:
           echo "API_DIRECTION=http://localhost:8080" >> .env
           echo "PORT=8080" >> .env
           echo "JWT_SECRET=5e40edda6cd84b78d3944603a60d8a19fd736035765542a257f252dba23327ed" >> .env
+          echo "REDIS_PASSWORD=vYVSiOC9Tadt4QlWQE6zDGdit97ksBWluVFdEMG5GIQQ0OtgPW" >> .env
 
           # 2. Levantar BDD y API (Usando 'docker compose' V2)
           # Solo levantamos estos dos para optimizar el tiempo de ejecución en GitHub
