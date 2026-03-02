@@ -141,3 +141,38 @@ export const deleteReserva = async (req, res) => {
 			.json({ error: "Error interno al intentar eliminar la reserva." });
 	}
 };
+
+export const getReservasMaquina = async (req, res) => {
+	const { uuid } = req.params;
+	const idUsuario = req.user.idUsuario;
+
+	let { fechaInicio, fechaFin } = req.query;
+
+	if (!fechaInicio || !fechaFin) {
+		const hoy = new Date();
+		const unMesDespues = new Date();
+		unMesDespues.setMonth(hoy.getMonth() + 1);
+
+		fechaInicio = fechaInicio || hoy.toISOString();
+		fechaFin = fechaFin || unMesDespues.toISOString();
+	}
+
+	try {
+		const reservas = await CalendarioModel.getReservasByMaquina(
+			uuid,
+			idUsuario,
+			fechaInicio,
+			fechaFin,
+		);
+
+		return res
+			.status(200)
+			.json({
+				message: "Listado de reservas obtenido con éxito.",
+				info: reservas,
+			});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({ error: "Error al obtener el calendario." });
+	}
+};

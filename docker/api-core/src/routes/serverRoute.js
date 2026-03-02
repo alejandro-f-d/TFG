@@ -14,7 +14,10 @@ import {
 	deleteServicioByUuid,
 	patchServicio,
 } from "../controller/serviciosController.js";
-import { postCalendario } from "../controller/calendarioController.js";
+import {
+	postCalendario,
+	getReservasMaquina,
+} from "../controller/calendarioController.js";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
@@ -852,4 +855,162 @@ router.post(
 	postCalendario,
 );
 
+/**
+ * @swagger
+ * /api/maquina/{uuid}/reserva:
+ *   get:
+ *     summary: Obtiene las reservas de una máquina específica en un rango de fechas
+ *     description: |
+ *       Retorna todas las reservas de una máquina que se solapan con el rango de fechas especificado.
+ *       Si no se proporcionan fechas, se usa el rango por defecto: desde hoy hasta dentro de un mes.
+ *       La seguridad se aplica a nivel de query: solo se devuelven reservas si el usuario autenticado
+ *       es el responsable o tiene permisos especiales (admin:total o maquina:calendario:{uuid}).
+ *     tags: [Reservas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID de la máquina a consultar
+ *         example: "014f5a5e-9894-4f25-a009-45668244c1ae"
+ *       - in: query
+ *         name: fechaInicio
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Fecha de inicio del rango (ISO 8601). Si no se proporciona, se usa la fecha actual.
+ *         example: "2026-03-01T00:00:00.000Z"
+ *       - in: query
+ *         name: fechaFin
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Fecha de fin del rango (ISO 8601). Si no se proporciona, se usa un mes después de la fecha actual.
+ *         example: "2026-04-01T00:00:00.000Z"
+ *     responses:
+ *       200:
+ *         description: Listado de reservas obtenido con éxito
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Listado de reservas obtenido con éxito."
+ *                 info:
+ *                   type: array
+ *                   description: Array de reservas de la máquina
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       idcalendario:
+ *                         type: integer
+ *                         description: ID interno de la reserva
+ *                         example: 1
+ *                       uuidcalendario:
+ *                         type: string
+ *                         format: uuid
+ *                         description: UUID único de la reserva
+ *                         example: "342e1c0a-137b-4980-b7b3-d815f935c28f"
+ *                       nombre_reserva:
+ *                         type: string
+ *                         description: Nombre o título de la reserva
+ *                         example: "Reserva IA"
+ *                       descripcion:
+ *                         type: string
+ *                         description: Descripción detallada de la reserva
+ *                         example: "Reserva para pruebas GPU"
+ *                       fechainicio:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Fecha y hora de inicio de la reserva (ISO 8601)
+ *                         example: "2026-03-01T00:00:00.000Z"
+ *                       fechafin:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Fecha y hora de fin de la reserva (ISO 8601)
+ *                         example: "2026-03-05T00:00:00.000Z"
+ *                       nombre_maquina:
+ *                         type: string
+ *                         description: Nombre de la máquina reservada
+ *                         example: "srv-gpu-01"
+ *                       uuidmaquina:
+ *                         type: string
+ *                         format: uuid
+ *                         description: UUID de la máquina reservada
+ *                         example: "014f5a5e-9894-4f25-a009-45668244c1ae"
+ *                       uuid_responsable:
+ *                         type: string
+ *                         format: uuid
+ *                         description: UUID del usuario responsable de la reserva
+ *                         example: "3dcb7dc3-6742-4609-95f6-9594e4e7927e"
+ *                       id_responsable:
+ *                         type: integer
+ *                         description: ID interno del usuario responsable
+ *                         example: 2
+ *                       nombre_completo_responsable:
+ *                         type: string
+ *                         description: Nombre completo del responsable
+ *                         example: "test test test"
+ *       400:
+ *         description: Error de validación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Formato de UUID inválido"
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error al obtener el calendario."
+ */
+
+router.get(
+	"/:uuid/reserva",
+	[verificarToken, tienePermiso("maquina:calendario", true)],
+	getReservasMaquina,
+);
 export default router;

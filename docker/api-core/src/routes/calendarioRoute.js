@@ -355,7 +355,7 @@ router.get("/:uuid", [verificarToken], getDetalleReserva);
 
 /**
  * @swagger
- * /api/calendario/{uuid}:
+ * /api/reservas/{uuid}:
  *   delete:
  *     summary: Elimina una reserva específica
  *     description: |

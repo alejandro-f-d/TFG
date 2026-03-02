@@ -86,4 +86,43 @@ export const CALENDAR_QUERY = {
         )
         RETURNING uuidcalendario;
     `,
+	GET_RESERVAS_MAQUINA: `
+    SELECT 
+        rc.idcalendario,
+        rc.uuidcalendario,
+        rc.nombre AS nombre_reserva,
+        rc.descripcion,
+        rc.fechainicio,
+        rc.fechafin,
+        m.nombre AS nombre_maquina,
+        m.uuidmaquina,
+        u.uuidusuario AS uuid_responsable,
+        u.idusuario AS id_responsable,
+        TRIM(CONCAT(u.nombre, ' ', u.apellido1, ' ', u.apellido2)) AS nombre_completo_responsable
+    FROM medal.reservacalendario rc
+    INNER JOIN medal.maquina m ON m.idmaquina = rc.idmaquina
+    LEFT JOIN medal.usuario u ON u.idusuario = rc.idusuario
+    WHERE m.uuidmaquina = $1
+    -- FILTRO DE FECHAS: Trae eventos que se solapen con el rango solicitado
+    AND rc.fechainicio <= $4 -- La reserva empieza antes de que acabe el rango
+    AND rc.fechafin >= $3    -- La reserva termina después de que empiece el rango
+    AND (
+        -- SEGURIDAD
+        rc.idusuario = $2 
+        OR 
+        EXISTS (
+            SELECT 1 
+            FROM medal.rolesTiene rt
+            INNER JOIN medal.operaCon oc ON oc.idRole = rt.idRole
+            INNER JOIN medal.permisos p ON p.idPermiso = oc.idPermiso
+            WHERE rt.idUsuario = $2 
+            AND (
+                p.alias = 'admin:total' 
+                OR 
+                p.alias = 'maquina:calendario:' || m.uuidmaquina
+            )
+        )
+    )
+    ORDER BY rc.fechainicio ASC;
+    `,
 };

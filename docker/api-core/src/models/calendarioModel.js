@@ -117,6 +117,24 @@ class CalendarioModel {
 			throw error;
 		}
 	}
+	static async getReservasByMaquina(
+		uuidMaquina,
+		idUsuario,
+		fechaInicio,
+		fechaFin,
+	) {
+		try {
+			const res = await pool.query(CALENDAR_QUERY.GET_RESERVAS_MAQUINA, [
+				uuidMaquina,
+				idUsuario,
+				fechaInicio,
+				fechaFin,
+			]);
+			return res.rows;
+		} catch (error) {
+			throw error;
+		}
+	}
 }
 
 export default CalendarioModel;

@@ -1806,6 +1806,100 @@ class TestGestionUsuarios:
         assert res.status_code == 404
         print("✅ Seguridad DELETE validada: 404 para uuid no valida.")
 
+
+
+    def test_103_get_reservas_maquina_default(self):
+        """
+        Caso: Obtener reservas sin pasar fechas (aplica el mes por defecto).
+        Endpoint: GET /api/maquina/{uuid}/reserva
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        assert mid is not None
+        
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        # Cambiado a /reserva según tus logs de error
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/reserva"
+
+        res = requests.get(url, headers=headers)
+        
+        assert res.status_code == 200
+        data = res.json()
+        
+        # Ajustado a tu estructura: data['info'] es la lista
+        assert "info" in data
+        assert isinstance(data["info"], list)
+        print(f"\n✅ Listado obtenido. Mensaje: {data.get('message')}")
+
+    def test_104_get_reservas_maquina_filtro_fechas(self):
+        """
+        Caso: Filtrar reservas en un rango amplio (todo el año 2026).
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/reserva"
+        
+        # Ampliamos el rango para evitar problemas de zona horaria (UTC vs Local)
+        params = {
+            "fechaInicio": "2026-01-01T00:00:00.000Z",
+            "fechaFin": "2026-12-31T23:59:59.000Z"
+        }
+
+        res = requests.get(url, headers=headers, params=params)
+        
+        assert res.status_code == 200
+        data = res.json()
+        reservas = data.get("info", [])
+        
+        # Si falla, esto nos dirá qué recibió el test
+        if not reservas:
+            print(f"\n DEBUG: El servidor devolvió 'info' vacío. Query Params: {params}")
+        else:
+            print(f"\n DEBUG: Reservas encontradas: {[r['nombre_reserva'] for r in reservas]}")
+
+        # Buscamos la reserva por nombre
+        encontrada = any(r["nombre_reserva"] == "Pruebas de estrés GPU" for r in reservas)
+        
+        assert encontrada, f"La reserva no aparece. El servidor devolvió: {data}"
+        print("✅ Filtro de fechas validado con rango amplio.")
+
+    def test_105_get_reservas_maquina_rango_vacio(self):
+        """
+        Caso: Filtrar por un rango donde no hay nada (año 2029).
+        Se espera: 'info' vacío.
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/reserva"
+        
+        params = {
+            "fechaInicio": "2029-01-01T00:00:00.000Z",
+            "fechaFin": "2029-01-31T23:59:59.000Z"
+        }
+
+        res = requests.get(url, headers=headers, params=params)
+        
+        assert res.status_code == 200
+        data = res.json()
+        # Verificamos que 'info' sea una lista vacía
+        assert data["info"] == []
+        print("✅ Rango vacío validado (info: []).")
+
+    def test_106_get_reservas_maquina_seguridad_sin_permisos(self):
+        """
+        Caso: Un usuario sin roles intenta acceder.
+        Tu servidor devuelve 403, así que ajustamos el assert.
+        """
+        mid = TestGestionUsuarios.uuid_maquina_creada
+        headers = {"Authorization": f"Bearer {self.token_sin_roles}"}
+        url = f"{self.BASE_URL_MAQUINA}/{mid}/reserva"
+
+        res = requests.get(url, headers=headers)
+        
+        # Tu middleware está lanzando un 403 antes de llegar al controlador
+        assert res.status_code == 403
+        print("✅ Seguridad validada: Acceso denegado (403) para usuario sin permisos.")
+
+
     def test_102_delete_reserva_exito_admin(self):
         """Caso: Admin borra la reserva. Se espera 200."""
         rid = TestGestionUsuarios.uuid_reserva_creada
@@ -1815,6 +1909,8 @@ class TestGestionUsuarios:
         res = requests.delete(url, headers=headers)
         assert res.status_code == 204
         print("✅ Borrado exitoso por parte del Administrador.")
+
+
 
     def test_22_delete_maquina(self):
         """
