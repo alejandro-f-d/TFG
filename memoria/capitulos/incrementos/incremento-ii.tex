@@ -1178,17 +1178,36 @@ La infraestructura se va a basar en microservicios apoyados en docker. El sistem
   % \item Frontend: Esta capa va a ser la visible para el usuario y la que está pensada para que el usuario interactue.
   % \item API: Esta capa se encargará de la comunicación entre el frontend y el backend. Además se encargará de trabajar con los servicios de @firma.
   % \item Backend: Esta última capa se va a encargar del almacenamiento de los datos. Concretamente se va a dividir en dos partes principales, una base de datos y en una estructura encargada de almacenar los datos de los documentos (servicio de almacenamiento de objetos).
-  \item \texttt{Bases de datos}: Servicio de almacenamiento para el sistema.
+  \item \texttt{Bases de datos (Relacional Tablas)}: Servicio de almacenamiento para el sistema.
+  \item \texttt{Bases de datos (Documentos)}: En este microservicio se van a almacenar de manera segura los documentos, separados de la base de datos para evitar su sobrecarga.
   \item \texttt{API}: Comunicación entre el frontend y el backend.
   \item \texttt{Worker}: Encargado de realización de trabajos pesados tales como la monitorización de páginas web.
-  \item \texttt{Storage}: En este microservicio se van a almacenar de manera segura los documentos, separados de la base de datos para evitar su sobrecarga.
   \item \texttt{Frontend}: Parte con la que va a interactuar el usuario. 
+  \item \texttt{Cron}: Encargado de realizar tareas periódicas con el worker.
 \end{itemize}
-
 
 Se selecciona una arquitectura modular ya que estos sistemas permiten aislamiento y portabilidad con respecto a las características de la máquina. En un sistema de mayor cantidad de usuarios que en el caso de este laboratorio permitiría una mayor resilencia con el uso de herramientas como un loadbalancer que opere con diferentes instancias de la API levantando instancias según sea necesario. En la parte del almacenado de datos, este sistema permitiría la redundancia de datos del sistema en varias bases de datos si fuera necesario.
 
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{incremento-ii/infraestructura.png}
+ \caption{Arquitectura lógica del sistema.}
+ \label{fig:infraestructura_inc_ii}
+\end{figure}
+
+Figura \ref{fig:infraestructura_inc_ii} Arquitectura lógica del sistema. Se observa un diseño basado en microservicios y eventos. La API principal actúa como orquestador, delegando tareas pesadas y notificaciones a un Worker independiente mediante una cola de mensajes (Queue). El Worker asume la responsabilidad de la comunicación con el servidor SMTP de Gmail y la ejecución de tareas programadas (CRON), garantizando que la API permanezca disponible y con tiempos de respuesta bajos para el usuario final.
+
+
+
 \subsection{Tablas resumen de las operaciones:}
+
+
+\subsection{Configuración del servicio SMTP Google:}
+
+Para el sistema de notificaciones, se ha integrado el servicio de mensajería de Google (Gmail), aprovechando la infraestructura preexistente en el laboratorio y sabiendo que el volumen de envíos se mantenga dentro de los umbrales de seguridad permitidos por el proveedor. La integración técnica se realiza mediante contraseñas de aplicación.
+
+Siguiendo la filosofía de diseño modular del proyecto, este servicio se ha implementado mediante una arquitectura dirigida por eventos (Event-Driven Architecture). Bajo este enfoque, la API actúa como el editor, emitiendo eventos de dominio ante acciones relevantes, mientras que el módulo de correo funciona como el Suscriptor. Esta estructura permite un procesamiento asíncrono donde el módulo de notificaciones gestiona la carga de manera independiente al flujo principal de la API, desacoplando la latencia del protocolo SMTP de los tiempos de respuesta de los endpoints.
 
 \subsection{FIGMA: Diseño de pantallas}
 
