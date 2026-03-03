@@ -2,6 +2,7 @@ import UserModel from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
+import { addEmailToQueue } from "../eda/mailQueue.js";
 
 const verificarCorreo = (correo) => {
 	if (!correo) return false;
@@ -73,6 +74,14 @@ export const postUser = async (req, res) => {
 		}
 
 		if (resultado.status === "OK") {
+			// EDA: Correo electrónico de alta en el sistema.
+			await addEmailToQueue({
+				template: "WELCOME_USER", // Identificador de la plantilla
+				to: correoInstitucional,
+				nombre: nombre,
+				loginUrl: `${process.env.API_DIRECTION}/login`,
+			});
+
 			return res
 				.status(201)
 				.location(`/api/user/${resultado.id}`)
