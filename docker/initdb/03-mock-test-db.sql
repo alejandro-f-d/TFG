@@ -101,9 +101,9 @@ INSERT INTO medal.notificacion(mensaje,tipo,idUsuario)
 VALUES
 ('Servicio caído','ALERTA',1);
 
-INSERT INTO medal.recuperacionPassword(fechaExpiracion,token,idUsuario)
-VALUES
-(NOW() + INTERVAL '1 day','token123',2);
+-- INSERT INTO medal.recuperacionPassword(fechaExpiracion,token,idUsuario)
+-- VALUES
+-- (NOW() + INTERVAL '1 day','token123',2);
 
 INSERT INTO medal.intentosLogin(emailIntentado,ipOrigen,exitoso)
 VALUES
