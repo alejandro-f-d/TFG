@@ -480,3 +480,18 @@ CREATE TABLE IF NOT EXISTS medal.accede(
     REFERENCES medal.puertas(idPuerta)
     ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS medal.recuperacionPassword(
+  idRecuperacion SERIAL PRIMARY KEY, 
+  tokenHash VARCHAR(64) NOT NULL, 
+  usado BOOLEAN DEFAULT FALSE,
+  fechaCreacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fechaExpiracion TIMESTAMP NOT NULL, 
+  usedAt TIMESTAMP DEFAULT NULL,
+  idUsuario INTEGER NOT NULL,
+  CONSTRAINT fk_recover_usuario
+    FOREIGN KEY (idUsuario)
+    REFERENCES medal.usuario(idUsuario)
+    ON DELETE CASCADE 
+);
+

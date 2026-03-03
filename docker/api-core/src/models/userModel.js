@@ -263,6 +263,8 @@ class UserModel {
 		const res = await pool.query(USER_QUERIES.UPDATE_LAST_IP, [ip, correo]);
 		return res.rowCount > 0;
 	}
+
+	static async resetPassword(email, expiresAt) {}
 }
 
 export default UserModel;

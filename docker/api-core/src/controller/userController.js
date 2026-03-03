@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import { addEmailToQueue } from "../eda/mailQueue.js";
+import crypto from "crypto";
 
 const verificarCorreo = (correo) => {
 	if (!correo) return false;
@@ -308,6 +309,49 @@ export const login = async (req, res) => {
 		});
 	} catch (error) {
 		console.error("Error en login:", error);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
+
+export const requestPasswordReset = async (req, res) => {
+	try {
+		const { email } = req.body;
+		if (!email) {
+			return res.status(400).json({ error: "Petición mal formada." });
+		}
+		const resetToken = crypto.randomUUID();
+		const tokenHash = crypto
+			.createHash("sha256")
+			.update(resetToken)
+			.digest("hex");
+		const expiresAt = new Date();
+		expiresAt.setHours(expiresAt.getHours() + 1);
+		const resBdd = await UserModel.resetPassword(email, expiresAt);
+		if (resBbdd === 2) {
+			return res.status(200).json({
+				message:
+					"En caso de ser un correo registrado recibirá en su bandeja de entrada el sistema de modificación de password.",
+			});
+		}
+
+		const resetUrl = `${process.env.API_DIRECTION}/api/reset-password?token=${resetToken}`;
+
+		await emailQueue.add("sendEmail", {
+			template: "PASSWORD_RESET",
+			to: resBbdd.email,
+			nombre: resBbdd.nombre,
+			resetUrl: resetUrl,
+		});
+
+		return res.status(200).json({
+			message:
+				"En caso de ser un correo registrado recibirá en su bandeja de entrada el sistema de modificación de password.",
+		});
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al intentar regenerar una contraseña.",
+			error,
+		);
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
