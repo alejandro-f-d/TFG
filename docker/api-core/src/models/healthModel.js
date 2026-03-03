@@ -1,25 +1,36 @@
-// import BaseDeDatos from './conexion.js';
-import BaseDeDatos from "../bbdd/conexion.js"; // Tu configuración de conexión a la DB
+import BaseDeDatos from "../bbdd/conexion.js";
 import { HEALTH_QUERYS } from "../querys/healthcheckQuery.js";
+import { transporter } from "../config/mailer.js"; // Importa tu config de nodemailer
+import { redisConnection } from "../config/redis.js"; // Importa tu config de ioredis
 
 class HealthModel {
 	static async checkDB() {
 		try {
 			const startTime = Date.now();
 			await BaseDeDatos.query(HEALTH_QUERYS.SELECT);
-			const duration = Date.now() - startTime;
-
-			return {
-				status: "UP",
-				latency: `${duration}ms`,
-				connection: "PostgreSQL OK",
-			};
+			return { status: "UP", latency: `${Date.now() - startTime}ms` };
 		} catch (error) {
-			return {
-				status: "DOWN",
-				error: error.message,
-				connection: "PostgreSQL Failed",
-			};
+			return { status: "DOWN", error: error.message };
+		}
+	}
+
+	static async checkRedis() {
+		try {
+			const startTime = Date.now();
+			await redisConnection.ping();
+			return { status: "UP", latency: `${Date.now() - startTime}ms` };
+		} catch (error) {
+			return { status: "DOWN", error: error.message };
+		}
+	}
+
+	static async checkGoogle() {
+		try {
+			const startTime = Date.now();
+			await transporter.verify();
+			return { status: "UP", latency: `${Date.now() - startTime}ms` };
+		} catch (error) {
+			return { status: "DOWN", error: error.message };
 		}
 	}
 }
