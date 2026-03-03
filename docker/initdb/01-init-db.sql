@@ -228,19 +228,19 @@ CREATE TABLE IF NOT EXISTS medal.notificacion(
 
 -- 17. RECUPERACION
 CREATE TABLE IF NOT EXISTS medal.recuperacionPassword(
-  idRecuperacion SERIAL PRIMARY KEY,
-  uuidRecuperacion UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-  fechaExpiracion TIMESTAMPTZ NOT NULL,
-  fechaCreacion TIMESTAMPTZ NOT NULL DEFAULT NOW(), 
-  usado BOOLEAN NOT NULL DEFAULT FALSE,
-  token VARCHAR(100) NOT NULL,
+  idRecuperacion SERIAL PRIMARY KEY, 
+  tokenHash VARCHAR(64) NOT NULL, 
+  usado BOOLEAN DEFAULT FALSE,
+  fechaCreacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fechaExpiracion TIMESTAMP NOT NULL, 
+  usedAt TIMESTAMP DEFAULT NULL,
   idUsuario INTEGER NOT NULL,
-  
-  CONSTRAINT fk_usuario_recupera 
-    FOREIGN KEY (idUsuario) 
+  CONSTRAINT fk_recover_usuario
+    FOREIGN KEY (idUsuario)
     REFERENCES medal.usuario(idUsuario)
-    ON DELETE CASCADE
+    ON DELETE CASCADE 
 );
+
 
 -- 18. Logs intento login
 CREATE TABLE IF NOT EXISTS medal.intentosLogin(
@@ -479,19 +479,5 @@ CREATE TABLE IF NOT EXISTS medal.accede(
     FOREIGN KEY(idPuerta)
     REFERENCES medal.puertas(idPuerta)
     ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS medal.recuperacionPassword(
-  idRecuperacion SERIAL PRIMARY KEY, 
-  tokenHash VARCHAR(64) NOT NULL, 
-  usado BOOLEAN DEFAULT FALSE,
-  fechaCreacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  fechaExpiracion TIMESTAMP NOT NULL, 
-  usedAt TIMESTAMP DEFAULT NULL,
-  idUsuario INTEGER NOT NULL,
-  CONSTRAINT fk_recover_usuario
-    FOREIGN KEY (idUsuario)
-    REFERENCES medal.usuario(idUsuario)
-    ON DELETE CASCADE 
 );
 

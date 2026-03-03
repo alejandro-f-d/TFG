@@ -264,7 +264,34 @@ class UserModel {
 		return res.rowCount > 0;
 	}
 
-	static async resetPassword(email, expiresAt) {}
+	static async resetPassword(email, expiresAt) {
+		const client = await pool.connect();
+		try {
+			await client.query("BEGIN");
+			const resIdUser = await client.query(
+				USER_QUERIES.EXISTE_USER_CORREO_ELECTRONICO,
+				[email],
+			);
+			if (resIdUser.rows.length === 0) {
+				await client.query("ROLLBACK");
+				return 2; // Usuario no encontrado.
+			}
+
+			// Invalidamos tokens anteriores:
+			const invalidacionAnterioresId = await client.query(
+				USER_QUERIES.INVALIDAR_TOKENS_ANTERIORES,
+				[resIdUser.rows[0].idusuario],
+			);
+			// Añadimos el token que será ahora enviado por correo electrónico.
+
+			await client.query("COMMIT");
+		} catch (error) {
+			await client.query("ROLLBACK");
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 }
 
 export default UserModel;
