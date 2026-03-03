@@ -5,8 +5,8 @@ export const templates = {
 		html: `<h1>Bienvenido ${data.nombre}</h1><p>Haz clic <a href="${data.loginUrl}">aquí</a> para entrar.</p>`,
 	}),
 	PASSWORD_RESET: (data) => ({
-		subject: "Restablece tu contraseña",
-		text: `Usa este código: ${data.token}`,
-		html: `<b>Tu código es: ${data.token}</b>`,
+		subject: `Restablece tu contraseña ${data.nombre}`,
+		text: `Usa este enlace: ${data.resetUrl}`,
+		html: `<b>Tu enlace es: ${data.resetUrl}</b>`,
 	}),
 };

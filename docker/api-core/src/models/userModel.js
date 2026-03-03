@@ -264,7 +264,7 @@ class UserModel {
 		return res.rowCount > 0;
 	}
 
-	static async resetPassword(email, expiresAt) {
+	static async resetPassword(email, expiresAt, hash) {
 		const client = await pool.connect();
 		try {
 			await client.query("BEGIN");
@@ -283,8 +283,13 @@ class UserModel {
 				[resIdUser.rows[0].idusuario],
 			);
 			// Añadimos el token que será ahora enviado por correo electrónico.
-
+			await client.query(USER_QUERIES.AGREGAR_TOKEN, [
+				hash,
+				expiresAt,
+				resIdUser.rows[0].idusuario,
+			]);
 			await client.query("COMMIT");
+			return { nombre: resIdUser.rows[0].nombre };
 		} catch (error) {
 			await client.query("ROLLBACK");
 			throw error;

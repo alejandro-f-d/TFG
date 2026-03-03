@@ -155,7 +155,9 @@ export const USER_QUERIES = {
 
 	UPDATE_LAST_IP: `UPDATE medal.usuario SET dirIpLastLogin = $1 WHERE correoInstitucional = $2;`,
 
-	EXISTE_USER_CORREO_ELECTRONICO: `SELECT idusuario FROM medal.usuario WHERE correoinstitucional = $1;`,
+	EXISTE_USER_CORREO_ELECTRONICO: `SELECT idusuario, nombre FROM medal.usuario WHERE correoinstitucional = $1;`,
 
 	INVALIDAR_TOKENS_ANTERIORES: `UPDATE medal.recuperacionpassword SET usado = true WHERE idusuario = $1 AND usado = false`,
+
+	AGREGAR_TOKEN: `INSERT INTO medal.recuperacionpassword(tokenhash, fechaexpiracion, idusuario) VALUES ($1, $2, $3);`,
 };

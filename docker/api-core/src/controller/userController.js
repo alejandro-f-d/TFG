@@ -315,8 +315,8 @@ export const login = async (req, res) => {
 
 export const requestPasswordReset = async (req, res) => {
 	try {
-		const { email } = req.body;
-		if (!email) {
+		const { correoInstitucional } = req.body;
+		if (!correoInstitucional) {
 			return res.status(400).json({ error: "Petición mal formada." });
 		}
 		const resetToken = crypto.randomUUID();
@@ -326,8 +326,18 @@ export const requestPasswordReset = async (req, res) => {
 			.digest("hex");
 		const expiresAt = new Date();
 		expiresAt.setHours(expiresAt.getHours() + 1);
-		const resBdd = await UserModel.resetPassword(email, expiresAt);
-		if (resBbdd === 2) {
+		//email, expiresAt, hash
+		const resBdd = await UserModel.resetPassword(
+			correoInstitucional,
+			expiresAt,
+			tokenHash,
+		);
+		console.log(
+			"Se ha inetentado hacer un login del siguiente correo con resultado.",
+			correoInstitucional,
+			resBdd,
+		);
+		if (resBdd === 2) {
 			return res.status(200).json({
 				message:
 					"En caso de ser un correo registrado recibirá en su bandeja de entrada el sistema de modificación de password.",
@@ -336,10 +346,10 @@ export const requestPasswordReset = async (req, res) => {
 
 		const resetUrl = `${process.env.API_DIRECTION}/api/reset-password?token=${resetToken}`;
 
-		await emailQueue.add("sendEmail", {
+		await addEmailToQueue({
 			template: "PASSWORD_RESET",
-			to: resBbdd.email,
-			nombre: resBbdd.nombre,
+			to: correoInstitucional,
+			nombre: resBdd.nombre,
 			resetUrl: resetUrl,
 		});
 

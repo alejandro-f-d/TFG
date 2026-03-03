@@ -6,10 +6,16 @@ import {
 	getUsers,
 	patchUser,
 	login,
+	requestPasswordReset,
 } from "../controller/userController.js";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
-import { validarTipos } from '../middlewares/validador.middleware.js';
-import { usuarioSchema, maquinaSchema, loginSchema, usuarioPatchSchema } from '../schemas/index.js';
+import { validarTipos } from "../middlewares/validador.middleware.js";
+import {
+	usuarioSchema,
+	maquinaSchema,
+	loginSchema,
+	usuarioPatchSchema,
+} from "../schemas/index.js";
 const router = express.Router();
 
 // ESTE MÉTODO SIEMPRE ES PÚBLICO.
@@ -41,7 +47,7 @@ const router = express.Router();
  *         description: Error interno del servidor.
  */
 
-router.post("/login", validarTipos(loginSchema),login);
+router.post("/login", validarTipos(loginSchema), login);
 
 /**
  * @swagger
@@ -133,7 +139,15 @@ router.post("/login", validarTipos(loginSchema),login);
 
 // router.post("/", verificarToken, postUser);
 
-router.post("/", [verificarToken, tienePermiso("usr:crearUsuario"), validarTipos(usuarioSchema)], postUser);
+router.post(
+	"/",
+	[
+		verificarToken,
+		tienePermiso("usr:crearUsuario"),
+		validarTipos(usuarioSchema),
+	],
+	postUser,
+);
 
 /**
  * @swagger
@@ -243,6 +257,80 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *         description: Error interno del servidor.
  */
 
-router.patch("/:uuid", [verificarToken, validarTipos(usuarioPatchSchema)], patchUser);
+router.patch(
+	"/:uuid",
+	[verificarToken, validarTipos(usuarioPatchSchema)],
+	patchUser,
+);
+
+/**
+ * @swagger
+ * /api/user/recuperarpassword:
+ *   post:
+ *     summary: Solicita recuperación de contraseña
+ *     description: |
+ *       Inicia el proceso de recuperación de contraseña para un usuario.
+ *       Si el correo existe en el sistema:
+ *       - Se genera un token único de recuperación válido por 1 hora
+ *       - Se invalidan todos los tokens anteriores del usuario
+ *       - Se envía un correo con el enlace para restablecer la contraseña
+ *
+ *       Por seguridad, siempre se devuelve el mismo mensaje de éxito,
+ *       independientemente de si el correo existe o no, para evitar
+ *       ataques de enumeración de usuarios.
+ *     tags: [Autenticación]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - correoInstitucional
+ *             properties:
+ *               correoInstitucional:
+ *                 type: string
+ *                 format: email
+ *                 description: Correo institucional del usuario
+ *                 example: "usuario@institucion.edu"
+ *           examples:
+ *             ejemploBasico:
+ *               summary: Solicitud de recuperación
+ *               value:
+ *                 correoInstitucional: "juan.perez@universidad.edu"
+ *     responses:
+ *       200:
+ *         description: Solicitud procesada (mensaje genérico por seguridad)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "En caso de ser un correo registrado recibirá en su bandeja de entrada el sistema de modificación de password."
+ *       400:
+ *         description: Error de validación - Correo no proporcionado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición mal formada."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.post("/recuperarpassword", requestPasswordReset);
 
 export default router;
