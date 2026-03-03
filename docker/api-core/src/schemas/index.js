@@ -17,7 +17,7 @@ export const usuarioSchema = Joi.object({
 	teams: Joi.boolean().default(false),
 	jefeLaboratorio: Joi.boolean().default(false),
 	esResponsable: Joi.boolean().default(false),
-	contrasena: Joi.string().required(),
+	contrasena: Joi.string(),
 
 	roles: Joi.array().items(Joi.number().integer()),
 	puertasAutorizadas: Joi.array().items(Joi.number().integer()),

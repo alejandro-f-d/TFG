@@ -1,12 +1,12 @@
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
-
+import { QUEUE_MAIL } from "./constants.js";
 const connection = new IORedis(process.env.REDIS_URL, {
 	maxRetriesPerRequest: null,
 });
 
 // 2. Definimos la cola usando esa conexión
-const mailQueue = new Queue("email-notifications", {
+const mailQueue = new Queue(QUEUE_MAIL, {
 	connection,
 	defaultJobOptions: {
 		attempts: 3,

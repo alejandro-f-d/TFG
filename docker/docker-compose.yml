@@ -73,6 +73,8 @@ services:
     environment:
       API_URL: http://medal-api-core:8080
       REDIS_URL: ${REDIS_URL}
+      GMAIL_USER: ${GMAIL_USER}
+      GOOGLE_APP_PASSWORD: ${GOOGLE_APP_PASSWORD}
     networks:
       - medalnetwork
 
