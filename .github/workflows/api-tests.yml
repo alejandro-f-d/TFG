@@ -1,4 +1,5 @@
 name: CI API Medal Tests
+name: CI API Medal Tests
 
 on:
   push:
@@ -9,6 +10,7 @@ on:
 jobs:
   test-api:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
 
     steps:
       - name: Checkout del código
@@ -27,7 +29,7 @@ jobs:
       - name: Configurar entorno y Levantar Servicios
         working-directory: ./docker
         run: |
-          # 1. Crear archivo .env dinámico basado en tu .env-example
+          # Crear archivo .env con la nueva configuración
           echo "DB_USER=root" >> .env
           echo "DB_PASSWORD=1" >> .env
           echo "DB_NAME=medal" >> .env
@@ -38,22 +40,30 @@ jobs:
           echo "API_DIRECTION=http://localhost:8080" >> .env
           echo "PORT=8080" >> .env
           echo "JWT_SECRET=5e40edda6cd84b78d3944603a60d8a19fd736035765542a257f252dba23327ed" >> .env
+          
+          # Configuración de Redis
           echo "REDIS_PASSWORD=vYVSiOC9Tadt4QlWQE6zDGdit97ksBWluVFdEMG5GIQQ0OtgPW" >> .env
+          echo "REDIS_IP=127.0.0.1" >> .env
+          echo "PORT_REDIS=6379" >> .env
+          echo "REDIS_HOST=redis" >> .env
+          echo "REDIS_URL=redis://default:vYVSiOC9Tadt4QlWQE6zDGdit97ksBWluVFdEMG5GIQQ0OtgPW@redis:6379" >> .env
+          
+          # Configuración de Gmail
+          echo "GMAIL_USER=pgpprueba609@gmail.com" >> .env
+          echo "GMAIL_APP_PASSWORD=mvdpbpgavdcghhpw" >> .env
 
-          # 2. Levantar BDD y API (Usando 'docker compose' V2)
-          # Solo levantamos estos dos para optimizar el tiempo de ejecución en GitHub
+          # Levantar servicios necesarios
           docker compose up -d --build medal-bdd-postgres redis medal-api-core
 
       - name: Esperar a que la API esté lista (Healthcheck)
         run: |
-          echo "Esperando a que el contenedor apiMedal responda en el puerto 8080..."
-          timeout 60s bash -c 'until curl -s http://localhost:8080/api/user/login > /dev/null; do sleep 3; done'
-          echo "API Medal lista para recibir peticiones."
+          echo "Esperando a que el contenedor apiMedal responda..."
+          timeout 30s bash -c 'until curl -s http://localhost:8080/api/user/login > /dev/null; do sleep 2; done'
+          echo "API Medal lista."
 
       - name: Ejecutar Tests de Pytest
         working-directory: ./docker/test/api
         run: |
-          # Ejecutamos el archivo de tests que hemos estado preparando
           pytest test_api.py -v -s
 
       - name: Debug en caso de fallo
@@ -63,8 +73,8 @@ jobs:
           docker ps
           echo "--- LOGS DE LA API ---"
           docker logs apiMedal
-          echo "--- LOGS DE LA BASE DE DATOS ---"
-          docker logs dbMedal
+          echo "--- LOGS DE REDIS ---"
+          docker logs redis_queue
 
       - name: Detener y limpiar servicios
         if: always()
