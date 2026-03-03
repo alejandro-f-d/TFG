@@ -268,6 +268,7 @@ class UserModel {
 		const client = await pool.connect();
 		try {
 			await client.query("BEGIN");
+
 			const resIdUser = await client.query(
 				USER_QUERIES.EXISTE_USER_CORREO_ELECTRONICO,
 				[email],
@@ -275,6 +276,20 @@ class UserModel {
 			if (resIdUser.rows.length === 0) {
 				await client.query("ROLLBACK");
 				return 2; // Usuario no encontrado.
+			}
+
+			const checkSpam = await client.query(USER_QUERIES.CHECK_SPAM, [
+				resIdUser.rows[0].idusuario,
+			]);
+
+			if (checkSpam.rows.length > 0) {
+				const ultimoIntento = new Date(checkSpam.rows[0].fechacreacion);
+				const ahora = new Date();
+				const diferenciaMinutos = (ahora - ultimoIntento) / 1000 / 60;
+
+				if (diferenciaMinutos < 5) {
+					return 3;
+				}
 			}
 
 			// Invalidamos tokens anteriores:
@@ -295,6 +310,23 @@ class UserModel {
 			throw error;
 		} finally {
 			client.release();
+		}
+	}
+	static async updatePassword(tokenHashEnviado, passwordHasheada) {
+		try {
+			const result = await pool.query(USER_QUERIES.UPDATE_CONTRASENA_TOKEN, [
+				tokenHashEnviado,
+				passwordHasheada,
+			]);
+			if (result.rowCount === 0) {
+				return 2;
+			}
+			return { status: "OK" };
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al hacer el update de contraseña.",
+			);
+			throw error;
 		}
 	}
 }

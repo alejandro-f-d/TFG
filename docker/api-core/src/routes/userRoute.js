@@ -1,3 +1,4 @@
+import rateLimit from "express-rate-limit";
 import express from "express";
 import dotenv from "dotenv";
 import {
@@ -7,6 +8,7 @@ import {
 	patchUser,
 	login,
 	requestPasswordReset,
+	patchRecuperarPassword,
 } from "../controller/userController.js";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
@@ -48,6 +50,192 @@ const router = express.Router();
  */
 
 router.post("/login", validarTipos(loginSchema), login);
+
+const recoveryLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // Bloqueo por ventana de 15 minutos
+	max: 5, // Máximo 5 peticiones por IP cada 15 min
+	message: {
+		error: "Demasiados intentos. Por favor, inténtelo de nuevo en 15 minutos.",
+	},
+	standardHeaders: true, // Devuelve info en las cabeceras RateLimit-*
+	legacyHeaders: false,
+});
+
+/**
+ * @swagger
+ * /api/recuperarpassword:
+ *   post:
+ *     summary: Solicita recuperación de contraseña
+ *     description: |
+ *       Inicia el proceso de recuperación de contraseña para un usuario.
+ *
+ *       **Características de seguridad:**
+ *       - Limitador de tasa (rate limiting) para prevenir abusos
+ *       - Anti-spam: 5 minutos de espera entre solicitudes para el mismo usuario
+ *       - Tokens de un solo uso válidos por 1 hora
+ *       - Invalidación automática de tokens anteriores
+ *       - Mensaje genérico por seguridad (no revela si el correo existe)
+ *
+ *       **Flujo del proceso:**
+ *       1. Validar formato de correo
+ *       2. Verificar anti-spam (5 min entre solicitudes)
+ *       3. Generar token único y su hash
+ *       4. Invalidar tokens anteriores del usuario
+ *       5. Guardar nuevo token con expiración de 1 hora
+ *       6. Enviar correo con enlace (vía cola de emails)
+ *     tags: [Autenticación]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - correoInstitucional
+ *             properties:
+ *               correoInstitucional:
+ *                 type: string
+ *                 format: email
+ *                 description: Correo institucional del usuario registrado
+ *                 example: "juan.perez@universidad.edu"
+ *           examples:
+ *             ejemploBasico:
+ *               summary: Solicitud de recuperación
+ *               value:
+ *                 correoInstitucional: "juan.perez@universidad.edu"
+ *     responses:
+ *       200:
+ *         description: Solicitud procesada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "En caso de ser un correo registrado recibirá en su bandeja de entrada el sistema de modificación de password."
+ *       400:
+ *         description: Error de validación - Correo no proporcionado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición mal formada."
+ *       429:
+ *         description: |
+ *           Demasiadas solicitudes - Límite anti-spam.
+ *           Debes esperar el tiempo indicado antes de solicitar otro enlace.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Debes esperar 3 minutos para solicitar otro enlace."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.post("/recuperarpassword", recoveryLimiter, requestPasswordReset);
+
+/**
+ * @swagger
+ * /api/recuperarpassword:
+ *   patch:
+ *     summary: Restablece la contraseña usando un token de recuperación
+ *     description: |
+ *       Permite a un usuario establecer una nueva contraseña utilizando el token
+ *       recibido por correo electrónico en el proceso de recuperación.
+ *
+ *       El token debe ser válido y no haber expirado (válido por 1 hora desde su creación).
+ *       Una vez utilizado, el token queda invalidado automáticamente.
+ *
+ *       La nueva contraseña se almacena hasheada con bcrypt.
+ *     tags: [Autenticación]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - contrasena
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Token de recuperación recibido por correo
+ *                 example: "123e4567-e89b-12d3-a456-426614174000"
+ *               contrasena:
+ *                 type: string
+ *                 format: password
+ *                 description: Nueva contraseña del usuario
+ *                 example: "NuevaContraseñaSegura123!"
+ *                 minLength: 8
+ *           examples:
+ *             ejemploBasico:
+ *               summary: Restablecimiento de contraseña
+ *               value:
+ *                 token: "a7b8c9d0-e1f2-3a4b-5c6d-7e8f9a0b1c2d"
+ *                 contrasena: "MiNuevaPassword2024!"
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Contraseña actualizada con éxito."
+ *       400:
+ *         description: |
+ *           Error de validación. Puede deberse a:
+ *           * Token o contraseña no proporcionados
+ *           * Token inválido, expirado o ya utilizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               camposFaltantes:
+ *                 summary: Faltan campos requeridos
+ *                 value:
+ *                   error: "Petición mal formada: falta token o contraseña."
+ *               tokenInvalido:
+ *                 summary: Token inválido o expirado
+ *                 value:
+ *                   error: "El enlace es invalido, ha expirado o ha sido usado."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.patch("/recuperarpassword", recoveryLimiter, patchRecuperarPassword);
 
 /**
  * @swagger
@@ -262,75 +450,5 @@ router.patch(
 	[verificarToken, validarTipos(usuarioPatchSchema)],
 	patchUser,
 );
-
-/**
- * @swagger
- * /api/user/recuperarpassword:
- *   post:
- *     summary: Solicita recuperación de contraseña
- *     description: |
- *       Inicia el proceso de recuperación de contraseña para un usuario.
- *       Si el correo existe en el sistema:
- *       - Se genera un token único de recuperación válido por 1 hora
- *       - Se invalidan todos los tokens anteriores del usuario
- *       - Se envía un correo con el enlace para restablecer la contraseña
- *
- *       Por seguridad, siempre se devuelve el mismo mensaje de éxito,
- *       independientemente de si el correo existe o no, para evitar
- *       ataques de enumeración de usuarios.
- *     tags: [Autenticación]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - correoInstitucional
- *             properties:
- *               correoInstitucional:
- *                 type: string
- *                 format: email
- *                 description: Correo institucional del usuario
- *                 example: "usuario@institucion.edu"
- *           examples:
- *             ejemploBasico:
- *               summary: Solicitud de recuperación
- *               value:
- *                 correoInstitucional: "juan.perez@universidad.edu"
- *     responses:
- *       200:
- *         description: Solicitud procesada (mensaje genérico por seguridad)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "En caso de ser un correo registrado recibirá en su bandeja de entrada el sistema de modificación de password."
- *       400:
- *         description: Error de validación - Correo no proporcionado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Petición mal formada."
- *       500:
- *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Error interno del servidor."
- */
-
-router.post("/recuperarpassword", requestPasswordReset);
 
 export default router;

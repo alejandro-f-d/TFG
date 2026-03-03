@@ -343,6 +343,11 @@ export const requestPasswordReset = async (req, res) => {
 					"En caso de ser un correo registrado recibirá en su bandeja de entrada el sistema de modificación de password.",
 			});
 		}
+		if (resBdd === 3) {
+			return res.status(429).json({
+				error: `Demasiadas peticiones para este usuario.`,
+			});
+		}
 
 		const resetUrl = `${process.env.API_DIRECTION}/api/reset-password?token=${resetToken}`;
 
@@ -362,6 +367,41 @@ export const requestPasswordReset = async (req, res) => {
 			"Se ha producido un error al intentar regenerar una contraseña.",
 			error,
 		);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
+
+export const patchRecuperarPassword = async (req, res) => {
+	const { token, contrasena } = req.body;
+
+	if (!token || !contrasena) {
+		return res
+			.status(400)
+			.json({ error: "Petición mal formada: falta token o contraseña." });
+	}
+
+	try {
+		const tokenHashEnviado = crypto
+			.createHash("sha256")
+			.update(token)
+			.digest("hex");
+
+		const salt = await bcrypt.genSalt(10);
+		const passwordHasheada = await bcrypt.hash(contrasena, salt);
+		const resUpdatePassword = await UserModel.updatePassword(
+			tokenHashEnviado,
+			passwordHasheada,
+		);
+		if (resUpdatePassword === 2) {
+			return res
+				.status(400)
+				.json({ error: "El enlace es invalido, ha expirado o ha sido usado." });
+		}
+		return res
+			.status(200)
+			.json({ message: "Contraseña actualizada con éxito." });
+	} catch (error) {
+		console.error("Error al procesar el cambio de contraseña:", error);
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };

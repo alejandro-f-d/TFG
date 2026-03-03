@@ -160,4 +160,19 @@ export const USER_QUERIES = {
 	INVALIDAR_TOKENS_ANTERIORES: `UPDATE medal.recuperacionpassword SET usado = true WHERE idusuario = $1 AND usado = false`,
 
 	AGREGAR_TOKEN: `INSERT INTO medal.recuperacionpassword(tokenhash, fechaexpiracion, idusuario) VALUES ($1, $2, $3);`,
+
+	UPDATE_CONTRASENA_TOKEN: `
+    WITH token_validado AS (
+        UPDATE medal.recuperacionpassword
+        SET usado = true, usedat = NOW()
+        WHERE tokenhash = $1 AND usado = false AND fechaexpiracion > NOW()
+        RETURNING idusuario
+    )
+    UPDATE medal.usuario
+    SET contrasena = $2
+    WHERE idusuario = (SELECT idusuario FROM token_validado)
+    RETURNING idusuario;    `,
+	CHECK_SPAM: `SELECT fechacreacion FROM medal.recuperacionpassword 
+     WHERE idusuario = $1 
+     ORDER BY fechacreacion DESC LIMIT 1`,
 };
