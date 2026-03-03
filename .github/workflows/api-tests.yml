@@ -1,5 +1,4 @@
 name: CI API Medal Tests
-name: CI API Medal Tests
 
 on:
   push:
