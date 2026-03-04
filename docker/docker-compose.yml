@@ -80,6 +80,7 @@ services:
 
 
 # Servicio para el almacenado de los documentos firmados.
+# No tiene puertos abiertos al exterior porque la API es la única que puede interactuar con este microservicio.
 
   medal-storage:
     container_name: storageMedal

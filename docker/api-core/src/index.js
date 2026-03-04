@@ -12,6 +12,7 @@ import rolRoute from "./routes/rolRoute.js";
 import puertasRoute from "./routes/puertasRoute.js";
 import dispositivosRoute from "./routes/dispositivosRoute.js";
 import calendarioRoute from "./routes/calendarioRoute.js";
+import peticionRoute from "./routes/peticionRoute.js";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
@@ -59,6 +60,7 @@ app.use("/api/rol", rolRoute);
 app.use("/api/puertas", puertasRoute);
 app.use("/api/dispositivos", dispositivosRoute);
 app.use("/api/reservas", calendarioRoute);
+app.use("/api/peticion", peticionRoute);
 
 // Errores interno 500
 app.use((err, req, res, next) => {

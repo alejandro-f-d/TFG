@@ -63,7 +63,7 @@ const recoveryLimiter = rateLimit({
 
 /**
  * @swagger
- * /api/recuperarpassword:
+ * /api/user/recuperarpassword:
  *   post:
  *     summary: Solicita recuperación de contraseña
  *     description: |
@@ -152,7 +152,7 @@ router.post("/recuperarpassword", recoveryLimiter, requestPasswordReset);
 
 /**
  * @swagger
- * /api/recuperarpassword:
+ * /api/user/recuperarpassword:
  *   patch:
  *     summary: Restablece la contraseña usando un token de recuperación
  *     description: |

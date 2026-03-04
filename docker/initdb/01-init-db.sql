@@ -294,7 +294,7 @@ CREATE TABLE IF NOT EXISTS medal.peticion(
   idPeticion SERIAL PRIMARY KEY,
   uuidPeticion UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
   fechaCreacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  estado VARCHAR(50) NOT NULL,
+  estado VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
   usuarioPeticion INTEGER NOT NULL, 
   CONSTRAINT fk_usuario_creador_peticion 
     FOREIGN KEY (usuarioPeticion) 
@@ -321,8 +321,8 @@ CREATE TABLE IF NOT EXISTS medal.momentoEjecucion(
 
 CREATE TABLE IF NOT EXISTS medal.detallePeticionAcceso(
   idPetAcceso SERIAL PRIMARY KEY,
-  cpuSolicitada INTEGER NOT NULL,
-  gpuSolicitada INTEGER NOT NULL,
+  cpuSolicitada VARCHAR(100) NOT NULL,
+  gpuSolicitada VARCHAR(100) NOT NULL,
   nombreProyectoAsociado VARCHAR(50) NOT NULL,
   nombreServicioAsociado VARCHAR(100) NOT NULL,
   prioridadTarea INTEGER NOT NULL,
@@ -332,9 +332,9 @@ CREATE TABLE IF NOT EXISTS medal.detallePeticionAcceso(
   tiempoEstimadoTarea INTEGER, 
   aceptaTos BOOLEAN DEFAULT TRUE,
   nombreAccesoNativo VARCHAR(50),
-  disco INTEGER NOT NULL,
+  disco VARCHAR(100) NOT NULL,
   justificacionAccesoNativo VARCHAR(1000),
-  ram INTEGER NOT NULL, 
+  ram VARCHAR(100) NOT NULL, 
   idPeticionReferencia INTEGER NOT NULL,
   CONSTRAINT fk_peticion_asociada 
     FOREIGN KEY(idPeticionReferencia)

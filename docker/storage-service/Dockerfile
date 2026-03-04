@@ -1,16 +1,9 @@
 FROM node:18-alpine
 
-RUN apk add --no-cache ghostscript graphicsmagick
-
+RUN apk update && apk add --no-cache curl
 WORKDIR /usr/src/app
-
 COPY package*.json ./
-RUN npm install --omit=dev
-
+RUN npm install --production
 COPY . .
-
-RUN mkdir -p /app/data/pdfs && chown -R node:node /usr/src/app /app/data/pdfs
-USER node
-
-EXPOSE 3001 
-CMD ["node", "fichero.js"]
+EXPOSE 8080
+CMD ["npm", "start"]

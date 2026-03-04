@@ -2,7 +2,7 @@ import UserModel from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
-import { addEmailToQueue } from "../eda/mailQueue.js";
+import { addEmailToQueue } from "../eda/queue.js";
 import crypto from "crypto";
 
 const verificarCorreo = (correo) => {

@@ -9,6 +9,13 @@ VALUES
 
 ;
 
+-- Update del responsable de mi usuario para pruebas.
+
+UPDATE medal.usuario 
+SET responsable = 2 
+WHERE nombre = 'Alejandro';
+
+
 ; -- Creación de un usuario para poder hacer las pruebas de manera rápida
 
 

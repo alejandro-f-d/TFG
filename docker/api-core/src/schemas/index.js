@@ -312,3 +312,33 @@ export const patchReservaParamsSchema = Joi.object({
 			"any.required": "El UUID de la reserva es obligatorio.",
 		}),
 });
+
+export const peticionSchema = Joi.object({
+	nombreProyectoAsociado: Joi.string().required().messages({
+		"any.required": "El nombre del proyecto asociado es obligatorio ",
+	}),
+	servidorAsociado: Joi.array().items(Joi.number().integer()).min(1).required(),
+	necesidadServidor: Joi.string().required(),
+	tareasServidor: Joi.string().required(),
+
+	cpuSolicitada: Joi.string().required(),
+	gpuSolicitada: Joi.string().allow("", null).default("No GPU"),
+	ram: Joi.string().required(),
+	disco: Joi.string().required(),
+
+	prioridadTarea: Joi.number().integer().required().messages({
+		"any.required": "La prioridad es obligatoria",
+	}),
+	momentoEjecucion: Joi.number().integer().required().messages({
+		"any.required": "El momento de ejecución es obligatorio",
+	}),
+
+	docker: Joi.string().required(),
+	sistemaOperativo: Joi.string().required(),
+	tiempoEstimadoTarea: Joi.string().required(),
+
+	nombreServicioAsociado: Joi.string().allow("", null),
+	nombreAccesoNativo: Joi.string().allow("", null),
+	justificacionAccesoNativo: Joi.string().allow("", null),
+	comentariosAdicionales: Joi.string().allow("", null),
+});
