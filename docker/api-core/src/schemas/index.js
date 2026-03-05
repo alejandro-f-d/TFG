@@ -341,4 +341,5 @@ export const peticionSchema = Joi.object({
 	nombreAccesoNativo: Joi.string().allow("", null),
 	justificacionAccesoNativo: Joi.string().allow("", null),
 	comentariosAdicionales: Joi.string().allow("", null),
+	fechaFin: Joi.date().iso(),
 });

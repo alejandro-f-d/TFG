@@ -42,6 +42,7 @@ export const postPeticion = async (req, res) => {
 				.status(403)
 				.json({ error: errores[datosParaWorker] || "Operación no permitida." });
 		}
+		console.log(datosParaWorker);
 
 		await addPdfToQueue({
 			...datosParaWorker,
@@ -53,16 +54,19 @@ export const postPeticion = async (req, res) => {
 			proyecto: datosParaWorker.nombreProyectoAsociado,
 
 			recursos: {
-				cpu: datosParaWorker.cpusolicitada,
+				cpu: datosParaWorker.cpuSolicitada,
 				ram: datosParaWorker.ram,
 				disco: datosParaWorker.disco,
-				gpu: datosParaWorker.gpusolicitada,
+				gpu: datosParaWorker.gpuSolicitada,
 			},
 
 			tareas: datosParaWorker.tareasServidor,
 			docker: datosParaWorker.docker,
-			prioridad: datosParaWorker.prioridadtarea,
+			finNecesidadServicio: datosParaWorker.fechaFin,
+			prioridadTarea: datosParaWorker.prioridadTarea,
+			momentoEjecucion: datosParaWorker.momentoEjecucion,
 		});
+		// TODO: Pasar momento de ejecución, Fin de la necesidad del servicio.
 
 		return res.status(201).json({
 			message:

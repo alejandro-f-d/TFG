@@ -294,6 +294,7 @@ CREATE TABLE IF NOT EXISTS medal.peticion(
   idPeticion SERIAL PRIMARY KEY,
   uuidPeticion UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
   fechaCreacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fechaFin TIMESTAMP,
   estado VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
   usuarioPeticion INTEGER NOT NULL, 
   CONSTRAINT fk_usuario_creador_peticion 
@@ -315,6 +316,12 @@ CREATE TABLE IF NOT EXISTS medal.momentoEjecucion(
   descripcion VARCHAR(500)
 );
 
+CREATE TABLE IF NOT EXISTS medal.prioridadTarea(
+  idPrioridad SERIAL PRIMARY KEY,
+  nombre VARCHAR(25) NOT NULL,
+  descripcion VARCHAR(500)
+);
+
 
 
 -- 22 Detalle de las peticiones
@@ -329,7 +336,7 @@ CREATE TABLE IF NOT EXISTS medal.detallePeticionAcceso(
   docker VARCHAR(50),
   sistemaOperativo VARCHAR(100),
   comentariosAdicionales VARCHAR(500),
-  tiempoEstimadoTarea INTEGER, 
+  tiempoEstimadoTarea VARCHAR(100), 
   aceptaTos BOOLEAN DEFAULT TRUE,
   nombreAccesoNativo VARCHAR(50),
   disco VARCHAR(100) NOT NULL,
@@ -344,6 +351,10 @@ CREATE TABLE IF NOT EXISTS medal.detallePeticionAcceso(
   CONSTRAINT fk_momento_ejecucion
     FOREIGN KEY (idMomentoEjecucion)
     REFERENCES medal.momentoEjecucion(idMomentoEjecucion)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_prioridadTarea 
+    FOREIGN KEY(prioridadTarea) 
+    REFERENCES medal.prioridadTarea(idPrioridad)
     ON DELETE CASCADE
 );
 

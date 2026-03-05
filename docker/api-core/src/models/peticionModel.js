@@ -21,6 +21,7 @@ class PeticionModel {
 			momentoEjecucion,
 			nombreServicioAsociado,
 			justificacionAccesoNativo,
+			fechaFin,
 		} = data;
 
 		const uuidPeticion = uuidv4();
@@ -54,10 +55,11 @@ class PeticionModel {
 				throw new Error("Responsable no encontrado");
 
 			const nombreSupervisor = resDatosResponsable.rows[0].nombre_completo;
+			console.log("El nombre del supervisor es: ", nombreSupervisor);
 
 			const resTablaPeticion = await client.query(
 				PETICION_QUERY.POST_TABLA_PETICION,
-				[uuidPeticion, idUsuario, user.responsable],
+				[uuidPeticion, idUsuario, user.responsable, fechaFin],
 			);
 			const idPeticion = resTablaPeticion.rows[0].idpeticion;
 
@@ -87,6 +89,10 @@ class PeticionModel {
 				]);
 				nombresMaquinas.push(resMaq.rows[0].nombre_maquina);
 			}
+			const prioridadEjecucionRes = await client.query(
+				PETICION_QUERY.OBTENER_MOMENTO_EJECUCION,
+				[momentoEjecucion],
+			);
 
 			await client.query("COMMIT");
 
@@ -97,6 +103,8 @@ class PeticionModel {
 				servidoresNombres: nombresMaquinas.join(", "),
 				...data, // Aquí ya vienen las keys en camelCase desde el esquema de Joi
 				fechaSolicitud: new Date().toISOString(),
+				fechaFin: fechaFin,
+				momentoEjecucion: prioridadEjecucionRes.rows[0].nombre,
 			};
 		} catch (error) {
 			if (client) await client.query("ROLLBACK");

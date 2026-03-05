@@ -134,9 +134,10 @@ INSERT INTO medal.peticion(estado,usuarioPeticion,usuarioSupervisor)
 VALUES
 ('APROBADA',2,1);
 
-INSERT INTO medal.momentoEjecucion(nombre,descripcion)
+INSERT INTO medal.prioridadTarea(nombre,descripcion)
 VALUES
 ('INMEDIATO','Ejecución inmediata');
+INSERT INTO medal.momentoEjecucion(nombre) VALUES('mañanas');
 
 INSERT INTO medal.detallePeticionAcceso
 (cpuSolicitada,gpuSolicitada,nombreProyectoAsociado,nombreServicioAsociado,

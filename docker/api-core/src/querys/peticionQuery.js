@@ -15,8 +15,8 @@ export const PETICION_QUERY = {
         WHERE idusuario = $1;`,
 
 	POST_TABLA_PETICION: `
-        INSERT INTO medal.peticion(uuidpeticion, estado, usuariopeticion, usuariosupervisor) 
-        VALUES($1, 'PENDIENTE', $2, $3) 
+        INSERT INTO medal.peticion(uuidpeticion, estado, usuariopeticion, usuariosupervisor, fechafin) 
+        VALUES($1, 'PENDIENTE', $2, $3, $4) 
         RETURNING idpeticion;`,
 
 	POST_DETALLE_PETICION: `
@@ -30,4 +30,5 @@ export const PETICION_QUERY = {
 	POST_MAQUINA: `
         INSERT INTO medal.alojado(idpetacceso, idmaquina) 
         VALUES($1, $2) RETURNING (SELECT nombre FROM medal.maquina WHERE idmaquina = $2) AS nombre_maquina;`,
+	OBTENER_MOMENTO_EJECUCION: `SELECT nombre from medal.momentoejecucion WHERE idmomentoejecucion = $1`,
 };
