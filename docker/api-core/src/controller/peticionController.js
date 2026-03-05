@@ -36,7 +36,8 @@ export const postPeticion = async (req, res) => {
 				1: "Usuario solicitante no encontrado.",
 				2: "Un responsable/supervisor no puede realizar esta petición.",
 				3: "Responsable asociado no encontrado.",
-				4: "Error al crear la cabecera de la petición.",
+				4: "Momento de ejecución no válido.",
+				5: "Prioridad de la tarea no válido.",
 			};
 			return res
 				.status(403)

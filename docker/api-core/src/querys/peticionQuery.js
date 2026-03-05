@@ -31,4 +31,5 @@ export const PETICION_QUERY = {
         INSERT INTO medal.alojado(idpetacceso, idmaquina) 
         VALUES($1, $2) RETURNING (SELECT nombre FROM medal.maquina WHERE idmaquina = $2) AS nombre_maquina;`,
 	OBTENER_MOMENTO_EJECUCION: `SELECT nombre from medal.momentoejecucion WHERE idmomentoejecucion = $1`,
+	OBTENER_PRIORIDAD_TAREA: `SELECT nombre FROM medal.prioridadtarea WHERE idprioridad = $1;`,
 };

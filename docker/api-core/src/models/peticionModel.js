@@ -35,27 +35,44 @@ class PeticionModel {
 				[uuidUsuario],
 			);
 
-			if (resDatosUser.rowCount === 0) throw new Error("Usuario no encontrado");
-
+			if (resDatosUser.rowCount === 0) {
+				return 1;
+			}
 			const user = resDatosUser.rows[0];
 			const esResponsable = user.esresponsable;
 			const idUsuario = user.idusuario;
 			const correoInstitucional = user.correoinstitucional;
 			const nombreCompleto = user.nombre_completo;
 
-			if (esResponsable)
-				throw new Error("Un responsable no puede realizar esta petición");
+			if (esResponsable) {
+				return 2;
+			}
 
 			const resDatosResponsable = await client.query(
 				PETICION_QUERY.OBTENER_DATOS_RESPONSABLE,
 				[user.responsable],
 			);
 
-			if (resDatosResponsable.rowCount === 0)
-				throw new Error("Responsable no encontrado");
+			if (resDatosResponsable.rowCount === 0) {
+				return 3;
+			}
 
 			const nombreSupervisor = resDatosResponsable.rows[0].nombre_completo;
 			console.log("El nombre del supervisor es: ", nombreSupervisor);
+			const momentoEjecucionRes = await client.query(
+				PETICION_QUERY.OBTENER_MOMENTO_EJECUCION,
+				[momentoEjecucion],
+			);
+			if (momentoEjecucionRes.rowCount === 0) {
+				return 4;
+			}
+			const prioridadTareaRes = await client.query(
+				PETICION_QUERY.OBTENER_PRIORIDAD_TAREA,
+				[prioridadTarea],
+			);
+			if (prioridadTareaRes.rowCount === 0) {
+				return 5;
+			}
 
 			const resTablaPeticion = await client.query(
 				PETICION_QUERY.POST_TABLA_PETICION,
@@ -89,10 +106,6 @@ class PeticionModel {
 				]);
 				nombresMaquinas.push(resMaq.rows[0].nombre_maquina);
 			}
-			const prioridadEjecucionRes = await client.query(
-				PETICION_QUERY.OBTENER_MOMENTO_EJECUCION,
-				[momentoEjecucion],
-			);
 
 			await client.query("COMMIT");
 
@@ -103,8 +116,9 @@ class PeticionModel {
 				servidoresNombres: nombresMaquinas.join(", "),
 				...data, // Aquí ya vienen las keys en camelCase desde el esquema de Joi
 				fechaSolicitud: new Date().toISOString(),
-				fechaFin: fechaFin,
-				momentoEjecucion: prioridadEjecucionRes.rows[0].nombre,
+				finNecesidadServicio: fechaFin,
+				momentoEjecucion: momentoEjecucionRes.rows[0].nombre,
+				prioridadTarea: prioridadTareaRes.rows[0].nombre,
 			};
 		} catch (error) {
 			if (client) await client.query("ROLLBACK");
