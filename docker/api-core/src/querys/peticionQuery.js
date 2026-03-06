@@ -32,4 +32,17 @@ export const PETICION_QUERY = {
         VALUES($1, $2) RETURNING (SELECT nombre FROM medal.maquina WHERE idmaquina = $2) AS nombre_maquina;`,
 	OBTENER_MOMENTO_EJECUCION: `SELECT nombre from medal.momentoejecucion WHERE idmomentoejecucion = $1`,
 	OBTENER_PRIORIDAD_TAREA: `SELECT nombre FROM medal.prioridadtarea WHERE idprioridad = $1;`,
+	DUENO_PETICION: `SELECT usuariopeticion FROM medal.peticion WHERE uuidpeticion = $2;`,
+	GET_PROYECTO_BY_UUID: `
+        SELECT 
+            p.*, 
+            pa.*, 
+            t.nombre AS prioridad_nombre, 
+            x.nombre AS momento_ejecucion_nombre
+        FROM medal.peticion p
+        INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idpetacceso
+        INNER JOIN medal.prioridadtarea t ON pa.prioridadtarea = t.idprioridad
+        INNER JOIN medal.momentoejecucion x ON pa.idmomentoejecucion = x.idmomentoejecucion
+        WHERE p.uuidpeticion = $1;
+    `,
 };

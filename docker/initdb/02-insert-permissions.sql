@@ -72,6 +72,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('dispositi
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('dispositivo:getDispositivo', 'Listado de dispositivos.', 'Permite al usuario acceder al inventariaje de dispositivos.', 'dispositivos');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('peticion:revisor', 'Visualizar peticiones.', 'Permite al usuario ver cualquier petición realizada en el sistema.', 'peticiones');
+
  
 
 INSERT INTO medal.tipodispositivo (idtipodispositivo, nombre, descripcion) VALUES

@@ -130,5 +130,42 @@ class PeticionModel {
 			client.release();
 		}
 	}
+	static async verificarPermiso(userUuid, peticionUuid, idUsuario) {
+		try {
+			const resIdUsuarioCreador = await pool.query(
+				PETICION_QUERY.DUENO_PETICION,
+				[peticionUuid],
+			);
+			if (resIdUsuarioCreador.rowCount === 0) {
+				return 2; //404 not found peticion.
+			}
+			const idCreador = resIdUsuarioCreador.rows[0].usuariopeticion;
+			return idCreador === idUsuario;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al verificar los permisos para ver una petición.",
+				userUuid,
+				peticionUuid,
+				error,
+			);
+			throw error;
+		}
+	}
+	static async getPeticionByUuid(uuidPeticion) {
+		try {
+			const res = await pool.query(PETICION_QUERY.GET_PROYECTO_BY_UUID, [
+				uuidPeticion,
+			]);
+			if (res.rowCount === 0) {
+				return 2; //404
+			}
+			return res.rows[0];
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener una petición por uuid.",
+				error,
+			);
+		}
+	}
 }
 export default PeticionModel;
