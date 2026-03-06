@@ -141,7 +141,7 @@ class UserModel {
 		}
 	}
 
-	static async patchUser(uuid, campos, esUser) {
+	static async patchUser(uuid, campos, esUser, fotoFile) {
 		const client = await pool.connect();
 		try {
 			await client.query("BEGIN");
@@ -229,6 +229,9 @@ class UserModel {
 							]);
 					}
 				}
+			}
+			if (fotoFile) {
+				await client.query(USER_QUERIES.INSERT_PHOTO, [fotoFile.buffer, uuid]);
 			}
 
 			await client.query("COMMIT");

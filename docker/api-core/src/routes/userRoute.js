@@ -1,6 +1,7 @@
 import rateLimit from "express-rate-limit";
 import express from "express";
 import dotenv from "dotenv";
+import multer from "multer";
 import {
 	postUser,
 	getUserByUuid,
@@ -19,6 +20,20 @@ import {
 	usuarioPatchSchema,
 } from "../schemas/index.js";
 const router = express.Router();
+const storage = multer.memoryStorage();
+const upload = multer({
+	storage: storage,
+	limits: {
+		fileSize: 2 * 1024 * 1024, // Limitamos a 2MB para no saturar la DB
+	},
+	fileFilter: (req, file, cb) => {
+		if (file.mimetype.startsWith("image/")) {
+			cb(null, true);
+		} else {
+			cb(new Error("Solo se permiten imágenes"), false);
+		}
+	},
+});
 
 // ESTE MÉTODO SIEMPRE ES PÚBLICO.
 /**
@@ -410,44 +425,237 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  * @swagger
  * /api/user/{uuid}:
  *   patch:
- *     summary: Actualiza parcialmente un usuario.
+ *     summary: Actualiza parcialmente un usuario
+ *     description: |
+ *       Permite modificar los datos de un usuario existente.
+ *       **Permisos requeridos:**
+ *       - Admin total (`admin:total`)
+ *       - Editor de usuarios (`usr:editUsuario`)
+ *       - O el propio usuario (solo puede editar campos básicos)
+ *
+ *       **Campos editables por el propio usuario:**
+ *       - nombre, apellido1, apellido2, fotoPerfil
+ *
+ *       **Campos editables por administradores/editores (todos los anteriores más):**
+ *       - teams, esresponsable, usuariovpn, correoinstitucional, activo, fechafin
+ *       - wifi, tarjetaacceso, diriplastlogin, contrasena, gitlab, responsable, jefelaboratorio
+ *
+ *       **Relaciones editables solo por administradores/editores:**
+ *       - roles: Lista de IDs de roles
+ *       - puertasAutorizadas: Lista de IDs de puertas
+ *       - duenoMaquina: Lista de IDs de máquinas
+ *
+ *       **Operaciones especiales:**
+ *       - `darBaja=true` (query param): Desactiva el usuario (solo admin/editor)
+ *       - Subida de foto de perfil (multipart/form-data)
  *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *       - in: path
  *         name: uuid
  *         required: true
  *         schema:
  *           type: string
- *         description: UUID del usuario.
- *       - name: darBaja 
- *         in: query
- *         required: false
+ *           format: uuid
+ *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+ *         description: UUID del usuario a actualizar
+ *         example: "3dcb7dc3-6742-4609-95f6-9594e4e7927e"
+ *       - in: query
+ *         name: darBaja
  *         schema:
  *           type: boolean
-
+ *           enum: [true]
+ *         description: Si es true, da de baja al usuario (desactiva su cuenta)
+ *         example: true
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
- *             example:
- *               nombre: "Alejandro Modificado"
- *               activo: false
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nombre del usuario
+ *                 example: "Juan Carlos"
+ *               apellido1:
+ *                 type: string
+ *                 description: Primer apellido
+ *                 example: "Pérez"
+ *               apellido2:
+ *                 type: string
+ *                 description: Segundo apellido
+ *                 example: "García"
+ *               correoinstitucional:
+ *                 type: string
+ *                 format: email
+ *                 description: Correo institucional (solo admin/editor)
+ *                 example: "juan.perez@universidad.edu"
+ *               contrasena:
+ *                 type: string
+ *                 format: password
+ *                 description: Nueva contraseña (se hashea automáticamente)
+ *                 example: "nuevaContraseña123"
+ *               activo:
+ *                 type: boolean
+ *                 description: Estado activo del usuario (solo admin/editor)
+ *                 example: true
+ *               fechafin:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de baja/expiración (solo admin/editor)
+ *                 example: "2026-12-31"
+ *               teams:
+ *                 type: string
+ *                 description: Equipos/Teams del usuario (solo admin/editor)
+ *                 example: "Desarrollo,Investigación"
+ *               esresponsable:
+ *                 type: boolean
+ *                 description: Indica si es responsable (solo admin/editor)
+ *                 example: true
+ *               usuariovpn:
+ *                 type: string
+ *                 description: Usuario de VPN (solo admin/editor)
+ *                 example: "jperez"
+ *               wifi:
+ *                 type: string
+ *                 description: Credenciales WiFi (solo admin/editor)
+ *                 example: "eduroam"
+ *               tarjetaacceso:
+ *                 type: string
+ *                 description: Número de tarjeta de acceso (solo admin/editor)
+ *                 example: "ABC123456"
+ *               diriplastlogin:
+ *                 type: string
+ *                 description: Directorio/IP last login (solo admin/editor)
+ *                 example: "192.168.1.100"
+ *               gitlab:
+ *                 type: string
+ *                 description: Usuario de GitLab (solo admin/editor)
+ *                 example: "jperez"
+ *               responsable:
+ *                 type: integer
+ *                 description: ID del responsable (solo admin/editor)
+ *                 example: 5
+ *               jefelaboratorio:
+ *                 type: integer
+ *                 description: ID del jefe de laboratorio (solo admin/editor)
+ *                 example: 3
+ *               roles:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Lista de IDs de roles a asignar (solo admin/editor)
+ *                 example: [1, 3, 5]
+ *               puertasAutorizadas:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Lista de IDs de puertas autorizadas (solo admin/editor)
+ *                 example: [2, 4, 7]
+ *               duenoMaquina:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Lista de IDs de máquinas propietarias (solo admin/editor)
+ *                 example: [10, 12]
+ *               fotoFile:
+ *                 type: string
+ *                 format: binary
+ *                 description: Archivo de imagen para la foto de perfil
  *     responses:
  *       204:
- *         description: Actualizado con éxito.
+ *         description: Usuario actualizado exitosamente (sin contenido)
+ *       400:
+ *         description: |
+ *           Error de validación. Puede deberse a:
+ *           * No se enviaron campos a actualizar
+ *           * Datos inválidos según el esquema de validación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               camposVacios:
+ *                 summary: Sin campos a actualizar
+ *                 value:
+ *                   error: "No se han enviado campos a actualizar."
+ *               validacionJoi:
+ *                 summary: Error de validación de esquema
+ *                 value:
+ *                   error: "correoinstitucional debe ser un email válido"
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
  *       403:
- *         description: Careces de los permisos necesarios. 
+ *         description: |
+ *           Prohibido - No tiene permisos suficientes para realizar la operación.
+ *           Puede deberse a:
+ *           * Intentar editar un usuario sin ser admin/editor/propietario
+ *           * Intentar modificar campos restringidos siendo el propio usuario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Careces de los permisos necesarios"
  *       404:
- *         description: Usuario no encontrado.
+ *         description: |
+ *           Usuario no encontrado. Puede deberse a:
+ *           * Formato de UUID inválido
+ *           * UUID no existente en la base de datos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               formatoInvalido:
+ *                 summary: UUID con formato incorrecto
+ *                 value:
+ *                   error: "User no encontrado (Formato de ID inválido)."
+ *               noExiste:
+ *                 summary: UUID válido pero no existe
+ *                 value:
+ *                   error: "Usuario no encontrado."
  *       500:
- *         description: Error interno del servidor.
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error en el servidor."
  */
 
 router.patch(
 	"/:uuid",
-	[verificarToken, validarTipos(usuarioPatchSchema)],
+	[verificarToken, validarTipos(usuarioPatchSchema), upload.single("fotoFile")],
 	patchUser,
 );
 

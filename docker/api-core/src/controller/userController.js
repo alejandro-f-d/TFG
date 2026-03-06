@@ -171,6 +171,7 @@ export const patchUser = async (req, res) => {
 		// console.log(darBaja);
 		const permisos = req.user?.permisos || [];
 		const uuidDelToken = req.user?.uuid;
+		const fotoFile = req.file;
 
 		const uuidRegex =
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -207,7 +208,7 @@ export const patchUser = async (req, res) => {
 					message: "Usuario dado de baja de manera correcta.",
 				});
 			}
-			if (Object.keys(camposCambiados).length === 0) {
+			if (Object.keys(camposCambiados).length === 0 && !fotoFile) {
 				return res
 					.status(400)
 					.json({ error: "No se han enviado campos a actualizar." });
@@ -218,6 +219,7 @@ export const patchUser = async (req, res) => {
 				uuidDelToken === uuid &&
 					!permisos.includes("usr:editUsuario") &&
 					!permisos.includes("admin:total"),
+				fotoFile,
 			);
 			if (resultado.rowCount === 0) {
 				return res.status(404).json({ error: "Usuario no encontrado." });

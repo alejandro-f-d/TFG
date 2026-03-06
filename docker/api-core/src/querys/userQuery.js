@@ -175,4 +175,5 @@ export const USER_QUERIES = {
 	CHECK_SPAM: `SELECT fechacreacion FROM medal.recuperacionpassword 
      WHERE idusuario = $1 
      ORDER BY fechacreacion DESC LIMIT 1`,
+	INSERT_PHOTO: `UPDATE medal.usuario SET fotoperfil = $1 WHERE uuidusuario = $2;`,
 };

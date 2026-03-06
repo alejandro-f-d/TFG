@@ -40,10 +40,13 @@ export const loginSchema = Joi.object({
 	}),
 });
 
-export const usuarioPatchSchema = usuarioSchema.fork(
-	Object.keys(usuarioSchema.describe().keys),
-	(schema) => schema.optional(),
-);
+export const usuarioPatchSchema = usuarioSchema
+	.fork(Object.keys(usuarioSchema.describe().keys), (schema) =>
+		schema.optional(),
+	)
+	.keys({
+		fotoFile: Joi.any().optional(),
+	});
 
 export const maquinaSchema = Joi.object({
 	nombre: Joi.string().max(300).required(),
