@@ -2,6 +2,8 @@ import PDFDocument from "pdfkit";
 import axios from "axios";
 import FormData from "form-data";
 import path from "path";
+import PdfModel from "../models/pdfModel.js";
+import { addEmailToQueue } from "../eda/queue.js";
 
 export const pdfProcessor = async (job) => {
 	const {
@@ -21,6 +23,9 @@ export const pdfProcessor = async (job) => {
 		prioridadTarea,
 		momentoEjecucion,
 		finNecesidadServicio,
+		idPeticion,
+		uuid,
+		linkPeticion,
 	} = job.data;
 
 	return new Promise((resolve, reject) => {
@@ -34,22 +39,39 @@ export const pdfProcessor = async (job) => {
 				const pdfBuffer = Buffer.concat(buffers);
 
 				const form = new FormData();
-				const fileName = `Server_access_request_${solicitante.replace(/ /g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
+				const iniciales = solicitante
+					.split(" ")
+					.map((word) => word[0])
+					.join("")
+					.toUpperCase();
+
+				const fechaHoy = new Date().toISOString().split("T")[0];
+
+				const fileName = `SAR_${iniciales}_${fechaHoy}.pdf`;
 
 				form.append("pdf", pdfBuffer, {
 					filename: fileName,
 					contentType: "application/pdf",
 				});
-
-				const response = await axios.post(
+				const { data } = await axios.post(
 					"http://medal-storage:3001/upload",
 					form,
 					{
 						headers: form.getHeaders(),
 					},
 				);
+				const resUpdateDoc = await PdfModel.updateUuidDocument(
+					idPeticion,
+					data.uuid,
+				);
 
-				resolve(response.data);
+				addEmailToQueue({
+					template: "FORM_SOL",
+					to: email,
+					linkPeticion: linkPeticion,
+				});
+
+				resolve(data);
 			} catch (err) {
 				console.error("Error subiendo PDF al storage:", err.message);
 				reject(err);
@@ -95,7 +117,7 @@ export const pdfProcessor = async (job) => {
 		doc.text(`Description of server need: ${necesidadServidor || "N/A"}`);
 		doc.text(`Tasks to be carried out: ${tareas}`);
 		doc.text(`Task priority: ${prioridadTarea}`);
-		doc.text(`End of Server Necesity: ${finNecesidadServicio}`);
+		doc.text(`End of Server Necesity: ${finNecesidadServicio || "N/A"}`);
 		doc.text(`Moment of Execution: ${momentoEjecucion}`);
 		doc.moveDown();
 
@@ -111,6 +133,7 @@ export const pdfProcessor = async (job) => {
 		doc.text(`Expected execution time: ${tiempoEstimadoTarea}`);
 		doc.text(`Software/OS requirements: ${sistemaOperativo}`);
 		doc.text(`Docker image: ${docker}`);
+		doc.text(`Identificador del recurso: ${uuid}`);
 		doc.moveDown();
 
 		doc

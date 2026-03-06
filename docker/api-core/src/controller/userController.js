@@ -349,7 +349,7 @@ export const requestPasswordReset = async (req, res) => {
 			});
 		}
 
-		const resetUrl = `${process.env.API_DIRECTION}/api/reset-password?token=${resetToken}`;
+		const resetUrl = `${process.env.WEB_URL}/api/reset-password?token=${resetToken}`;
 
 		await addEmailToQueue({
 			template: "PASSWORD_RESET",

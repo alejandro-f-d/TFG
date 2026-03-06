@@ -119,6 +119,8 @@ class PeticionModel {
 				finNecesidadServicio: fechaFin,
 				momentoEjecucion: momentoEjecucionRes.rows[0].nombre,
 				prioridadTarea: prioridadTareaRes.rows[0].nombre,
+				idPeticion: idPeticion,
+				uuid: uuidPeticion,
 			};
 		} catch (error) {
 			if (client) await client.query("ROLLBACK");

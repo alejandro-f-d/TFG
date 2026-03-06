@@ -61,10 +61,9 @@ const startSystem = async () => {
 		});
 	} catch (error) {
 		console.error("---------------------------------------------------");
-		console.error("ERROR AL ARRANCAR EL SISTEMA:");
+		console.error("ERROR:");
 		console.error(error.message);
 		console.log("---------------------------------------------------");
-		process.exit(1);
 	}
 };
 

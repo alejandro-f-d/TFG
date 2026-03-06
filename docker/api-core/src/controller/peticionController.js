@@ -66,8 +66,10 @@ export const postPeticion = async (req, res) => {
 			finNecesidadServicio: datosParaWorker.fechaFin,
 			prioridadTarea: datosParaWorker.prioridadTarea,
 			momentoEjecucion: datosParaWorker.momentoEjecucion,
+			idPeticion: datosParaWorker.idPeticion,
+			uuid: datosParaWorker.uuid,
+			linkPeticion: `${process.env.WEB_URL}${datosParaWorker.uuid}`,
 		});
-		// TODO: Pasar momento de ejecución, Fin de la necesidad del servicio.
 
 		return res.status(201).json({
 			message:

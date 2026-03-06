@@ -9,4 +9,9 @@ export const templates = {
 		text: `Usa este enlace: ${data.resetUrl}`,
 		html: `<b>Tu enlace es: ${data.resetUrl}</b>`,
 	}),
+	FORM_SOL: (data) => ({
+		subject: `Petición de acceso a servicios MEDAL`,
+		text: `En este enlace puedes acceder a la petición para seguir con el proceso. ${data.linkPeticion}.`,
+		html: `<b>En este enlace puedes seguir con tu proceso de petición de servicios. ${data.linkPeticion}<b>`,
+	}),
 };

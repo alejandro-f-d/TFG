@@ -297,6 +297,7 @@ CREATE TABLE IF NOT EXISTS medal.peticion(
   fechaFin TIMESTAMP,
   estado VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
   usuarioPeticion INTEGER NOT NULL, 
+  uuidDocumento VARCHAR(500),
   CONSTRAINT fk_usuario_creador_peticion 
     FOREIGN KEY (usuarioPeticion) 
     REFERENCES medal.usuario(idUsuario)
