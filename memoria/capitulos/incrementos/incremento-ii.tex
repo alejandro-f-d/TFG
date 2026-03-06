@@ -1213,7 +1213,18 @@ Siguiendo la filosofía de diseño modular del proyecto, este servicio se ha imp
 
 
 \section{Implementación y codificación:}
+\subsection{Backend:}
 
+\subsubsection{Autenticación y middleware:}
+Para la autenticación de los usuarios se ha utilizado el sistema de Bearer Token, este sistema funciona mediante la generación de una contraseña firmada por el servidor que es capaz de identificar al usuario. En el caso de esta implementación, este token guarda el uuid del usuario se trata de un identificador único para cada usuario. Para el sistema de permisos se ha desarrollado un sistema de identificación basado en roles, por ello para cada petición que recibe la API, el middleware se encarga de validad la petición para permitir o denegar el acceso. 
+
+\subsubsection{Almacenamiento de la información:}
+Para el almacenamiento de la información este sistema se apoya en tres bases de datos, una de ellas relacional para almacenar la información de forma estructurada de los usuarios, servicios y máquinas. 
+Los documentos se guardan en un sistema de almacenamiento permanente de objetos. Adecuado para el payload evitando bases de datos SQL y NoSQL.
+Por otro lado, se usa una base de datos redis (NoSQL) para el intercambio de transacciones rápidas entre la api y el worker, como el envío de correos electrónicos y generación de documentos.
+
+\subsubsection{Validación de los datos de entrada:}
+Para la validación de los tipos de entrada y de los parámetros obligatorios se hace uso de JOI así como las longuitudes como capa extra de seguridad hacia la API evitando así buffer overflows y errores de tipos.
 
 \section{Validación y cierre:}
 
