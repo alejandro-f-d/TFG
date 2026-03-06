@@ -167,5 +167,28 @@ class PeticionModel {
 			);
 		}
 	}
+	static async getUuidDoc(uuid) {
+		try {
+			const resUuid = await pool.query(PETICION_QUERY.OBTENER_UUID_DOC, [uuid]);
+			if (resUuid.rowCount === 0) {
+				return 2; //404
+			}
+			console.log(
+				"Se ha encontrado lo siguiente en la base de datos.",
+				resUuid.rows[0],
+			);
+			return {
+				uuidDocumento: resUuid.rows[0].uuiddocumento,
+				nombre: resUuid.rows[0].nombreproyectoasociado,
+			};
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener el uuid del documento en el almacenamiento de objetos.",
+				uuid,
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;

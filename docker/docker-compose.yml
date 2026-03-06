@@ -62,6 +62,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       REDIS_URL: ${REDIS_URL}
       WEB_URL: ${WEB_URL}
+      STORAGE_URL: ${STORAGE_URL}
     networks:
       - medalnetwork
     env_file:
@@ -78,6 +79,7 @@ services:
       GMAIL_USER: ${GMAIL_USER}
       GOOGLE_APP_PASSWORD: ${GOOGLE_APP_PASSWORD}
       WEB_URL: ${WEB_URL}
+      STORAGE_URL: ${STORAGE_URL}
     networks:
       - medalnetwork
 

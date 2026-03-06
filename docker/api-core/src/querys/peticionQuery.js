@@ -40,9 +40,10 @@ export const PETICION_QUERY = {
             t.nombre AS prioridad_nombre, 
             x.nombre AS momento_ejecucion_nombre
         FROM medal.peticion p
-        INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idpetacceso
+        INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idPeticionReferencia
         INNER JOIN medal.prioridadtarea t ON pa.prioridadtarea = t.idprioridad
         INNER JOIN medal.momentoejecucion x ON pa.idmomentoejecucion = x.idmomentoejecucion
         WHERE p.uuidpeticion = $1;
     `,
+	OBTENER_UUID_DOC: `SELECT p.uuiddocumento, d.nombreproyectoasociado FROM medal.peticion p, medal.detallepeticionacceso d WHERE p.idpeticion = d.idPeticionReferencia  AND uuidpeticion = $1;`,
 };

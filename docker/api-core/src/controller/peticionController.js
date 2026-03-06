@@ -1,11 +1,21 @@
 import { QUEUE_DOCUMENTS } from "../eda/constants.js";
 import { addPdfToQueue } from "../eda/queue.js";
 import PeticionModel from "../models/peticionModel.js";
+import axios from "axios";
 
 const tienePermisoVisualizacion = async (userId, peticionUuid, permisos) => {
 	if (!userId) {
 		return 1; // Error 403
 	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+	if (!uuidRegex.test(peticionUuid)) {
+		return res
+			.status(404)
+			.json({ error: "User no encontrado (Formato de ID inválido)." });
+	}
+
 	if (
 		permisos.includes("admin:total") ||
 		permisos.includes("peticion:revisor")
@@ -132,6 +142,55 @@ export const getPeticion = async (req, res) => {
 			"Se ha producido un error al intentar obtener los datos de una petición.",
 			error,
 		);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
+
+export const getDocumentoPeticion = async (req, res) => {
+	const { uuid } = req.params;
+	if (!uuid) {
+		return res.status(400).json({ error: "Solicitud mal formada." });
+	}
+	try {
+		const tienePermisoVer = tienePermisoVisualizacion(
+			req.user?.idUsuario,
+			uuid,
+			req.user?.permisos,
+		); // userId, peticionUuid, permisos
+		if (tienePermisoVisualizacion === 1) {
+			return res.status(403).json({
+				error:
+					"No tienes las credenciales para ver los datos de esta petición.",
+			});
+		}
+		const resGetUuidDoc = await PeticionModel.getUuidDoc(uuid);
+		if (resGetUuidDoc === 2) {
+			return res.status(404).json({ error: `Documento no encontrado.` });
+		}
+		console.log("El uuid del documento es:", resGetUuidDoc.uuidDocumento);
+		const respuestaStorage = await axios.get(
+			`${process.env.STORAGE_URL}/download/${resGetUuidDoc.uuidDocumento}`,
+			{
+				responseType: "arraybuffer",
+			},
+		);
+		// Establecemos que el tipo que se devuelve es un documento pdf.
+		res.setHeader("Content-Type", "application/pdf");
+		res.setHeader(
+			"Content-Disposition",
+			`inline; filename="${resGetUuidDoc.nombre}.pdf"`,
+		);
+		res.send(respuestaStorage.data);
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al intentar realizar un get de la documentación.",
+			error,
+		);
+		if (error.response?.status === 404) {
+			return res
+				.status(404)
+				.json({ message: "El archivo no existe en Storage" });
+		}
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };

@@ -54,7 +54,7 @@ export const pdfProcessor = async (job) => {
 					contentType: "application/pdf",
 				});
 				const { data } = await axios.post(
-					"http://medal-storage:3001/upload",
+					`${process.env.STORAGE_URL}/upload`,
 					form,
 					{
 						headers: form.getHeaders(),

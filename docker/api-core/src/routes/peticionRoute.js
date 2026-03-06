@@ -1,6 +1,10 @@
 import express from "express";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
-import { postPeticion, getPeticion } from "../controller/peticionController.js";
+import {
+	postPeticion,
+	getPeticion,
+	getDocumentoPeticion,
+} from "../controller/peticionController.js";
 const router = express.Router();
 /**
  * @swagger
@@ -399,5 +403,98 @@ router.post("/", [verificarToken], postPeticion);
  */
 
 router.get("/:uuid", [verificarToken], getPeticion);
+
+/**
+ * @swagger
+ * /api/peticiones/{uuid}/file:
+ *   get:
+ *     summary: Obtiene el documento PDF de una petición
+ *     description: Retorna el archivo PDF asociado a una petición específica
+ *     tags: [Peticiones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID de la petición
+ *         example: "4e015f25-2c2e-4292-ac57-43218a969f97"
+ *     responses:
+ *       200:
+ *         description: Archivo PDF encontrado y devuelto correctamente
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Solicitud mal formada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Solicitud mal formada."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: No tiene permisos para ver esta petición
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tienes las credenciales para ver los datos de esta petición."
+ *       404:
+ *         description: |
+ *           Puede deberse a:
+ *           * Documento no encontrado en la base de datos
+ *           * Archivo no existe en el almacenamiento
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Documento no encontrado."
+ *                 message:
+ *                   type: string
+ *                   example: "El archivo no existe en Storage"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.get("/:uuid/file", [verificarToken], getDocumentoPeticion);
 
 export default router;
