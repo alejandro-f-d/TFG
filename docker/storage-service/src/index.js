@@ -7,12 +7,16 @@ const app = express();
 const PORT = 3001;
 const STORAGE_PATH = "/app/data/pdfs";
 
+if (!fs.existsSync(STORAGE_PATH)) {
+	// Esto en teoría no es necesario ya que al hacerse con volumenes docker se garantiza que existe salvo borrado manual.
+	fs.mkdirSync(STORAGE_PATH, { recursive: true });
+}
+
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		cb(null, STORAGE_PATH);
 	},
 	filename: (req, file, cb) => {
-		// Generamos un nombre único: timestamp + nombre original
 		const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
 		cb(null, uniqueSuffix + "-" + file.originalname);
 	},
@@ -31,20 +35,30 @@ app.post("/upload", upload.single("pdf"), (req, res) => {
 				.json({ error: "No se ha enviado ningún archivo." });
 		}
 
+		const uuid = path.basename(
+			req.file.filename,
+			path.extname(req.file.filename),
+		);
+
 		res.status(201).json({
 			message: "Archivo guardado correctamente",
+			uuid: uuid,
 			filename: req.file.filename,
-			path: req.file.path,
+			originalName: req.body.originalName || "document.pdf",
 		});
 	} catch (error) {
+		console.error("Error en storage:", error);
 		res.status(500).json({ error: "Error interno en el servidor de storage." });
 	}
 });
 
-app.get("/download/:filename", (req, res) => {
-	const filePath = path.join(STORAGE_PATH, req.params.filename);
+app.get("/download/:uuid", (req, res) => {
+	const uuid = req.params.uuid;
+	const files = fs.readdirSync(STORAGE_PATH);
+	const fileName = files.find((f) => f.startsWith(uuid));
 
-	if (fs.existsSync(filePath)) {
+	if (fileName) {
+		const filePath = path.join(STORAGE_PATH, fileName);
 		res.sendFile(filePath);
 	} else {
 		res.status(404).json({ error: "Archivo no encontrado" });
