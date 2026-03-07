@@ -60,7 +60,7 @@ class TestGestionUsuarios:
             "correoInstitucional": "user.sin.permisos@test.com",
             "profesorResponsable": 1, "fechaIncorporacion": "2026-02-23",
             "fechaFin": "2027-02-23", "wifi": True, "activo": True,
-            "tarjetaAcceso": "T-00000", "teams": False, "jefeLaboratorio": False,
+            "tarjetaAcceso": "T-00000", "teams": False, 
             "esResponsable": False, "roles": [3], "puertasAutorizadas": [],
             "duenoMaquina": [], "contrasena": "test"
         }
@@ -89,7 +89,7 @@ class TestGestionUsuarios:
             "correoInstitucional": "alejandro.nuevo.test@test.com",
             "profesorResponsable": 1, "fechaIncorporacion": "2026-02-16",
             "fechaFin": "2027-02-16", "wifi": True, "activo": True,
-            "tarjetaAcceso": "A-88923", "teams": True, "jefeLaboratorio": False,
+            "tarjetaAcceso": "A-88923", "teams": True, 
             "esResponsable": False, "roles": [2], "puertasAutorizadas": [1],
             "duenoMaquina": [1, 2], "contrasena": "test"
         }

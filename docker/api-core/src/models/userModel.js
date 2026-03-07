@@ -49,7 +49,6 @@ class UserModel {
 				uuid,
 				datos.gitlab || null,
 				datos.profesorResponsable || null,
-				datos.jefeLaboratorio || false,
 			];
 
 			const res = await client.query(USER_QUERIES.POST_USER(false), valores);
@@ -87,7 +86,6 @@ class UserModel {
 				uuid,
 				datos.gitlab || null,
 				datos.profesorResponsable || null,
-				datos.jefeLaboratorio || false,
 				passwordHaseada,
 			];
 
@@ -166,7 +164,6 @@ class UserModel {
 						"contrasena",
 						"gitlab",
 						"responsable",
-						"jefelaboratorio",
 						"fotoPerfil",
 					];
 

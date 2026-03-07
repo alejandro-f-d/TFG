@@ -306,9 +306,6 @@ router.patch("/recuperarpassword", recoveryLimiter, patchRecuperarPassword);
  *               teams:
  *                 type: boolean
  *                 example: true
- *               jefeLaboratorio:
- *                 type: boolean
- *                 example: false
  *               esResponsable:
  *                 type: boolean
  *                 example: false
@@ -438,7 +435,7 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *
  *       **Campos editables por administradores/editores (todos los anteriores más):**
  *       - teams, esresponsable, usuariovpn, correoinstitucional, activo, fechafin
- *       - wifi, tarjetaacceso, diriplastlogin, contrasena, gitlab, responsable, jefelaboratorio
+ *       - wifi, tarjetaacceso, diriplastlogin, contrasena, gitlab, responsable
  *
  *       **Relaciones editables solo por administradores/editores:**
  *       - roles: Lista de IDs de roles
@@ -546,10 +543,6 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *                 type: integer
  *                 description: ID del responsable (solo admin/editor)
  *                 example: 5
- *               jefelaboratorio:
- *                 type: integer
- *                 description: ID del jefe de laboratorio (solo admin/editor)
- *                 example: 3
  *               roles:
  *                 type: array
  *                 items:

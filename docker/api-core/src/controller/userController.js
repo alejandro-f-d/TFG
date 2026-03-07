@@ -39,7 +39,6 @@ export const postUser = async (req, res) => {
 			contrasena,
 			dirIpLastLogin,
 			teams,
-			jefeLaboratorio,
 			duenoMaquina,
 			esResponsable,
 		} = req.body;

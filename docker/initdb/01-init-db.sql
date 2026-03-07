@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS medal.usuario (
   contrasena VARCHAR(1000),
   gitlab VARCHAR(50) UNIQUE, 
   responsable INTEGER,
-  jefeLaboratorio BOOLEAN DEFAULT false,
+  -- jefeLaboratorio BOOLEAN DEFAULT false,
   CONSTRAINT fk_responsable_usuario 
     FOREIGN KEY (responsable) 
     REFERENCES medal.usuario(idUsuario)

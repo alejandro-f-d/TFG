@@ -11,13 +11,13 @@ export const USER_QUERIES = {
 
 	// Usuarios
 	POST_USER: (conContrasena = false) => `
-        INSERT INTO medal.usuario(
-            nombre, apellido1, apellido2, teams, esresponsable, usuariovpn, 
-            correoinstitucional, activo, fechaincorporacion, fechafin, wifi, 
-            tarjetaacceso, uuidusuario, gitlab, responsable, jefelaboratorio
-            ${conContrasena ? ", contrasena" : ""}
-        ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16 ${conContrasena ? ", $17" : ""}) 
-        RETURNING uuidusuario, idusuario;`,
+    INSERT INTO medal.usuario(
+        nombre, apellido1, apellido2, teams, esresponsable, usuariovpn, 
+        correoinstitucional, activo, fechaincorporacion, fechafin, wifi, 
+        tarjetaacceso, uuidusuario, gitlab, responsable
+        ${conContrasena ? ", contrasena" : ""}
+    ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15 ${conContrasena ? ", $16" : ""}) 
+    RETURNING uuidusuario, idusuario;`,
 
 	GET_BY_UUID: `
     SELECT 

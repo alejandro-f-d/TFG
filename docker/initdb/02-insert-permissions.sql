@@ -1,11 +1,11 @@
 
 
 INSERT INTO medal.usuario 
-(nombre, apellido1, apellido2, teams, esResponsable, usuarioVPN, correoInstitucional, activo, wifi, tarjetaAcceso, dirIpLastLogin, contrasena, gitlab, jefeLaboratorio)
+(nombre, apellido1, apellido2, teams, esResponsable, usuarioVPN, correoInstitucional, activo, wifi, tarjetaAcceso, dirIpLastLogin, contrasena, gitlab)
 VALUES
-('Alejandro','Fisac','Delgado',true,false,'afisac','alejandro.fisac.contact@gmail.com',true,true,'0767','10.0.0.10','$2b$10$ZQ8lNQrd8pZrTOW9xdF2UuCZ.NF3aKi.xIhEinMm2TxzjM1ATMtgK','afisac',true),
-('test', 'test', 'test', true, true, 'test', 'test@gmail.com', true, true, '02022', '10.0.0.5', '$2b$10$S2hEdX/ql7foYueMV1JgKuVhWle2fSxZLhD6kTyxz5DLvPOnLdRWG', 'test', false),
-('test2', 'test2', 'test2', true, true, 'test2', 'test2@gmail.com', true, true, '02022', '10.0.0.5', '$2b$10$S2hEdX/ql7foYueMV1JgKuVhWle2fSxZLhD6kTyxz5DLvPOnLdRWG', 'test2', false);
+('Alejandro','Fisac','Delgado',true,false,'afisac','alejandro.fisac.contact@gmail.com',true,true,'0767','10.0.0.10','$2b$10$ZQ8lNQrd8pZrTOW9xdF2UuCZ.NF3aKi.xIhEinMm2TxzjM1ATMtgK','afisac'),
+('test', 'test', 'test', true, true, 'test', 'test@gmail.com', true, true, '02022', '10.0.0.5', '$2b$10$S2hEdX/ql7foYueMV1JgKuVhWle2fSxZLhD6kTyxz5DLvPOnLdRWG', 'test'),
+('test2', 'test2', 'test2', true, true, 'test2', 'test2@gmail.com', true, true, '02022', '10.0.0.5', '$2b$10$S2hEdX/ql7foYueMV1JgKuVhWle2fSxZLhD6kTyxz5DLvPOnLdRWG', 'test2');
 
 ;
 
