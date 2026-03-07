@@ -45,7 +45,7 @@ export const getProyectoGitlab = async (req, res) => {
 		return res.status(200).json({
 			message: "Lista de proyectos de gitlab devuelta correctamente.",
 			info: resultado,
-			pagination: resultado.pagination,
+			// pagination: resultado.pagination,
 		});
 	} catch (error) {
 		console.error(

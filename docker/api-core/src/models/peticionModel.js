@@ -198,21 +198,31 @@ class PeticionModel {
 	) {
 		const offset = (page - 1) * limit;
 		const busqueda = `%${filtroNombre}%`;
-		const busquedaStatus = `%${status}%`;
+		const busquedaStatus = status ? `%${status}%` : "%%";
 
 		try {
-			const queryGetAll = PETICION_QUERY.OBTENER_PETICIONES_PAGINACION_ALL;
-			const resGetAll = await pool.query(queryGetAll, [
-				busqueda,
-				busquedaStatus,
-				limit,
-				offset,
+			const queryGetAll = verTodos
+				? PETICION_QUERY.OBTENER_PETICIONES_PAGINACION_ALL
+				: PETICION_QUERY.OBTENER_PETICIONES_PAGINACION_FILTRADO;
+			const queryCount = verTodos
+				? PETICION_QUERY.COUNT_PETICIONES_ALL
+				: PETICION_QUERY.COUNT_PETICIONES_FILTRADO;
+
+			const valuesGetAll = [busqueda, busquedaStatus, limit, offset];
+			const valuesCount = [busqueda, busquedaStatus];
+
+			if (!verTodos) {
+				valuesGetAll.push(userId);
+				valuesCount.push(userId);
+			}
+
+			const [resGetAll, countRes] = await Promise.all([
+				pool.query(queryGetAll, valuesGetAll),
+				pool.query(queryCount, valuesCount),
 			]);
-			const countRes = await pool.query(PETICION_QUERY.COUNT_PETICIONES_ALL, [
-				busqueda,
-				busquedaStatus,
-			]);
+
 			const totalItems = parseInt(countRes.rows[0].count);
+
 			return {
 				status: "OK",
 				rows: resGetAll.rows,
@@ -220,16 +230,11 @@ class PeticionModel {
 					totalItems,
 					totalPages: Math.ceil(totalItems / limit),
 					currentPage: page,
-					totalItems: totalItems,
+					limit: limit,
 				},
 			};
-
-			//COUNT_PETICIONES_ALL
 		} catch (error) {
-			console.error(
-				"Se ha producido un error al hacer un get de todas las peticiones",
-				error,
-			);
+			console.error("Error al obtener peticiones:", error);
 			throw error;
 		}
 	}

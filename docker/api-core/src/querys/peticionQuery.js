@@ -59,30 +59,43 @@ export const PETICION_QUERY = {
         WHERE p.uuidpeticion = $1;
     `,
 	OBTENER_PETICIONES_PAGINACION_ALL: `
-        SELECT 
-            p.*, 
-            pa.*, 
-            t.nombre AS prioridad_nombre, 
-            x.nombre AS momento_ejecucion_nombre,
-            CONCAT(u_c.nombre, ' ', u_c.apellido1, ' ', COALESCE(u_c.apellido2, '')) AS nombre_creador,
-            CONCAT(u_s.nombre, ' ', u_s.apellido1, ' ', COALESCE(u_s.apellido2, '')) AS nombre_supervisor
+        SELECT p.*, pa.*, t.nombre AS prioridad_nombre, x.nombre AS momento_ejecucion_nombre,
+        CONCAT(u_c.nombre, ' ', u_c.apellido1, ' ', COALESCE(u_c.apellido2, '')) AS nombre_creador,
+        CONCAT(u_s.nombre, ' ', u_s.apellido1, ' ', COALESCE(u_s.apellido2, '')) AS nombre_supervisor
         FROM medal.peticion p
         INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idPeticionReferencia
         INNER JOIN medal.prioridadtarea t ON pa.prioridadtarea = t.idprioridad
         INNER JOIN medal.momentoejecucion x ON pa.idmomentoejecucion = x.idmomentoejecucion
         INNER JOIN medal.usuario u_c ON p.usuariopeticion = u_c.idusuario
         LEFT JOIN medal.usuario u_s ON u_c.responsable = u_s.idusuario 
-        WHERE pa.nombreproyectoasociado ILIKE $1 
-        AND p.estado ILIKE $2 
-        ORDER BY p.idpeticion ASC 
-        LIMIT $3 OFFSET $4;
-    `,
+        WHERE pa.nombreproyectoasociado ILIKE $1 AND p.estado ILIKE $2
+        ORDER BY p.idpeticion ASC LIMIT $3 OFFSET $4;`,
+
+	OBTENER_PETICIONES_PAGINACION_FILTRADO: `
+        SELECT p.*, pa.*, t.nombre AS prioridad_nombre, x.nombre AS momento_ejecucion_nombre,
+        CONCAT(u_c.nombre, ' ', u_c.apellido1, ' ', COALESCE(u_c.apellido2, '')) AS nombre_creador,
+        CONCAT(u_s.nombre, ' ', u_s.apellido1, ' ', COALESCE(u_s.apellido2, '')) AS nombre_supervisor
+        FROM medal.peticion p
+        INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idPeticionReferencia
+        INNER JOIN medal.prioridadtarea t ON pa.prioridadtarea = t.idprioridad
+        INNER JOIN medal.momentoejecucion x ON pa.idmomentoejecucion = x.idmomentoejecucion
+        INNER JOIN medal.usuario u_c ON p.usuariopeticion = u_c.idusuario
+        LEFT JOIN medal.usuario u_s ON u_c.responsable = u_s.idusuario 
+        WHERE pa.nombreproyectoasociado ILIKE $1 AND p.estado ILIKE $2 
+        AND (p.usuariopeticion = $5 OR u_c.responsable = $5)
+        ORDER BY p.idpeticion ASC LIMIT $3 OFFSET $4;`,
+
 	COUNT_PETICIONES_ALL: `
         SELECT COUNT(DISTINCT p.idpeticion) 
         FROM medal.peticion p
         INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idPeticionReferencia
+        WHERE pa.nombreproyectoasociado ILIKE $1 AND p.estado ILIKE $2;`,
+
+	COUNT_PETICIONES_FILTRADO: `
+        SELECT COUNT(DISTINCT p.idpeticion) 
+        FROM medal.peticion p
+        INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idPeticionReferencia
         INNER JOIN medal.usuario u_c ON p.usuariopeticion = u_c.idusuario
-        WHERE pa.nombreproyectoasociado ILIKE $1 
-        AND p.estado ILIKE $2;
-    `,
+        WHERE pa.nombreproyectoasociado ILIKE $1 AND p.estado ILIKE $2 
+        AND (p.usuariopeticion = $3 OR u_c.responsable = $3);`,
 };
