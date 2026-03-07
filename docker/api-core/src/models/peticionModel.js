@@ -188,5 +188,50 @@ class PeticionModel {
 			throw error;
 		}
 	}
+	static async getAllPeticiones(
+		page = 1,
+		limit = 10,
+		filtroNombre = "",
+		status = null,
+		verTodos = false,
+		userId = null,
+	) {
+		const offset = (page - 1) * limit;
+		const busqueda = `%${filtroNombre}%`;
+		const busquedaStatus = `%${status}%`;
+
+		try {
+			const queryGetAll = PETICION_QUERY.OBTENER_PETICIONES_PAGINACION_ALL;
+			const resGetAll = await pool.query(queryGetAll, [
+				busqueda,
+				busquedaStatus,
+				limit,
+				offset,
+			]);
+			const countRes = await pool.query(PETICION_QUERY.COUNT_PETICIONES_ALL, [
+				busqueda,
+				busquedaStatus,
+			]);
+			const totalItems = parseInt(countRes.rows[0].count);
+			return {
+				status: "OK",
+				rows: resGetAll.rows,
+				pagination: {
+					totalItems,
+					totalPages: Math.ceil(totalItems / limit),
+					currentPage: page,
+					totalItems: totalItems,
+				},
+			};
+
+			//COUNT_PETICIONES_ALL
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al hacer un get de todas las peticiones",
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;

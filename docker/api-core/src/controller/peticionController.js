@@ -201,3 +201,59 @@ export const getDocumentoPeticion = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
+
+export const getAllPeticiones = async (req, res) => {
+	const page = parseInt(req.query.page) || 1;
+	const limit = parseInt(req.query.limit) || 5;
+	const filtroNombre = req.query.filtroNombre || "";
+	const status = req.query.status || "";
+	if (page < 1 || limit < 1) {
+		return res.status(400).json({ error: "Petición invalida" });
+	}
+
+	try {
+		let resultado;
+		if (
+			req.user.permisos.includes("admin:total") ||
+			req.user.permisos.includes("peticion:listar_todo")
+		) {
+			resultado = await PeticionModel.getAllPeticiones(
+				page,
+				limit,
+				filtroNombre,
+				status,
+				true,
+				null,
+			);
+		} else if (req.user.permisos.includes("peticion:revisor")) {
+			resultado = await PeticionModel.getAllPeticiones(
+				page,
+				limit,
+				filtroNombre,
+				status,
+				false,
+				req.user.idUsuario,
+			);
+		} else {
+			return res
+				.status(403)
+				.json({ error: "No tienes los permisos necesarios." });
+		}
+		if (resultado.totalItems === 0) {
+			return res.status(400).json({
+				message: `No se han encontrado usuarios que coincidan con: ${filtroNombre}`,
+			});
+		}
+		return res.status(200).json({
+			message: "Lista de proyectos de gitlab devuelta correctamente.",
+			info: resultado,
+			pagination: resultado.pagination,
+		});
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al obtener el listado de todas las peticiones",
+			error,
+		);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};

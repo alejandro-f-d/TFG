@@ -76,6 +76,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('peticion:
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('peticion:listar_todo', 'Listar peticiones','Visualizar todas las peticiones que se han realizado en el sistema.', 'peticiones');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('peticion:firma_administrador', 'Firmar documentos', 'Permite al usuario la firma de todos los documentos', 'peticiones');
+
  
 
 INSERT INTO medal.tipodispositivo (idtipodispositivo, nombre, descripcion) VALUES

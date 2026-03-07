@@ -4,7 +4,7 @@ import {
 	postPeticion,
 	getPeticion,
 	getDocumentoPeticion,
-	// getAllPeticiones,
+	getAllPeticiones,
 } from "../controller/peticionController.js";
 const router = express.Router();
 /**
@@ -498,10 +498,6 @@ router.get("/:uuid", [verificarToken], getPeticion);
 
 router.get("/:uuid/file", [verificarToken], getDocumentoPeticion);
 
-// router.get(
-// 	"/",
-// 	[verificarToken, tienePermiso("peticion:revisor")],
-// 	getAllPeticiones,
-// ); // Lo que debería tener este método es la capacidad de hacer filtros. Además debemos diferenciar dos tipos de usuario, el primero es el de admin:total/jefe laboratorio que debe poder ver todas las peticiones y los revisores que solamente podrían ver las suyas. Lo ideal, creo que sería que el jefe de laboratorio tenga el admin total. Pero a lo mejor no se quiere así porque no quiere poder hacer todo, porque quiere separar que solo pueda javier dar alta a los usuarios. Por lo tanto podemos tirar del esquema relacional del flag es lider de laboratorio. Tampoco creo que sea lo optimo hacerlo asi ya que sube la complejidad de la implementación, y lo mejor es que sea un permiso que se añade en un role. Pero a la hora de enviar un correo electrónico si lo hacmos por roles es más complejo encontrar al jefe de laboratorio.
+router.get("/", [verificarToken], getAllPeticiones); // Lo que debería tener este método es la capacidad de hacer filtros. Además debemos diferenciar dos tipos de usuario, el primero es el de admin:total/jefe laboratorio que debe poder ver todas las peticiones y los revisores que solamente podrían ver las suyas. Lo ideal, creo que sería que el jefe de laboratorio tenga el admin total. Pero a lo mejor no se quiere así porque no quiere poder hacer todo, porque quiere separar que solo pueda javier dar alta a los usuarios. Por lo tanto podemos tirar del esquema relacional del flag es lider de laboratorio. Tampoco creo que sea lo optimo hacerlo asi ya que sube la complejidad de la implementación, y lo mejor es que sea un permiso que se añade en un role. Pero a la hora de enviar un correo electrónico si lo hacmos por roles es más complejo encontrar al jefe de laboratorio.
 
 export default router;

@@ -38,20 +38,51 @@ export const PETICION_QUERY = {
             p.*, 
             pa.*, 
             t.nombre AS prioridad_nombre, 
-            x.nombre AS momento_ejecucion_nombre
+            x.nombre AS momento_ejecucion_nombre,
+            CONCAT(u_c.nombre, ' ', u_c.apellido1, ' ', COALESCE(u_c.apellido2, '')) AS nombre_creador,
+            CONCAT(u_s.nombre, ' ', u_s.apellido1, ' ', COALESCE(u_s.apellido2, '')) AS nombre_supervisor
         FROM medal.peticion p
         INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idPeticionReferencia
         INNER JOIN medal.prioridadtarea t ON pa.prioridadtarea = t.idprioridad
         INNER JOIN medal.momentoejecucion x ON pa.idmomentoejecucion = x.idmomentoejecucion
+        INNER JOIN medal.usuario u_c ON p.usuariopeticion = u_c.idusuario
+        LEFT JOIN medal.usuario u_s ON u_c.responsable = u_s.idusuario
         WHERE p.uuidpeticion = $1;
     `,
 	OBTENER_UUID_DOC: `SELECT p.uuiddocumento, d.nombreproyectoasociado FROM medal.peticion p, medal.detallepeticionacceso d WHERE p.idpeticion = d.idPeticionReferencia  AND uuidpeticion = $1;`,
 	OBTENER_RESPONSABLE: `
-    SELECT 
-        u.responsable AS id_responsable_del_creador,
-        p.usuariopeticion AS id_creador_peticion
-    FROM medal.peticion p
-    INNER JOIN medal.usuario u ON p.usuariopeticion = u.idusuario
-    WHERE p.uuidpeticion = $1;
-`,
+        SELECT 
+            u.responsable AS id_responsable_del_creador,
+            p.usuariopeticion AS id_creador_peticion
+        FROM medal.peticion p
+        INNER JOIN medal.usuario u ON p.usuariopeticion = u.idusuario
+        WHERE p.uuidpeticion = $1;
+    `,
+	OBTENER_PETICIONES_PAGINACION_ALL: `
+        SELECT 
+            p.*, 
+            pa.*, 
+            t.nombre AS prioridad_nombre, 
+            x.nombre AS momento_ejecucion_nombre,
+            CONCAT(u_c.nombre, ' ', u_c.apellido1, ' ', COALESCE(u_c.apellido2, '')) AS nombre_creador,
+            CONCAT(u_s.nombre, ' ', u_s.apellido1, ' ', COALESCE(u_s.apellido2, '')) AS nombre_supervisor
+        FROM medal.peticion p
+        INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idPeticionReferencia
+        INNER JOIN medal.prioridadtarea t ON pa.prioridadtarea = t.idprioridad
+        INNER JOIN medal.momentoejecucion x ON pa.idmomentoejecucion = x.idmomentoejecucion
+        INNER JOIN medal.usuario u_c ON p.usuariopeticion = u_c.idusuario
+        LEFT JOIN medal.usuario u_s ON u_c.responsable = u_s.idusuario 
+        WHERE pa.nombreproyectoasociado ILIKE $1 
+        AND p.estado ILIKE $2 
+        ORDER BY p.idpeticion ASC 
+        LIMIT $3 OFFSET $4;
+    `,
+	COUNT_PETICIONES_ALL: `
+        SELECT COUNT(DISTINCT p.idpeticion) 
+        FROM medal.peticion p
+        INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idPeticionReferencia
+        INNER JOIN medal.usuario u_c ON p.usuariopeticion = u_c.idusuario
+        WHERE pa.nombreproyectoasociado ILIKE $1 
+        AND p.estado ILIKE $2;
+    `,
 };
