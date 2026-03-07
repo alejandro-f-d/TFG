@@ -621,6 +621,7 @@ class TestGestionUsuarios:
     def test_26_get_proyectos_gitlab_paginado(self):
         """
         Caso: Obtener lista de proyectos y validar estructura de respuesta y paginación.
+        Adaptado a la estructura: data -> info -> [rows, pagination]
         """
         base = self.BASE_URL.rstrip('/')
         url = f"{base}/proyectosgitlab"
@@ -640,18 +641,25 @@ class TestGestionUsuarios:
         assert data["message"] == "Lista de proyectos de gitlab devuelta correctamente."
         assert "info" in data
         
-        # 2. Validar estructura de 'info'
+        # 2. Validar el contenido de 'info'
         info = data["info"]
         assert info["status"] == "OK"
         assert isinstance(info["rows"], list)
         
-        # 3. Validar objeto de paginación (está en dos sitios según tu JSON)
-        pagination = data.get("pagination")
-        assert pagination is not None
+        # 3. Validar la paginación DENTRO de 'info'
+        # Según tu JSON, pagination vive en data['info']['pagination']
+        pagination = info.get("pagination")
+        
+        assert pagination is not None, "No se encontró el objeto pagination dentro de info"
         assert "totalItems" in pagination
         assert pagination["currentPage"] == 1
         
-        print(f"✅ Lista recibida. Total items: {pagination['totalItems']}")
+        # Opcional: Validar que hay datos en las filas
+        if len(info["rows"]) > 0:
+            assert "idproyecto" in info["rows"][0]
+            assert "participantes" in info["rows"][0]
+        
+        print(f"✅ Test pasado. Total items en info: {pagination['totalItems']}")
 
     def test_27_get_proyectos_gitlab_filtro_nombre(self):
         """
