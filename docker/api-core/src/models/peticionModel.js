@@ -130,24 +130,22 @@ class PeticionModel {
 			client.release();
 		}
 	}
-	static async verificarPermiso(userUuid, peticionUuid, idUsuario) {
+	static async verificarPermiso(userId, peticionUuid, esRevisor) {
 		try {
-			const resIdUsuarioCreador = await pool.query(
-				PETICION_QUERY.DUENO_PETICION,
-				[peticionUuid],
-			);
-			if (resIdUsuarioCreador.rowCount === 0) {
-				return 2; //404 not found peticion.
-			}
-			const idCreador = resIdUsuarioCreador.rows[0].usuariopeticion;
-			return idCreador === idUsuario;
+			const query = esRevisor
+				? PETICION_QUERY.OBTENER_RESPONSABLE
+				: PETICION_QUERY.DUENO_PETICION;
+			const res = await pool.query(query, [peticionUuid]);
+
+			if (res.rowCount === 0) return 2; // 404
+
+			const idAComparar = esRevisor
+				? res.rows[0].id_responsable_del_creador
+				: res.rows[0].usuariopeticion;
+
+			return idAComparar === userId ? 0 : 1;
 		} catch (error) {
-			console.error(
-				"Se ha producido un error al verificar los permisos para ver una petición.",
-				userUuid,
-				peticionUuid,
-				error,
-			);
+			console.error("Error en verificarPermiso:", userId, peticionUuid, error);
 			throw error;
 		}
 	}

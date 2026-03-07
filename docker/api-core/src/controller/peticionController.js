@@ -4,32 +4,39 @@ import PeticionModel from "../models/peticionModel.js";
 import axios from "axios";
 
 const tienePermisoVisualizacion = async (userId, peticionUuid, permisos) => {
-	if (!userId) {
-		return 1; // Error 403
-	}
+	if (!userId) return 1; // 403
+
 	const uuidRegex =
 		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-	if (!uuidRegex.test(peticionUuid)) {
-		return res
-			.status(404)
-			.json({ error: "User no encontrado (Formato de ID inválido)." });
-	}
+	if (!uuidRegex.test(peticionUuid)) return 2;
 
 	if (
 		permisos.includes("admin:total") ||
-		permisos.includes("peticion:revisor")
+		permisos.includes("peticion:listar_todo")
 	) {
 		return 0;
 	}
-	const resTienePermiso = await PeticionModel.verificarPermiso(
-		userUuid,
-		peticionUuid,
-	);
-	if (!resTienePermiso) {
-		return 1; //403
+
+	if (permisos.includes("peticion:revisor")) {
+		const esSuResponsable = await PeticionModel.verificarPermiso(
+			userId,
+			peticionUuid,
+			true,
+		);
+		if (esSuResponsable === 0) return 0; // Éxito
+		if (esSuResponsable === 2) return 2; // Not found
 	}
-	return 0;
+
+	const esElCreador = await PeticionModel.verificarPermiso(
+		userId,
+		peticionUuid,
+		false,
+	);
+
+	if (esElCreador === 0) return 0;
+	if (esElCreador === 2) return 2;
+
+	return 1;
 };
 
 export const postPeticion = async (req, res) => {
@@ -118,17 +125,17 @@ export const postPeticion = async (req, res) => {
 export const getPeticion = async (req, res) => {
 	const { uuid } = req.params;
 	try {
-		const tienePermisoVer = tienePermisoVisualizacion(
-			req.user?.idUsuario,
+		const codigoPermiso = await tienePermisoVisualizacion(
+			req.user.idUsuario,
 			uuid,
-			req.user?.permisos,
-		); // userId, peticionUuid, permisos
-		if (tienePermisoVisualizacion === 1) {
-			return res.status(403).json({
-				error:
-					"No tienes las credenciales para ver los datos de esta petición.",
-			});
-		}
+			req.user.permisos,
+		);
+
+		if (codigoPermiso === 1)
+			return res.status(403).json({ error: "No tienes permiso" });
+		if (codigoPermiso === 2)
+			return res.status(404).json({ error: "Petición no encontrada" });
+
 		const resGetPeticion = await PeticionModel.getPeticionByUuid(uuid);
 		if (resGetPeticion === 2) {
 			return res.status(404).json({ error: "Petición no encontrada." });
@@ -152,17 +159,17 @@ export const getDocumentoPeticion = async (req, res) => {
 		return res.status(400).json({ error: "Solicitud mal formada." });
 	}
 	try {
-		const tienePermisoVer = tienePermisoVisualizacion(
-			req.user?.idUsuario,
+		const codigoPermiso = await tienePermisoVisualizacion(
+			req.user.idUsuario,
 			uuid,
-			req.user?.permisos,
-		); // userId, peticionUuid, permisos
-		if (tienePermisoVisualizacion === 1) {
-			return res.status(403).json({
-				error:
-					"No tienes las credenciales para ver los datos de esta petición.",
-			});
-		}
+			req.user.permisos,
+		);
+
+		if (codigoPermiso === 1)
+			return res.status(403).json({ error: "No tienes permiso" });
+		if (codigoPermiso === 2)
+			return res.status(404).json({ error: "Petición no encontrada" });
+
 		const resGetUuidDoc = await PeticionModel.getUuidDoc(uuid);
 		if (resGetUuidDoc === 2) {
 			return res.status(404).json({ error: `Documento no encontrado.` });

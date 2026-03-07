@@ -32,7 +32,7 @@ export const PETICION_QUERY = {
         VALUES($1, $2) RETURNING (SELECT nombre FROM medal.maquina WHERE idmaquina = $2) AS nombre_maquina;`,
 	OBTENER_MOMENTO_EJECUCION: `SELECT nombre from medal.momentoejecucion WHERE idmomentoejecucion = $1`,
 	OBTENER_PRIORIDAD_TAREA: `SELECT nombre FROM medal.prioridadtarea WHERE idprioridad = $1;`,
-	DUENO_PETICION: `SELECT usuariopeticion FROM medal.peticion WHERE uuidpeticion = $2;`,
+	DUENO_PETICION: `SELECT usuariopeticion FROM medal.peticion WHERE uuidpeticion = $1;`,
 	GET_PROYECTO_BY_UUID: `
         SELECT 
             p.*, 
@@ -46,4 +46,12 @@ export const PETICION_QUERY = {
         WHERE p.uuidpeticion = $1;
     `,
 	OBTENER_UUID_DOC: `SELECT p.uuiddocumento, d.nombreproyectoasociado FROM medal.peticion p, medal.detallepeticionacceso d WHERE p.idpeticion = d.idPeticionReferencia  AND uuidpeticion = $1;`,
+	OBTENER_RESPONSABLE: `
+    SELECT 
+        u.responsable AS id_responsable_del_creador,
+        p.usuariopeticion AS id_creador_peticion
+    FROM medal.peticion p
+    INNER JOIN medal.usuario u ON p.usuariopeticion = u.idusuario
+    WHERE p.uuidpeticion = $1;
+`,
 };
