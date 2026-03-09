@@ -3,6 +3,7 @@ import { addPdfToQueue } from "../eda/queue.js";
 import PeticionModel from "../models/peticionModel.js";
 import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
+import FormData from "form-data";
 
 export const validarFirmaDSS = async (file, name) => {
 	// 1. Verificación de archivo recibido
@@ -398,6 +399,29 @@ export const procesarFirmaPorRol = async (req, res) => {
 		const metadatos = await validarFirmaDSS(req.file, req.file.originalname);
 
 		if (metadatos.indicacion === "TOTAL_PASSED") {
+			// TODO: Hacer el patch, actualizar la base de datos si corresponde.
+			const infoDoc = await PeticionModel.getUuidDoc(uuid);
+			const form = new FormData();
+
+			form.append("pdf", req.file.buffer, {
+				filename: req.file.originalname,
+				contentType: "application/pdf",
+			});
+			console.log(
+				"La url es: ",
+				`${process.env.STORAGE_URL}/${infoDoc.uuidDocumento}`,
+			);
+			const response = await axios.patch(
+				`${process.env.STORAGE_URL}//${infoDoc.uuidDocumento}`,
+				form,
+				{
+					headers: {
+						...form.getHeaders(), // Generamos los headers correspondientes para el envio con el form.
+					},
+					maxContentLength: Infinity,
+					maxBodyLength: Infinity,
+				},
+			);
 			return res.status(200).json({
 				success: true,
 				message: "Documento íntegro y firma válida (Reconocida por la UE/FNMT)",
@@ -414,7 +438,7 @@ export const procesarFirmaPorRol = async (req, res) => {
 			});
 		}
 	} catch (error) {
-		console.error("ERROR EN PROCESAR_FIRMA_POR_ROL:");
+		console.error("ERROR EN PROCESAR_FIRMA_POR_ROL:", error);
 		if (error.response) {
 			console.error("Detalle error DSS:", JSON.stringify(error.response.data));
 		} else {

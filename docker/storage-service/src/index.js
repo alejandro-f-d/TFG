@@ -65,6 +65,46 @@ app.get("/download/:uuid", (req, res) => {
 	}
 });
 
+const memoryUpload = multer({
+	storage: multer.memoryStorage(),
+	limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+app.patch("/:uuid", memoryUpload.single("pdf"), (req, res) => {
+	try {
+		const { uuid } = req.params;
+
+		if (!req.file) {
+			return res
+				.status(400)
+				.json({ error: "No se ha enviado ningún archivo PDF." });
+		}
+
+		// 2. Localizamos el archivo existente en el storage que empieza por el UUID
+		const files = fs.readdirSync(STORAGE_PATH);
+		const fileName = files.find((f) => f.startsWith(uuid));
+
+		if (!fileName) {
+			return res.status(404).json({ error: "El archivo original no existe." });
+		}
+
+		const filePath = path.join(STORAGE_PATH, fileName);
+
+		// 3. Sobrescribimos el archivo existente con el nuevo Buffer
+		// Esto mantiene el NOMBRE exacto, la RUTA y los PERMISOS del archivo original.
+		fs.writeFileSync(filePath, req.file.buffer);
+
+		res.status(200).json({
+			message: "Contenido del documento actualizado correctamente",
+			uuid: uuid,
+			filename: fileName, // El nombre sigue siendo el mismo que estaba en el disco
+		});
+	} catch (error) {
+		console.error("Error al actualizar contenido:", error);
+		res.status(500).json({ error: "Error interno al modificar el documento." });
+	}
+});
+
 app.listen(PORT, () => {
 	console.log(`Storage Service corriendo en puerto ${PORT}`);
 	console.log(`Guardando archivos en: ${STORAGE_PATH}`);
