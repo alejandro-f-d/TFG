@@ -238,5 +238,43 @@ class PeticionModel {
 			throw error;
 		}
 	}
+	static async esUserCreador(uuid, userId) {
+		try {
+			const creadorId = await pool.query(PETICION_QUERY.DUENO_PETICION, [uuid]);
+			if (creadorId.rowCount === 0) {
+				return 2;
+			}
+			const firmadoUsuario = creadorId.rows[0].firmadousuario;
+
+			return creadorId.rows[0].usuariopeticion === userId && !firmadoUsuario; // Puede realizar la firma ya que todavía no la ha hecho.
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al verificar si es el creador de la petición.",
+			);
+			throw error;
+		}
+	}
+	static async esEncargado(uuid, userId) {
+		try {
+			const supervisorId = await pool.query(
+				PETICION_QUERY.OBTENER_RESPONSABLE,
+				[uuid],
+			);
+			if (creadorId.rowCount === 0) {
+				return 2;
+			}
+			const firmadoSupervisor = supervisorId.rows[0].firmado_supervisor;
+			return (
+				creadorId.rows[0].id_responsable_del_creador === userId &&
+				!firmadoSupervisor
+			); // Puede realizar la firma si todavía no lo ha hecho.
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener el encargado de una petición.",
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;

@@ -5,8 +5,26 @@ import {
 	getPeticion,
 	getDocumentoPeticion,
 	getAllPeticiones,
+	procesarFirmaPorRol,
 } from "../controller/peticionController.js";
 const router = express.Router();
+import multer from "multer";
+
+const storage = multer.memoryStorage();
+const upload = multer({
+	storage: storage,
+	limits: {
+		fileSize: 100 * 1024 * 1024, // Limitamos a 100MB
+	},
+	fileFilter: (req, file, cb) => {
+		if (file.mimetype.startsWith("application/pdf")) {
+			cb(null, true);
+		} else {
+			cb(new Error("Solo se permiten pdfs"), false);
+		}
+	},
+});
+
 /**
  * @swagger
  * /api/peticiones:
@@ -498,6 +516,238 @@ router.get("/:uuid", [verificarToken], getPeticion);
 
 router.get("/:uuid/file", [verificarToken], getDocumentoPeticion);
 
-router.get("/", [verificarToken], getAllPeticiones); // Lo que debería tener este método es la capacidad de hacer filtros. Además debemos diferenciar dos tipos de usuario, el primero es el de admin:total/jefe laboratorio que debe poder ver todas las peticiones y los revisores que solamente podrían ver las suyas. Lo ideal, creo que sería que el jefe de laboratorio tenga el admin total. Pero a lo mejor no se quiere así porque no quiere poder hacer todo, porque quiere separar que solo pueda javier dar alta a los usuarios. Por lo tanto podemos tirar del esquema relacional del flag es lider de laboratorio. Tampoco creo que sea lo optimo hacerlo asi ya que sube la complejidad de la implementación, y lo mejor es que sea un permiso que se añade en un role. Pero a la hora de enviar un correo electrónico si lo hacmos por roles es más complejo encontrar al jefe de laboratorio.
+/**
+ * @swagger
+ * /api/peticiones:
+ *   get:
+ *     summary: Obtiene listado paginado de peticiones
+ *     description: |
+ *       Retorna un listado de peticiones con paginación y filtros.
+ *
+ *       **Permisos requeridos:**
+ *       - admin:total o peticion:listar_todo → Ve todas las peticiones
+ *       - peticion:revisor → Ve solo las peticiones que le corresponden
+ *     tags: [Peticiones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número de página
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 5
+ *         description: Cantidad de resultados por página
+ *         example: 10
+ *       - in: query
+ *         name: filtroNombre
+ *         schema:
+ *           type: string
+ *         description: Filtro por nombre de proyecto
+ *         example: "IA"
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filtro por estado (PENDIENTE, APROBADA, RECHAZADA, COMPLETADA)
+ *         example: "APROBADA"
+ *     responses:
+ *       200:
+ *         description: Listado obtenido correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Lista de proyectos de gitlab devuelta correctamente."
+ *                 info:
+ *                   type: object
+ *                   properties:
+ *                     status:
+ *                       type: string
+ *                       example: "OK"
+ *                     rows:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           idpeticion:
+ *                             type: integer
+ *                             example: 1
+ *                           uuidpeticion:
+ *                             type: string
+ *                             format: uuid
+ *                             example: "481bd62e-8d11-40fc-94bb-64e3309ab4af"
+ *                           fechacreacion:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2026-03-07T18:35:52.620Z"
+ *                           fechafin:
+ *                             type: string
+ *                             nullable: true
+ *                             example: null
+ *                           estado:
+ *                             type: string
+ *                             example: "APROBADA"
+ *                           usuariopeticion:
+ *                             type: integer
+ *                             example: 2
+ *                           uuiddocumento:
+ *                             type: string
+ *                             nullable: true
+ *                             example: null
+ *                           usuariosupervisor:
+ *                             type: integer
+ *                             example: 1
+ *                           idpetacceso:
+ *                             type: integer
+ *                             example: 1
+ *                           cpusolicitada:
+ *                             type: string
+ *                             example: "8"
+ *                           gpusolicitada:
+ *                             type: string
+ *                             example: "1"
+ *                           nombreproyectoasociado:
+ *                             type: string
+ *                             example: "IA-Research"
+ *                           nombreservicioasociado:
+ *                             type: string
+ *                             example: "Servicio-IA"
+ *                           prioridadtarea:
+ *                             type: integer
+ *                             example: 1
+ *                           docker:
+ *                             type: string
+ *                             example: "docker:latest"
+ *                           sistemaoperativo:
+ *                             type: string
+ *                             example: "Ubuntu 22.04"
+ *                           comentariosadicionales:
+ *                             type: string
+ *                             nullable: true
+ *                             example: null
+ *                           tiempoestimadotarea:
+ *                             type: string
+ *                             example: "48"
+ *                           aceptatos:
+ *                             type: boolean
+ *                             example: true
+ *                           nombreaccesonativo:
+ *                             type: string
+ *                             nullable: true
+ *                             example: null
+ *                           disco:
+ *                             type: string
+ *                             example: "500"
+ *                           justificacionaccesonativo:
+ *                             type: string
+ *                             nullable: true
+ *                             example: null
+ *                           ram:
+ *                             type: string
+ *                             example: "32"
+ *                           idpeticionreferencia:
+ *                             type: integer
+ *                             example: 1
+ *                           idmomentoejecucion:
+ *                             type: integer
+ *                             example: 1
+ *                           prioridad_nombre:
+ *                             type: string
+ *                             example: "INMEDIATO"
+ *                           momento_ejecucion_nombre:
+ *                             type: string
+ *                             example: "mañanas"
+ *                           nombre_creador:
+ *                             type: string
+ *                             example: "test test test"
+ *                           nombre_supervisor:
+ *                             type: string
+ *                             example: "  "
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         totalItems:
+ *                           type: integer
+ *                           example: 1
+ *                         totalPages:
+ *                           type: integer
+ *                           example: 1
+ *                         currentPage:
+ *                           type: integer
+ *                           example: 1
+ *                         limit:
+ *                           type: integer
+ *                           example: 5
+ *       400:
+ *         description: Parámetros inválidos o sin resultados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición invalida"
+ *                 message:
+ *                   type: string
+ *                   example: "No se han encontrado usuarios que coincidan con: IA"
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: No tiene los permisos necesarios
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tienes los permisos necesarios."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.get("/", [verificarToken], getAllPeticiones);
+
+router.post(
+	"/:uuid/firma",
+	[verificarToken, upload.single("documentoPdf")],
+	procesarFirmaPorRol,
+);
 
 export default router;

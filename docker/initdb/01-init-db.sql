@@ -298,6 +298,9 @@ CREATE TABLE IF NOT EXISTS medal.peticion(
   estado VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
   usuarioPeticion INTEGER NOT NULL, 
   uuidDocumento VARCHAR(500),
+  firmadoUsuario BOOLEAN NOT NULL DEFAULT FALSE,
+  firmadoSupervisor BOOLEAN NOT NULL DEFAULT FALSE,
+  firmadoJefeLaboratorio BOOLEAN NOT NULL DEFAULT FALSE,
   CONSTRAINT fk_usuario_creador_peticion 
     FOREIGN KEY (usuarioPeticion) 
     REFERENCES medal.usuario(idUsuario)
@@ -359,6 +362,9 @@ CREATE TABLE IF NOT EXISTS medal.detallePeticionAcceso(
     ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS medal.documento(
+  idDocumento SERIAL PRIMARY KEY
+);
 
 
 

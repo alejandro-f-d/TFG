@@ -2,6 +2,82 @@ import { QUEUE_DOCUMENTS } from "../eda/constants.js";
 import { addPdfToQueue } from "../eda/queue.js";
 import PeticionModel from "../models/peticionModel.js";
 import axios from "axios";
+import { XMLParser } from "fast-xml-parser";
+
+export const validarFirmaDSS = async (file, name) => {
+	// 1. Verificación de archivo recibido
+	if (!file) {
+		throw new Error("No hay fichero");
+	}
+
+	const pdfBase64 = file.buffer.toString("base64");
+
+	const dssUrl = process.env.DSS_URL;
+
+	const dssResponse = await axios.post(
+		`${dssUrl}/services/rest/validation/validateSignature`,
+		{
+			signedDocument: {
+				bytes: pdfBase64,
+				name: name,
+			},
+			tokenExtractionStrategy: "NONE",
+		},
+		{
+			maxContentLength: Infinity,
+			maxBodyLength: Infinity,
+			timeout: 60000,
+		},
+	);
+
+	const data = dssResponse.data;
+
+	const simpleSignatures =
+		data.SimpleReport?.signatureOrTimestampOrEvidenceRecord || [];
+	const detailedSignatures =
+		data.DetailedReport?.signatureOrTimestampOrEvidenceRecord || [];
+
+	const soloFirmasSimple = simpleSignatures.filter((item) => item.Signature);
+	const soloFirmasDetailed = detailedSignatures.filter(
+		(item) => item.Signature,
+	);
+
+	if (soloFirmasSimple.length === 0) {
+		return res.status(422).json({
+			error: "El documento no contiene ninguna firma electrónica reconocida.",
+			detalles: "Asegúrese de que el PDF esté firmado digitalmente (PAdES).",
+		});
+	}
+
+	const ultimaFirmaSimple =
+		soloFirmasSimple[soloFirmasSimple.length - 1].Signature;
+	const ultimaFirmaDetailed =
+		soloFirmasDetailed[soloFirmasDetailed.length - 1].Signature;
+
+	const metadatos = {
+		firmante: ultimaFirmaSimple.SignedBy || "No identificado",
+		fecha_firma: ultimaFirmaSimple.SigningTime,
+		indicacion: ultimaFirmaSimple.Indication, // Ej: TOTAL_PASSED, INDETERMINATE
+		sub_indicacion: ultimaFirmaSimple.SubIndication, // Ej: NO_CERTIFICATE_CHAIN_FOUND
+		nivel: ultimaFirmaSimple.SignatureLevel, // Ej: PAdES-B-B
+
+		// El emisor del certificado (normalmente FNMT, DNIe, etc.)
+		emisor:
+			ultimaFirmaSimple.CertificateChain?.[0]?.IssuerName ||
+			"Emisor desconocido",
+
+		detalles_tecnicos: {
+			filtro: ultimaFirmaDetailed.PDFSignatureDictionary?.Filter || "N/A",
+			subfiltro: ultimaFirmaDetailed.PDFSignatureDictionary?.SubFilter || "N/A",
+			byte_range: ultimaFirmaDetailed.PDFSignatureDictionary?.ByteRange || [],
+		},
+		veredicto: {
+			conclusion: ultimaFirmaDetailed.Conclusion?.Indication || "N/A",
+			warnings: ultimaFirmaDetailed.Conclusion?.Warnings || [],
+		},
+	};
+	return metadatos;
+};
 
 const tienePermisoVisualizacion = async (userId, peticionUuid, permisos) => {
 	if (!userId) return 1; // 403
@@ -255,5 +331,99 @@ export const getAllPeticiones = async (req, res) => {
 			error,
 		);
 		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
+
+export const procesarFirmaPorRol = async (req, res) => {
+	const { uuid } = req.params;
+
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(uuid)) {
+		return res
+			.status(400)
+			.json({ error: "UUID de la petición en formato inválido." });
+	}
+
+	if (!req.file) {
+		return res
+			.status(400)
+			.json({ error: "No se ha recibido el PDF en 'documentoPdf'." });
+	}
+
+	try {
+		//  Antes de atacar al servidor y verificar integridad de las firmas, documento, ...
+		// Lo que hacemos es verificar si para ese determinado usuario ha realizado el envío del documento firmado.
+		const permisos = req.user.permisos;
+		const userId = req.user.idUsuario;
+		if (
+			!permisos.includes("peticion:revisor") &&
+			!permisos.includes("admin:total") &&
+			!permisos.includes("peticion:firma_administrador")
+		) {
+			// Se trata del usuario base, este usuario solo puede hacerlo si se trata del userId creador de la petición.
+			const esCreadorPeticion = await PeticionModel.esUserCreador(uuid, userId);
+			if (esCreadorPeticion == 2) {
+				return res.status(404).json({ error: "Petición no encontrada." });
+			}
+			if (!esCreadorPeticion) {
+				return res.status(403).json({
+					error:
+						"No tienes los permisos necesarios o ya has realizado la firma.",
+				});
+			}
+		} else if (
+			permisos.includes("peticion:revisor") &&
+			!permisos.includes("admin:total")
+		) {
+			// En este caso debemos validar de que sea revisor de dicha solicitud.
+			const esSupervisorPeticion = await PeticionModel.esEncargado(
+				uuid,
+				userId,
+			);
+			if (esSupervisorPeticion === 2) {
+				return res.status(404).json({ error: "Petición no encontrada." });
+			}
+			if (!esSupervisorPeticion) {
+				return res.status(403).json({
+					error:
+						"No tienes los permisos necesarios o ya has realizado la firma.",
+				});
+			}
+		} // En cualquiera de los otros dos casos puede ver todas las peticiones o modificarlas al gusto.
+		const metadatos = await validarFirmaDSS(req.file, req.file.originalname);
+
+		if (metadatos.indicacion === "TOTAL_PASSED") {
+			return res.status(200).json({
+				success: true,
+				message: "Documento íntegro y firma válida (Reconocida por la UE/FNMT)",
+				metadatos,
+			});
+		} else {
+			// Si es INDETERMINATE o TOTAL_FAILED
+			return res.status(422).json({
+				success: false,
+				error:
+					"La validación de la firma no ha podido completarse satisfactoriamente.",
+				motivo: metadatos.sub_indicacion || "Desconocido",
+				metadatos,
+			});
+		}
+	} catch (error) {
+		console.error("ERROR EN PROCESAR_FIRMA_POR_ROL:");
+		if (error.response) {
+			console.error("Detalle error DSS:", JSON.stringify(error.response.data));
+		} else {
+			console.error(error.message);
+		}
+
+		return res.status(500).json({
+			error: "Error interno al procesar la firma electrónica.",
+			detalle: error.message,
+		});
 	}
 };

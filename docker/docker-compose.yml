@@ -63,6 +63,7 @@ services:
       REDIS_URL: ${REDIS_URL}
       WEB_URL: ${WEB_URL}
       STORAGE_URL: ${STORAGE_URL}
+      DSS_URL: ${DSS_URL}
     networks:
       - medalnetwork
     env_file:
