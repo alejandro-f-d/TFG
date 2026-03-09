@@ -1226,6 +1226,15 @@ Por otro lado, se usa una base de datos redis (NoSQL) para el intercambio de tra
 \subsubsection{Validación de los datos de entrada:}
 Para la validación de los tipos de entrada y de los parámetros obligatorios se hace uso de JOI así como las longuitudes como capa extra de seguridad hacia la API evitando así buffer overflows y errores de tipos.
 
+\subsubsection{Validación de los datos de entrada:}
+
+En el marco teórico los pdf firmados digitalmente están compuestos por un ByteRange, este es el encargado de separar las segmentos del documento firmado y la propia firma digital. 
+
+Este sistema, al usar firmas con validez legal, tienen una estructura más compleja. Por ello se utiliza un sistema de organismos oficiales para validar la firma. En este caso, se utiliza un herramienta instalable en local de la \texttt{Comisión Europea}. Se trata de una API REST, que valida todas las firmas de un documento. Más información se puede encontrar en \href{https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467109107/Digital+Signature+Service+-+DSS}{Digital Signature Service} (DSS en adalente) y el \href{https://github.com/esig/dss-demonstrations}{Repositorio Oficial de Documentación}. 
+
+Este sistema al estar gestionado integramente por el laboratorio puede proporcionar mayor confidencialidad de los documentos firmados.
+
+
 \section{Validación y cierre:}
 
 
