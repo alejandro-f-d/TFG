@@ -4,6 +4,7 @@ import PeticionModel from "../models/peticionModel.js";
 import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
 import FormData from "form-data";
+import { addEmailToQueue } from "../eda/queue.js";
 
 export const validarFirmaDSS = async (file, name) => {
 	// 1. Verificación de archivo recibido
@@ -422,22 +423,39 @@ export const procesarFirmaPorRol = async (req, res) => {
 			);
 
 			let nivelFirma = 0;
+			// PET_AVISO => Template de correo electronico.
 
 			if (
 				permisos.includes("admin:total") ||
 				permisos.includes("peticion:firma_administrador")
 			) {
 				nivelFirma = 3; // Firma de Administración / Jefe
-			} else if (permisos.includes("peticion:revisor")) {
+				// Este nivel no necesita en principio envío de correo electrónico.
+			}
+
+			if (permisos.includes("peticion:revisor")) {
 				nivelFirma = 2; // Firma Técnica / Revisor
-				//TODO: Enviar correo electrónico al boss.
-			} else {
+				const correosJefes = await PeticionModel.obtenerListaJefesLaboratorio();
+				await addEmailToQueue({
+					template: "PET_AVISO",
+					to: correosJefes,
+				});
+			} else if (
+				!permisos.includes("admin:total") ||
+				!permisos.includes("peticion:firma_administrador")
+			) {
+				// Esta estructura tan extraña se sigue para que en caso de que un usuario sea jefe y responsable se le validen automáticamente las dos revisiones.
 				nivelFirma = 1; // Firma de Solicitante
-				// TODO: Enviar correo al supervisor.
+				const correoSupervisor =
+					await PeticionModel.obtenerCorreoSupervisor(userId);
+				await addEmailToQueue({
+					template: "PET_AVISO",
+					to: correoSupervisor,
+				});
 			}
 			await PeticionModel.setFirmado(uuid, nivelFirma);
 
-			return res.status(200).json({
+			return res.status(201).json({
 				success: true,
 				message: "Documento íntegro y firma válida",
 				metadatos,

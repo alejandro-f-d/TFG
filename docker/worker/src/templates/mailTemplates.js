@@ -1,17 +1,144 @@
+const DISCLAIMER = (email) => `
+<hr/>
+<p style="font-size:12px;color:#666;">
+Este correo electrónico está destinado exclusivamente a la persona o entidad a la que va dirigido. 
+Si usted no es el destinatario previsto, le informamos de que cualquier revisión, uso, divulgación 
+o distribución está prohibida. Por favor, elimine este mensaje y notifíquelo inmediatamente a 
+<a href="mailto:${email}">${email}</a>.
+</p>
+`;
+
 export const templates = {
 	WELCOME_USER: (data) => ({
-		subject: `¡Hola ${data.nombre}, alta en el sistema medal!`,
-		text: `Gracias por unirte. Puedes loguearte en: ${data.loginUrl}`,
-		html: `<h1>Bienvenido ${data.nombre}</h1><p>Haz clic <a href="${data.loginUrl}">aquí</a> para entrar.</p>`,
+		subject: `¡Hola ${data.nombre}! Alta en el sistema MEDAL`,
+		text: `
+Hola ${data.nombre},
+
+Tu cuenta en el sistema MEDAL ha sido creada correctamente.
+
+Puedes acceder al sistema desde el siguiente enlace:
+${data.loginUrl}
+
+Si tienes cualquier problema de acceso, contacta con el equipo de soporte.
+
+--
+Sistema MEDAL
+		`,
+		html: `
+<h2>Bienvenido/a ${data.nombre}</h2>
+
+<p>Tu cuenta en el sistema <b>MEDAL</b> ha sido creada correctamente.</p>
+
+<p>
+Para acceder a la plataforma haz clic en el siguiente enlace:
+</p>
+
+<p>
+<a href="${data.loginUrl}" style="color:#1a73e8;">
+Acceder al sistema MEDAL
+</a>
+</p>
+
+<p>Si tienes cualquier problema de acceso, contacta con el equipo de soporte.</p>
+
+<p>Un saludo,<br/>Equipo MEDAL</p>
+
+${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
+`,
 	}),
+
 	PASSWORD_RESET: (data) => ({
-		subject: `Restablece tu contraseña ${data.nombre}`,
-		text: `Usa este enlace: ${data.resetUrl}`,
-		html: `<b>Tu enlace es: ${data.resetUrl}</b>`,
+		subject: `Restablecimiento de contraseña - ${data.nombre}`,
+		text: `
+Hola ${data.nombre},
+
+Hemos recibido una solicitud para restablecer tu contraseña.
+
+Puedes crear una nueva contraseña utilizando el siguiente enlace:
+${data.resetUrl}
+
+Si no solicitaste este cambio, puedes ignorar este mensaje.
+
+--
+Sistema MEDAL
+		`,
+		html: `
+<h2>Restablecimiento de contraseña</h2>
+
+<p>Hola <b>${data.nombre}</b>,</p>
+
+<p>Hemos recibido una solicitud para restablecer tu contraseña.</p>
+
+<p>
+Para crear una nueva contraseña utiliza el siguiente enlace:
+</p>
+
+<p>
+<a href="${data.resetUrl}" style="color:#1a73e8;">
+Restablecer contraseña
+</a>
+</p>
+
+<p>Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
+
+<p>Un saludo,<br/>Equipo MEDAL</p>
+
+${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
+`,
 	}),
+
 	FORM_SOL: (data) => ({
 		subject: `Petición de acceso a servicios MEDAL`,
-		text: `En este enlace puedes acceder a la petición para seguir con el proceso. ${data.linkPeticion}.`,
-		html: `<b>En este enlace puedes seguir con tu proceso de petición de servicios. ${data.linkPeticion}<b>`,
+		text: `
+Se ha iniciado una petición de acceso a los servicios MEDAL.
+
+Puedes continuar con el proceso desde el siguiente enlace:
+${data.linkPeticion}
+
+--
+Sistema MEDAL
+		`,
+		html: `
+<h2>Petición de acceso a servicios MEDAL</h2>
+
+<p>Se ha iniciado una petición de acceso a los servicios de la plataforma <b>MEDAL</b>.</p>
+
+<p>Puedes continuar con el proceso desde el siguiente enlace:</p>
+
+<p>
+<a href="${data.linkPeticion}" style="color:#1a73e8;">
+Acceder a la petición
+</a>
+</p>
+
+<p>Un saludo,<br/>Equipo MEDAL</p>
+
+${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
+`,
+	}),
+
+	PET_AVISO: (data) => ({
+		subject: `Petición pendiente de aprobación`,
+		text: `
+Existe una petición pendiente de aprobación en la plataforma MEDAL.
+
+Por favor, accede a la plataforma para autorizar o denegar la solicitud.
+
+--
+Sistema MEDAL
+		`,
+		html: `
+<h2>Petición pendiente de aprobación</h2>
+
+<p>Existe una petición que requiere tu revisión.</p>
+
+<p>
+Accede a la plataforma MEDAL para <b>autorizar o denegar</b> la solicitud correspondiente.
+</p>
+
+<p>Un saludo,<br/>Equipo MEDAL</p>
+
+${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
+`,
 	}),
 };

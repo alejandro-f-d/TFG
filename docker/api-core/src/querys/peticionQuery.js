@@ -102,4 +102,20 @@ export const PETICION_QUERY = {
 	SET_USUARIO: `UPDATE medal.peticion SET firmadousuario = true WHERE uuidpeticion = $1;`,
 	SET_SUPERVISOR: `UPDATE medal.peticion SET firmadosupervisor = true WHERE uuidpeticion = $1;`,
 	SET_JEFE: `UPDATE medal.peticion SET firmadojefelaboratorio = true WHERE uuidpeticion = $1;`,
+	OBTENER_CORREO_SUPERVISOR: `SELECT 
+        u_hijo.nombre AS usuario_nombre,
+        u_padre.correoinstitucional AS correo_supervisor
+    FROM medal.usuario u_hijo
+    INNER JOIN medal.usuario u_padre ON u_hijo.responsable = u_padre.idusuario
+    WHERE u_hijo.idusuario = $1;`,
+	OBTENER_CORREO_JEFE_LABORATORIO: `
+    SELECT STRING_AGG(u.correoInstitucional, ', ') AS lista_destinatarios
+    FROM medal.usuario u
+    JOIN medal.rolesTiene rt ON u.idUsuario = rt.idUsuario
+    JOIN medal.roles r ON rt.idRole = r.idRole
+    JOIN medal.operaCon oc ON r.idRole = oc.idRole
+    JOIN medal.permisos p ON oc.idPermiso = p.idPermiso
+    WHERE p.alias = 'peticion:firma_administrador'
+    AND u.activo = TRUE;
+    `,
 };

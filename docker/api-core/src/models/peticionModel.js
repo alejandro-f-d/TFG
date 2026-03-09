@@ -303,5 +303,42 @@ class PeticionModel {
 			throw error;
 		}
 	}
+	static async obtenerCorreoSupervisor(userId) {
+		try {
+			const resQuery = await pool.query(
+				PETICION_QUERY.OBTENER_CORREO_SUPERVISOR,
+				[userId],
+			);
+			if (resQuery.rowCount === 0) {
+				throw new Error(`Usuario inválido con id: ${userId}`);
+			}
+			return resQuery.rows[0].correo_supervisor;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener el correo del supervisor.",
+				userId,
+				error,
+			);
+			throw error;
+		}
+	}
+	static async obtenerListaJefesLaboratorio() {
+		try {
+			const listaCorreos = await pool.query(
+				PETICION_QUERY.OBTENER_CORREO_JEFE_LABORATORIO,
+				[],
+			);
+			if (listaCorreos.rowCount === 0) {
+				throw new Error(`No se han encontrado jefes de laboratorio.`);
+			}
+			return listaCorreos.rows[0].lista_destinatarios;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener la lista de los jefes de laboratorio.",
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;

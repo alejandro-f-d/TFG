@@ -1184,6 +1184,7 @@ La infraestructura se va a basar en microservicios apoyados en docker. El sistem
   \item \texttt{Worker}: Encargado de realización de trabajos pesados tales como la monitorización de páginas web.
   \item \texttt{Frontend}: Parte con la que va a interactuar el usuario. 
   \item \texttt{Cron}: Encargado de realizar tareas periódicas con el worker.
+  \item \texttt{Digital Signature Service}: Servicio de la Comunidad Económica Europea para validar la integridad de firmas en documentos PDF.
 \end{itemize}
 
 Se selecciona una arquitectura modular ya que estos sistemas permiten aislamiento y portabilidad con respecto a las características de la máquina. En un sistema de mayor cantidad de usuarios que en el caso de este laboratorio permitiría una mayor resilencia con el uso de herramientas como un loadbalancer que opere con diferentes instancias de la API levantando instancias según sea necesario. En la parte del almacenado de datos, este sistema permitiría la redundancia de datos del sistema en varias bases de datos si fuera necesario.

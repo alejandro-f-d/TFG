@@ -136,6 +136,7 @@ INSERT INTO medal.tipodispositivo (idtipodispositivo, nombre, descripcion) VALUE
 INSERT INTO medal.roles(nombre, idUsuario) values('admin', 1);
 INSERT INTO medal.roles(nombre, idUsuario) values('responsable', 1);
 INSERT INTO medal.roles(nombre, idUsuario) values('usuariobase',1);
+INSERT INTO medal.roles(nombre, idUsuario) values('jefelaboratorio', 1);
 
 
 
@@ -159,6 +160,8 @@ INSERT INTO medal.roles(nombre, idUsuario) values('usuariobase',1);
 INSERT INTO medal.rolesTiene(idRole, idUsuario) values(1,1);
 INSERT INTO medal.rolesTiene(idRole, idUsuario) values(2,2);
 INSERT INTO medal.rolesTiene(idRole, idUsuario) values(3,3);
+INSERT INTO medal.rolesTiene(idRole, idUsuario) values(4,1);
+-- INSERT INTO medal.rolesTiene(idRole, idUsuario) values(4,2);
 
 
 -- -- 12. OPERA CON
@@ -181,4 +184,5 @@ INSERT INTO medal.operaCon(idRole, idPermiso) values(2,3);
 INSERT INTO medal.operaCon(idRole, idPermiso) values(2,7);
 INSERT INTO medal.operaCon(idRole, idPermiso) values(2,9);
 INSERT INTO medal.operaCon(idRole, idPermiso) values(3,2);
+INSERT INTO medal.operaCon(idRole, idPermiso) values(4,23); -- Permiso de firma de documentos jefe.
 
