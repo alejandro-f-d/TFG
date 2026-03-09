@@ -276,5 +276,32 @@ class PeticionModel {
 			throw error;
 		}
 	}
+	static async setFirmado(uuidPeticion, nivelFirma) {
+		const queries = {
+			1: PETICION_QUERY.SET_USUARIO,
+			2: PETICION_QUERY.SET_SUPERVISOR,
+			3: PETICION_QUERY.SET_JEFE,
+		};
+
+		const querySeleccionada = queries[nivelFirma];
+		if (!querySeleccionada) {
+			throw new Error(`Nivel de firma '${nivelFirma}' no reconocido.`);
+		}
+		try {
+			const res = await pool.query(querySeleccionada, [uuidPeticion]);
+			if (res.rowCount === 0) {
+				throw new Error(
+					"No se encontró ninguna petición con el UUID proporcionado.",
+				);
+			}
+			return res;
+		} catch (error) {
+			console.error(
+				`Error al actualizar firma nivel ${nivelFirma} para la petición ${uuidPeticion}:`,
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;

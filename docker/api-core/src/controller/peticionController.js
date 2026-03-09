@@ -359,13 +359,15 @@ export const procesarFirmaPorRol = async (req, res) => {
 	try {
 		//  Antes de atacar al servidor y verificar integridad de las firmas, documento, ...
 		// Lo que hacemos es verificar si para ese determinado usuario ha realizado el envío del documento firmado.
-		const permisos = req.user.permisos;
+		const permisos = req.user?.permisos; //req.user?.permisos
 		const userId = req.user.idUsuario;
+		console.log("Los permisos son:", permisos);
 		if (
 			!permisos.includes("peticion:revisor") &&
 			!permisos.includes("admin:total") &&
 			!permisos.includes("peticion:firma_administrador")
 		) {
+			console.log("Entro aqui 1.");
 			// Se trata del usuario base, este usuario solo puede hacerlo si se trata del userId creador de la petición.
 			const esCreadorPeticion = await PeticionModel.esUserCreador(uuid, userId);
 			if (esCreadorPeticion == 2) {
@@ -381,6 +383,7 @@ export const procesarFirmaPorRol = async (req, res) => {
 			permisos.includes("peticion:revisor") &&
 			!permisos.includes("admin:total")
 		) {
+			console.log("Entro aqui 2.");
 			// En este caso debemos validar de que sea revisor de dicha solicitud.
 			const esSupervisorPeticion = await PeticionModel.esEncargado(
 				uuid,
@@ -399,7 +402,6 @@ export const procesarFirmaPorRol = async (req, res) => {
 		const metadatos = await validarFirmaDSS(req.file, req.file.originalname);
 
 		if (metadatos.indicacion === "TOTAL_PASSED") {
-			// TODO: Hacer el patch, actualizar la base de datos si corresponde.
 			const infoDoc = await PeticionModel.getUuidDoc(uuid);
 			const form = new FormData();
 
@@ -407,12 +409,8 @@ export const procesarFirmaPorRol = async (req, res) => {
 				filename: req.file.originalname,
 				contentType: "application/pdf",
 			});
-			console.log(
-				"La url es: ",
-				`${process.env.STORAGE_URL}/${infoDoc.uuidDocumento}`,
-			);
 			const response = await axios.patch(
-				`${process.env.STORAGE_URL}//${infoDoc.uuidDocumento}`,
+				`${process.env.STORAGE_URL}/${infoDoc.uuidDocumento}`,
 				form,
 				{
 					headers: {
@@ -422,9 +420,26 @@ export const procesarFirmaPorRol = async (req, res) => {
 					maxBodyLength: Infinity,
 				},
 			);
+
+			let nivelFirma = 0;
+
+			if (
+				permisos.includes("admin:total") ||
+				permisos.includes("peticion:firma_administrador")
+			) {
+				nivelFirma = 3; // Firma de Administración / Jefe
+			} else if (permisos.includes("peticion:revisor")) {
+				nivelFirma = 2; // Firma Técnica / Revisor
+				//TODO: Enviar correo electrónico al boss.
+			} else {
+				nivelFirma = 1; // Firma de Solicitante
+				// TODO: Enviar correo al supervisor.
+			}
+			await PeticionModel.setFirmado(uuid, nivelFirma);
+
 			return res.status(200).json({
 				success: true,
-				message: "Documento íntegro y firma válida (Reconocida por la UE/FNMT)",
+				message: "Documento íntegro y firma válida",
 				metadatos,
 			});
 		} else {

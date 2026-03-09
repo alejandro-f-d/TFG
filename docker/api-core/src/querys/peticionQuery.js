@@ -99,4 +99,7 @@ export const PETICION_QUERY = {
         INNER JOIN medal.usuario u_c ON p.usuariopeticion = u_c.idusuario
         WHERE pa.nombreproyectoasociado ILIKE $1 AND p.estado ILIKE $2 
         AND (p.usuariopeticion = $3 OR u_c.responsable = $3);`,
+	SET_USUARIO: `UPDATE medal.peticion SET firmadousuario = true WHERE uuidpeticion = $1;`,
+	SET_SUPERVISOR: `UPDATE medal.peticion SET firmadosupervisor = true WHERE uuidpeticion = $1;`,
+	SET_JEFE: `UPDATE medal.peticion SET firmadojefelaboratorio = true WHERE uuidpeticion = $1;`,
 };
