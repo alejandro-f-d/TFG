@@ -301,6 +301,7 @@ CREATE TABLE IF NOT EXISTS medal.peticion(
   firmadoUsuario BOOLEAN NOT NULL DEFAULT FALSE,
   firmadoSupervisor BOOLEAN NOT NULL DEFAULT FALSE,
   firmadoJefeLaboratorio BOOLEAN NOT NULL DEFAULT FALSE,
+  razonDenegada VARCHAR(500),
   CONSTRAINT fk_usuario_creador_peticion 
     FOREIGN KEY (usuarioPeticion) 
     REFERENCES medal.usuario(idUsuario)

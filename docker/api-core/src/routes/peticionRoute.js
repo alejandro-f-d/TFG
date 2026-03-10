@@ -6,6 +6,7 @@ import {
 	getDocumentoPeticion,
 	getAllPeticiones,
 	procesarFirmaPorRol,
+	denegarPeticion,
 } from "../controller/peticionController.js";
 const router = express.Router();
 import multer from "multer";
@@ -899,5 +900,7 @@ router.post(
 	[verificarToken, upload.single("documentoPdf")],
 	procesarFirmaPorRol,
 );
+
+router.patch("/:uuid/denegar", [verificarToken], denegarPeticion);
 
 export default router;

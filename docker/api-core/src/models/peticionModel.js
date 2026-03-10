@@ -363,5 +363,39 @@ class PeticionModel {
 			throw error;
 		}
 	}
+	static async denegarPeticion(uuidPeticion, razon) {
+		try {
+			await pool.query(PETICION_QUERY.DENEGAR_PETICION, [uuidPeticion, razon]);
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al denegar una petición.",
+				uuidPeticion,
+				razon,
+				error,
+			);
+			throw error;
+		}
+	}
+	static async obtenerCorreoInstitucionalUserCreador(uuidPeticion) {
+		try {
+			const correoUser = await pool.query(
+				PETICION_QUERY.OBTENER_CORREO_INST_CREADOR,
+				[uuidPeticion],
+			);
+			if (correoUser.rowCount === 0) {
+				throw new Error(
+					`No se ha encontrado del usuario que ha realizado la petición.`,
+				);
+			}
+			return correoUser.rows[0].correoinstitucional;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener el correo institucional de una petición.",
+				uuidPeticion,
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;

@@ -366,13 +366,11 @@ export const procesarFirmaPorRol = async (req, res) => {
 		// Lo que hacemos es verificar si para ese determinado usuario ha realizado el envío del documento firmado.
 		const permisos = req.user?.permisos; //req.user?.permisos
 		const userId = req.user.idUsuario;
-		console.log("Los permisos son:", permisos);
 		if (
 			!permisos.includes("peticion:revisor") &&
 			!permisos.includes("admin:total") &&
 			!permisos.includes("peticion:firma_administrador")
 		) {
-			console.log("Entro aqui 1.");
 			// Se trata del usuario base, este usuario solo puede hacerlo si se trata del userId creador de la petición.
 			const esCreadorPeticion = await PeticionModel.esUserCreador(uuid, userId);
 			if (esCreadorPeticion == 2) {
@@ -493,5 +491,64 @@ export const procesarFirmaPorRol = async (req, res) => {
 			error: "Error interno al procesar la firma electrónica.",
 			detalle: error.message,
 		});
+	}
+};
+
+export const denegarPeticion = async (req, res) => {
+	const { uuid } = req.params;
+	const { razonDenegada } = req.body;
+	if (!razonDenegada) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	try {
+		const permisosPermitidos = [
+			"admin:total",
+			"peticion:firma_administrador",
+			"peticion:revisor",
+		];
+
+		if (!req.user.permisos.some((p) => permisosPermitidos.includes(p))) {
+			return res.status(403).json({
+				error: "No tienes permiso para denegar una petición.",
+			});
+		}
+		const codigoPermiso = await tienePermisoVisualizacion(
+			req.user.idUsuario,
+			uuid,
+			req.user.permisos,
+		);
+
+		if (codigoPermiso === 1)
+			return res.status(403).json({ error: "No tienes permiso" });
+		if (codigoPermiso === 2)
+			return res.status(404).json({ error: "Petición no encontrada" });
+		// Esta sería la lógica de denegar el servicio. En este punto tienePermisoVisualizacion ha validado que el supervisor tiene relacion con esa petición.
+		await PeticionModel.denegarPeticion(uuid, razonDenegada);
+
+		let destinatarios = "";
+
+		if (
+			permisos.includes("admin:total") ||
+			permisos.includes("peticion:firma_administrador")
+		) {
+			// Caso Admin: Notificar a ambos
+			destinatarios = await PeticionModel.obtenerCorreoUsuarioSupervisor(uuid);
+		} else {
+			// Caso Revisor: Solo al creador
+			destinatarios =
+				await PeticionModel.obtenerCorreoInstitucionalUserCreador(uuid);
+		}
+		await addEmailToQueue({
+			template: "PET_AVISO",
+			to: destinatarios,
+			reason: razonDenegada,
+		});
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al denegar una petición.",
+			uuid,
+			error,
+		);
+		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };

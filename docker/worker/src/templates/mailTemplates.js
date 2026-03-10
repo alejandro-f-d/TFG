@@ -172,4 +172,37 @@ Puedes acceder a la plataforma MEDAL para consultar los detalles de la petición
 ${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
 `,
 	}),
+
+	PET_DENEGADA: (data) => ({
+		subject: `Petición denegada`,
+		text: `
+La petición en la plataforma MEDAL ha sido denegada.
+
+Motivo de la denegación:
+${data.reason}
+
+Si necesitas más información o crees que se trata de un error, puedes contactar con en respuesta a este correo o acceder a la plataforma MEDAL.
+
+--
+Sistema MEDAL
+	`,
+		html: `
+<h2>Petición denegada</h2>
+
+<p>La petición ha sido <b>denegada</b> en la plataforma MEDAL.</p>
+
+<p>
+<b>Motivo de la denegación:</b><br/>
+${data.reason}
+</p>
+
+<p>
+Si necesitas más información o crees que se trata de un error, puedes acceder a la plataforma MEDAL o contacta en respuesta a este correo.
+</p>
+
+<p>Un saludo,<br/>Equipo MEDAL</p>
+
+${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
+`,
+	}),
 };

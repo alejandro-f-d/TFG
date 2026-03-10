@@ -135,5 +135,12 @@ export const PETICION_QUERY = {
         INNER JOIN medal.usuario u_s ON u_c.responsable = u_s.idusuario
         WHERE p.uuidpeticion = $1
     ) AS correos;
-`,
+    `,
+	DENEGAR_PETICION: `UPDATE medal.peticion SET estado = 'DENEGADA' , razondenegada = $2 WHERE uuidpeticion = $1;`,
+	OBTENER_CORREO_INST_CREADOR: `
+    SELECT u.correoInstitucional 
+    FROM medal.peticion p
+    JOIN medal.usuario u ON p.usuariopeticion = u.idusuario
+    WHERE p.uuidpeticion = $1;
+    `,
 };
