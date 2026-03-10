@@ -54,7 +54,7 @@ export const PETICION_QUERY = {
         SELECT 
             u.responsable AS id_responsable_del_creador,
             p.usuariopeticion AS id_creador_peticion,
-            p.firmadosupervisor AS firmado_supervisor,
+            p.firmadosupervisor AS firmado_supervisor
         FROM medal.peticion p
         INNER JOIN medal.usuario u ON p.usuariopeticion = u.idusuario
         WHERE p.uuidpeticion = $1;

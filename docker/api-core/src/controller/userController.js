@@ -62,7 +62,8 @@ export const postUser = async (req, res) => {
 		const dominio = obtenerDominio(correoInstitucional).toLowerCase();
 
 		// console.log(dominio);
-		if (dominio.includes("upm")) {
+		if (dominio.includes("upm") && false) {
+			// TODO: Cambiar dependiendo de si se incorpora el login de la upm.
 			resultado = await UserModel.postUserUpm(req.body);
 		} else {
 			if (!contrasena) {

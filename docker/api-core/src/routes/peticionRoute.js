@@ -27,7 +27,7 @@ const upload = multer({
 
 /**
  * @swagger
- * /api/peticiones:
+ * /api/peticion:
  *   post:
  *     summary: Crea una nueva petición de recursos/servicios
  *     description: |
@@ -253,7 +253,7 @@ router.post("/", [verificarToken], postPeticion);
 
 /**
  * @swagger
- * /api/peticiones/{uuid}:
+ * /api/peticion/{uuid}:
  *   get:
  *     summary: Obtiene los detalles de una petición específica
  *     description: Retorna la información detallada de una petición de recursos/servicios
@@ -425,7 +425,7 @@ router.get("/:uuid", [verificarToken], getPeticion);
 
 /**
  * @swagger
- * /api/peticiones/{uuid}/file:
+ * /api/peticion/{uuid}/file:
  *   get:
  *     summary: Obtiene el documento PDF de una petición
  *     description: Retorna el archivo PDF asociado a una petición específica
@@ -518,7 +518,7 @@ router.get("/:uuid/file", [verificarToken], getDocumentoPeticion);
 
 /**
  * @swagger
- * /api/peticiones:
+ * /api/peticion:
  *   get:
  *     summary: Obtiene listado paginado de peticiones
  *     description: |
@@ -743,6 +743,156 @@ router.get("/:uuid/file", [verificarToken], getDocumentoPeticion);
  */
 
 router.get("/", [verificarToken], getAllPeticiones);
+
+/**
+ * @swagger
+ * /api/peticiones/{uuid}/firma:
+ *   post:
+ *     summary: Procesa la firma electrónica de un documento de petición
+ *     description: |
+ *       Endpoint para subir y validar un documento PDF firmado electrónicamente.
+ *       La validación se realiza mediante un servicio DSS (Digital Signature Service).
+ *
+ *       **Niveles de firma según rol:**
+ *       - **Nivel 1 (Solicitante)**: Usuario creador de la petición
+ *       - **Nivel 2 (Revisor)**: Supervisor/encargado de la petición
+ *       - **Nivel 3 (Administrador)**: Admin o firma_administrador
+ *
+ *       **Flujo:**
+ *       1. Verifica permisos según el rol del usuario
+ *       2. Valida la integridad de la firma electrónica
+ *       3. Si es válida, actualiza el documento en Storage
+ *       4. Registra el nivel de firma completado
+ *       5. Envía notificaciones por correo según el nivel
+ *     tags: [Peticiones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID de la petición
+ *         example: "481bd62e-8d11-40fc-94bb-64e3309ab4af"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - documentoPdf
+ *             properties:
+ *               documentoPdf:
+ *                 type: string
+ *                 format: binary
+ *                 description: Archivo PDF con la firma electrónica
+ *     responses:
+ *       201:
+ *         description: Documento validado y firma procesada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Documento íntegro y firma válida"
+ *                 metadatos:
+ *                   type: object
+ *                   description: Metadatos de la validación de firma
+ *       400:
+ *         description: Error de validación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               uuidFaltante:
+ *                 value:
+ *                   error: "Petición mal formada."
+ *               uuidInvalido:
+ *                 value:
+ *                   error: "UUID de la petición en formato inválido."
+ *               sinArchivo:
+ *                 value:
+ *                   error: "No se ha recibido el PDF en 'documentoPdf'."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: No tiene permisos para firmar esta petición
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tienes los permisos necesarios o ya has realizado la firma."
+ *       404:
+ *         description: Petición no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición no encontrada."
+ *       422:
+ *         description: La validación de la firma ha fallado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "La validación de la firma no ha podido completarse satisfactoriamente."
+ *                 motivo:
+ *                   type: string
+ *                   example: "Firma no válida"
+ *                 metadatos:
+ *                   type: object
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno al procesar la firma electrónica."
+ *                 detalle:
+ *                   type: string
+ */
 
 router.post(
 	"/:uuid/firma",

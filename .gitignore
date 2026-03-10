@@ -1,3 +1,5 @@
+# Evitar subir documentos reales firmados.
+peticion_firmada.pdf
 # Evitar subir cosas no implementadas por mi.
 *dss.tar
 

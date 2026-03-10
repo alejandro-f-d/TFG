@@ -222,6 +222,9 @@ class PeticionModel {
 			]);
 
 			const totalItems = parseInt(countRes.rows[0].count);
+			if (totalItems === 0) {
+				return 2;
+			}
 
 			return {
 				status: "OK",
@@ -260,12 +263,12 @@ class PeticionModel {
 				PETICION_QUERY.OBTENER_RESPONSABLE,
 				[uuid],
 			);
-			if (creadorId.rowCount === 0) {
+			if (supervisorId.rowCount === 0) {
 				return 2;
 			}
 			const firmadoSupervisor = supervisorId.rows[0].firmado_supervisor;
 			return (
-				creadorId.rows[0].id_responsable_del_creador === userId &&
+				supervisorId.rows[0].id_responsable_del_creador === userId &&
 				!firmadoSupervisor
 			); // Puede realizar la firma si todavía no lo ha hecho.
 		} catch (error) {

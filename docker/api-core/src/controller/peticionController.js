@@ -186,11 +186,15 @@ export const postPeticion = async (req, res) => {
 			linkPeticion: `${process.env.WEB_URL}${datosParaWorker.uuid}`,
 		});
 
-		return res.status(201).json({
-			message:
-				"Petición registrada correctamente. El documento PDF se está generando.",
-			uuidPeticion: datosParaWorker.uuidPeticion,
-		});
+		return res
+			.status(201)
+			.location(`/api/peticion/${datosParaWorker.uuid}`)
+			.json({
+				message:
+					"Petición registrada correctamente. El documento PDF se está generando.",
+				uuidPeticion: datosParaWorker.uuid,
+				url: `${process.env.API_DIRECTION}/api/peticion/${datosParaWorker.uuid}`,
+			});
 	} catch (error) {
 		console.error(
 			"Se ha producido un error al hacer post para una petición.",
@@ -317,7 +321,7 @@ export const getAllPeticiones = async (req, res) => {
 				.status(403)
 				.json({ error: "No tienes los permisos necesarios." });
 		}
-		if (resultado.totalItems === 0) {
+		if (resultado === 2) {
 			return res.status(400).json({
 				message: `No se han encontrado usuarios que coincidan con: ${filtroNombre}`,
 			});
@@ -448,6 +452,7 @@ export const procesarFirmaPorRol = async (req, res) => {
 				nivelFirma = 1; // Firma de Solicitante
 				const correoSupervisor =
 					await PeticionModel.obtenerCorreoSupervisor(userId);
+				console.log("El correo del supervisor es:", correoSupervisor);
 				await addEmailToQueue({
 					template: "PET_AVISO",
 					to: correoSupervisor,
