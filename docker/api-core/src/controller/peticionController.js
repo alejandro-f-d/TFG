@@ -434,7 +434,13 @@ export const procesarFirmaPorRol = async (req, res) => {
 				permisos.includes("peticion:firma_administrador")
 			) {
 				nivelFirma = 3; // Firma de Administración / Jefe
-				// Este nivel no necesita en principio envío de correo electrónico.
+				// Correo electrónico al usuario y supervisorCorrespondiente. Se saca en base del uuidPeticion.
+				const correosImplicados =
+					await PeticionModel.obtenerCorreoUsuarioSupervisor(uuid);
+				await addEmailToQueue({
+					template: "PET_APROBADA",
+					to: correosImplicados,
+				});
 			}
 
 			if (permisos.includes("peticion:revisor")) {

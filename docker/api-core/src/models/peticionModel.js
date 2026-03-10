@@ -343,5 +343,25 @@ class PeticionModel {
 			throw error;
 		}
 	}
+	static async obtenerCorreoUsuarioSupervisor(uuidPeticion) {
+		try {
+			const listaCorreos = await pool.query(
+				PETICION_QUERY.OBTENER_LISTA_DESTINATARIOS_APROBACION,
+				[uuidPeticion],
+			);
+			if (listaCorreos.rowCount === 0) {
+				throw new Error(
+					`No se han encontrado usuarios vinculados a una petición.`,
+				);
+			}
+			return listaCorreos.rows[0].lista_destinatarios;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener los correos del supervisor y el usuario.",
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;

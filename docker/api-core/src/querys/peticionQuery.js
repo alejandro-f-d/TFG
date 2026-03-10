@@ -118,4 +118,22 @@ export const PETICION_QUERY = {
     WHERE p.alias = 'peticion:firma_administrador'
     AND u.activo = TRUE;
     `,
+	OBTENER_LISTA_DESTINATARIOS_APROBACION: `
+    SELECT 
+        STRING_AGG(DISTINCT correos.email, ', ') AS lista_destinatarios
+    FROM (
+        SELECT u_c.correoInstitucional AS email
+        FROM medal.peticion p
+        INNER JOIN medal.usuario u_c ON p.usuariopeticion = u_c.idusuario
+        WHERE p.uuidpeticion = $1
+        
+        UNION
+        
+        SELECT u_s.correoInstitucional AS email
+        FROM medal.peticion p
+        INNER JOIN medal.usuario u_c ON p.usuariopeticion = u_c.idusuario
+        INNER JOIN medal.usuario u_s ON u_c.responsable = u_s.idusuario
+        WHERE p.uuidpeticion = $1
+    ) AS correos;
+`,
 };

@@ -141,4 +141,35 @@ Accede a la plataforma MEDAL para <b>autorizar o denegar</b> la solicitud corres
 ${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
 `,
 	}),
+
+	PET_APROBADA: (data) => ({
+		subject: `Petición aprobada con éxito`,
+		text: `
+La petición en la plataforma MEDAL ha sido aprobada correctamente.
+
+La solicitud ya ha sido validada y procesada.
+
+Si necesitas más información, puedes acceder a la plataforma MEDAL.
+
+--
+Sistema MEDAL
+	`,
+		html: `
+<h2>Petición aprobada con éxito</h2>
+
+<p>La petición ha sido <b>aprobada correctamente</b> en la plataforma MEDAL.</p>
+
+<p>
+La solicitud ya ha sido validada y procesada.
+</p>
+
+<p>
+Puedes acceder a la plataforma MEDAL para consultar los detalles de la petición.
+</p>
+
+<p>Un saludo,<br/>Equipo MEDAL</p>
+
+${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
+`,
+	}),
 };

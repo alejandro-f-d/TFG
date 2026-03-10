@@ -470,4 +470,41 @@ class TestPeticion:
         except FileNotFoundError:
             pytest.fail(f"❌ No se encontró el archivo PDF en la ruta: {ruta_archivo}")
 
+    def test_22_post_jefe(self):
+        if not self.uuid_peticion_creada:
+            pytest.skip("No hay UUID de petición para firmar")
+
+        url = f"{self.BASE_URL}/peticion/{self.uuid_peticion_creada}/firma"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+
+        # Ruta de tu archivo en el disco
+        ruta_archivo = "./peticion_firmada.pdf" 
+
+        try:
+            # Abrimos el archivo en modo lectura binaria ('rb')
+            with open(ruta_archivo, "rb") as pdf_file:
+                # 'documentoPdf' es el nombre del campo que espera tu API
+                files = {
+                    'documentoPdf': (
+                        "peticion_firmada.pdf", # Nombre del archivo para el servidor
+                        pdf_file,               # El objeto del archivo abierto
+                        "application/pdf"       # Tipo MIME
+                    )
+                }
+
+                # Realizamos la petición
+                # NOTA: No pongas 'Content-Type' en headers, requests lo hace por ti al usar 'files'
+                res = requests.post(url, headers=headers, files=files)
+
+            # Validaciones de la respuesta
+            assert res.status_code == 201
+            data = res.json()
+            assert data["success"] is True
+            print(f"✅ Archivo subido y firmado correctamente: {data.get('message')}")
+
+        except FileNotFoundError:
+            pytest.fail(f"❌ No se encontró el archivo PDF en la ruta: {ruta_archivo}")
+
+
+
 
