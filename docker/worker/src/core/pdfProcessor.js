@@ -16,10 +16,7 @@ const sign_document = async (pdfBuffer) => {
 	try {
 		const certPath = path.resolve(__dirname, "../../certs/sello_servidor.p12");
 		const certificateBuffer = fs.readFileSync(certPath);
-		// Cambia esto en pdfProcessor.js
-		const signer = new P12Signer(certificateBuffer, {
-			password: Buffer.from("medal", "utf8"),
-		});
+		const signer = new P12Signer(certificateBuffer, { password: "" });
 		const pdfWithPlaceholder = plainAddPlaceholder({
 			pdfBuffer,
 			reason: "El servidor ha generado este documento de forma automatizada.",
