@@ -397,5 +397,23 @@ class PeticionModel {
 			throw error;
 		}
 	}
+	static async getEstadoPeticion(uuidPeticion) {
+		try {
+			const estado = await pool.query(PETICION_QUERY.OBTENER_STATUS_QUERY, [
+				uuidPeticion,
+			]);
+			if (estado.rowCount === 0) {
+				return 2;
+			}
+			return estado.rows[0].estado;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener el estado de una petición.",
+				uuidPeticion,
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;

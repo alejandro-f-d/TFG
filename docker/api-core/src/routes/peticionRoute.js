@@ -901,6 +901,133 @@ router.post(
 	procesarFirmaPorRol,
 );
 
+/**
+ * @swagger
+ * /api/peticiones/{uuid}/denegar:
+ *   patch:
+ *     summary: Deniega una petición
+ *     description: |
+ *       Permite denegar una petición de recursos/servicios.
+ *
+ *       **Permisos requeridos:**
+ *       - admin:total
+ *       - peticion:firma_administrador
+ *       - peticion:revisor
+ *
+ *       **Validaciones:**
+ *       - La petición debe existir
+ *       - La petición no debe estar ya denegada
+ *
+ *       **Comportamiento:**
+ *       - Cambia el estado de la petición a "DENEGADA"
+ *       - Guarda la razón de denegación
+ *       - Envía notificaciones por correo:
+ *         * Si es Admin: Notifica al creador y al supervisor
+ *         * Si es Revisor: Notifica solo al creador
+ *     tags: [Peticiones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID de la petición a denegar
+ *         example: "481bd62e-8d11-40fc-94bb-64e3309ab4af"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - razonDenegada
+ *             properties:
+ *               razonDenegada:
+ *                 type: string
+ *                 description: Motivo por el cual se deniega la petición
+ *                 example: "Recursos insuficientes en el cluster solicitado"
+ *           examples:
+ *             ejemploBasico:
+ *               value:
+ *                 razonDenegada: "No hay disponibilidad de GPU en las fechas solicitadas"
+ *     responses:
+ *       204:
+ *         description: Petición denegada correctamente
+ *       304:
+ *         description: La petición ya se encuentra denegada (no modificada)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "La petición ya se encuentra denegada."
+ *       400:
+ *         description: Error de validación - Razón no proporcionada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición mal formada."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: |
+ *           No tiene permisos para denegar la petición.
+ *           Puede deberse a:
+ *           * No tiene el rol adecuado (admin, firma_administrador, revisor)
+ *           * No tiene relación con la petición (solo puede denegar el supervisor asignado)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tienes permiso para denegar una petición."
+ *       404:
+ *         description: Petición no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición no encontrada."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
 router.patch("/:uuid/denegar", [verificarToken], denegarPeticion);
 
 export default router;

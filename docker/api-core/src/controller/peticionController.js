@@ -158,7 +158,7 @@ export const postPeticion = async (req, res) => {
 				.status(403)
 				.json({ error: errores[datosParaWorker] || "Operación no permitida." });
 		}
-		console.log(datosParaWorker);
+		// console.log(datosParaWorker);
 
 		await addPdfToQueue({
 			...datosParaWorker,
@@ -256,7 +256,7 @@ export const getDocumentoPeticion = async (req, res) => {
 		if (resGetUuidDoc === 2) {
 			return res.status(404).json({ error: `Documento no encontrado.` });
 		}
-		console.log("El uuid del documento es:", resGetUuidDoc.uuidDocumento);
+		// console.log("El uuid del documento es:", resGetUuidDoc.uuidDocumento);
 		const respuestaStorage = await axios.get(
 			`${process.env.STORAGE_URL}/download/${resGetUuidDoc.uuidDocumento}`,
 			{
@@ -386,7 +386,7 @@ export const procesarFirmaPorRol = async (req, res) => {
 			permisos.includes("peticion:revisor") &&
 			!permisos.includes("admin:total")
 		) {
-			console.log("Entro aqui 2.");
+			// console.log("Entro aqui 2.");
 			// En este caso debemos validar de que sea revisor de dicha solicitud.
 			const esSupervisorPeticion = await PeticionModel.esEncargado(
 				uuid,
@@ -456,7 +456,7 @@ export const procesarFirmaPorRol = async (req, res) => {
 				nivelFirma = 1; // Firma de Solicitante
 				const correoSupervisor =
 					await PeticionModel.obtenerCorreoSupervisor(userId);
-				console.log("El correo del supervisor es:", correoSupervisor);
+				// console.log("El correo del supervisor es:", correoSupervisor);
 				await addEmailToQueue({
 					template: "PET_AVISO",
 					to: correoSupervisor,
@@ -497,6 +497,7 @@ export const procesarFirmaPorRol = async (req, res) => {
 export const denegarPeticion = async (req, res) => {
 	const { uuid } = req.params;
 	const { razonDenegada } = req.body;
+	const permisos = req.user?.permisos; //req.user?.permisos
 	if (!razonDenegada) {
 		return res.status(400).json({ error: "Petición mal formada." });
 	}
@@ -523,6 +524,16 @@ export const denegarPeticion = async (req, res) => {
 		if (codigoPermiso === 2)
 			return res.status(404).json({ error: "Petición no encontrada" });
 		// Esta sería la lógica de denegar el servicio. En este punto tienePermisoVisualizacion ha validado que el supervisor tiene relacion con esa petición.
+
+		const estadoActualPeticion = await PeticionModel.getEstadoPeticion(uuid);
+		if (estadoActualPeticion === 2) {
+			return res.status(404).json({ error: "Petición no encontrada." });
+		}
+		if (estadoActualPeticion === "DENEGADA") {
+			return res
+				.status(304)
+				.json({ message: "La petición ya se encuentra denegada." });
+		}
 		await PeticionModel.denegarPeticion(uuid, razonDenegada);
 
 		let destinatarios = "";
@@ -539,10 +550,11 @@ export const denegarPeticion = async (req, res) => {
 				await PeticionModel.obtenerCorreoInstitucionalUserCreador(uuid);
 		}
 		await addEmailToQueue({
-			template: "PET_AVISO",
+			template: "PET_DENEGADA",
 			to: destinatarios,
 			reason: razonDenegada,
 		});
+		return res.status(204).send();
 	} catch (error) {
 		console.error(
 			"Se ha producido un error al denegar una petición.",

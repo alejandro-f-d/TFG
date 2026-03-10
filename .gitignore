@@ -1,5 +1,7 @@
 # Evitar subir documentos reales firmados.
 peticion_firmada.pdf
+
+docker/dss-service/dss-demo.tar
 # Evitar subir cosas no implementadas por mi.
 *dss.tar
 

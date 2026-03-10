@@ -506,5 +506,121 @@ class TestPeticion:
             pytest.fail(f"❌ No se encontró el archivo PDF en la ruta: {ruta_archivo}")
 
 
+    # -------------------------------------------------------
+    # Denegación de la petición:  
+    # -------------------------------------------------------
+
+    def test_23_post_peticion_exito(self):
+        """Caso exitoso: Usuario base crea una petición válida."""
+        headers = {"Authorization": f"Bearer {self.token_user_base}"}
+        payload = {
+            "nombreProyectoAsociado": "Proyecto IA",
+            "servidorAsociado": [2], 
+            "necesidadServidor": "Acceso para pruebas",
+            "tareasServidor": "Entrenamiento de modelos",
+            "cpuSolicitada": 4,
+            "gpuSolicitada": 1,
+            "prioridadTarea": 1,
+            "docker": True,
+            "sistemaOperativo": "Ubuntu 20.04",
+            "comentariosAdicionales": "Necesito permisos de sudo",
+            "tiempoEstimadoTarea": "1 mes",
+            "nombreAccesoNativo": "user-base-ai",
+            "disco": 200,
+            "ram": 16,
+            "momentoEjecucion": 1,
+            "nombreServicioAsociado": "AI Platform",
+            "justificacionAccesoNativo": "Configuración de entornos",
+            "fechaFin": "2026-04-30T23:59:59.999Z"
+        }
+        
+        res = requests.post(f"{self.BASE_URL}/peticion", json=payload, headers=headers)
+        
+        assert res.status_code == 201
+        data = res.json()
+        assert "uuidPeticion" in data
+        assert "Petición registrada correctamente" in data["message"]
+        
+        # Guardamos el UUID para futuros tests (como borrar o consultar)
+        TestPeticion.uuid_peticion_creada = data["uuidPeticion"]
+        print(f"✅ Petición creada con éxito: {data['uuidPeticion']}")
+
+
+    def test_24_post_firma_usuario_base_disco_exito(self):
+        """Caso: El usuario solicitante sube un PDF REAL desde el disco."""
+        if not self.uuid_peticion_creada:
+            pytest.skip("No hay UUID de petición para firmar")
+
+        url = f"{self.BASE_URL}/peticion/{self.uuid_peticion_creada}/firma"
+        headers = {"Authorization": f"Bearer {self.token_user_base}"}
+
+        # Ruta de tu archivo en el disco
+        ruta_archivo = "./peticion_firmada.pdf" 
+
+        try:
+            # Abrimos el archivo en modo lectura binaria ('rb')
+            with open(ruta_archivo, "rb") as pdf_file:
+                # 'documentoPdf' es el nombre del campo que espera tu API
+                files = {
+                    'documentoPdf': (
+                        "peticion_firmada.pdf", # Nombre del archivo para el servidor
+                        pdf_file,               # El objeto del archivo abierto
+                        "application/pdf"       # Tipo MIME
+                    )
+                }
+
+                # Realizamos la petición
+                # NOTA: No pongas 'Content-Type' en headers, requests lo hace por ti al usar 'files'
+                res = requests.post(url, headers=headers, files=files)
+
+            # Validaciones de la respuesta
+            assert res.status_code == 201
+            data = res.json()
+            assert data["success"] is True
+            print(f"✅ Archivo subido y firmado correctamente: {data.get('message')}")
+
+        except FileNotFoundError:
+            pytest.fail(f"❌ No se encontró el archivo PDF en la ruta: {ruta_archivo}")
+
+    def test_26_denegar_como_admin_exito(self):
+        """
+        Caso: Admin deniega petición. 
+        Debe devolver 204 y disparar correos a Creador + Supervisor.
+        """
+        url = f"{self.BASE_URL}/peticion/{self.uuid_peticion_creada}/denegar"
+        headers = {
+            "Authorization": f"Bearer {self.token_admin}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "razonDenegada": "No hay disponibilidad de GPU en las fechas solicitadas"
+        }
+
+        res = requests.patch(url, headers=headers, json=payload)
+        
+        # El estándar 204 No Content no devuelve cuerpo, solo confirmación
+        assert res.status_code == 204
+        print("✅ Denegación por Admin correcta (204).")
+
+    def test_25_denegar_como_admin_ya_denegada(self):
+        """
+        Caso: Admin deniega petición. 
+        Debe devolver 304 y disparar correos a Creador + Supervisor.
+        """
+        url = f"{self.BASE_URL}/peticion/{self.uuid_peticion_creada}/denegar"
+        headers = {
+            "Authorization": f"Bearer {self.token_admin}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "razonDenegada": "No hay disponibilidad de GPU en las fechas solicitadas"
+        }
+
+        res = requests.patch(url, headers=headers, json=payload)
+        
+        assert res.status_code == 304
+        print("✅ Denegación por Admin correcta (304).")
+
+
 
 

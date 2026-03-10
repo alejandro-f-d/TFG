@@ -143,4 +143,5 @@ export const PETICION_QUERY = {
     JOIN medal.usuario u ON p.usuariopeticion = u.idusuario
     WHERE p.uuidpeticion = $1;
     `,
+	OBTENER_STATUS_QUERY: `SELECT estado from medal.peticion WHERE uuidpeticion = $1;`,
 };
