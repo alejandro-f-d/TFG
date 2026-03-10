@@ -1,3 +1,7 @@
+# Subida de certificados
+**/*.pem
+**/*.p12
+
 # Evitar subir documentos reales firmados.
 peticion_firmada.pdf
 

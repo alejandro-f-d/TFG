@@ -4,6 +4,36 @@ import FormData from "form-data";
 import path from "path";
 import PdfModel from "../models/pdfModel.js";
 import { addEmailToQueue } from "../eda/queue.js";
+import fs from "fs";
+import { plainAddPlaceholder } from "@signpdf/placeholder-plain";
+import { SignPdf } from "@signpdf/signpdf";
+import { P12Signer } from "@signpdf/signer-p12";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const sign_document = async (pdfBuffer) => {
+	try {
+		const certPath = path.resolve(__dirname, "../../certs/sello_servidor.p12");
+		const certificateBuffer = fs.readFileSync(certPath);
+		// Cambia esto en pdfProcessor.js
+		const signer = new P12Signer(certificateBuffer, {
+			password: Buffer.from("medal", "utf8"),
+		});
+		const pdfWithPlaceholder = plainAddPlaceholder({
+			pdfBuffer,
+			reason: "El servidor ha generado este documento de forma automatizada.",
+			contactInfo: "medal@ctb.upm.es",
+			name: "Servidor MEDAL",
+			location: "Madrid, ES",
+			signatureLength: 8192, // Buffer de seguridad
+		});
+		const signedPdf = await new SignPdf().sign(pdfWithPlaceholder, signer);
+		return signedPdf;
+	} catch (error) {
+		throw new Error(`Error en el sellado del servidor: ${error.message}`);
+	}
+};
 
 export const pdfProcessor = async (job) => {
 	const {
@@ -48,8 +78,9 @@ export const pdfProcessor = async (job) => {
 				const fechaHoy = new Date().toISOString().split("T")[0];
 
 				const fileName = `SAR_${iniciales}_${fechaHoy}.pdf`;
+				const pdfBufferFirmado = await sign_document(pdfBuffer);
 
-				form.append("pdf", pdfBuffer, {
+				form.append("pdf", pdfBufferFirmado, {
 					filename: fileName,
 					contentType: "application/pdf",
 				});

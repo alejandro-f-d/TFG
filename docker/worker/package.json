@@ -22,6 +22,9 @@
 		"start": "node src/index.js"
 	},
 	"dependencies": {
+		"@signpdf/placeholder-plain": "^3.3.0",
+		"@signpdf/signer-p12": "^3.3.0",
+		"@signpdf/signpdf": "^3.3.0",
 		"axios": "^1.13.6",
 		"bullmq": "^5.70.1",
 		"cors": "^2.8.6",
