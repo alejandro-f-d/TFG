@@ -364,7 +364,17 @@ CREATE TABLE IF NOT EXISTS medal.detallePeticionAcceso(
 );
 
 CREATE TABLE IF NOT EXISTS medal.documento(
-  idDocumento SERIAL PRIMARY KEY
+  idDocumento SERIAL PRIMARY KEY,
+  idPeticion INTEGER NOT NULL UNIQUE,
+  firmanteUsuarioBase VARCHAR(500),
+  fechaFirmaUsuarioBase TIMESTAMPTZ,
+  nivelDescripcionUsuarioBase VARCHAR(500),
+  firmanteUsuarioSupervisor VARCHAR(500),
+  fechaFirmaUsuarioSupervisor TIMESTAMPTZ,
+  nivelDescripcionUsuarioSupervisor VARCHAR(500),
+  firmanteJefeLaboratorio VARCHAR(500),
+  fechaFirmaJefeLaboratorio TIMESTAMPTZ,
+  nivelDescripcionJefeLaboratorio VARCHAR(500)
 );
 
 

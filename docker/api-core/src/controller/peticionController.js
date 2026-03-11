@@ -418,6 +418,7 @@ export const procesarFirmaPorRol = async (req, res) => {
 		const metadatos = await validarFirmaDSS(req.file, req.file.originalname);
 
 		if (metadatos.indicacion === "TOTAL_PASSED") {
+			console.log(metadatos);
 			const infoDoc = await PeticionModel.getUuidDoc(uuid);
 			const form = new FormData();
 
