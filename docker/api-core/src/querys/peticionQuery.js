@@ -144,4 +144,5 @@ export const PETICION_QUERY = {
     WHERE p.uuidpeticion = $1;
     `,
 	OBTENER_STATUS_QUERY: `SELECT estado from medal.peticion WHERE uuidpeticion = $1;`,
+	MARCAR_COMPLETADA: `UPDATE medal.peticion SET estado = 'REALIZADA' WHERE uuidpeticion = $1;`,
 };

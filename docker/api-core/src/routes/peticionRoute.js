@@ -7,6 +7,7 @@ import {
 	getAllPeticiones,
 	procesarFirmaPorRol,
 	denegarPeticion,
+	peticionRealizada,
 } from "../controller/peticionController.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
 import {
@@ -1045,4 +1046,105 @@ router.patch(
 	denegarPeticion,
 );
 
+/**
+ * @swagger
+ * /api/peticiones/{uuid}/completada:
+ *   patch:
+ *     summary: Marca una petición como realizada/completada
+ *     description: |
+ *       Cambia el estado de una petición a "REALIZADA" (completada).
+ *       Solo los usuarios con permiso `admin:total` pueden ejecutar esta acción.
+ *
+ *       **Validaciones:**
+ *       - La petición debe existir
+ *       - La petición no debe estar en estado "DENEGADA"
+ *     tags: [Peticiones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID de la petición a marcar como completada
+ *         example: "481bd62e-8d11-40fc-94bb-64e3309ab4af"
+ *     responses:
+ *       204:
+ *         description: Petición marcada como REALIZADA correctamente (sin contenido)
+ *       304:
+ *         description: La petición ya se encuentra denegada, no se puede marcar como completada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "La petición ya se encuentra denegada."
+ *       400:
+ *         description: Petición mal formada (UUID no proporcionado)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición mal formada."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso "admin:total"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: Petición no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición no encontrada."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.patch(
+	"/:uuid/completada",
+	[verificarToken, tienePermiso("admin:total")],
+	peticionRealizada,
+);
 export default router;

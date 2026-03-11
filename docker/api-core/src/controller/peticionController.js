@@ -370,6 +370,10 @@ export const procesarFirmaPorRol = async (req, res) => {
 			return res
 				.status(304)
 				.json({ message: "La petición ya se encuentra denegada." });
+		} else if (estadoActualPeticion === "REALIZADA") {
+			return res
+				.status(304)
+				.json({ message: "La petición ya está marcada como realizada" });
 		}
 		//  Antes de atacar al servidor y verificar integridad de las firmas, documento, ...
 		// Lo que hacemos es verificar si para ese determinado usuario ha realizado el envío del documento firmado.
@@ -542,6 +546,10 @@ export const denegarPeticion = async (req, res) => {
 			return res
 				.status(304)
 				.json({ message: "La petición ya se encuentra denegada." });
+		} else if (estadoActualPeticion === "REALIZADA") {
+			return res
+				.status(304)
+				.json({ error: "La petición está marcada como realizada." });
 		}
 		await PeticionModel.denegarPeticion(uuid, razonDenegada);
 
@@ -571,5 +579,39 @@ export const denegarPeticion = async (req, res) => {
 			error,
 		);
 		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
+
+export const peticionRealizada = async (req, res) => {
+	const { uuid } = req.params;
+	if (!uuid) {
+		return res.status(400).json({ error: `Petición mal formada.` });
+	}
+	try {
+		const estadoActualPeticion = await PeticionModel.getEstadoPeticion(uuid);
+		if (estadoActualPeticion === 2) {
+			return res.status(404).json({ error: "Petición no encontrada." });
+		}
+		if (estadoActualPeticion === "DENEGADA") {
+			return res
+				.status(304)
+				.json({ message: "La petición ya se encuentra denegada." });
+		} else if (estadoActualPeticion === "REALIZADA") {
+			return res
+				.status(204)
+				.json({ message: "Petición marcada como REALIZADA correctamente." });
+		}
+		const updatePeticion = await PeticionModel.establecerRealizada(uuid);
+		if (updatePeticion.status === "OK") {
+			return res
+				.status(204)
+				.json({ message: "Petición marcada como REALIZADA correctamente." });
+		}
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al marcar como completada una petición",
+			error,
+		);
+		return res.status(500).json({ error: `Error interno del servidor.` });
 	}
 };

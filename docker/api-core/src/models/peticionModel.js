@@ -415,5 +415,20 @@ class PeticionModel {
 			throw error;
 		}
 	}
+	static async establecerRealizada(uuidPeticion) {
+		try {
+			const cambiarEstado = await pool.query(PETICION_QUERY.MARCAR_COMPLETADA, [
+				uuidPeticion,
+			]);
+			return { status: "OK" };
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al marcar como realizada la petición",
+				uuidPeticion,
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;

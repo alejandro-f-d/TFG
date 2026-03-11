@@ -506,6 +506,36 @@ class TestPeticion:
             pytest.fail(f"❌ No se encontró el archivo PDF en la ruta: {ruta_archivo}")
 
 
+
+    def test_22_1_peticion_realizada(self):
+        if not self.uuid_peticion_creada:
+            pytest.skip("No hay UUID de petición para firmar")
+
+        url = f"{self.BASE_URL}/peticion/{self.uuid_peticion_creada}/completada"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+
+        res = requests.patch(url, headers=headers, json={})
+        # El estándar 204 No Content no devuelve cuerpo, solo confirmación
+        assert res.status_code == 204
+        print("✅ Petición realizada por Admin correcta (204).")
+    
+    def test_22_2_peticion_realizada_no_admin(self):
+        if not self.uuid_peticion_creada:
+            pytest.skip("No hay UUID de petición para firmar")
+
+        url = f"{self.BASE_URL}/peticion/{self.uuid_peticion_creada}/completada"
+        headers = {"Authorization": f"Bearer {self.token_user_base}"}
+
+        res = requests.patch(url, headers=headers, json={})
+        # El estándar 204 No Content no devuelve cuerpo, solo confirmación
+        assert res.status_code == 403
+        print("No tiene permisos para marcar como completada.")
+
+
+
+
+
+
     # -------------------------------------------------------
     # Denegación de la petición:  
     # -------------------------------------------------------
@@ -622,5 +652,20 @@ class TestPeticion:
         print("✅ Denegación por Admin correcta (304).")
 
 
+
+    # -------------------------------------------------------
+    # Completada una petición denegada:  
+    # -------------------------------------------------------
+    def test_26_completada_denegada(self):
+        if not self.uuid_peticion_creada:
+            pytest.skip("No hay UUID de petición para firmar")
+
+        url = f"{self.BASE_URL}/peticion/{self.uuid_peticion_creada}/completada"
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+
+        res = requests.patch(url, headers=headers, json={})
+        # El estándar 204 No Content no devuelve cuerpo, solo confirmación
+        assert res.status_code == 304
+        print("✅ No se puede marcar como completada una petición previamente denegada.")
 
 
