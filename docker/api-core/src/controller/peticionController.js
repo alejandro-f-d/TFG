@@ -362,6 +362,15 @@ export const procesarFirmaPorRol = async (req, res) => {
 	}
 
 	try {
+		const estadoActualPeticion = await PeticionModel.getEstadoPeticion(uuid);
+		if (estadoActualPeticion === 2) {
+			return res.status(404).json({ error: "Petición no encontrada." });
+		}
+		if (estadoActualPeticion === "DENEGADA") {
+			return res
+				.status(304)
+				.json({ message: "La petición ya se encuentra denegada." });
+		}
 		//  Antes de atacar al servidor y verificar integridad de las firmas, documento, ...
 		// Lo que hacemos es verificar si para ese determinado usuario ha realizado el envío del documento firmado.
 		const permisos = req.user?.permisos; //req.user?.permisos

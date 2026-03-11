@@ -334,11 +334,11 @@ export const requestPasswordReset = async (req, res) => {
 			expiresAt,
 			tokenHash,
 		);
-		console.log(
-			"Se ha inetentado hacer un login del siguiente correo con resultado.",
-			correoInstitucional,
-			resBdd,
-		);
+		// console.log(
+		// 	"Se ha inetentado hacer un login del siguiente correo con resultado.",
+		// 	correoInstitucional,
+		// 	resBdd,
+		// );
 		if (resBdd === 2) {
 			return res.status(200).json({
 				message:

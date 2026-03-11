@@ -345,3 +345,32 @@ export const peticionSchema = Joi.object({
 	comentariosAdicionales: Joi.string().allow("", null),
 	fechaFin: Joi.date().iso(),
 });
+
+export const denegarPeticionSchema = Joi.object({
+	uuid: Joi.string()
+		.guid({ version: ["uuidv4"] })
+		.required(),
+
+	// Viene de req.body (lo que envía Pytest)
+	razonDenegada: Joi.string().min(5).max(500).required().messages({
+		"string.empty": "La razón de denegación no puede estar vacía.",
+		"any.required": "Debes proporcionar una razón para denegar la petición.",
+	}),
+}).unknown(true);
+export const validacionFirmaCompleta = Joi.object({
+	uuid: Joi.string()
+		.guid({ version: ["uuidv4"] })
+		.required(),
+
+	file: Joi.object({
+		fieldname: Joi.string().valid("documentoPdf").required(),
+		mimetype: Joi.string().valid("application/pdf").required(),
+		size: Joi.number()
+			.max(10 * 1024 * 1024)
+			.required(),
+	})
+		.required()
+		.messages({
+			"any.required": "No se ha recibido el PDF en 'documentoPdf'.",
+		}),
+}).unknown(true);

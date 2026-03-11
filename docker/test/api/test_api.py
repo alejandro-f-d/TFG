@@ -1288,7 +1288,7 @@ class TestGestionUsuarios:
         res = requests.post(self.BASE_URL_PUERTA, json={}, headers=headers)
         
         assert res.status_code == 400
-        assert res.json()["error"] == "Petición mal formada."
+        assert res.json()["error"] == "Error de validación de tipos"
         print("✅ Error 400 validado correctamente para cuerpo vacío.")
 
     def test_62_crear_puerta_401_sin_token(self):

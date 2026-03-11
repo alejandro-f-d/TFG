@@ -8,6 +8,11 @@ import {
 	procesarFirmaPorRol,
 	denegarPeticion,
 } from "../controller/peticionController.js";
+import { validarTipos } from "../middlewares/validador.middleware.js";
+import {
+	denegarPeticionSchema,
+	validacionFirmaCompleta,
+} from "../schemas/index.js";
 const router = express.Router();
 import multer from "multer";
 
@@ -814,6 +819,8 @@ router.get("/", [verificarToken], getAllPeticiones);
  *                 metadatos:
  *                   type: object
  *                   description: Metadatos de la validación de firma
+ *       304:
+ *         description: La petición ya se encuentra en estado "DENEGADA", luego no se pueden realizar más firmas.
  *       400:
  *         description: Error de validación
  *         content:
@@ -897,7 +904,11 @@ router.get("/", [verificarToken], getAllPeticiones);
 
 router.post(
 	"/:uuid/firma",
-	[verificarToken, upload.single("documentoPdf")],
+	[
+		verificarToken,
+		upload.single("documentoPdf"),
+		validarTipos(validacionFirmaCompleta),
+	],
 	procesarFirmaPorRol,
 );
 
@@ -1028,6 +1039,10 @@ router.post(
  *                   type: string
  *                   example: "Error interno del servidor."
  */
-router.patch("/:uuid/denegar", [verificarToken], denegarPeticion);
+router.patch(
+	"/:uuid/denegar",
+	[verificarToken, validarTipos(denegarPeticionSchema)],
+	denegarPeticion,
+);
 
 export default router;
