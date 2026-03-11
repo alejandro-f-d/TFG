@@ -50,6 +50,31 @@ export const validarFirmaDSS = async (file, name) => {
 			detalles: "Asegúrese de que el PDF esté firmado digitalmente (PAdES).",
 		});
 	}
+	// Validación de que la primera firma es la del servidor. Con el serial y con el nombre.
+	const firmaServidorSimple = soloFirmasSimple[0].Signature;
+	const firmaServidorDetailed = soloFirmasDetailed[0].Signature;
+
+	const nombreFirmante = firmaServidorSimple.SignedBy || "";
+	console.log("Datos de la firma:", firmaServidorSimple.CertificateChain);
+	const serialNumber =
+		firmaServidorDetailed.CertificateChain?.[0]?.SerialNumber || "";
+
+	const tieneNombreCorrecto = nombreFirmante.includes(process.env.COMMON_NAME);
+	const tieneSerialCorrecto =
+		serialNumber.toLowerCase() === process.env.SERIAL.toLowerCase();
+	console.log("El log del indication es:", firmaServidorSimple.Indication);
+
+	const esIntegridadValida = ["TOTAL_PASSED", "INDETERMINATE"].includes(
+		firmaServidorSimple.Indication,
+	);
+
+	if (!tieneNombreCorrecto) {
+		return 3;
+	}
+
+	if (!esIntegridadValida) {
+		return 4;
+	}
 
 	const ultimaFirmaSimple =
 		soloFirmasSimple[soloFirmasSimple.length - 1].Signature;
@@ -416,6 +441,14 @@ export const procesarFirmaPorRol = async (req, res) => {
 			}
 		} // En cualquiera de los otros dos casos puede ver todas las peticiones o modificarlas al gusto.
 		const metadatos = await validarFirmaDSS(req.file, req.file.originalname);
+		if (metadatos === 3) {
+			return res.status(422).json({ error: "CN no es válido." });
+		}
+		if (metadatos === 4) {
+			return res
+				.status(422)
+				.json({ error: "Error de integridad del documento." });
+		}
 
 		if (metadatos.indicacion === "TOTAL_PASSED") {
 			console.log(metadatos);

@@ -9,6 +9,8 @@ Para ello se necesita el certificado que se va a crear de la siguiente manera, c
 ```bash
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365 -nodes -subj "/C=ES/ST=Madrid/L=Madrid/O=UPM/OU=CTB/CN=Servidor MEDAL"
 openssl pkcs12 -export -out sello_servidor.p12 -inkey key.pem -in cert.pem -keypbe AES-256-CBC -certpbe AES-256-CBC -passout pass:
+# Obtención del SERIAL:
+openssl x509 -in cert.pem -serial -noout
 # Validación:
 openssl pkcs12 -info -in sello_servidor.p12 -passin pass: -noout
 ```

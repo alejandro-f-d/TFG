@@ -872,7 +872,7 @@ router.get("/", [verificarToken], getAllPeticiones);
  *                   type: string
  *                   example: "Petición no encontrada."
  *       422:
- *         description: La validación de la firma ha fallado
+ *         description: La validación de la firma ha fallado o el CN del certificado del servidor no es válido o la integridad se ha visto alterada.
  *         content:
  *           application/json:
  *             schema:

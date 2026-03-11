@@ -64,6 +64,8 @@ services:
       WEB_URL: ${WEB_URL}
       STORAGE_URL: ${STORAGE_URL}
       DSS_URL: ${DSS_URL}
+      SERIAL: ${SERIAL}
+      COMMON_NAME: ${COMMON_NAME}
     networks:
       - medalnetwork
     env_file:
