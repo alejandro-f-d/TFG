@@ -145,4 +145,9 @@ export const PETICION_QUERY = {
     `,
 	OBTENER_STATUS_QUERY: `SELECT estado from medal.peticion WHERE uuidpeticion = $1;`,
 	MARCAR_COMPLETADA: `UPDATE medal.peticion SET estado = 'REALIZADA' WHERE uuidpeticion = $1;`,
+	OBTENER_ID_PET: `SELECT idpeticion from medal.peticion where uuidpeticion = $1;`,
+	ANADIR_METADATA_FIRMA_USER_BASE: `INSERT INTO medal.documento(idpeticion, firmanteusuariobase, fechafirmausuariobase, niveldescripcionusuariobase) values($1, $2, $3, $4);
+	`,
+	ANADIR_METADATA_SUPERVISOR: `UPDATE medal.documento SET  firmanteusuariosupervisor = $1, fechafirmausuariosupervisor = $2, niveldescripcionusuariosupervisor = $3 where idpeticion =$4;`,
+	ANADIR_METADATA_JEFE_LAB: `UPDATE medal.documento SET firmantejefelaboratorio = $1, fechafirmajefelaboratorio = $2, niveldescripcionjefelaboratorio = $3 where idpeticion =$4;`,
 };

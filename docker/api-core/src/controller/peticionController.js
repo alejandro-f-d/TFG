@@ -510,6 +510,7 @@ export const procesarFirmaPorRol = async (req, res) => {
 				});
 			}
 			await PeticionModel.setFirmado(uuid, nivelFirma);
+			await PeticionModel.addMetadata(metadatos, uuid, nivelFirma);
 
 			return res.status(201).json({
 				success: true,

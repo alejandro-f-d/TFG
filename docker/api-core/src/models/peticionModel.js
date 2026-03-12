@@ -430,5 +430,63 @@ class PeticionModel {
 			throw error;
 		}
 	}
+	static async addMetadata(metadata, uuidPeticion, nivel) {
+		const client = await pool.connect();
+		try {
+			await client.query("BEGIN");
+			const resPeticionId = await pool.query(PETICION_QUERY.OBTENER_ID_PET, [
+				uuidPeticion,
+			]);
+
+			if (resPeticionId.rowCount === 0) {
+				throw new Error("Id de la petición no encontrado.");
+			}
+
+			const peticionId = resPeticionId.rows[0].idpeticion;
+			if (!peticionId) {
+				throw new Error(`Id de la petición no encontrado.`);
+			}
+			if (nivel === 1) {
+				// Se trata de un usuario base.
+				await client.query(PETICION_QUERY.ANADIR_METADATA_FIRMA_USER_BASE, [
+					peticionId,
+					metadata.firmante,
+					metadata.fecha_firma,
+					metadata.nivel.description,
+				]);
+			} else if (nivel === 2) {
+				// Supervisor.
+				await client.query(PETICION_QUERY.ANADIR_METADATA_SUPERVISOR, [
+					metadata.firmante,
+					metadata.fecha_firma,
+					metadata.nivel.description,
+					peticionId,
+				]);
+			} else if (nivel === 3) {
+				// Jefe de laboratorio.
+				await client.query(PETICION_QUERY.ANADIR_METADATA_JEFE_LAB, [
+					metadata.firmante,
+					metadata.fecha_firma,
+					metadata.nivel.description,
+					peticionId,
+				]);
+			} else {
+				throw new Error(`Nivel de la firma no reconocido.`);
+			}
+			await client.query("COMMIT");
+		} catch (error) {
+			await client.query("ROLLBACK");
+			console.error(
+				"Se ha producido un error al introducir la metadata:",
+				metadata,
+				uuidPeticion,
+				nivel,
+				error,
+			);
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 }
 export default PeticionModel;
