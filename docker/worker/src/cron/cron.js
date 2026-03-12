@@ -1,16 +1,25 @@
-// cron/cron.js
 import { CronJob } from "cron";
+import CaducidadFechas from "../models/caducidadFechas.js";
+import { addEmailToQueue } from "../eda/queue.js";
 
-export const initCron = () => {
+export const initCron = async () => {
 	const job = new CronJob(
-		"*/10 * * * * *", // Cada 10 segundos para no saturar el log
+		"0 0 9 * * *",
+		// "0 0 9 * * *", // 0s, 0min, 9h, todos los días, meses y semanas
 		function () {
-			console.log("Cron ejecutándose: Comprobando tareas pendientes...");
+			console.log("Ejecutando la tarea a las nueve de la mañana");
+			const cuerpoInfo = await CaducidadFechas.getCaducidad();
+			const correosAdministrador = await CaducidadFechas.getCorreoAdministradores();
+			addEmailToQueue({
+				template: "EXPIRACION_SERVICIOS",
+				to: correosAdministrador,
+				registros: cuerpoInfo,
+			});
 		},
 		null,
 		true,
-		"Europe/Madrid", // Ajustado a tu zona horaria
+		"Europe/Madrid", // Asegúrate de poner tu zona horaria real
 	);
 
-	job.start();
+	console.log("📅 Cron configurado para ejecutarse todos los días a las 09:00");
 };

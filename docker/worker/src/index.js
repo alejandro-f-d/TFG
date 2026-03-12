@@ -41,8 +41,8 @@ const initWorker = (queueName, processor, concurrency = 5) => {
 };
 
 // Arrancamos los Workers
-const mailWorker = initWorker(QUEUE_MAIL, mailProcessor, 5);
-const pdfWorker = initWorker(QUEUE_DOCUMENTS, pdfProcessor, 2);
+// const mailWorker = initWorker(QUEUE_MAIL, mailProcessor, 5);
+// const pdfWorker = initWorker(QUEUE_DOCUMENTS, pdfProcessor, 2);
 
 const startSystem = async () => {
 	try {

@@ -205,4 +205,51 @@ Si necesitas más información o crees que se trata de un error, puedes acceder 
 ${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
 `,
 	}),
+	EXPIRACION_SERVICIOS: (data) => ({
+		subject: `Aviso de caducidad de cuentas y servicios MEDAL`,
+
+		text: `
+Se ha detectado que en el día de hoy caducan las siguientes cuentas o peticiones asociadas a la plataforma MEDAL:
+
+${data.registros}
+
+Por favor, revisa estas entradas para determinar si deben prorrogarse o darse de baja en el sistema.
+
+Si procede, realiza las acciones necesarias desde la plataforma MEDAL para mantener o finalizar el acceso correspondiente.
+
+--
+Sistema MEDAL
+  `,
+
+		html: `
+<h2>Aviso de caducidad de cuentas y servicios</h2>
+
+<p>
+Se ha detectado que en el día de hoy caducan las siguientes cuentas o peticiones
+asociadas a la plataforma <b>MEDAL</b>.
+</p>
+
+<p>
+Detalle de los registros afectados:
+</p>
+
+<pre style="background:#f6f8fa;padding:12px;border-radius:6px;font-size:13px;">
+${data.registros}
+</pre>
+
+<p>
+Por favor, revisa estas entradas para determinar si deben
+<b>prorrogarse</b> o <b>darse de baja</b> en el sistema.
+</p>
+
+<p>
+Si procede, realiza las acciones necesarias desde la plataforma MEDAL
+para mantener o finalizar el acceso correspondiente.
+</p>
+
+<p>Un saludo,<br/>Equipo MEDAL</p>
+
+${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
+`,
+	}),
 };
