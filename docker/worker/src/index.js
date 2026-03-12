@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Worker } from "bullmq";
+import { initCron } from "./cron/cron.js";
 
 import { redisConnection } from "./config/redis.js";
 import { QUEUE_MAIL, QUEUE_DOCUMENTS } from "./constants.js";
@@ -53,10 +54,12 @@ const startSystem = async () => {
 		initWorker(QUEUE_MAIL, mailProcessor, 5);
 		initWorker(QUEUE_DOCUMENTS, pdfProcessor, 2);
 		const PORT = process.env.PORT || 3000;
+		initCron();
 		app.listen(PORT, () => {
 			console.log(`SERVIDOR WORKER EN: ${PORT}`);
 			console.log(`SISTEMA DE GMAIL: ACTIVO`);
 			console.log(`GENERACIÓN PDF: ACTIVA`);
+			console.log(`Cron iniciado correctamente.`);
 			console.log("---------------------------------------------------");
 		});
 	} catch (error) {
