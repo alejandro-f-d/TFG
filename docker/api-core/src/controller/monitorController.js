@@ -33,6 +33,17 @@ export const getMonitorByUuid = async (req, res) => {
 	if (!uuid) {
 		return res.status(400).json({ error: "Petición mal formada." });
 	}
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(uuid)) {
+		return res.status(400).json({
+			error: "Formato de identificador de reserva inválido.",
+		});
+	}
+
 	try {
 		if (
 			!req.user.permisos.includes("monitor:listar") &&
@@ -59,6 +70,45 @@ export const getMonitorByUuid = async (req, res) => {
 			"Se ha producido un error al hacer el get de un monitor por uuid.",
 			error,
 		);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
+
+export const deleteMonitor = async (req, res) => {
+	const { uuid } = req.params;
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(uuid)) {
+		return res.status(400).json({
+			error: "Formato de identificador de reserva inválido.",
+		});
+	}
+
+	try {
+		if (
+			!req.user.permisos.includes("monitor:borrar") &&
+			!req.user.permisos.includes("admin:total")
+		) {
+			// Opción de que sea el dueño del monitor.
+			const esDueno = MonitorModel.verificardueno(uuid, req.user.idUsuario);
+			if (!esDueno || esDueno === 2) {
+				return res
+					.status(403)
+					.json({ error: "No tienes acceso a ese monitor." });
+			}
+		}
+
+		const resBorrado = await MonitorModel.deleteMonitorByUuid(uuid);
+		if (resBorrado === 2) {
+			return res.status(404).json({ error: "Monitor not found." });
+		} else {
+			return res.status(204).send();
+		}
+	} catch (error) {
+		console.error("Se ha producido un error al borrar un monitor.", error);
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };

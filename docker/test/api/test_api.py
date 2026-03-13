@@ -2113,3 +2113,69 @@ class TestGestionUsuarios:
         assert "error" in res.json()
         print("✅ Error 404 correctamente gestionado para UUID inexistente.")
 
+    def test_107_delete_monitoreo_success(self):
+        """Caso: Eliminación exitosa de un monitor (204)"""
+        uuid_test = getattr(TestGestionUsuarios, 'uuid_monitoreo', None)
+        assert uuid_test is not None, "Se requiere un UUID de monitoreo para borrar."
+
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL}/monitor/{uuid_test}"
+        
+        res = requests.delete(url, headers=headers)
+        
+        # El estándar 204 indica que se procesó correctamente y no devuelve cuerpo (No Content)
+        assert res.status_code == 204
+        print(f"✅ Monitor {uuid_test} eliminado correctamente (204).")
+
+    def test_107_delete_monitoreo_not_found(self):
+        """Caso: Intentar eliminar un monitor que ya no existe (404)"""
+        import uuid
+        uuid_inexistente = str(uuid.uuid4())
+        
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL}/monitor/{uuid_inexistente}"
+        
+        res = requests.delete(url, headers=headers)
+        
+        assert res.status_code == 404
+        assert res.json()["error"] == "Monitor not found."
+        print("✅ Error 404 confirmado para monitor inexistente.")
+
+    def test_108_delete_monitoreo_bad_request(self):
+        """Caso: Formato de UUID inválido (400)"""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL}/monitor/esto-no-es-un-uuid"
+        
+        res = requests.delete(url, headers=headers)
+        
+        assert res.status_code == 400
+        assert "error" in res.json()
+        print("✅ Error 400 confirmado para formato UUID inválido.")
+
+    def test_109_delete_monitoreo_no_auth(self):
+        """Caso: Intento de borrado sin token (401)"""
+        url = f"{self.BASE_URL}/monitor/55e7434f-6f33-483d-9485-d8580ecf8e53"
+        
+        res = requests.delete(url)
+        
+        assert res.status_code == 401
+        print("✅ Error 401 confirmado ante falta de credenciales.")
+
+    def test_110_delete_monitoreo_forbidden(self):
+        """Caso: No tiene permisos para eliminar (403)"""
+        # Suponiendo que tienes un token de un usuario sin permisos de borrado
+        token_usuario_basico = getattr(self, 'token_usuario_normal', None)
+        if not token_usuario_basico:
+            print("⚠️ Saltando test 403: No se dispone de token de usuario básico.")
+            return
+
+        # Intentamos borrar un monitor que (por ejemplo) es de otro usuario
+        uuid_ajeno = "55e7434f-6f33-483d-9485-d8580ecf8e53"
+        headers = {"Authorization": f"Bearer {token_usuario_basico}"}
+        url = f"{self.BASE_URL}/monitor/{uuid_ajeno}"
+        
+        res = requests.delete(url, headers=headers)
+        
+        assert res.status_code == 403
+        assert res.json()["error"] == "No tienes acceso a ese monitor."
+        print("✅ Error 403 confirmado: El usuario no tiene permisos sobre este monitor.")

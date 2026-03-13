@@ -82,6 +82,7 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('monitor:p
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('monitor:listar','Listar monitores', 'Permiso para listar y ver todos los servicios de monitoreo activos.', 'monitor');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('monitor:borrar','Borrar monitores', 'Permiso para borrar cualquiera de los monitores activos.', 'monitor');
  
 
 INSERT INTO medal.tipodispositivo (idtipodispositivo, nombre, descripcion) VALUES

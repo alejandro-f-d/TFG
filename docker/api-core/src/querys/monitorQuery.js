@@ -33,4 +33,9 @@ LEFT JOIN LATERAL (
 ) h ON TRUE
 WHERE m.uuidmonitoreo = $1;`,
 	GET_CREADOR: `SELECT idusuario from medal.monitoreoWeb where uuidmonitoreo = $1;`,
+	DELETE_MONITOR_BY_UUID: `
+        DELETE FROM medal.monitoreoWeb 
+        WHERE uuidMonitoreo = $1
+        RETURNING idMonitor;
+  `,
 };

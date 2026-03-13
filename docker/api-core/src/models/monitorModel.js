@@ -57,5 +57,19 @@ class MonitorModel {
 			throw error;
 		}
 	}
+	static async deleteMonitorByUuid(uuidMonitor) {
+		try {
+			const idMonitor = await pool.query(MONITOR_QUERY.DELETE_MONITOR_BY_UUID, [
+				uuidMonitor,
+			]);
+			if (idMonitor.rowCount === 0) {
+				return 2;
+			}
+			return 0;
+		} catch (error) {
+			console.error("Se ha producido un error al borrar el monitor.", error);
+			throw error;
+		}
+	}
 }
 export default MonitorModel;

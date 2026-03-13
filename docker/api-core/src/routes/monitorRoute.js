@@ -4,6 +4,7 @@ import { validarTipos } from "../middlewares/validador.middleware.js";
 import {
 	postMonitor,
 	getMonitorByUuid,
+	deleteMonitor,
 } from "../controller/monitorController.js";
 import { monitorSchema } from "../schemas/index.js";
 const router = express.Router();
@@ -352,4 +353,99 @@ router.post(
  */
 
 router.get("/:uuid", [verificarToken], getMonitorByUuid);
+
+/**
+ * @swagger
+ * /api/monitoreo/{uuid}:
+ *   delete:
+ *     summary: Elimina un monitor por su UUID
+ *     description: |
+ *       Elimina permanentemente un monitor de la base de datos.
+ *
+ *       **Control de acceso:**
+ *       - Requiere permiso `monitor:borrar` o `admin:total`
+ *       - El propietario del monitor también puede eliminarlo aunque no tenga esos permisos
+ *     tags: [Monitoreo]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID del monitor a eliminar
+ *         example: "55e7434f-6f33-483d-9485-d8580ecf8e53"
+ *     responses:
+ *       204:
+ *         description: Monitor eliminado correctamente (sin contenido)
+ *       400:
+ *         description: |
+ *           Error de validación. Puede deberse a:
+ *           * UUID no proporcionado
+ *           * Formato de UUID inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               uuidFaltante:
+ *                 value:
+ *                   error: "Petición mal formada."
+ *               uuidInvalido:
+ *                 value:
+ *                   error: "Formato de identificador de reserva inválido."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: No tiene permisos para eliminar este monitor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tienes acceso a ese monitor."
+ *       404:
+ *         description: Monitor no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Monitor not found."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+router.delete("/:uuid", [verificarToken], deleteMonitor);
 export default router;
