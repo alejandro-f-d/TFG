@@ -374,3 +374,30 @@ export const validacionFirmaCompleta = Joi.object({
 			"any.required": "No se ha recibido el PDF en 'documentoPdf'.",
 		}),
 }).unknown(true);
+
+export const monitorSchema = Joi.object({
+	nombreObjetivo: Joi.string().min(3).max(50).required().messages({
+		"string.empty": "El nombre del objetivo no puede estar vacío",
+		"any.required": "El nombre del objetivo es obligatorio",
+	}),
+
+	direccion: Joi.string()
+		.uri({ scheme: ["http", "https"] })
+		.required()
+		.messages({
+			"string.uri": "La dirección debe ser una URL válida (http/https)",
+			"any.required": "La dirección URL es obligatoria",
+		}),
+
+	valorEsperado: Joi.number().integer().min(100).max(599).default(200),
+
+	timeOutSegundos: Joi.number().integer().min(1).max(30).required(),
+
+	umbralReintentos: Joi.number().integer().min(0).max(10).default(3),
+
+	idMetodo: Joi.number().integer().required(),
+
+	cadaCuantoSegundos: Joi.number().integer().min(10).required().messages({
+		"number.min": "El intervalo mínimo de monitoreo son 10 segundos",
+	}),
+});

@@ -178,14 +178,13 @@ CREATE TABLE IF NOT EXISTS medal.monitoreoWeb (
     nombreObjetivo VARCHAR(50) NOT NULL,
     direccion VARCHAR(100) NOT NULL,
     valorUltimaRespuesta INTEGER,
-    valorEsperado INTEGER,
+    valorEsperado INTEGER DEFAULT 200,
     uuidMonitoreo UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     fechaCreacion DATE NOT NULL DEFAULT CURRENT_DATE,
-    timeoutMs INTEGER DEFAULT 500,
+    timeoutSegundos INTEGER DEFAULT 60,
     umbralReintentos INTEGER DEFAULT 5,
-    intervaloSegundos INTEGER DEFAULT 60,
     contadorFallos INTEGER DEFAULT 0,
-    
+    cadaCuantoSegundos INTEGER DEFAULT 86400,
     idUsuario INTEGER NOT NULL,
     idMetodo INTEGER NOT NULL,
 

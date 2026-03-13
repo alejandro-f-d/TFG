@@ -23,6 +23,7 @@ class TestGestionUsuarios:
     uuid_puerta_creada = None
     uuid_dispositivo_creado = None
     uuid_reserva_creada = None
+    uuid_monitoreo = None
 
 
     # --- BLOQUE 1: AUTENTICACIÓN (LOGIN) ---
@@ -2020,4 +2021,45 @@ class TestGestionUsuarios:
         res_check = requests.get(url, headers=headers)
         assert res_check.status_code == 404
         print(f"✅ Verificación exitosa: La máquina ya no existe (404).")
+
+
+
+
+    def test_103_post_monitoreo(self):
+        """Caso: Creación de manera correcta un monitoreo web"""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        payload = {
+            "nombreObjetivo": "Prueba del servidor",
+            "direccion": "https://localhost:8080/healthchek",
+            "valorEsperado": 200,
+            "timeOutSegundos": 1,
+            "umbralReintentos": 5,
+            "idMetodo": 2,
+            "cadaCuantoSegundos": 10
+        }        
+        res = requests.post(f"{self.BASE_URL}/monitor", json=payload, headers=headers)
+        assert res.status_code in [201]
+        
+        data = res.json()
+        uid = data.get("uuid") or data.get("id") or (data.get("info", {}) if isinstance(data.get("info"), dict) else {}).get("uuid")
+        TestGestionUsuarios.uuid_monitoreo  = uid
+        assert TestGestionUsuarios.uuid_monitoreo  is not None, f"No se pudo obtener el UUID. Respuesta: {data}"
+        print(f"✅ Monitoreo web correcto: {TestGestionUsuarios.uuid_monitoreo }")
+
+    def test_104_post_monitoreo_mal_formado(self):
+        """Caso: Creación de manera incorrecta un monitoreo web"""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        payload = {
+            "nombreObjetivo": "Prueba del servidor",
+            "direccion": "www.://localhost:8080/healthchek",
+            "valorEsperado": 200,
+            "timeOutSegundos": 1,
+            "umbralReintentos": 5,
+            "idMetodo": 2,
+            "cadaCuantoSegundos": 10
+        }        
+        res = requests.post(f"{self.BASE_URL}/monitor" , json=payload, headers=headers)
+        assert res.status_code in [400]
+        print(f"✅ Monitoreo web ha fallado correctamente.")
+
 

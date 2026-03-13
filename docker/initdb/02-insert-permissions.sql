@@ -78,6 +78,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('peticion:
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('peticion:firma_administrador', 'Firmar documentos', 'Permite al usuario la firma de todos los documentos', 'peticiones');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('monitor:postMonitor', 'Creación de un nuevo monitor.', 'Permite al usuario que posee este permiso crear monitorización a diferentes páginas web.', 'monitor');
+
  
 
 INSERT INTO medal.tipodispositivo (idtipodispositivo, nombre, descripcion) VALUES
@@ -115,6 +117,22 @@ INSERT INTO medal.tipodispositivo (idtipodispositivo, nombre, descripcion) VALUE
 (21, 'Dongle Licencia', 'Llave USB física para software (HASP)'),
 (22, 'Docking Station', 'Base de expansión para ordenadores portátiles'),
 (23, 'Bridge', 'Puente de conexión entre protocolos de red');
+
+
+INSERT INTO medal.metodoMonitoreoWeb (nombre, alias, descripcion) VALUES 
+(
+    'HTTP GET', 
+    'GET', 
+    'Solicita el recurso completo de la URL. Es el método más común para verificar que una página web carga contenido correctamente.'
+),
+(
+    'ICMP Echo (Ping Red)', 
+    'ICMP', 
+    'Verifica la conectividad a nivel de red (Capa 3). Útil para saber si el servidor está encendido, aunque el servicio web esté caído.'
+);
+
+
+
 
 -- ====================================
 -- Roles:
