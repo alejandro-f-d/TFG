@@ -19,7 +19,7 @@ class CaducidadFechas {
 				})
 				.join("\n");
 
-			console.log(bodyCorreo);
+			// console.log(bodyCorreo);
 			return bodyCorreo;
 		} catch (error) {
 			console.error(
@@ -35,7 +35,7 @@ class CaducidadFechas {
 				QUERIES_CADUCIDAD.OBTENER_CORREO_ADMIN,
 				[],
 			);
-			console.log(correoAdministradores.rows[0].lista_destinatarios);
+			// console.log(correoAdministradores.rows[0].lista_destinatarios);
 			return correoAdministradores.rows[0].lista_destinatarios;
 		} catch (error) {
 			console.error(

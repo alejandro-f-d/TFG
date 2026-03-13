@@ -1,3 +1,5 @@
+# Evitamos la subida de las claves de los certificados:
+**certs.zip
 # Subida de certificados
 **/*.pem
 **/*.p12

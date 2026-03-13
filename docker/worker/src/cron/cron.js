@@ -4,12 +4,13 @@ import { addEmailToQueue } from "../eda/queue.js";
 
 export const initCron = async () => {
 	const job = new CronJob(
-		"0 0 9 * * *",
-		// "0 0 9 * * *", // 0s, 0min, 9h, todos los días, meses y semanas
-		function () {
+		// "0 30 11 * * *",
+		"0 0 9 * * *", // 0s, 0min, 9h, todos los días, meses y semanas
+		async function () {
 			console.log("Ejecutando la tarea a las nueve de la mañana");
 			const cuerpoInfo = await CaducidadFechas.getCaducidad();
-			const correosAdministrador = await CaducidadFechas.getCorreoAdministradores();
+			const correosAdministrador =
+				await CaducidadFechas.getCorreoAdministradores();
 			addEmailToQueue({
 				template: "EXPIRACION_SERVICIOS",
 				to: correosAdministrador,
@@ -18,8 +19,10 @@ export const initCron = async () => {
 		},
 		null,
 		true,
-		"Europe/Madrid", // Asegúrate de poner tu zona horaria real
+		"Europe/Madrid",
 	);
 
-	console.log("📅 Cron configurado para ejecutarse todos los días a las 09:00");
+	console.log(
+		"Cron de baja de usuarios y peticiones funcionando correctamente.",
+	);
 };
