@@ -1,7 +1,10 @@
 import express from "express";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
-import { postMonitor } from "../controller/monitorController.js";
+import {
+	postMonitor,
+	getMonitorByUuid,
+} from "../controller/monitorController.js";
 import { monitorSchema } from "../schemas/index.js";
 const router = express.Router();
 
@@ -175,4 +178,178 @@ router.post(
 	],
 	postMonitor,
 );
+
+/**
+ * @swagger
+ * /api/monitoreo/{uuid}:
+ *   get:
+ *     summary: Obtiene los detalles de un monitor por su UUID
+ *     description: |
+ *       Retorna la información detallada de un monitor específico, incluyendo
+ *       datos de configuración, última respuesta, responsable y método HTTP.
+ *
+ *       **Control de acceso:**
+ *       - Requiere permiso `monitor:listar` o `admin:total`
+ *       - El propietario del monitor también puede acceder aunque no tenga esos permisos
+ *     tags: [Monitoreo]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID del monitor a consultar
+ *         example: "55e7434f-6f33-483d-9485-d8580ecf8e53"
+ *     responses:
+ *       200:
+ *         description: Monitor encontrado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Monitor encontrado con éxito"
+ *                 info:
+ *                   type: object
+ *                   properties:
+ *                     uuidmonitoreo:
+ *                       type: string
+ *                       format: uuid
+ *                       description: UUID único del monitor
+ *                       example: "55e7434f-6f33-483d-9485-d8580ecf8e53"
+ *                     nombreobjetivo:
+ *                       type: string
+ *                       description: Nombre descriptivo del objetivo
+ *                       example: "Prueba del servidor"
+ *                     direccion:
+ *                       type: string
+ *                       format: uri
+ *                       description: URL monitoreada
+ *                       example: "https://localhost:8080/healthchek"
+ *                     valorultimarespuesta:
+ *                       type: integer
+ *                       nullable: true
+ *                       description: Último código de respuesta HTTP obtenido (puede ser nulo si aún no se ha ejecutado)
+ *                       example: null
+ *                     valoresperado:
+ *                       type: integer
+ *                       description: Código HTTP esperado
+ *                       example: 200
+ *                     contadorfallos:
+ *                       type: integer
+ *                       description: Número de fallos consecutivos
+ *                       example: 0
+ *                     timeoutsegundos:
+ *                       type: integer
+ *                       description: Tiempo máximo de espera en segundos
+ *                       example: 1
+ *                     cadacuantosegundos:
+ *                       type: integer
+ *                       description: Intervalo entre monitoreos (segundos)
+ *                       example: 10
+ *                     fechaverificacion:
+ *                       type: string
+ *                       format: date-time
+ *                       nullable: true
+ *                       description: Fecha de la última verificación realizada
+ *                       example: null
+ *                     proxima_ejecucion:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Fecha y hora programada para la próxima ejecución
+ *                       example: "2026-03-13T13:18:30.896Z"
+ *                     responsable_nombre:
+ *                       type: string
+ *                       description: Nombre completo del usuario responsable/creador
+ *                       example: "Alejandro Fisac Delgado"
+ *                     responsable_email:
+ *                       type: string
+ *                       format: email
+ *                       description: Correo electrónico del responsable
+ *                       example: "alejandro.fisac.contact@gmail.com"
+ *                     metodo_http:
+ *                       type: string
+ *                       description: Descripción del método HTTP utilizado (ej. GET, POST, ICMP)
+ *                       example: "ICMP Echo (Ping Red)"
+ *                     ultimo_estado_disponible:
+ *                       type: boolean
+ *                       nullable: true
+ *                       description: Último estado de disponibilidad (true = disponible)
+ *                       example: null
+ *                     ultimo_codigo_http:
+ *                       type: integer
+ *                       nullable: true
+ *                       description: Último código HTTP obtenido (puede ser nulo)
+ *                       example: null
+ *                     ultima_respuesta_fecha:
+ *                       type: string
+ *                       format: date-time
+ *                       nullable: true
+ *                       description: Fecha de la última respuesta recibida
+ *                       example: null
+ *       400:
+ *         description: Petición mal formada (UUID no proporcionado)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición mal formada."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: No tiene permisos para ver este monitor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tienes acceso a ese monitor."
+ *       404:
+ *         description: Monitor no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Monitor no encontrado."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.get("/:uuid", [verificarToken], getMonitorByUuid);
 export default router;

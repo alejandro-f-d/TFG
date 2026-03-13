@@ -2062,4 +2062,54 @@ class TestGestionUsuarios:
         assert res.status_code in [400]
         print(f"✅ Monitoreo web ha fallado correctamente.")
 
+    def test_105_get_monitoreo_by_uuid(self):
+        """Caso: Obtener detalles de un monitor por su UUID (Éxito)"""
+        # Verificamos que tengamos un UUID de los tests anteriores
+        uuid_test = getattr(TestGestionUsuarios, 'uuid_monitoreo', None)
+        assert uuid_test is not None, "Se requiere un UUID de monitoreo válido para este test."
+
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # Construimos la URL con el UUID en el path
+        url = f"{self.BASE_URL}/monitor/{uuid_test}"
+        
+        res = requests.get(url, headers=headers)
+        
+        # 1. Validar código de estado
+        assert res.status_code == 200, f"Error esperado 200 pero se obtuvo {res.status_code}. Respuesta: {res.text}"
+        
+        data = res.json()
+        
+        # 2. Validar estructura del mensaje
+        assert "message" in data, "Falta el campo 'message' en la respuesta"
+        assert "info" in data, "Falta el campo 'info' en la respuesta"
+        
+        info = data["info"]
+        
+        # 3. Validar campos clave de la info (según tu DDL y documentación)
+        assert info["uuidmonitoreo"] == uuid_test
+        assert "nombreobjetivo" in info
+        assert "direccion" in info
+        assert "responsable_nombre" in info
+        assert "metodo_http" in info
+        
+        # 4. Validar que campos de histórico existan (aunque sean null)
+        assert "ultimo_estado_disponible" in info
+        assert "ultima_respuesta_fecha" in info
+        
+        print(f"✅ Detalle de monitor verificado para: {info['nombreobjetivo']} ({info['metodo_http']})")
+
+    def test_106_get_monitoreo_not_found(self):
+        """Caso: Intento de obtener un monitor con un UUID inexistente (404)"""
+        import uuid
+        uuid_falso = str(uuid.uuid4())
+        
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        url = f"{self.BASE_URL}/monitor/{uuid_falso}"
+        
+        res = requests.get(url, headers=headers)
+        
+        assert res.status_code == 404
+        assert "error" in res.json()
+        print("✅ Error 404 correctamente gestionado para UUID inexistente.")
 

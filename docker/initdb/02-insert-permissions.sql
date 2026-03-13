@@ -80,6 +80,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('peticion:
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('monitor:postMonitor', 'Creación de un nuevo monitor.', 'Permite al usuario que posee este permiso crear monitorización a diferentes páginas web.', 'monitor');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('monitor:listar','Listar monitores', 'Permiso para listar y ver todos los servicios de monitoreo activos.', 'monitor');
+
  
 
 INSERT INTO medal.tipodispositivo (idtipodispositivo, nombre, descripcion) VALUES
