@@ -196,7 +196,8 @@ CREATE TABLE IF NOT EXISTS medal.monitoreoWeb (
 
     CONSTRAINT fk_metodo_monitoreo
         FOREIGN KEY (idMetodo) 
-        REFERENCES medal.metodoMonitoreoWeb(idMetodo)
+        REFERENCES medal.metodoMonitoreoWeb(idMetodo),
+    proxima_ejecucion TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 15. HISTORICO
@@ -374,7 +375,11 @@ CREATE TABLE IF NOT EXISTS medal.documento(
   nivelDescripcionUsuarioSupervisor VARCHAR(500),
   firmanteJefeLaboratorio VARCHAR(500),
   fechaFirmaJefeLaboratorio TIMESTAMPTZ,
-  nivelDescripcionJefeLaboratorio VARCHAR(500)
+  nivelDescripcionJefeLaboratorio VARCHAR(500),
+  CONSTRAINT fk_peticion 
+    FOREIGN KEY(idPeticion)
+    REFERENCES medal.peticion(idPeticion)
+    ON DELETE NO ACTION
 );
 
 
@@ -510,3 +515,4 @@ CREATE TABLE IF NOT EXISTS medal.accede(
     ON DELETE CASCADE
 );
 
+CREATE INDEX idx_monitoreo_proxima_ejecucion ON medal.monitoreoWeb (proxima_ejecucion);
