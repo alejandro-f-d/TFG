@@ -38,4 +38,92 @@ WHERE m.uuidmonitoreo = $1;`,
         WHERE uuidMonitoreo = $1
         RETURNING idMonitor;
   `,
+	GET_ALL_MONITORES: `SELECT 
+            m.uuidMonitoreo,
+            m.nombreObjetivo,
+            m.direccion,
+            m.valorUltimaRespuesta,
+            m.valorEsperado,
+            m.contadorFallos,
+            m.timeoutSegundos,
+            m.cadaCuantoSegundos,
+            m.fechaVerificacion,
+            m.proxima_ejecucion,
+            m.fechaCreacion,
+
+            -- Datos del Responsable
+            CONCAT(u.nombre, ' ', u.apellido1, ' ', COALESCE(u.apellido2, '')) AS responsable_nombre,
+            u.correoinstitucional AS responsable_email,
+
+            -- Método HTTP
+            met.nombre AS metodo_http,
+
+            -- Último estado (Lateral Join para eficiencia)
+            h.disponible AS ultimo_estado_disponible,
+            h.resultado AS ultimo_codigo_http,
+            h.fecha_registro AS ultima_respuesta_fecha,
+
+            -- Conteo total para el frontend
+            COUNT(*) OVER() AS total_registros
+
+        FROM medal.monitoreoWeb m
+        JOIN medal.usuario u ON m.idUsuario = u.idUsuario
+        JOIN medal.metodoMonitoreoWeb met ON m.idMetodo = met.idMetodo
+        LEFT JOIN LATERAL (
+            SELECT disponible, resultado, fecha_registro
+            FROM medal.historicoMonitoreo
+            WHERE idMonitor = m.idMonitor
+            ORDER BY fecha_registro DESC
+            LIMIT 1
+        ) h ON TRUE
+        
+        WHERE ($3::text = '' OR m.nombreObjetivo ILIKE $4)
+        
+        ORDER BY m.fechaCreacion DESC
+        
+        LIMIT $1 OFFSET $2;`,
+	GET_ALL_MONITORES_PROPIOS: `SELECT 
+            m.uuidMonitoreo,
+            m.nombreObjetivo,
+            m.direccion,
+            m.valorUltimaRespuesta,
+            m.valorEsperado,
+            m.contadorFallos,
+            m.timeoutSegundos,
+            m.cadaCuantoSegundos,
+            m.fechaVerificacion,
+            m.proxima_ejecucion,
+            m.fechaCreacion,
+
+            -- Datos del Responsable
+            CONCAT(u.nombre, ' ', u.apellido1, ' ', COALESCE(u.apellido2, '')) AS responsable_nombre,
+            u.correoinstitucional AS responsable_email,
+
+            -- Método HTTP
+            met.nombre AS metodo_http,
+
+            -- Último estado (Lateral Join para eficiencia)
+            h.disponible AS ultimo_estado_disponible,
+            h.resultado AS ultimo_codigo_http,
+            h.fecha_registro AS ultima_respuesta_fecha,
+
+            -- Conteo total para el frontend
+            COUNT(*) OVER() AS total_registros
+
+        FROM medal.monitoreoWeb m
+        JOIN medal.usuario u ON m.idUsuario = u.idUsuario
+        JOIN medal.metodoMonitoreoWeb met ON m.idMetodo = met.idMetodo
+        LEFT JOIN LATERAL (
+            SELECT disponible, resultado, fecha_registro
+            FROM medal.historicoMonitoreo
+            WHERE idMonitor = m.idMonitor
+            ORDER BY fecha_registro DESC
+            LIMIT 1
+        ) h ON TRUE
+        
+        WHERE ($3::text = '' OR m.nombreObjetivo ILIKE $4) AND m.idusuario = $5
+        
+        ORDER BY m.fechaCreacion DESC
+        
+        LIMIT $1 OFFSET $2;`,
 };

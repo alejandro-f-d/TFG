@@ -112,3 +112,57 @@ export const deleteMonitor = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
+
+export const getMonitor = async (req, res) => {
+	const page = parseInt(req.query.page) || 1;
+	const limit = parseInt(req.query.limit) || 5;
+	const filtroNombre = req.query.filtroNombre || "";
+	const userId = req.user.idUsuario;
+	if (page < 1 || limit < 1) {
+		return res.status(400).json({ error: "Petición invalida" });
+	}
+
+	try {
+		let resGet;
+		if (
+			!req.user.permisos.includes("monitor:listar") &&
+			!req.user.permisos.includes("admin:total")
+		) {
+			// Usuario base, solo puede ser con su uuid.
+			resGet = await MonitorModel.getAllMonitores(
+				page,
+				limit,
+				filtroNombre,
+				true,
+				userId,
+			);
+		} else if (
+			req.user.permisos.includes("monitor:listar") ||
+			req.user.permisos.includes("admin:total")
+		) {
+			resGet = await MonitorModel.getAllMonitores(
+				page,
+				limit,
+				filtroNombre,
+				false,
+				userId,
+			);
+		}
+		if (resGet === 2) {
+			return res
+				.status(404)
+				.json({ error: "Monitor no encontrado con esos filtros." });
+		}
+		return res
+			.status(200)
+			.json({ message: "Monitores encontrado con éxito.", info: resGet });
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al hacer un get de monitor/",
+			error,
+		);
+		return res.status(500).json({
+			error: "Se ha producido un error al hacer un get de los monitores.",
+		});
+	}
+};

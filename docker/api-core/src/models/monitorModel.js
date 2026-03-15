@@ -71,5 +71,29 @@ class MonitorModel {
 			throw error;
 		}
 	}
+
+	static async getAllMonitores(page, limit, filtroNombre, propios, userId) {
+		try {
+			const offset = (page - 1) * limit;
+			const pattern = `%${filtroNombre}%`;
+			const sqlQuery = propios
+				? MONITOR_QUERY.GET_ALL_MONITORES_PROPIOS
+				: MONITOR_QUERY.GET_ALL_MONITORES;
+			const params = propios
+				? [limit, offset, filtroNombre, pattern, userId]
+				: [limit, offset, filtroNombre, pattern];
+			const result = await pool.query(sqlQuery, params);
+			if (result.rows.length === 0) return 2;
+			return {
+				info: result.rows,
+				total: parseInt(result.rows[0].total_registros) || 0,
+				page: parseInt(page),
+				limit: parseInt(limit),
+			};
+		} catch (error) {
+			console.error("Error en getAllMonitores:", error);
+			throw error;
+		}
+	}
 }
 export default MonitorModel;
