@@ -78,15 +78,15 @@ INSERT INTO medal.participa VALUES
 -- =========================
 -- 7. METODO MONITOREO
 -- =========================
-INSERT INTO medal.metodoMonitoreoWeb(nombre,alias,descripcion)
-VALUES
-('HTTP_STATUS','http','Verifica código HTTP'),
-('PING','ping','Verifica conectividad ICMP');
+-- INSERT INTO medal.metodoMonitoreoWeb(nombre,alias,descripcion)
+-- VALUES
+-- ('HTTP_STATUS','http','Verifica código HTTP'),
+-- ('PING','ping','Verifica conectividad ICMP');
 
 INSERT INTO medal.monitoreoWeb
-(nombreObjetivo,direccion,valorUltimaRespuesta,valorEsperado,idUsuario,idMetodo)
+(nombreObjetivo,direccion,valorUltimaRespuesta,valorEsperado,idUsuario,idMetodo, cadacuantosegundos)
 VALUES
-('Google','https://google.com',200,200,1,1);
+('Google','https://google.com',200,200,1,2, 10);
 
 INSERT INTO medal.historicoMonitoreo(disponible,resultado,idMonitor)
 VALUES

@@ -10,6 +10,7 @@ import { QUEUE_MAIL, QUEUE_DOCUMENTS, QUEUE_HEALTH } from "./constants.js";
 import { mailProcessor } from "./core/mailProcessor.js"; // Tu lógica de Gmail
 import { pdfProcessor } from "./core/pdfProcessor.js";
 import { healthProcessor } from "./core/healthProcessor.js";
+import { loadMonitorsToRedis } from "./eda/queue.js";
 
 import BaseDeDatos from "./bbdd/conexion.js";
 
@@ -57,11 +58,13 @@ const startSystem = async () => {
 		initWorker(QUEUE_HEALTH, healthProcessor, 10);
 		const PORT = process.env.PORT || 3000;
 		initCron();
+		await loadMonitorsToRedis();
 		app.listen(PORT, () => {
 			console.log(`SERVIDOR WORKER EN: ${PORT}`);
 			console.log(`SISTEMA DE GMAIL: ACTIVO`);
 			console.log(`GENERACIÓN PDF: ACTIVA`);
 			console.log(`Cron iniciado correctamente.`);
+			console.log(`Monitoreo cargado correctamente.`);
 			console.log("---------------------------------------------------");
 		});
 	} catch (error) {
