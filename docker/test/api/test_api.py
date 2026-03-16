@@ -2046,6 +2046,39 @@ class TestGestionUsuarios:
         assert TestGestionUsuarios.uuid_monitoreo  is not None, f"No se pudo obtener el UUID. Respuesta: {data}"
         print(f"✅ Monitoreo web correcto: {TestGestionUsuarios.uuid_monitoreo }")
 
+
+    def test_110_get_nombre(self):
+        """Caso: Obtención del get por filtroNombre del monitor creado con filtroNombre"""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        query_params = {
+            "filtroNombre": "Prueba",
+            "page": 1,
+            "limit": 5
+        }
+        url = f"{self.BASE_URL}/monitor"
+        res = requests.get(url, headers=headers, params=query_params)
+        assert res.status_code == 200
+        data = res.json()["info"]
+        assert data["page"] == 1
+        assert isinstance(data["info"], list)
+        print(f"✅ Test de filtros completado. URL: {res.url}")
+
+    def test_111_get_monitores_filtro_vacio(self):
+        """Caso: Filtro de nombre vacío ?filtroNombre=&page=1"""
+        headers = {"Authorization": f"Bearer {self.token_admin}"}
+        
+        # Si quieres enviar el parámetro vacío:
+        query_params = {
+            "filtroNombre": "", 
+            "page": 1
+        }
+        
+        res = requests.get(f"{self.BASE_URL}/monitor", headers=headers, params=query_params)
+        
+        assert res.status_code == 200
+        print(f"✅ Test con filtro vacío ejecutado: {res.url}")
+
+
     def test_104_post_monitoreo_mal_formado(self):
         """Caso: Creación de manera incorrecta un monitoreo web"""
         headers = {"Authorization": f"Bearer {self.token_admin}"}
