@@ -19,9 +19,13 @@ class HealthModel {
 	}
 
 	static async getCorreo(idMonitor) {
+		await pool.query(HEALTH_QUERYES.SET_CAIDO, [idMonitor]);
 		const res = await pool.query(HEALTH_QUERYES.GET_CORREO, [idMonitor]);
-
-		// Verificamos si existe el registro para evitar errores de "undefined"
+		return res.rows.length > 0 ? res.rows[0].correoinstitucional : null;
+	}
+	static async getCorreoSetOk(idMonitor) {
+		await pool.query(HEALTH_QUERYES.SET_OK, [idMonitor]);
+		const res = await pool.query(HEALTH_QUERYES.GET_CORREO, [idMonitor]);
 		return res.rows.length > 0 ? res.rows[0].correoinstitucional : null;
 	}
 }

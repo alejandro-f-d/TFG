@@ -308,4 +308,53 @@ Recibirás nuevas notificaciones si el estado cambia o el servicio se restablece
 ${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
 `,
 	}),
+	SERVICIO_RECUPERADO: (data) => ({
+		subject: `✅ Servicio recuperado - ${data.serviceName}`,
+		text: `
+El servicio monitorizado ${data.serviceName} ha recuperado su funcionamiento normal.
+
+Hora de recuperación:
+${data.recoveredAt}
+
+Estado actual:
+${data.currentStatus || "Operativo"}
+
+Puedes consultar más detalles del servicio en el siguiente enlace:
+${data.dashboardUrl}
+
+--
+Sistema de Monitorización
+	`,
+		html: `
+<h2 style="color:#188038;">✅ Servicio recuperado</h2>
+
+<p>
+El servicio monitorizado <b>${data.serviceName}</b> ha recuperado su funcionamiento normal.
+</p>
+
+<p>
+<b>Hora de recuperación:</b><br/>
+${data.recoveredAt}
+</p>
+
+<p>
+<b>Estado actual:</b><br/>
+${data.currentStatus || "Operativo"}
+</p>
+
+<p style="margin-top:16px;">
+Puedes consultar más detalles del estado del servicio en el siguiente enlace:
+</p>
+
+<p>
+<a href="${data.dashboardUrl}" style="color:#1a73e8;">
+Ver estado del servicio
+</a>
+</p>
+
+<p>Un saludo,<br/>Sistema de Monitorización</p>
+
+${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
+`,
+	}),
 };

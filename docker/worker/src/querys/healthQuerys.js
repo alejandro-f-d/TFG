@@ -10,7 +10,7 @@ export const HEALTH_QUERYES = {
             fechaVerificacion = NOW(),
             contadorFallos = CASE WHEN $2 = TRUE THEN 0 ELSE contadorFallos + 1 END
         WHERE idMonitor = $3 
-        RETURNING contadorFallos, umbralReintentos, nombreObjetivo, direccion
+        RETURNING *
     `,
 
 	GET_CORREO: `
@@ -19,4 +19,6 @@ export const HEALTH_QUERYES = {
         INNER JOIN medal.monitoreoweb mw ON u.idusuario = mw.idusuario 
         WHERE mw.idmonitor = $1
     `,
+	SET_CAIDO: `UPDATE medal.monitoreoweb SET statusactual = 'caido' WHERE idmonitor = $1;`,
+	SET_OK: `UPDATE medal.monitoreoweb SET statusactual = 'ok' WHERE idmonitor = $1;`,
 };

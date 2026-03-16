@@ -30,8 +30,12 @@ export const healthProcessor = async (job) => {
 			);
 
 			if (monitorActualizado) {
-				const { contadorfallos, umbralreintentos, nombreobjetivo } =
-					monitorActualizado;
+				const {
+					contadorfallos,
+					umbralreintentos,
+					nombreobjetivo,
+					statusactual,
+				} = monitorActualizado;
 
 				if (contadorfallos === umbralreintentos) {
 					const correoCreador = await HealthModel.getCorreo(idMonitor);
@@ -44,6 +48,22 @@ export const healthProcessor = async (job) => {
 							description: `Fallo detectado mediante ${type}. Código/Estado: ${status.resultado}`,
 							dashboardUrl: process.env.WEB_URL,
 							serviceName: nombreobjetivo,
+						});
+						console.log(
+							`[ALERTA] Correo enviado a ${correoCreador} por caída de ${nombreobjetivo}`,
+						);
+					}
+				} else if (contadorfallos === 0 && statusactual === "caido") {
+					const correoCreador = await HealthModel.getCorreoSetOk(idMonitor);
+
+					if (correoCreador) {
+						await addEmailToQueue({
+							template: "SERVICIO_RECUPERADO",
+							to: correoCreador,
+							serviceName: nombreobjetivo,
+							recoveredAt: new Date(),
+							currentStatus: "Funcionando.",
+							dashboardUrl: process.env.WEB_URL,
 						});
 						console.log(
 							`[ALERTA] Correo enviado a ${correoCreador} por caída de ${nombreobjetivo}`,

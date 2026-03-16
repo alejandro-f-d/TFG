@@ -187,6 +187,7 @@ CREATE TABLE IF NOT EXISTS medal.monitoreoWeb (
     cadaCuantoSegundos INTEGER DEFAULT 86400,
     idUsuario INTEGER NOT NULL,
     idMetodo INTEGER NOT NULL,
+    statusActual VARCHAR(50) NOT NULL DEFAULT 'ok',
 
     CONSTRAINT fk_usuario_monitoreo 
         FOREIGN KEY (idUsuario) 
