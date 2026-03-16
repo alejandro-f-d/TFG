@@ -5,10 +5,11 @@ import { Worker } from "bullmq";
 import { initCron } from "./cron/cron.js";
 
 import { redisConnection } from "./config/redis.js";
-import { QUEUE_MAIL, QUEUE_DOCUMENTS } from "./constants.js";
+import { QUEUE_MAIL, QUEUE_DOCUMENTS, QUEUE_HEALTH } from "./constants.js";
 
 import { mailProcessor } from "./core/mailProcessor.js"; // Tu lógica de Gmail
 import { pdfProcessor } from "./core/pdfProcessor.js";
+import { healthProcessor } from "./core/healthProcessor.js";
 
 import BaseDeDatos from "./bbdd/conexion.js";
 
@@ -53,6 +54,7 @@ const startSystem = async () => {
 		console.log("DB POSTGRESQL: CONECTADA");
 		initWorker(QUEUE_MAIL, mailProcessor, 5);
 		initWorker(QUEUE_DOCUMENTS, pdfProcessor, 2);
+		initWorker(QUEUE_HEALTH, healthProcessor, 10);
 		const PORT = process.env.PORT || 3000;
 		initCron();
 		app.listen(PORT, () => {
