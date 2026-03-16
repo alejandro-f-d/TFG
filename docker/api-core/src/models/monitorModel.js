@@ -6,21 +6,24 @@ class MonitorModel {
 	static async postMonitor(userId, data) {
 		try {
 			const uuidMonitor = uuidv4();
-			await pool.query(MONITOR_QUERY.CREAR_MONITOR, [
+
+			const res = await pool.query(MONITOR_QUERY.CREAR_MONITOR, [
 				data.nombreObjetivo,
 				data.direccion,
-				data.valorEsperado,
+				data.valorEsperado || 200,
 				uuidMonitor,
-				data.timeOutSegundos,
-				data.umbralReintentos,
+				data.timeoutSegundos || 60,
+				data.umbralReintentos || 5,
 				userId,
 				data.idMetodo,
-				data.cadaCuantoSegundos,
+				data.cadaCuantoSegundos || 86400,
 			]);
-			return { uuid: uuidMonitor };
+
+			return res.rows[0];
 		} catch (error) {
 			console.error(
 				"Se ha producido un error al intentar escribir la información del monitor en la base de datos.",
+				error,
 			);
 			throw error;
 		}

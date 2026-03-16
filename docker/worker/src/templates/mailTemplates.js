@@ -252,4 +252,60 @@ para mantener o finalizar el acceso correspondiente.
 ${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
 `,
 	}),
+	SERVICIO_CAIDO: (data) => ({
+		subject: `⚠️ Alerta: Servicio fuera de línea - ${data.serviceName}`,
+		text: `
+Se ha detectado una caída en el servicio monitorizado: ${data.serviceName}.
+
+Hora de detección:
+${data.detectedAt}
+
+Descripción del incidente:
+${data.description || "No se ha proporcionado una descripción adicional."}
+
+Puedes consultar más detalles o seguir el estado del servicio desde el siguiente enlace:
+${data.dashboardUrl}
+
+Recibirás nuevas notificaciones si el estado cambia o el servicio se restablece.
+
+--
+Sistema de Monitorización
+	`,
+		html: `
+<h2 style="color:#d93025;">⚠️ Alerta: Servicio fuera de línea</h2>
+
+<p>
+Se ha detectado una incidencia en el servicio monitorizado:
+<b>${data.serviceName}</b>.
+</p>
+
+<p>
+<b>Hora de detección:</b><br/>
+${data.detectedAt}
+</p>
+
+<p>
+<b>Descripción del incidente:</b><br/>
+${data.description || "No se ha proporcionado una descripción adicional."}
+</p>
+
+<p style="margin-top:16px;">
+Puedes consultar más detalles o seguir la evolución del estado del servicio desde el siguiente enlace:
+</p>
+
+<p>
+<a href="${data.dashboardUrl}" style="color:#1a73e8;">
+Ver estado del servicio
+</a>
+</p>
+
+<p>
+Recibirás nuevas notificaciones si el estado cambia o el servicio se restablece.
+</p>
+
+<p>Un saludo,<br/>Sistema de Monitorización</p>
+
+${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
+`,
+	}),
 };

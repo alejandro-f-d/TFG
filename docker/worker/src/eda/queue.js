@@ -34,13 +34,14 @@ export const loadMonitorsToRedis = async () => {
 		const res = await pool.query(
 			`
             SELECT 
-                idmonitor, 
-                uuidmonitoreo, 
-                direccion, 
-                valoresperado, 
-                timeoutsegundos, 
-                cadacuantosegundos,
-                idmetodo 
+						nombreobjetivo,
+						idmonitor, 
+						uuidmonitoreo, 
+						direccion, 
+						valoresperado, 
+						timeoutsegundos, 
+						cadacuantosegundos,
+						idmetodo 
             FROM medal.monitoreoWeb
         `,
 			[],

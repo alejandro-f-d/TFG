@@ -1,4 +1,5 @@
 import MonitorModel from "../models/monitorModel.js";
+import { addMonitorToQueue } from "../eda/queue.js";
 
 export const postMonitor = async (req, res) => {
 	const { nombreObjetivo, direccion } = req.body;
@@ -12,13 +13,14 @@ export const postMonitor = async (req, res) => {
 			req.user.idUsuario,
 			req.body,
 		);
+		await addMonitorToQueue(resPost);
 		return res
 			.status(201)
-			.location(resPost.uuid)
+			.location(resPost.uuidmonitoreo)
 			.json({
-				message: "Proceso de monitoreo creado con éxito.",
-				uuid: resPost.uuid,
-				url: `${process.env.API_DIRECTION}/api/monitor/${resPost.uuid}`,
+				message: "Proceso de monitoreo creado y activado con éxito.",
+				uuid: resPost.uuidmonitoreo,
+				url: `${process.env.API_DIRECTION}/api/monitor/${resPost.uuidmonitoreo}`,
 			});
 	} catch (error) {
 		console.error(
