@@ -9,7 +9,7 @@ const connection = new IORedis(process.env.REDIS_URL, {
 const defaultJobOptions = {
 	attempts: 3,
 	backoff: { type: "exponential", delay: 1000 },
-	removeOnComplete: true,
+	removeOnComplete: { count: 100 }, // Mantiene los últimos 100 trabajos completados, para poder verlos en el gestor.
 	removeOnFail: { age: 24 * 3600 }, // Mantiene fallidos 24h para revisión
 };
 

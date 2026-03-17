@@ -95,7 +95,11 @@ export const deleteMonitor = async (req, res) => {
 			!req.user.permisos.includes("admin:total")
 		) {
 			// Opción de que sea el dueño del monitor.
-			const esDueno = MonitorModel.verificardueno(uuid, req.user.idUsuario);
+			const esDueno = await MonitorModel.verificardueno(
+				uuid,
+				req.user.idUsuario,
+			);
+			// console.log("El valor de esdueno es: ", esDueno);
 			if (!esDueno || esDueno === 2) {
 				return res
 					.status(403)

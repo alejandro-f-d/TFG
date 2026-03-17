@@ -2197,14 +2197,13 @@ class TestGestionUsuarios:
     def test_110_delete_monitoreo_forbidden(self):
         """Caso: No tiene permisos para eliminar (403)"""
         # Suponiendo que tienes un token de un usuario sin permisos de borrado
-        token_usuario_basico = getattr(self, 'token_usuario_normal', None)
-        if not token_usuario_basico:
+        if not self.token_sin_roles:
             print("⚠️ Saltando test 403: No se dispone de token de usuario básico.")
             return
 
         # Intentamos borrar un monitor que (por ejemplo) es de otro usuario
         uuid_ajeno = "55e7434f-6f33-483d-9485-d8580ecf8e53"
-        headers = {"Authorization": f"Bearer {token_usuario_basico}"}
+        headers = {"Authorization": f"Bearer {self.token_sin_roles}"}
         url = f"{self.BASE_URL}/monitor/{uuid_ajeno}"
         
         res = requests.delete(url, headers=headers)

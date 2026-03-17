@@ -30,7 +30,9 @@ class MonitorModel {
 	}
 	static async verificardueno(uuidMonitor, userId) {
 		try {
-			const creadorRes = await pool.query(MONITOR_QUERY.GET_CREADOR);
+			const creadorRes = await pool.query(MONITOR_QUERY.GET_CREADOR, [
+				uuidMonitor,
+			]);
 			if (creadorRes.rowCount === 0) {
 				return 2;
 			}
