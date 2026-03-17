@@ -384,6 +384,35 @@ Para cada uno de los roles se les puede asignar diferentes permisos asociados, e
   \item \texttt{Asignación de roles}: Permite la asignación de roles existentes a los usuarios.
 \end{itemize}
 
+\subsubsection{Proyectos de Gitlab:}
+\begin{itemize}
+  \item \texttt{Creación de proyectos}: Permite la creación de un proyecto de gitlab al usuario.
+  \item \texttt{Obtener listado de proyectos}: Permite al usuario la obtención del conjunto de listados de proyectos.
+\end{itemize}
+
+\subsubsection{Puertas:}
+\begin{itemize}
+  \item \texttt{Creación}: Permite la creación de puertas en el sistema.
+  \item \texttt{Get}: Permite el listado de las puertas del sistema.
+\end{itemize}
+
+\subsubsection{Dispositivos:}
+\begin{itemize}
+  \item \texttt{Creación de dispositivos}: Permite el registro de nuevos dispositivos físicos en el inventario.
+  \item \texttt{Listado de dispositivos}: Acceso al inventario completo de dispositivos registrados.
+\end{itemize}
+
+\subsubsection{Monitoreo Web (HealthCheck):}
+\begin{itemize}
+  \item \texttt{Creación de monitores}: Permite configurar nuevos objetivos de monitoreo (URLs) y definir el método (GET/PING).
+  \item \texttt{Listado y visualización}: Permite ver el estado actual (OK/Error) de los servicios y acceder al histórico de disponibilidad.
+  \item \texttt{Gestión de monitores}: Permite la eliminación o pausa de las tareas de monitoreo programadas.
+\end{itemize}
+
+\subsubsection{Documentación Técnica:}
+\begin{itemize}
+  \item \texttt{Acceso a Swagger}: Permite visualizar la documentación técnica de la API y realizar pruebas de los endpoints.
+\end{itemize}
 \newpage
 
 
@@ -437,7 +466,7 @@ La infraestructura se va a basar en microservicios apoyados en docker. El sistem
   % \item Frontend: Esta capa va a ser la visible para el usuario y la que está pensada para que el usuario interactue.
   % \item API: Esta capa se encargará de la comunicación entre el frontend y el backend. Además se encargará de trabajar con los servicios de @firma.
   % \item Backend: Esta última capa se va a encargar del almacenamiento de los datos. Concretamente se va a dividir en dos partes principales, una base de datos y en una estructura encargada de almacenar los datos de los documentos (servicio de almacenamiento de objetos).
-  \item \texttt{Bases de datos (Relacional Tablas)}: Servicio de almacenamiento para el sistema.
+  \item \texttt{Bases de datos (Tablas del modelo relacional)}: Servicio de almacenamiento para el sistema.
   \item \texttt{Bases de datos (Documentos)}: En este microservicio se van a almacenar de manera segura los documentos, separados de la base de datos para evitar su sobrecarga.
   \item \texttt{API}: Comunicación entre el frontend y el backend.
   \item \texttt{Worker}: Encargado de realización de trabajos pesados tales como la monitorización de páginas web.
