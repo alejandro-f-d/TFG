@@ -56,7 +56,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "${API_PORT_EXTERNAL}:8080"
+      - "${API_IP}:${API_PORT_EXTERNAL}:8080"
     environment:
       DB_URL: postgres://${DB_USER}:${DB_PASSWORD}@medal-bdd-postgres:5432/${DB_NAME}
       JWT_SECRET: ${JWT_SECRET}
