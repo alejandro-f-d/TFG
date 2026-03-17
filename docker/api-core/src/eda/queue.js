@@ -71,3 +71,5 @@ export const addMonitorToQueue = async (payload) => {
 		throw error;
 	}
 };
+
+export const queuesForDashboard = [mailQueue, pdfQueue, monitorQueue];

@@ -14,6 +14,7 @@ import dispositivosRoute from "./routes/dispositivosRoute.js";
 import calendarioRoute from "./routes/calendarioRoute.js";
 import peticionRoute from "./routes/peticionRoute.js";
 import monitorRoute from "./routes/monitorRoute.js";
+import adminRoute from "./routes/adminRoute.js";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
@@ -63,6 +64,7 @@ app.use("/api/dispositivos", dispositivosRoute);
 app.use("/api/reservas", calendarioRoute);
 app.use("/api/peticion", peticionRoute);
 app.use("/api/monitor", monitorRoute);
+app.use("/admin/queues", adminRoute);
 
 // Errores interno 500
 app.use((err, req, res, next) => {
