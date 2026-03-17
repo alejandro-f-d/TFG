@@ -17,6 +17,7 @@ import monitorRoute from "./routes/monitorRoute.js";
 import adminRoute from "./routes/adminRoute.js";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import { verificarToken, tienePermiso } from "./middlewares/authMiddleware.js";
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 // Middlewares
 app.use(
 	"/api-docs",
+	[verificarToken, tienePermiso("swagger:viewDocs")],
 	swaggerUi.serve,
 	swaggerUi.setup(swaggerDocs, {
 		swaggerOptions: {
