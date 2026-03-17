@@ -168,3 +168,50 @@ export const getMonitor = async (req, res) => {
 		});
 	}
 };
+
+export const getHistorico = async (req, res) => {
+	// Este método la idea es que el frontend pida los datos, y el mismo se encargue de generar la gráfica deseada por parte del usuario que se quiere ver.
+	const { uuid } = req.params;
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(uuid)) {
+		return res.status(400).json({
+			error: "Formato de identificador de reserva inválido.",
+		});
+	}
+
+	try {
+		if (
+			!req.user.permisos.includes("monitor:listar") &&
+			!req.user.permisos.includes("admin:total")
+		) {
+			// Opción de que sea el dueño del monitor.
+			const esDueno = MonitorModel.verificardueno(uuid, req.user.idUsuario);
+			if (!esDueno || esDueno === 2) {
+				return res
+					.status(403)
+					.json({ error: "No tienes acceso a ese monitor." });
+			}
+		}
+		const resultado = await MonitorModel.getHistoricoMonitores(uuid);
+		if (resultado === 2) {
+			return res.status(404).json({ error: "Monitor no encontrado." });
+		}
+
+		return res
+			.status(200)
+			.json({ message: "Monitor encontrado con éxito", info: resultado });
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al hacer la obtención del histórico de un monitor por uuid.",
+			error,
+		);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};

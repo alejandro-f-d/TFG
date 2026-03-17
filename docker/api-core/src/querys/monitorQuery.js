@@ -126,4 +126,22 @@ WHERE m.uuidmonitoreo = $1;`,
         ORDER BY m.fechaCreacion DESC
         
         LIMIT $1 OFFSET $2;`,
+	OBTENER_HISTORICO: ` SELECT 
+             mw.idMonitor,
+             mw.nombreObjetivo,
+             mw.direccion,
+             mw.statusActual,
+             mm.nombre AS metodo,
+             (
+                 SELECT JSON_AGG(json_build_object(
+                     'fecha', h.fecha_registro, 
+                     'disponible', h.disponible,
+                     'resultado', h.resultado
+                 ) ORDER BY h.fecha_registro DESC)
+                 FROM medal.historicoMonitoreo h
+                 WHERE h.idMonitor = mw.idMonitor
+             ) as historico
+         FROM medal.monitoreoWeb mw
+         INNER JOIN medal.metodoMonitoreoWeb mm ON mw.idMetodo = mm.idMetodo
+         WHERE mw.uuidmonitoreo = $1;`,
 };

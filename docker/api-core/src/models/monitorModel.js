@@ -98,5 +98,22 @@ class MonitorModel {
 			throw error;
 		}
 	}
+
+	static async getHistoricoMonitores(uuid) {
+		try {
+			const res = await pool.query(MONITOR_QUERY.OBTENER_HISTORICO, [uuid]);
+			if (res.rowCount === 0) {
+				return 2; // Not Found
+			}
+			return res.rows[0];
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener el histórico de un servicio de monitorización.",
+				uuid,
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default MonitorModel;

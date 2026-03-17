@@ -6,6 +6,7 @@ import {
 	getMonitorByUuid,
 	deleteMonitor,
 	getMonitor,
+	getHistorico,
 } from "../controller/monitorController.js";
 import { monitorSchema } from "../schemas/index.js";
 const router = express.Router();
@@ -652,4 +653,152 @@ router.get("/", [verificarToken], getMonitor);
  *                   example: "Error interno del servidor."
  */
 router.delete("/:uuid", [verificarToken], deleteMonitor);
+
+/**
+ * @swagger
+ * /api/monitor/{uuid}/historico:
+ *   get:
+ *     summary: Obtiene el histórico de monitorización de un monitor
+ *     description: |
+ *       Retorna el histórico de comprobaciones realizadas para un monitor específico,
+ *       incluyendo la información del monitor y un array con los registros históricos.
+ *
+ *       **Control de acceso:**
+ *       - Requiere permiso `monitor:listar` o `admin:total`
+ *       - El propietario del monitor también puede acceder aunque no tenga esos permisos
+ *     tags: [Monitor]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID del monitor a consultar
+ *         example: "198500b2-931c-475a-ae6e-7951318c70f1"
+ *     responses:
+ *       200:
+ *         description: Histórico obtenido correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Monitor encontrado con éxito"
+ *                 info:
+ *                   type: object
+ *                   properties:
+ *                     idmonitor:
+ *                       type: integer
+ *                       description: ID interno del monitor
+ *                       example: 1
+ *                     nombreobjetivo:
+ *                       type: string
+ *                       description: Nombre del objetivo monitoreado
+ *                       example: "Google"
+ *                     direccion:
+ *                       type: string
+ *                       format: uri
+ *                       description: URL monitoreada
+ *                       example: "https://google.com"
+ *                     statusactual:
+ *                       type: string
+ *                       description: Estado actual del monitor (ok, warning, error, etc.)
+ *                       example: "ok"
+ *                     metodo:
+ *                       type: string
+ *                       description: Método HTTP o tipo de comprobación utilizado
+ *                       example: "ICMP Echo (Ping Red)"
+ *                     historico:
+ *                       type: array
+ *                       description: Lista de registros históricos ordenados por fecha descendente
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           fecha:
+ *                             type: string
+ *                             format: date-time
+ *                             description: Fecha y hora del registro
+ *                             example: "2026-03-17T08:50:30.128633"
+ *                           disponible:
+ *                             type: boolean
+ *                             description: Indica si el servicio estaba disponible en ese momento
+ *                             example: true
+ *                           resultado:
+ *                             type: integer
+ *                             description: Código de resultado (HTTP, tiempo de respuesta, etc.)
+ *                             example: 1
+ *       400:
+ *         description: |
+ *           Error de validación. Puede deberse a:
+ *           * UUID no proporcionado
+ *           * Formato de UUID inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               uuidFaltante:
+ *                 value:
+ *                   error: "Petición mal formada."
+ *               uuidInvalido:
+ *                 value:
+ *                   error: "Formato de identificador de reserva inválido."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: No tiene permisos para ver este monitor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tienes acceso a ese monitor."
+ *       404:
+ *         description: Monitor no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Monitor no encontrado."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.get("/:uuid/historico", [verificarToken], getHistorico);
 export default router;
