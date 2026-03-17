@@ -72,7 +72,7 @@ app.use((err, req, res, next) => {
 	res.status(500).send({ error: "Algo salió mal en el servidor" });
 });
 
-app.listen(process.env.PORT, () => {
+app.listen("8080", "0.0.0.0", () => {
 	console.log(`API Medal corriendo en ${process.env.API_DIRECTION}`);
 	console.log(
 		`Documentación disponible en ${process.env.API_DIRECTION}/api-docs`,
