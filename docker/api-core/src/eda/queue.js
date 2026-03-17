@@ -10,7 +10,7 @@ const defaultJobOptions = {
 	attempts: 3,
 	backoff: { type: "exponential", delay: 1000 },
 	removeOnComplete: { count: 100 }, // Mantiene los últimos 100 trabajos completados, para poder verlos en el gestor.
-	removeOnFail: { age: 24 * 3600 }, // Mantiene fallidos 24h para revisión
+	removeOnFail: { age: 7 * 24 * 3600 }, // Mantiene fallidos 7 días para revisión
 };
 
 const mailQueue = new Queue(QUEUE_MAIL, { connection, defaultJobOptions });
