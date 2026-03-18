@@ -753,7 +753,7 @@ router.get("/", [verificarToken], getAllPeticiones);
 
 /**
  * @swagger
- * /api/peticiones/{uuid}/firma:
+ * /api/peticion/{uuid}/firma:
  *   post:
  *     summary: Procesa la firma electrónica de un documento de petición
  *     description: |
@@ -915,7 +915,7 @@ router.post(
 
 /**
  * @swagger
- * /api/peticiones/{uuid}/denegar:
+ * /api/peticion/{uuid}/denegar:
  *   patch:
  *     summary: Deniega una petición
  *     description: |
@@ -1048,7 +1048,7 @@ router.patch(
 
 /**
  * @swagger
- * /api/peticiones/{uuid}/completada:
+ * /api/peticion/{uuid}/completada:
  *   patch:
  *     summary: Marca una petición como realizada/completada
  *     description: |

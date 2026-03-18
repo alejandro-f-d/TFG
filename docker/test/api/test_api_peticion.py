@@ -443,7 +443,7 @@ class TestPeticion:
         headers = {"Authorization": f"Bearer {self.token_user_supervisor}"}
 
         # Ruta de tu archivo en el disco
-        ruta_archivo = "./peticion_firmada.pdf" 
+        ruta_archivo = "./peticion_firmada_2.pdf" 
 
         try:
             # Abrimos el archivo en modo lectura binaria ('rb')

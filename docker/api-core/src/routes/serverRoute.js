@@ -828,7 +828,7 @@ router.delete(
  *       Retorna un listado paginado de los servicios que están corriendo en una máquina específica.
  *       Incluye detalles del servicio y los puertos asociados.
  *       Requiere el permiso `maquina:verServicios` (con flag true) o `admin:total`.
- *     tags: [Máquinas]
+ *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1040,7 +1040,7 @@ router.get(
  *       Crea un servicio y lo asocia a la máquina especificada.
  *       Opcionalmente permite asociar otros servidores y definir puertos abiertos.
  *       Requiere el permiso `maquina:crearServicios` (con flag true) o `admin:total`.
- *     tags: [Máquinas]
+ *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1277,7 +1277,7 @@ router.post(
  *     description: |
  *       Retorna la información detallada de un servicio concreto que corre en la máquina indicada.
  *       Requiere el permiso `maquina:verServicios` (con flag true) o `admin:total`.
- *     tags: [Máquinas]
+ *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1658,7 +1658,7 @@ router.patch(
  *       - Elimina los puertos asociados al servicio
  *       - Elimina el servicio en sí
  *       Requiere el permiso `maquina:borrarServicios` (con flag true) o `admin:total`.
- *     tags: [Máquinas]
+ *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
  *     parameters:
