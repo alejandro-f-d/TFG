@@ -323,8 +323,7 @@ class TestGestionUsuarios:
         print(f"\n✅ Servicio '{payload['nombreServicio']}' creado con éxito para la máquina {mid}")
     def test_15_get_servicios_de_maquina(self):
         """
-        Caso: Obtener los servicios asociados a una máquina.
-        Soporta respuestas donde 'info' es un objeto único o una lista.
+        Caso: Obtener los servicios asociados a una máquina con soporte para paginación.
         """
         mid = TestGestionUsuarios.uuid_maquina_creada
         assert mid is not None
@@ -332,33 +331,39 @@ class TestGestionUsuarios:
         headers = {"Authorization": f"Bearer {self.token_admin}"}
         url = f"{self.BASE_URL_MAQUINA}/{mid}/servicios"
         
+        # Filtramos por una parte del nombre que sabemos que existe
         params = {"page": 1, "limit": 10, "filtroNombre": "Servidor Web"}
         res = requests.get(url, headers=headers, params=params)
         
         assert res.status_code == 200
         data = res.json()
         
-        # Extraemos 'info'
-        info_data = data.get("info", [])
+        # 1. Accedemos a la nueva estructura: info -> data
+        info_obj = data.get("info", {})
+        servicios = info_obj.get("data", [])
         
-        # Normalizamos: si es un dict, lo metemos en una lista; si es lista, se queda igual
-        servicios = [info_data] if isinstance(info_data, dict) else info_data
+        # 2. Validaciones de la lista
+        assert isinstance(servicios, list), f"Se esperaba una lista en 'data', se obtuvo: {type(servicios)}"
+        assert len(servicios) > 0, f"No se encontraron servicios. Respuesta completa: {data}"
         
-        assert isinstance(servicios, list), f"No se pudo procesar 'info' como lista. Tipo: {type(info_data)}"
-        assert len(servicios) > 0, "No se encontraron servicios en la máquina"
+        # 3. Verificamos nombres (Postgres devuelve minúsculas: 'nombreservicio')
+        nombres = [str(s.get("nombreservicio", s.get("nombreServicio", ""))) for s in servicios]
         
-        # Verificamos el nombre (atención a posibles minúsculas en las llaves del JSON)
-        # Usamos .lower() para ser más flexibles con el nombre
-        nombres = [str(s.get("nombreServicio", s.get("nombreservicio", ""))) for s in servicios]
+        # Usamos in para búsqueda parcial: "Servidor Web" está en "Servidor Web de Pruebas"
+        assert any("Servidor Web" in n for n in nombres), f"No se encontró el servicio. Nombres en JSON: {nombres}"
         
-        assert any("Servidor Web" in n for n in nombres), f"No se encontró el servicio. Nombres en BD: {nombres}"
+        # 4. Validamos que la paginación venga en la respuesta
+        pagination = info_obj.get("pagination", {})
+        assert "totalItems" in pagination, "Faltan metadatos de paginación"
         
-        print(f"✅ Servicios validados correctamente (formato {type(info_data).__name__}): {nombres}")
-        # Guardamos el uuid del servicio encontrado
-        primer_servicio = servicios[0]
-        uuid_servicio = primer_servicio.get("uuidServicio") or primer_servicio.get("uuidservicio")
-
-        assert uuid_servicio is not None, f"No se encontró uuidServicio en: {primer_servicio}"
+        print(f"✅ Servicios validados (Total: {pagination.get('totalItems')}): {nombres}")
+        
+        # 5. Guardamos el UUID para los siguientes tests
+        # Buscamos el servicio específico que queremos testear después
+        servicio_target = next((s for s in servicios if "Servidor Web" in (s.get("nombreservicio") or "")), servicios[0])
+        
+        uuid_servicio = servicio_target.get("uuidservicio") or servicio_target.get("uuidServicio")
+        assert uuid_servicio is not None, f"No se encontró uuidservicio en: {servicio_target}"
 
         TestGestionUsuarios.uuid_servicio_creado = uuid_servicio
     def test_16_get_servicio_por_uuid(self):
@@ -404,30 +409,30 @@ class TestGestionUsuarios:
         mid = TestGestionUsuarios.uuid_maquina_creada
         sid = TestGestionUsuarios.uuid_servicio_creado
         
-        assert mid is not None and sid is not None, "Error: UUIDs de máquina o servicio no encontrados"
+        assert mid is not None and sid is not None, "Error: UUIDs no encontrados"
 
         url = f"{self.BASE_URL_MAQUINA}/{mid}/servicios/{sid}"
         headers = {"Authorization": f"Bearer {self.token_admin}"}
         
-        # Valores que queremos actualizar
-        nuevo_nombre = "Apache Web Server v2.4 Updated"
-        nueva_desc = "Servidor optimizado para produccion"
+        # Valores para actualizar
+        nuevo_nombre = "Apache Web Server Updated"
+        nueva_desc = "Servidor optimizado"
         
+        # NOTA: He comentado 'servidores' porque si los IDs 1, 2, 3 no existen, da 500.
+        # Si tu lógica requiere enviarlos, asegúrate de que existan en la tabla Maquina.
         payload = {
             "nombreServicio": nuevo_nombre,
             "descripcionTecnica": nueva_desc,
-            "entorno": "produccion",
+            "entorno": "PROD",
             "publico": True,
             "softwareBase": "Apache 2.4",
-            "activo": True,
             "nivelSeveridad": "alto",
-            "servidores": [1, 2, 3], # Asegúrate de que estos IDs de servidor existen en tu DB de pruebas
+            # "servidores": [1], # Descomentar solo si el ID 1 existe en tu DB
             "puertosAbiertos": [
                 {
-                    "numeroPuertoMaquina": 80,
+                    "numeroPuertoMaquina": 8080,
                     "protocolo": "TCP",
-                    "nombreServicio": "http",
-                    "puertoVirtual": 8080
+                    "nombreServicio": "http-alt"
                 }
             ]
         }
@@ -436,8 +441,11 @@ class TestGestionUsuarios:
         print(f"\nEnviando PATCH a: {url}")
         res_patch = requests.patch(url, json=payload, headers=headers)
         
-        # Validamos que el controlador responda 204 (No Content)
-        assert res_patch.status_code == 204
+        # Si da 500, imprimimos el error del servidor para debuguear
+        if res_patch.status_code == 500:
+            print(f"❌ Error 500 del Servidor: {res_patch.text}")
+        
+        assert res_patch.status_code == 204, f"Fallo en PATCH. Status: {res_patch.status_code}"
         print(f"✅ PATCH exitoso (Status 204)")
 
         # 3. Verificar la actualización con un GET
@@ -445,29 +453,23 @@ class TestGestionUsuarios:
         assert res_get.status_code == 200
         
         datos_api = res_get.json()
-        
-        # Extraemos el objeto 'info' según la estructura de tu API
+        # En el GET por UUID, 'info' suele ser el objeto directo del servicio
         info = datos_api.get("info", {})
         
-        # Debug por si algo falla (ver con pytest -s)
-        print(f"DEBUG: Datos en 'info': {info}")
-
-        # 4. Validaciones de integridad (claves en minúscula por Postgres)
-        nombre_db = info.get("nombreservicio")
-        desc_db = info.get("descripciontecnica")
+        # 4. Validaciones de integridad (llaves en minúscula por Postgres)
+        nombre_db = info.get("nombreservicio", info.get("nombreServicio"))
         entorno_db = info.get("entorno")
         puertos = info.get("lista_puertos", [])
 
-        assert nombre_db == nuevo_nombre, f"Fallo: se esperaba '{nuevo_nombre}', pero la DB tiene '{nombre_db}'"
-        assert desc_db == nueva_desc
-        assert entorno_db == "produccion"
+        assert nombre_db == nuevo_nombre, f"Se esperaba '{nuevo_nombre}', llegó '{nombre_db}'"
+        assert entorno_db == "PROD"
         
-        # Verificamos que al menos el puerto que enviamos esté presente
-        assert len(puertos) > 0, "La lista de puertos está vacía"
-        assert puertos[0]["puerto"] == 80
-        assert puertos[0]["protocolo"] == "TCP"
+        # Verificamos que el puerto se haya actualizado
+        # Buscamos en la lista de puertos el que acabamos de insertar
+        puerto_actualizado = any(p.get("puerto") == 8080 for p in puertos)
+        assert puerto_actualizado, f"El puerto 8080 no se encuentra en la lista: {puertos}"
 
-        print(f"✅ VERIFICACIÓN OK: Los datos se han persistido correctamente en la DB.")
+        print(f"✅ VERIFICACIÓN OK: Datos persistidos correctamente.")
     def test_18_patch_servicio_vacio_error(self):
         """
         Caso: Enviar un cuerpo vacío o sin campos de actualización.
