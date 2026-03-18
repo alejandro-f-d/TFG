@@ -461,7 +461,7 @@ Asimismo, los requisitos de la firma electrónica avanzada se definen en su art�
 
 \subsection{Infraestructura:}
 
-La infraestructura se va a basar en microservicios apoyados en docker. El sistema se va a desarrollar en tres capas: 
+La infraestructura se va a basar en microservicios apoyados en docker. El sistema se va a desarrollar en diferentes capas: 
 \begin{itemize}
   % \item Frontend: Esta capa va a ser la visible para el usuario y la que está pensada para que el usuario interactue.
   % \item API: Esta capa se encargará de la comunicación entre el frontend y el backend. Además se encargará de trabajar con los servicios de @firma.
@@ -473,6 +473,7 @@ La infraestructura se va a basar en microservicios apoyados en docker. El sistem
   \item \texttt{Frontend}: Parte con la que va a interactuar el usuario. 
   \item \texttt{Cron}: Encargado de realizar tareas periódicas con el worker.
   \item \texttt{Digital Signature Service}: Servicio de la Comunidad Económica Europea para validar la integridad de firmas en documentos PDF.
+  \item \texttt{Frontend}: Capa visible para el usuario y con la que interactua el usuario. 
 \end{itemize}
 
 Se selecciona una arquitectura modular ya que estos sistemas permiten aislamiento y portabilidad con respecto a las características de la máquina. En un sistema de mayor cantidad de usuarios que en el caso de este laboratorio permitiría una mayor resilencia con el uso de herramientas como un loadbalancer que opere con diferentes instancias de la API levantando instancias según sea necesario. En la parte del almacenado de datos, este sistema permitiría la redundancia de datos del sistema en varias bases de datos si fuera necesario.

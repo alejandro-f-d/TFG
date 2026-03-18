@@ -41,7 +41,7 @@ const upload = multer({
  * /api/user/login:
  *   post:
  *     summary: Obtienes un token de dos horas de duración para interactuar con el sistema.
- *     tags: [User]
+ *     tags: [Autenticación]
  *     requestBody:
  *       required: true
  *       content:
@@ -76,6 +76,7 @@ const recoveryLimiter = rateLimit({
 	legacyHeaders: false,
 });
 
+// ESTE MÉTODO SIEMPRE ES PÚBLICO.
 /**
  * @swagger
  * /api/user/recuperarpassword:
@@ -256,83 +257,194 @@ router.patch("/recuperarpassword", recoveryLimiter, patchRecuperarPassword);
  * @swagger
  * /api/user:
  *   post:
- *     summary: Crear un nuevo usuario
- *     tags: [User]
+ *     summary: Crea un nuevo usuario
+ *     description: |
+ *       Registra un nuevo usuario en el sistema.
+ *       Dependiendo del dominio del correo, se trata como usuario institucional (UPM) o externo.
+ *       Para usuarios externos la contraseña es obligatoria.
+ *       Requiere el permiso `usr:crearUsuario` (o `admin:total`).
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - nombre
+ *               - apellido1
+ *               - roles
+ *               - correoInstitucional
+ *               - fechaIncorporacion
+ *               - activo
  *             properties:
  *               nombre:
  *                 type: string
- *                 example: Alejandro
+ *                 description: Nombre del usuario
+ *                 example: "Juan"
  *               apellido1:
  *                 type: string
- *                 example: Fisac
+ *                 description: Primer apellido
+ *                 example: "Pérez"
  *               apellido2:
  *                 type: string
- *                 example: Delgado
- *               correoInstitucional:
- *                 type: string
- *                 example: alejandro.fisac@alumnos.upm.es
- *               usuarioVpn:
- *                 type: string
- *                 example: afisac
- *               gitlab:
- *                 type: string
- *                 example: afisac
- *               profesorResponsable:
- *                 type: integer
- *                 example: 1
- *               fechaIncorporacion:
- *                 type: string
- *                 format: date
- *                 example: 2026-02-16
- *               fechaFin:
- *                 type: string
- *                 format: date
- *                 example: 2027-02-16
- *               wifi:
- *                 type: boolean
- *                 example: true
- *               activo:
- *                 type: boolean
- *                 example: true
- *               tarjetaAcceso:
- *                 type: string
- *                 example: A-88923
- *               teams:
- *                 type: boolean
- *                 example: true
- *               esResponsable:
- *                 type: boolean
- *                 example: false
+ *                 description: Segundo apellido (opcional)
+ *                 example: "García"
  *               roles:
  *                 type: array
  *                 items:
  *                   type: integer
- *                 example: [2]
+ *                 description: Lista de IDs de roles a asignar
+ *                 example: [1, 3]
+ *               correoInstitucional:
+ *                 type: string
+ *                 format: email
+ *                 description: Correo electrónico institucional
+ *                 example: "juan.perez@upm.es"
+ *               usuarioVpn:
+ *                 type: string
+ *                 description: Nombre de usuario para VPN
+ *                 example: "jperez"
+ *               gitlab:
+ *                 type: string
+ *                 description: Usuario de GitLab
+ *                 example: "jperez"
  *               puertasAutorizadas:
  *                 type: array
  *                 items:
  *                   type: integer
- *                 example: [1]
+ *                 description: IDs de puertas a las que tiene acceso
+ *                 example: [2, 5]
+ *               profesorResponsable:
+ *                 type: integer
+ *                 description: ID del profesor responsable (si aplica)
+ *                 example: 10
+ *               fechaIncorporacion:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de incorporación
+ *                 example: "2025-09-01"
+ *               fechaFin:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de finalización / baja (opcional)
+ *                 example: "2026-08-31"
+ *               wifi:
+ *                 type: boolean
+ *                 description: Acceso WiFi concedido
+ *                 example: true
+ *               activo:
+ *                 type: boolean
+ *                 description: Estado activo del usuario
+ *                 example: true
+ *               tarjetaAcceso:
+ *                 type: string
+ *                 description: Identificador de tarjeta de acceso
+ *                 example: "A1B2C3"
+ *               contrasena:
+ *                 type: string
+ *                 format: password
+ *                 description: Contraseña (obligatoria para usuarios externos)
+ *                 example: "MiClaveSegura2025"
+ *               dirIpLastLogin:
+ *                 type: string
+ *                 description: Última IP conocida
+ *                 example: "192.168.1.100"
+ *               teams:
+ *                 type: boolean
+ *                 description: Miembro de equipos específicos
+ *                 example: false
  *               duenoMaquina:
  *                 type: array
  *                 items:
  *                   type: integer
- *                 example: [1, 2]
+ *                 description: IDs de máquinas de las que es propietario
+ *                 example: [4, 7]
+ *               esResponsable:
+ *                 type: boolean
+ *                 description: Indica si el usuario tiene rol de responsable
+ *                 example: false
  *     responses:
  *       201:
- *         description: Usuario creado correctamente
+ *         description: Usuario creado con éxito
+ *         headers:
+ *           Location:
+ *             schema:
+ *               type: string
+ *             description: URL relativa del recurso creado
+ *             example: "/api/user/550e8400-e29b-41d4-a716-446655440000"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Usuario creado con éxito"
+ *                 uuid:
+ *                   type: string
+ *                   format: uuid
+ *                   description: UUID del usuario creado
+ *                   example: "550e8400-e29b-41d4-a716-446655440000"
+ *                 url:
+ *                   type: string
+ *                   format: uri
+ *                   description: URL completa del recurso
+ *                   example: "https://api.ejemplo.com/api/user/550e8400-e29b-41d4-a716-446655440000"
  *       400:
- *         description: Error en los datos enviados
+ *         description: |
+ *           Error de validación. Puede deberse a:
+ *           * Faltan parámetros obligatorios (nombre, apellido1, roles, correo, fechaIncorporacion, activo)
+ *           * Formato de correo inválido
+ *           * Falta contraseña para usuario externo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Faltan parámetros obligatorios."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
  *       403:
- *         description: Careces de los permisos necesarios.
+ *         description: Prohibido - No tiene el permiso "usr:crearUsuario"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
  *       500:
- *         description: Error interno del servidor.
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
  */
 
 // router.post("/", postUser);// Esta sería la petición normal sin verificar el token.
@@ -353,28 +465,244 @@ router.post(
  * @swagger
  * /api/user/{uuid}:
  *   get:
- *     summary: Obtienes un usuario por uuid.
- *     tags: [User]
+ *     summary: Obtiene los detalles de un usuario por su UUID
+ *     description: |
+ *       Retorna la información detallada de un usuario, incluyendo sus relaciones:
+ *       - Puertas a las que tiene acceso
+ *       - Máquinas de las que es propietario
+ *       - Proyectos de GitLab en los que participa
+ *       - Peticiones realizadas (si las tiene)
+ *       La contraseña del usuario nunca se incluye en la respuesta.
+ *       Requiere el permiso `usr:getUsuario` (o `admin:total`).
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *       - in: path
  *         name: uuid
  *         required: true
  *         schema:
  *           type: string
  *           format: uuid
- *         description: UUID del usuario
- *         example: 178529fe-3c6b-4a50-b318-9d9f01ae0054
+ *         description: UUID del usuario a consultar
+ *         example: "6d8d77f0-d9a5-472b-aec3-92223b6ac70b"
  *     responses:
  *       200:
- *         description: Información del usuario encontrada correctamente.
+ *         description: Usuario encontrado con éxito
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Usuario encontrado con éxito."
+ *                 info:
+ *                   type: object
+ *                   properties:
+ *                     idusuario:
+ *                       type: integer
+ *                       description: ID interno del usuario
+ *                       example: 1
+ *                     nombre:
+ *                       type: string
+ *                       description: Nombre del usuario
+ *                       example: "Alejandro"
+ *                     apellido1:
+ *                       type: string
+ *                       description: Primer apellido
+ *                       example: "Fisac"
+ *                     apellido2:
+ *                       type: string
+ *                       description: Segundo apellido (puede ser nulo)
+ *                       example: "Delgado"
+ *                     teams:
+ *                       type: boolean
+ *                       description: Indica si pertenece a equipos
+ *                       example: true
+ *                     esresponsable:
+ *                       type: boolean
+ *                       description: Indica si tiene rol de responsable
+ *                       example: false
+ *                     usuariovpn:
+ *                       type: string
+ *                       description: Nombre de usuario para VPN
+ *                       example: "afisac"
+ *                     correoinstitucional:
+ *                       type: string
+ *                       format: email
+ *                       description: Correo electrónico institucional
+ *                       example: "alejandro.fisac.contact@gmail.com"
+ *                     activo:
+ *                       type: boolean
+ *                       description: Estado activo del usuario
+ *                       example: true
+ *                     fechaincorporacion:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Fecha de incorporación
+ *                       example: "2026-03-17T00:00:00.000Z"
+ *                     fechafin:
+ *                       type: string
+ *                       format: date-time
+ *                       nullable: true
+ *                       description: Fecha de baja (si aplica)
+ *                       example: null
+ *                     wifi:
+ *                       type: boolean
+ *                       description: Acceso WiFi concedido
+ *                       example: true
+ *                     tarjetaacceso:
+ *                       type: string
+ *                       description: Identificador de tarjeta de acceso
+ *                       example: "0767"
+ *                     diriplastlogin:
+ *                       type: string
+ *                       description: Última dirección IP conocida
+ *                       example: "172.20.0.1"
+ *                     fotoperfil:
+ *                       type: string
+ *                       nullable: true
+ *                       description: URL o referencia de la foto de perfil
+ *                       example: null
+ *                     uuidusuario:
+ *                       type: string
+ *                       format: uuid
+ *                       description: UUID del usuario
+ *                       example: "6d8d77f0-d9a5-472b-aec3-92223b6ac70b"
+ *                     gitlab:
+ *                       type: string
+ *                       description: Usuario de GitLab
+ *                       example: "afisac"
+ *                     responsable:
+ *                       type: integer
+ *                       description: ID del usuario responsable (si tiene)
+ *                       example: 2
+ *                     peticiones:
+ *                       type: array
+ *                       description: Peticiones realizadas por el usuario
+ *                       items:
+ *                         type: object
+ *                       example: []
+ *                     puertas:
+ *                       type: array
+ *                       description: Puertas a las que tiene acceso
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: ID de la puerta
+ *                             example: 1
+ *                           nombre:
+ *                             type: string
+ *                             description: Nombre de la puerta
+ *                             example: "Puerta CPD"
+ *                     maquinas_propiedad:
+ *                       type: array
+ *                       description: Máquinas de las que es propietario
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: ID de la máquina
+ *                             example: 1
+ *                           nombre:
+ *                             type: string
+ *                             description: Nombre de la máquina
+ *                             example: "srv-docker-01"
+ *                     proyectos_gitlab:
+ *                       type: array
+ *                       description: Proyectos de GitLab en los que participa
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: ID del proyecto
+ *                             example: 1
+ *                           nombre:
+ *                             type: string
+ *                             description: Nombre del proyecto
+ *                             example: "Monitorizacion"
+ *                           uuid:
+ *                             type: string
+ *                             format: uuid
+ *                             description: UUID del proyecto
+ *                             example: "4e6353a7-7039-487f-ba38-f2ef986aa4e3"
+ *                           activo:
+ *                             type: boolean
+ *                             description: Estado activo del proyecto
+ *                             example: true
  *       400:
- *         description: Error en los datos enviados.
+ *         description: Falta el UUID en la petición
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Falta el uuid."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
  *       403:
- *         description: Careces de los permisos necesarios.
+ *         description: Prohibido - No tiene el permiso "usr:getUsuario"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
  *       404:
- *         description: Usuario no encontrado.
+ *         description: |
+ *           Usuario no encontrado. Puede deberse a:
+ *           * Formato de UUID inválido
+ *           * UUID no existente en la base de datos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               formatoInvalido:
+ *                 summary: UUID con formato incorrecto
+ *                 value:
+ *                   error: "User no encontrado (Formato de ID inválido)."
+ *               noExiste:
+ *                 summary: UUID válido pero no existe
+ *                 value:
+ *                   message: "Usuario no encontrado."
  *       500:
- *         description: Error interno del servidor.
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
  */
 
 router.get(
@@ -385,35 +713,274 @@ router.get(
 
 /**
  * @swagger
- * /api/user/:
+ * /api/user:
  *   get:
- *     summary: Obtienes la lista de todos los usuarios.
- *     tags: [User]
+ *     summary: Obtiene listado paginado de usuarios
+ *     description: |
+ *       Retorna una lista de usuarios con paginación.
+ *       Los usuarios incluyen sus relaciones: puertas, máquinas en propiedad, proyectos GitLab y peticiones.
+ *       La contraseña nunca se incluye en la respuesta.
+ *       Requiere el permiso `usr:getUsuario` (o `admin:total`).
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - name: page
- *         in: query
- *         required: false
- *         schema:
- *           type: integer
- *       - name: limit
- *         in: query
- *         required: false
- *         schema:
- *           type: integer
- *       - name: filtroNombre
- *         in: query
- *         required: false
+ *       - in: header
+ *         name: Authorization
+ *         required: true
  *         schema:
  *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número de página
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 5
+ *         description: Cantidad de resultados por página
+ *         example: 5
+ *       - in: query
+ *         name: filtroNombre
+ *         schema:
+ *           type: string
+ *         description: Filtro por nombre (búsqueda parcial en nombre, apellidos)
+ *         example: "Alejandro"
  *     responses:
  *       200:
- *         description: Información de los usuarios encontrada correctamente.
+ *         description: Lista de usuarios devuelta correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Lista de usuarios devuelta correctamente."
+ *                 info:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       idusuario:
+ *                         type: integer
+ *                         description: ID interno del usuario
+ *                         example: 1
+ *                       nombre:
+ *                         type: string
+ *                         description: Nombre
+ *                         example: "Alejandro"
+ *                       apellido1:
+ *                         type: string
+ *                         description: Primer apellido
+ *                         example: "Fisac"
+ *                       apellido2:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Segundo apellido
+ *                         example: "Delgado"
+ *                       teams:
+ *                         type: boolean
+ *                         description: Pertenece a equipos
+ *                         example: true
+ *                       esresponsable:
+ *                         type: boolean
+ *                         description: Tiene rol de responsable
+ *                         example: false
+ *                       usuariovpn:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Usuario VPN
+ *                         example: "afisac"
+ *                       correoinstitucional:
+ *                         type: string
+ *                         format: email
+ *                         description: Correo institucional
+ *                         example: "alejandro.fisac.contact@gmail.com"
+ *                       activo:
+ *                         type: boolean
+ *                         description: Estado activo
+ *                         example: true
+ *                       fechaincorporacion:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Fecha de incorporación
+ *                         example: "2026-03-17T00:00:00.000Z"
+ *                       fechafin:
+ *                         type: string
+ *                         format: date-time
+ *                         nullable: true
+ *                         description: Fecha de baja
+ *                         example: null
+ *                       wifi:
+ *                         type: boolean
+ *                         description: Acceso WiFi
+ *                         example: true
+ *                       tarjetaacceso:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Tarjeta de acceso
+ *                         example: "0767"
+ *                       diriplastlogin:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Última IP conocida
+ *                         example: "172.20.0.1"
+ *                       fotoperfil:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Foto de perfil (URL o referencia)
+ *                         example: null
+ *                       uuidusuario:
+ *                         type: string
+ *                         format: uuid
+ *                         description: UUID del usuario
+ *                         example: "6d8d77f0-d9a5-472b-aec3-92223b6ac70b"
+ *                       gitlab:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Usuario GitLab
+ *                         example: "afisac"
+ *                       responsable:
+ *                         type: integer
+ *                         nullable: true
+ *                         description: ID del usuario responsable
+ *                         example: 2
+ *                       peticiones:
+ *                         type: array
+ *                         description: Peticiones realizadas por el usuario
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                               example: 1
+ *                             uuid:
+ *                               type: string
+ *                               format: uuid
+ *                               example: "a682584b-a138-475d-99ac-3b78565681d9"
+ *                             proyecto:
+ *                               type: string
+ *                               example: "IA-Research"
+ *                             estado:
+ *                               type: string
+ *                               example: "APROBADA"
+ *                       puertas:
+ *                         type: array
+ *                         description: Puertas a las que tiene acceso
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                               example: 1
+ *                             nombre:
+ *                               type: string
+ *                               example: "Puerta CPD"
+ *                       maquinas_propiedad:
+ *                         type: array
+ *                         description: Máquinas de las que es propietario
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                               example: 1
+ *                             nombre:
+ *                               type: string
+ *                               example: "srv-docker-01"
+ *                       proyectos_gitlab:
+ *                         type: array
+ *                         description: Proyectos GitLab en los que participa
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                               example: 1
+ *                             nombre:
+ *                               type: string
+ *                               example: "Monitorizacion"
+ *                             uuid:
+ *                               type: string
+ *                               format: uuid
+ *                               example: "4e6353a7-7039-487f-ba38-f2ef986aa4e3"
+ *                             activo:
+ *                               type: boolean
+ *                               example: true
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                       description: Número total de usuarios
+ *                       example: 3
+ *                     totalPages:
+ *                       type: integer
+ *                       description: Número total de páginas
+ *                       example: 1
+ *                     currentPage:
+ *                       type: integer
+ *                       description: Página actual
+ *                       example: 1
+ *       400:
+ *         description: Parámetros de paginación inválidos (page/limit < 1)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición invalida"
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
  *       403:
- *         description: Careces de los permisos necesarios.
+ *         description: Prohibido - No tiene el permiso "usr:getUsuario"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
  *       404:
- *         description: Usuario no encontrado con esa información.
+ *         description: No se encontraron usuarios con el filtro aplicado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No se han encontrado usuarios que coincidan con: nombreFiltro"
  *       500:
- *         description: Error interno del servidor.
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
  */
 
 router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
@@ -435,7 +1002,7 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *
  *       **Campos editables por administradores/editores (todos los anteriores más):**
  *       - teams, esresponsable, usuariovpn, correoinstitucional, activo, fechafin
- *       - wifi, tarjetaacceso, diriplastlogin, contrasena, gitlab, responsable
+ *       - wifi, tarjetaacceso, diriplastlogin, contrasena, gitlab, responsable, fotoPerfil
  *
  *       **Relaciones editables solo por administradores/editores:**
  *       - roles: Lista de IDs de roles
@@ -445,7 +1012,7 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *       **Operaciones especiales:**
  *       - `darBaja=true` (query param): Desactiva el usuario (solo admin/editor)
  *       - Subida de foto de perfil (multipart/form-data)
- *     tags: [User]
+ *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -454,7 +1021,6 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *         required: true
  *         schema:
  *           type: string
- *           pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
  *         description: Token JWT con formato "Bearer <token>"
  *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *       - in: path
@@ -463,9 +1029,8 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *         schema:
  *           type: string
  *           format: uuid
- *           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
  *         description: UUID del usuario a actualizar
- *         example: "3dcb7dc3-6742-4609-95f6-9594e4e7927e"
+ *         example: "6d8d77f0-d9a5-472b-aec3-92223b6ac70b"
  *       - in: query
  *         name: darBaja
  *         schema:
@@ -512,9 +1077,9 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *                 description: Fecha de baja/expiración (solo admin/editor)
  *                 example: "2026-12-31"
  *               teams:
- *                 type: string
+ *                 type: boolean
  *                 description: Equipos/Teams del usuario (solo admin/editor)
- *                 example: "Desarrollo,Investigación"
+ *                 example: true
  *               esresponsable:
  *                 type: boolean
  *                 description: Indica si es responsable (solo admin/editor)
@@ -524,16 +1089,16 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *                 description: Usuario de VPN (solo admin/editor)
  *                 example: "jperez"
  *               wifi:
- *                 type: string
- *                 description: Credenciales WiFi (solo admin/editor)
- *                 example: "eduroam"
+ *                 type: boolean
+ *                 description: Acceso WiFi (solo admin/editor)
+ *                 example: true
  *               tarjetaacceso:
  *                 type: string
  *                 description: Número de tarjeta de acceso (solo admin/editor)
  *                 example: "ABC123456"
  *               diriplastlogin:
  *                 type: string
- *                 description: Directorio/IP last login (solo admin/editor)
+ *                 description: Última IP conocida (solo admin/editor)
  *                 example: "192.168.1.100"
  *               gitlab:
  *                 type: string
@@ -580,15 +1145,7 @@ router.get("/", [verificarToken, tienePermiso("usr:getUsuario")], getUsers);
  *               properties:
  *                 error:
  *                   type: string
- *             examples:
- *               camposVacios:
- *                 summary: Sin campos a actualizar
- *                 value:
- *                   error: "No se han enviado campos a actualizar."
- *               validacionJoi:
- *                 summary: Error de validación de esquema
- *                 value:
- *                   error: "correoinstitucional debe ser un email válido"
+ *                   example: "No se han enviado campos a actualizar."
  *       401:
  *         description: No autorizado - Token no proporcionado o inválido
  *         content:
