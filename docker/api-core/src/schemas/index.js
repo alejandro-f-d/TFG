@@ -93,7 +93,6 @@ export const servicioSchema = Joi.object({
 	entorno: Joi.string().max(1000).allow(null, ""),
 	publico: Joi.boolean().default(false),
 	softwareBase: Joi.string().max(500).allow(null, ""),
-	activo: Joi.boolean().default(true),
 	nivelSeveridad: Joi.string().max(50).allow(null, ""),
 	idUsuario: Joi.number().integer().required(),
 	idPeticion: Joi.number().integer().required(),
@@ -107,6 +106,7 @@ export const servicioSchema = Joi.object({
 			puertoVirtual: Joi.number().integer(),
 		}),
 	),
+	status: Joi.string().max(50).allow(null, ""),
 });
 
 export const servicioPatchSchema = Joi.object({
@@ -115,7 +115,6 @@ export const servicioPatchSchema = Joi.object({
 	entorno: Joi.string().max(1000).allow(null, ""),
 	publico: Joi.boolean(), // no default
 	softwareBase: Joi.string().max(500).allow(null, ""),
-	activo: Joi.boolean(), // no default
 	nivelSeveridad: Joi.string().max(50).allow(null, ""),
 	idUsuario: Joi.number().integer(),
 	idPeticion: Joi.number().integer(),
@@ -128,6 +127,7 @@ export const servicioPatchSchema = Joi.object({
 			puertoVirtual: Joi.number().integer(),
 		}),
 	),
+	status: Joi.string().max(50).allow(null, ""),
 })
 	.min(1)
 	.messages({

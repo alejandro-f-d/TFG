@@ -823,10 +823,11 @@ router.delete(
  * @swagger
  * /api/maquina/{uuid}/servicios:
  *   get:
- *     summary: Obtiene los servicios asociados a una máquina
+ *     summary: Obtiene los servicios asociados a una máquina (con paginación y filtros)
  *     description: |
- *       Retorna un listado paginado de los servicios que están corriendo en una máquina específica.
+ *       Retorna una lista paginada de los servicios que están corriendo en una máquina específica.
  *       Incluye detalles del servicio y los puertos asociados.
+ *       Soporta filtros por nombre del servicio y por estado (`status`).
  *       Requiere el permiso `maquina:verServicios` (con flag true) o `admin:total`.
  *     tags: [Servicios]
  *     security:
@@ -846,7 +847,7 @@ router.delete(
  *           type: string
  *           format: uuid
  *         description: UUID de la máquina
- *         example: "ee99001d-0157-424f-bd38-b2d82762de08"
+ *         example: "48728993-81a2-4169-8846-c226d4207b30"
  *       - in: query
  *         name: page
  *         schema:
@@ -868,7 +869,13 @@ router.delete(
  *         schema:
  *           type: string
  *         description: Filtro por nombre del servicio (búsqueda parcial)
- *         example: "API"
+ *         example: "web"
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filtro por estado del servicio (coincidencia parcial, ej. "working", "error")
+ *         example: "working"
  *     responses:
  *       200:
  *         description: Información de los servicios obtenida con éxito
@@ -881,89 +888,111 @@ router.delete(
  *                   type: string
  *                   example: "Información de los servicios obtenida con éxito."
  *                 info:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       idservicio:
- *                         type: integer
- *                         description: ID interno del servicio
- *                         example: 1
- *                       uuidservicio:
- *                         type: string
- *                         format: uuid
- *                         description: UUID del servicio
- *                         example: "20bad862-554b-4d37-b23c-580cde22b63f"
- *                       nombreservicio:
- *                         type: string
- *                         description: Nombre del servicio
- *                         example: "API-IA"
- *                       descripciontecnica:
- *                         type: string
- *                         description: Descripción técnica del servicio
- *                         example: "Servicio IA REST"
- *                       entorno:
- *                         type: string
- *                         description: Entorno del servicio (PROD, DESARROLLO, etc.)
- *                         example: "PROD"
- *                       publico:
- *                         type: boolean
- *                         description: Indica si el servicio es público
- *                         example: true
- *                       softwarebase:
- *                         type: string
- *                         description: Software base del servicio
- *                         example: "Python 3.11"
- *                       activo:
- *                         type: boolean
- *                         description: Estado activo del servicio
- *                         example: true
- *                       nivelseveridad:
- *                         type: string
- *                         description: Nivel de severidad del servicio
- *                         example: "alto"
- *                       idusuario:
- *                         type: integer
- *                         description: ID del usuario responsable
- *                         example: 2
- *                       idpeticion:
- *                         type: integer
- *                         description: ID de la petición asociada
- *                         example: 1
- *                       uuidpeticion:
- *                         type: string
- *                         format: uuid
- *                         description: UUID de la petición asociada
- *                         example: "a682584b-a138-475d-99ac-3b78565681d9"
- *                       uuidmaquina:
- *                         type: string
- *                         format: uuid
- *                         description: UUID de la máquina
- *                         example: "ee99001d-0157-424f-bd38-b2d82762de08"
- *                       lista_puertos:
- *                         type: array
- *                         description: Lista de puertos asociados al servicio
- *                         items:
- *                           type: object
- *                           properties:
- *                             id:
- *                               type: integer
- *                               description: ID del puerto
- *                               example: 1
- *                             puerto:
- *                               type: integer
- *                               description: Número de puerto
- *                               example: 443
- *                             protocolo:
- *                               type: string
- *                               description: Protocolo (TCP/UDP)
- *                               example: "TCP"
- *                             nombre:
- *                               type: string
- *                               description: Nombre del servicio en el puerto
- *                               example: "HTTPS"
+ *                   type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           idservicio:
+ *                             type: integer
+ *                             description: ID interno del servicio
+ *                             example: 2
+ *                           uuidservicio:
+ *                             type: string
+ *                             format: uuid
+ *                             description: UUID del servicio
+ *                             example: "2e5f6c42-0b22-45b2-baf8-3820dd85eedc"
+ *                           nombreservicio:
+ *                             type: string
+ *                             description: Nombre del servicio
+ *                             example: "Servidor Web de Pruebas"
+ *                           descripciontecnica:
+ *                             type: string
+ *                             description: Descripción técnica
+ *                             example: "Instancia de Apache para el despliegue del microservicio de auditoría."
+ *                           entorno:
+ *                             type: string
+ *                             description: Entorno (ej. Desarrollo, Producción)
+ *                             example: "Desarrollo"
+ *                           publico:
+ *                             type: boolean
+ *                             description: Indica si el servicio es público
+ *                             example: true
+ *                           softwarebase:
+ *                             type: string
+ *                             description: Software base
+ *                             example: "Apache/2.4.41 (Ubuntu)"
+ *                           nivelseveridad:
+ *                             type: string
+ *                             description: Nivel de severidad (bajo, medio, alto)
+ *                             example: "bajo"
+ *                           status:
+ *                             type: string
+ *                             description: Estado actual del servicio (ej. working, error)
+ *                             example: "working"
+ *                           idusuario:
+ *                             type: integer
+ *                             description: ID del usuario responsable
+ *                             example: 1
+ *                           idpeticion:
+ *                             type: integer
+ *                             description: ID de la petición asociada
+ *                             example: 1
+ *                           uuidpeticion:
+ *                             type: string
+ *                             format: uuid
+ *                             description: UUID de la petición asociada
+ *                             example: "17909258-4d06-45b4-b297-77e2db8fa3bf"
+ *                           uuidmaquina:
+ *                             type: string
+ *                             format: uuid
+ *                             description: UUID de la máquina
+ *                             example: "48728993-81a2-4169-8846-c226d4207b30"
+ *                           lista_puertos:
+ *                             type: array
+ *                             description: Puertos asociados al servicio
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 id:
+ *                                   type: integer
+ *                                   description: ID del puerto
+ *                                   example: 2
+ *                                 puerto:
+ *                                   type: integer
+ *                                   description: Número de puerto
+ *                                   example: 80
+ *                                 protocolo:
+ *                                   type: string
+ *                                   description: Protocolo (TCP/UDP)
+ *                                   example: "TCP"
+ *                                 nombre:
+ *                                   type: string
+ *                                   description: Nombre del servicio en ese puerto
+ *                                   example: "HTTP"
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         totalItems:
+ *                           type: integer
+ *                           description: Número total de servicios que cumplen los filtros
+ *                           example: 5
+ *                         totalPages:
+ *                           type: integer
+ *                           description: Número total de páginas
+ *                           example: 1
+ *                         currentPage:
+ *                           type: integer
+ *                           description: Página actual
+ *                           example: 1
+ *                         itemsPerPage:
+ *                           type: integer
+ *                           description: Cantidad de elementos por página
+ *                           example: 5
  *       400:
- *         description: Parámetros de consulta inválidos
+ *         description: Parámetros de paginación inválidos (page/limit < 1)
  *         content:
  *           application/json:
  *             schema:
@@ -971,7 +1000,7 @@ router.delete(
  *               properties:
  *                 error:
  *                   type: string
- *                   example: "Parámetros de paginación inválidos"
+ *                   example: "Petición invalida"
  *       401:
  *         description: No autorizado - Token no proporcionado o inválido
  *         content:

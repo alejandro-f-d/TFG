@@ -450,8 +450,8 @@ CREATE TABLE IF NOT EXISTS medal.servicio(
   entorno VARCHAR(1000),
   publico BOOLEAN DEFAULT FALSE,
   softwareBase VARCHAR(500),
-  activo BOOLEAN DEFAULT TRUE,
   nivelSeveridad VARCHAR(50),
+  status VARCHAR(50) NOT NULL DEFAULT 'working',
   idUsuario INTEGER NOT NULL,
   CONSTRAINT fk_usuarioDueno 
     FOREIGN KEY (idUsuario) 

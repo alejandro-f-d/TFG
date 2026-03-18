@@ -3,17 +3,41 @@ import { v4 as uuidv4 } from "uuid";
 import { SERVICIOS_QUERIES } from "../querys/serviciosQuery.js";
 
 class ServiciosModel {
-	static async getAllInfoServicios(page = 1, limit = 10, filtroNombre = "") {
+	static async getAllInfoServicios(
+		page = 1,
+		limit = 10,
+		filtroNombre = "",
+		status = "",
+	) {
 		try {
 			const offset = (page - 1) * limit;
 			const busqueda = `%${filtroNombre}%`;
-			// TODO: Poner que devuelva la cantidad de paginas, pág actual, ...
+			const busquedaStatus = `%${status}%`;
+
 			const res = await pool.query(SERVICIOS_QUERIES.GET_ALL_INFO, [
 				limit,
 				offset,
 				busqueda,
+				busquedaStatus,
 			]);
-			return res.rows;
+
+			if (res.rows.length === 0) {
+				return 2;
+			}
+			const totalItems = parseInt(res.rows[0].total_count);
+			const totalPages = Math.ceil(totalItems / limit);
+			return {
+				data: res.rows.map((row) => {
+					const { total_count, ...data } = row;
+					return data;
+				}),
+				pagination: {
+					totalItems,
+					totalPages,
+					currentPage: Number(page),
+					itemsPerPage: Number(limit),
+				},
+			};
 		} catch (error) {
 			console.error("Error en getAllInfoServicios:", error.message);
 			throw error;
@@ -29,7 +53,6 @@ class ServiciosModel {
 			entorno,
 			publico,
 			softwareBase,
-			activo,
 			nivelSeveridad,
 			idUsuario,
 			idPeticion,
@@ -51,7 +74,6 @@ class ServiciosModel {
 				entorno,
 				publico,
 				softwareBase,
-				activo,
 				nivelSeveridad,
 				idUsuario,
 				idPeticion,
@@ -158,6 +180,7 @@ class ServiciosModel {
 				"softwareBase",
 				"activo",
 				"nivelSeveridad",
+				"status",
 			];
 			const camposFiltrados = {};
 

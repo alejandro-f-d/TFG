@@ -5,6 +5,7 @@ export const getServicios = async (req, res) => {
 	const page = parseInt(req.query.page) || 1;
 	const limit = parseInt(req.query.limit) || 5;
 	const filtroNombre = req.query.filtroNombre || "";
+	const status = req.query.status || "";
 	if (page < 1 || limit < 1) {
 		return res.status(400).json({ error: "Petición invalida" });
 	}
@@ -14,7 +15,15 @@ export const getServicios = async (req, res) => {
 			page,
 			limit,
 			filtroNombre,
+			status,
 		);
+		if (resServicios === 2) {
+			return res
+				.status(404)
+				.json({
+					error: "No se ha encontrado ningún servicio con esos filtros.",
+				});
+		}
 		return res.status(200).json({
 			message: "Listado de los servicios obtenido correctamente.",
 			info: resServicios,

@@ -128,21 +128,52 @@ class ServerModel {
 		limit = 10,
 		filtroNombre = "",
 		uuid,
+		status = "",
 	) {
 		try {
 			const resExiste = await pool.query(MAQUINA_QUERIES.VERIFICAR_EXISTE, [
 				uuid,
 			]);
 			if (resExiste.rows.length === 0) return 2;
+
 			const offset = (page - 1) * limit;
 			const busqueda = `%${filtroNombre}%`;
+			const busquedaStatus = `%${status}%`;
+
 			const res = await pool.query(MAQUINA_QUERIES.GET_SERVICIOS_DETALLE, [
 				limit,
 				offset,
 				busqueda,
 				uuid,
+				busquedaStatus,
 			]);
-			return res.rows;
+
+			if (res.rows.length === 0) {
+				return {
+					data: [],
+					pagination: {
+						totalItems: 0,
+						totalPages: 0,
+						currentPage: Number(page),
+					},
+				};
+			}
+
+			const totalItems = parseInt(res.rows[0].total_count);
+			const totalPages = Math.ceil(totalItems / limit);
+
+			return {
+				data: res.rows.map((row) => {
+					const { total_count, ...data } = row;
+					return data;
+				}),
+				pagination: {
+					totalItems,
+					totalPages,
+					currentPage: Number(page),
+					itemsPerPage: Number(limit),
+				},
+			};
 		} catch (error) {
 			console.error("Error al obtener servicios de máquina:", error.message);
 			throw error;

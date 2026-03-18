@@ -34,31 +34,36 @@ export const MAQUINA_QUERIES = {
     `,
 
 	GET_SERVICIOS_DETALLE: `
-      SELECT 
-          s.*, 
-          p.uuidpeticion, 
-          maq.uuidmaquina,
-          puertos_agg.lista_puertos
-      FROM medal.servicio s
-      JOIN medal.peticion p ON s.idpeticion = p.idpeticion
-      JOIN medal.corre c ON c.idservicio = s.idservicio
-      JOIN medal.maquina maq ON maq.idmaquina = c.idmaquina
-      JOIN (
-          SELECT idservicio, 
-                  json_agg(json_build_object(
-                      'id', idpuerto, 
-                      'puerto', numeropuertomaquina, 
-                      'protocolo', protocolo,
-                      'nombre', nombreservicio
-                  )) AS lista_puertos
-          FROM medal.puertosabiertos
-          GROUP BY idservicio
-      ) AS puertos_agg ON s.idservicio = puertos_agg.idservicio
-      WHERE maq.uuidmaquina = $4
-        AND s.nombreservicio ILIKE $3
-      ORDER BY s.nombreservicio ASC 
-      LIMIT $1 OFFSET $2;
-  `,
+    SELECT * FROM (
+        SELECT DISTINCT ON (s.idservicio)
+            s.*, 
+            p.uuidpeticion, 
+            maq.uuidmaquina,
+            COALESCE(puertos_agg.lista_puertos, '[]') AS lista_puertos,
+            COUNT(*) OVER() AS total_count
+        FROM medal.servicio s
+        JOIN medal.peticion p ON s.idpeticion = p.idpeticion
+        JOIN medal.corre c ON c.idservicio = s.idservicio
+        JOIN medal.maquina maq ON c.idmaquina = maq.idmaquina
+        LEFT JOIN (
+            SELECT idservicio, 
+                   json_agg(json_build_object(
+                       'id', idpuerto, 
+                       'puerto', numeropuertomaquina, 
+                       'protocolo', protocolo,
+                       'nombre', nombreservicio
+                   )) AS lista_puertos
+            FROM medal.puertosabiertos
+            GROUP BY idservicio
+        ) AS puertos_agg ON s.idservicio = puertos_agg.idservicio
+        WHERE maq.uuidmaquina = $4
+          AND s.nombreservicio ILIKE $3 
+          AND s.status ILIKE $5
+        ORDER BY s.idservicio, s.nombreservicio ASC
+    ) sub
+    ORDER BY sub.nombreservicio ASC
+    LIMIT $1 OFFSET $2;
+`,
 
 	UPDATE_SERVER_DYNAMIC: (keys) => {
 		const setClause = keys
