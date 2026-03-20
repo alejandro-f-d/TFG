@@ -1,0 +1,404 @@
+// Esquema: medal
+// Generado para dbdiagram.io
+
+Table medal.usuario {
+  idUsuario SERIAL [pk, increment]
+  nombre VARCHAR(50) [not null]
+  apellido1 VARCHAR(50) [not null]
+  apellido2 VARCHAR(50)
+  teams BOOLEAN [default: false]
+  esResponsable BOOLEAN [default: false]
+  usuarioVPN VARCHAR(50) [unique]
+  correoInstitucional VARCHAR(100) [unique, not null]
+  activo BOOLEAN [default: true]
+  fechaIncorporacion DATE [not null, default: `now()`]
+  fechaFin DATE
+  wifi BOOLEAN [default: false]
+  tarjetaAcceso VARCHAR(20)
+  dirIpLastLogin VARCHAR(39)
+  fotoPerfil BYTEA
+  uuidUsuario UUID [unique, not null, default: `gen_random_uuid()`]
+  contrasena VARCHAR(1000)
+  gitlab VARCHAR(50) [unique]
+  responsable INTEGER
+}
+
+// Relación recursiva de usuario (Responsable)
+Ref: medal.usuario.responsable > medal.usuario.idUsuario
+
+Table medal.maquina {
+  idMaquina SERIAL [pk, increment]
+  nombre VARCHAR(300) [unique, not null]
+  caducidadSSL DATE
+  certificadoSslActivo BOOLEAN [default: false]
+  emisorSsl VARCHAR(100)
+  direccionIpPrivadaV4 VARCHAR(15) [not null]
+  uuidMaquina UUID [unique, not null, default: `gen_random_uuid()`]
+  direccionIpPublicaV4 VARCHAR(15)
+  direccionIpPrivadaV6 VARCHAR(39)
+  direccionIpPublicaV6 VARCHAR(39)
+  puertaEnlaceV4 VARCHAR(15) [not null]
+  puertaEnlaceV6 VARCHAR(39)
+  ram INTEGER
+  sistemaOperativo VARCHAR(100) [not null]
+  esServidor BOOLEAN [not null, default: false]
+}
+
+Table medal.tipoDispositivo {
+  idTipoDispositivo SERIAL [pk, increment]
+  nombre VARCHAR(50)
+  descripcion VARCHAR(1000)
+}
+
+Table medal.dispositivos {
+  idDispositivo SERIAL [pk, increment]
+  nombre VARCHAR(200) [not null]
+  puntoMontaje VARCHAR(100)
+  capacidad INTEGER
+  capacidadUsada INTEGER
+  tecnologia VARCHAR(200)
+  uuidDispositivo UUID [unique, not null, default: `gen_random_uuid()`]
+  idMaquina INTEGER
+  idTipoDispositivo INTEGER [not null]
+}
+
+Ref: medal.dispositivos.idMaquina > medal.maquina.idMaquina
+Ref: medal.dispositivos.idTipoDispositivo > medal.tipoDispositivo.idTipoDispositivo
+
+Table medal.proyectosGitlab {
+  idProyecto SERIAL [pk, increment]
+  nombre VARCHAR(50) [not null]
+  descripcion VARCHAR(500)
+  uuidProyecto UUID [unique, not null, default: `gen_random_uuid()`]
+  fechaInicio DATE [not null, default: `now()`]
+  fechaFin DATE
+  activo BOOLEAN [default: true]
+}
+
+Table medal.participa {
+  idUsuario INTEGER [not null]
+  idProyecto INTEGER [not null]
+  Note: 'PK: idUsuario, idProyecto'
+  
+  Indexes {
+    (idUsuario, idProyecto) [pk]
+  }
+}
+
+Ref: medal.participa.idUsuario > medal.usuario.idUsuario
+Ref: medal.participa.idProyecto > medal.proyectosGitlab.idProyecto
+
+Table medal.roles {
+  idRole SERIAL [pk, increment]
+  nombre VARCHAR(50) [not null]
+  descripcion VARCHAR(500)
+  uuidRole UUID [unique, not null, default: `gen_random_uuid()`]
+  fechaCreacion DATE [not null, default: `now()`]
+  idUsuario INTEGER [not null]
+}
+
+Ref: medal.roles.idUsuario > medal.usuario.idUsuario
+
+Table medal.rolesTiene {
+  idRole INTEGER [not null]
+  idUsuario INTEGER [not null]
+  
+  Indexes {
+    (idRole, idUsuario) [pk]
+  }
+}
+
+Ref: medal.rolesTiene.idRole > medal.roles.idRole
+Ref: medal.rolesTiene.idUsuario > medal.usuario.idUsuario
+
+Table medal.permisos {
+  idPermiso SERIAL [pk, increment]
+  alias VARCHAR(300) [unique, not null]
+  nombre VARCHAR(100) [not null]
+  descripcion VARCHAR(500)
+  modulo VARCHAR(30) [not null]
+}
+
+Table medal.operaCon {
+  idRole INTEGER [not null]
+  idPermiso INTEGER [not null]
+  
+  Indexes {
+    (idRole, idPermiso) [pk]
+  }
+}
+
+Ref: medal.operaCon.idRole > medal.roles.idRole
+Ref: medal.operaCon.idPermiso > medal.permisos.idPermiso
+
+Table medal.metodoMonitoreoWeb {
+  idMetodo SERIAL [pk, increment]
+  nombre VARCHAR(50) [not null]
+  alias VARCHAR(50) [not null]
+  descripcion VARCHAR(500)
+}
+
+Table medal.monitoreoWeb {
+  idMonitor SERIAL [pk, increment]
+  fechaVerificacion TIMESTAMPTZ
+  nombreObjetivo VARCHAR(50) [not null]
+  direccion VARCHAR(100) [not null]
+  valorUltimaRespuesta INTEGER
+  valorEsperado INTEGER [default: 200]
+  uuidMonitoreo UUID [unique, not null, default: `gen_random_uuid()`]
+  fechaCreacion DATE [not null, default: `now()`]
+  timeoutSegundos INTEGER [default: 60]
+  umbralReintentos INTEGER [default: 5]
+  contadorFallos INTEGER [default: 0]
+  cadaCuantoSegundos INTEGER [default: 86400]
+  idUsuario INTEGER [not null]
+  idMetodo INTEGER [not null]
+  statusActual VARCHAR(50) [not null, default: 'ok']
+  proxima_ejecucion TIMESTAMPTZ [default: `now()`]
+}
+
+Ref: medal.monitoreoWeb.idUsuario > medal.usuario.idUsuario
+Ref: medal.monitoreoWeb.idMetodo > medal.metodoMonitoreoWeb.idMetodo
+
+Table medal.historicoMonitoreo {
+  idLog SERIAL [pk, increment]
+  fecha_registro TIMESTAMP [not null, default: `now()`]
+  disponible BOOLEAN [not null]
+  resultado INTEGER
+  idMonitor INTEGER [not null]
+}
+
+Ref: medal.historicoMonitoreo.idMonitor > medal.monitoreoWeb.idMonitor
+
+Table medal.notificacion {
+  idNotificacion SERIAL [pk, increment]
+  uuidNotificacion UUID [unique, not null, default: `gen_random_uuid()`]
+  fechaRegistro TIMESTAMP [not null, default: `now()`]
+  mensaje VARCHAR(1000)
+  tipo VARCHAR(50) [not null]
+  idUsuario INTEGER [not null]
+}
+
+Ref: medal.notificacion.idUsuario > medal.usuario.idUsuario
+
+Table medal.recuperacionPassword {
+  idRecuperacion SERIAL [pk, increment]
+  tokenHash VARCHAR(64) [not null]
+  usado BOOLEAN [default: false]
+  fechaCreacion TIMESTAMP [not null, default: `now()`]
+  fechaExpiracion TIMESTAMP [not null]
+  usedAt TIMESTAMP
+  idUsuario INTEGER [not null]
+}
+
+Ref: medal.recuperacionPassword.idUsuario > medal.usuario.idUsuario
+
+Table medal.intentosLogin {
+  idIntentoLogin SERIAL [pk, increment]
+  emailIntentado VARCHAR(200) [not null]
+  ipOrigen VARCHAR(39) [not null]
+  exitoso BOOLEAN [not null, default: false]
+  timestamp TIMESTAMP [not null, default: `now()`]
+}
+
+Table medal.auditoria {
+  idAuditoria SERIAL [pk, increment]
+  fechaEvento TIMESTAMP [not null, default: `now()`]
+  tipoAccion VARCHAR(50) [not null]
+  direccionIpOrigen VARCHAR(39)
+  nivelSeveridad VARCHAR(50) [not null, default: 'bajo']
+  uuidAuditoria UUID [unique, not null, default: `gen_random_uuid()`]
+  idUsuario INTEGER [not null]
+}
+
+Ref: medal.auditoria.idUsuario > medal.usuario.idUsuario
+
+Table medal.reservaCalendario {
+  idCalendario SERIAL [pk, increment]
+  fechaInicio DATE [not null]
+  uuidCalendario UUID [unique, not null, default: `gen_random_uuid()`]
+  descripcion VARCHAR(500)
+  nombre VARCHAR(50) [not null]
+  fechaFin DATE [not null]
+  idUsuario INTEGER [not null]
+  idMaquina INTEGER [not null]
+}
+
+Ref: medal.reservaCalendario.idUsuario > medal.usuario.idUsuario
+Ref: medal.reservaCalendario.idMaquina > medal.maquina.idMaquina
+
+Table medal.peticion {
+  idPeticion SERIAL [pk, increment]
+  uuidPeticion UUID [unique, not null, default: `gen_random_uuid()`]
+  fechaCreacion TIMESTAMP [not null, default: `now()`]
+  fechaFin TIMESTAMP
+  estado VARCHAR(50) [not null, default: 'PENDIENTE']
+  usuarioPeticion INTEGER [not null]
+  uuidDocumento VARCHAR(500)
+  firmadoUsuario BOOLEAN [not null, default: false]
+  firmadoSupervisor BOOLEAN [not null, default: false]
+  firmadoJefeLaboratorio BOOLEAN [not null, default: false]
+  razonDenegada VARCHAR(500)
+  usuarioSupervisor INTEGER [not null]
+}
+
+Ref: medal.peticion.usuarioPeticion > medal.usuario.idUsuario
+Ref: medal.peticion.usuarioSupervisor > medal.usuario.idUsuario
+
+Table medal.momentoEjecucion {
+  idMomentoEjecucion SERIAL [pk, increment]
+  nombre VARCHAR(25) [not null]
+  descripcion VARCHAR(500)
+}
+
+Table medal.prioridadTarea {
+  idPrioridad SERIAL [pk, increment]
+  nombre VARCHAR(25) [not null]
+  descripcion VARCHAR(500)
+}
+
+Table medal.detallePeticionAcceso {
+  idPetAcceso SERIAL [pk, increment]
+  cpuSolicitada VARCHAR(100) [not null]
+  gpuSolicitada VARCHAR(100) [not null]
+  nombreProyectoAsociado VARCHAR(50) [not null]
+  nombreServicioAsociado VARCHAR(100) [not null]
+  prioridadTarea INTEGER [not null]
+  docker VARCHAR(50)
+  sistemaOperativo VARCHAR(100)
+  comentariosAdicionales VARCHAR(500)
+  tiempoEstimadoTarea VARCHAR(100)
+  aceptaTos BOOLEAN [default: true]
+  nombreAccesoNativo VARCHAR(50)
+  disco VARCHAR(100) [not null]
+  justificacionAccesoNativo VARCHAR(1000)
+  ram VARCHAR(100) [not null]
+  idPeticionReferencia INTEGER [not null]
+  idMomentoEjecucion INTEGER [not null]
+}
+
+Ref: medal.detallePeticionAcceso.idPeticionReferencia > medal.peticion.idPeticion
+Ref: medal.detallePeticionAcceso.idMomentoEjecucion > medal.momentoEjecucion.idMomentoEjecucion
+Ref: medal.detallePeticionAcceso.prioridadTarea > medal.prioridadTarea.idPrioridad
+
+Table medal.documento {
+  idDocumento SERIAL [pk, increment]
+  idPeticion INTEGER [unique, not null]
+  firmanteUsuarioBase VARCHAR(500)
+  fechaFirmaUsuarioBase TIMESTAMPTZ
+  nivelDescripcionUsuarioBase VARCHAR(500)
+  firmanteUsuarioSupervisor VARCHAR(500)
+  fechaFirmaUsuarioSupervisor TIMESTAMPTZ
+  nivelDescripcionUsuarioSupervisor VARCHAR(500)
+  firmanteJefeLaboratorio VARCHAR(500)
+  fechaFirmaJefeLaboratorio TIMESTAMPTZ
+  nivelDescripcionJefeLaboratorio VARCHAR(500)
+}
+
+Ref: medal.documento.idPeticion > medal.peticion.idPeticion
+
+Table medal.tareasRealizar {
+  idTarea SERIAL [pk, increment]
+  nombre VARCHAR(50)
+  descripcion VARCHAR(500)
+}
+
+Table medal.realiza {
+  idTarea INTEGER [not null]
+  idPetAcceso INTEGER [not null]
+  
+  Indexes {
+    (idTarea, idPetAcceso) [pk]
+  }
+}
+
+Ref: medal.realiza.idTarea > medal.tareasRealizar.idTarea
+Ref: medal.realiza.idPetAcceso > medal.detallePeticionAcceso.idPetAcceso
+
+Table medal.alojado {
+  idPetAcceso INTEGER [not null]
+  idMaquina INTEGER [not null]
+  justificacionVariosMaquina VARCHAR(500)
+  
+  Indexes {
+    (idPetAcceso, idMaquina) [pk]
+  }
+}
+
+Ref: medal.alojado.idPetAcceso > medal.detallePeticionAcceso.idPetAcceso
+Ref: medal.alojado.idMaquina > medal.maquina.idMaquina
+
+Table medal.propietario {
+  idUsuario INTEGER [not null]
+  idMaquina INTEGER [not null]
+  
+  Indexes {
+    (idUsuario, idMaquina) [pk]
+  }
+}
+
+Ref: medal.propietario.idUsuario > medal.usuario.idUsuario
+Ref: medal.propietario.idMaquina > medal.maquina.idMaquina
+
+Table medal.servicio {
+  idServicio SERIAL [pk, increment]
+  uuidServicio UUID [unique, not null, default: `gen_random_uuid()`]
+  nombreServicio VARCHAR(100) [not null]
+  descripcionTecnica VARCHAR(1000)
+  entorno VARCHAR(1000)
+  publico BOOLEAN [default: false]
+  softwareBase VARCHAR(500)
+  status VARCHAR(50) [default: 'working']
+  nivelSeveridad VARCHAR(50)
+  idUsuario INTEGER [not null]
+  idPeticion INTEGER [not null]
+}
+
+Ref: medal.servicio.idUsuario > medal.usuario.idUsuario
+Ref: medal.servicio.idPeticion > medal.peticion.idPeticion
+
+Table medal.corre {
+  idServicio INTEGER [not null]
+  idMaquina INTEGER [not null]
+  
+  Indexes {
+    (idServicio, idMaquina) [pk]
+  }
+}
+
+Ref: medal.corre.idServicio > medal.servicio.idServicio
+Ref: medal.corre.idMaquina > medal.maquina.idMaquina
+
+Table medal.puertosAbiertos {
+  idPuerto SERIAL [pk, increment]
+  numeroPuertoMaquina INTEGER [not null]
+  protocolo VARCHAR(50)
+  nombreServicio VARCHAR(100)
+  puertoVirtual INTEGER
+  idServicio INTEGER [not null]
+  
+  Indexes {
+    (numeroPuertoMaquina, idServicio) [unique]
+  }
+}
+
+Ref: medal.puertosAbiertos.idServicio > medal.servicio.idServicio
+
+Table medal.puertas {
+  idPuerta SERIAL [pk, increment]
+  nombre VARCHAR(250)
+  ubicacion VARCHAR(500)
+  uuidPuerta UUID [unique, not null, default: `gen_random_uuid()`]
+}
+
+Table medal.accede {
+  idUsuario INTEGER [not null]
+  idPuerta INTEGER [not null]
+  
+  Indexes {
+    (idUsuario, idPuerta) [pk]
+  }
+}
+
+Ref: medal.accede.idUsuario > medal.usuario.idUsuario
+Ref: medal.accede.idPuerta > medal.puertas.idPuerta
