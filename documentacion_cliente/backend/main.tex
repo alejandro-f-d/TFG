@@ -50,6 +50,8 @@ En este documento se presenta la información del servicio del backend se van a 
         Contenedores & \textbf{Docker} y \textbf{Docker Compose} (aislamiento de servicios). \\
         Documentación de API & \textbf{Swagger} (documentación interactiva). \\
         Pruebas (Testing) & \textbf{Pytest}. \\
+        Correo Electrónic & \textbf{Contraseña de aplicación Google} \\
+        Digital Signature Service (DSS) & \textbf{Servicio de validación de firmas} \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -59,6 +61,36 @@ En este documento se presenta la información del servicio del backend se van a 
 La estructura del backend se monta mediante microservicios basados en docker. A continuación se detallan los pasos a seguir para el montaje.
 
 \begin{itemize}
+
+    \item \textbf{Despliegue del servicio DSS (Digital Signature Service):} Para la validación de firmas electrónicas, el sistema integra la herramienta \textit{Digital Signature Service}. Debido a la complejidad de sus dependencias, se requiere la construcción previa de su imagen Docker. 
+
+    \notaseguridad{Se recomienda realizar la compilación y construcción de la imagen en \textbf{otra máquina} externa al entorno de producción. Una vez generado el archivo comprimido (\texttt{.tar}), este debe transferirse al servidor final para evitar el consumo excesivo de recursos (CPU/RAM) y dependencias de red durante el despliegue.}
+
+    El procedimiento técnico para la generación y exportación de la imagen es el siguiente:
+
+    \begin{lstlisting}[language=bash, 
+                       caption={Compilación y exportación de la imagen DSS}, 
+                       label={code:dss_setup},
+                       basicstyle=\ttfamily\footnotesize,
+                       breaklines=true]
+# 1. Clonar el repositorio oficial (solo el ultimo commit para ahorrar espacio)
+git clone --depth 1 https://github.com/esig/dss.git
+cd dss
+
+# 2. Construir la imagen localmente (Requiere Docker instalado)
+docker build -t dss-demo .
+
+# 3. Exportar la imagen a un archivo comprimido para su transferencia
+# Este archivo sera el que se suba al servidor de produccion
+docker save -o dss.tar dss-demo
+
+# 4. En el servidor de destino, cargar la imagen desde el archivo
+docker load -i dss.tar
+    \end{lstlisting}
+
+    Una vez cargada la imagen mediante \texttt{docker load}, el servicio quedará disponible en el registro local del servidor, permitiendo que \texttt{docker-compose} levante el contenedor de validación de firmas.
+
+    \item \textbf{Generación de la contraseña de aplicación Google:} Para el funcionamiento correcto de la aplicación se necesita tener una contraseña de aplicación de Google para el envío de correos electrónicos. Para ello se necesita una cuenta con autenticación de doble factor activada. La documentación de contraseñas de aplicación se puede obtener aquí \href{https://support.google.com/accounts/answer/185833?hl=es-419}{Documentación Google}. Esta contraseña de aplicación será utilizada a continuación en el documento de variables de entorno.
     \item \textbf{Generación de los certificados de la página web:} En el directorio \texttt{docker/nginx/certs/} deben estar presentes los certificados de los que hará uso la página web para securizar la API y garantizar un tráfico seguro mediante HTTPS.
 
     \item \textbf{Generación de la firma del servidor en documentos PDF:} En la ruta \texttt{docker/worker/certs/} se debe generar un certificado digital para la firma de cada PDF generado por el sistema, garantizando así su integridad. La firma de este certificado será la primera en todos los documentos. El proceso de generación es el siguiente:
