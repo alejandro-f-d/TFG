@@ -1,0 +1,42 @@
+gantt
+    title Cronograma de desarrollo TFG
+    dateFormat  YYYY-MM-DD
+    axisFormat  %d-%m-%Y
+    title Incremento I 
+    dateFormat  YYYY-MM-DD
+    axisFormat  %d-%m-%Y
+    section Incremento I
+    Introducción, objetivos y alcance          :done,      2026-01-01, 5d
+    Req. funcionales                           :done,      2026-01-06, 1d
+    Req. no funcionales                        :done,      2026-01-07, 1d
+    Tecnologías                                :done,      2026-01-08, 1d
+    Envío a tutor/cotutor                      :milestone, 2026-01-08, 0d
+    Cambios tras feedback                      :done,      2026-01-09, 2d
+
+    %% ============================================================
+    %% INCREMENTO II: DESARROLLO BACKEND
+    %% ============================================================
+    section Incremento II 
+    Base de datos (creación)                    :active,    2026-01-09, 70d
+    API User (/api/user)                        :done,      2026-02-15, 2d
+    API Permisos (/api/permisos)                :done,      2026-02-16, 2d
+    API Máquina (/api/maquina)                  :done,      2026-02-17, 6d
+    API Servicios                               :done,      2026-02-19, 6d
+    API Proyectos (GitLab)                      :done,      2026-02-24, 2d
+    API Roles                                   :done,      2026-02-25, 3d
+    Middleware                                  :done,      2026-02-25, 4d
+    API Reservas                                :done,      2026-02-28, 3d
+    CI GitHub (Workflow)                        :done,      2026-02-23, 9d
+    Redis / NoSQL                               :done,      2026-03-03, 1d
+    Recuperación de password                    :done,      2026-03-03, 1d
+    Sistema de peticiones (email/firma/DSS)     :done,      2026-03-03, 8d
+    Monitorización                              :done,      2026-03-12, 9d
+    Módulo CV                                   :done,      2026-03-08, 1d
+    Módulo Entrevistas                          :done,      2026-03-15, 1d
+    Documentación cliente Backend               :done,      2026-03-20, 1d
+
+    %% ============================================================
+    %% HITOS
+    %% ============================================================
+    section Hitos
+    Entrega                                     :milestone, 2026-01-08, 0d
