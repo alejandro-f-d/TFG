@@ -452,7 +452,12 @@ Este sistema al estar gestionado integramente por el laboratorio puede proporcio
 
 Para las actividades con una perioricidad determinada se hace uso del servicio de CRON de node-js. De esta manera permitimos la realización de las mismas por parte del \textbf{worker} en un momento determinado. Entre otras se encargará de tareas como: recordatorios de fin de servicios y de estancia de usuarios en el laboratorio. 
 
+
+\subsection{@Firma:}
+En un principio se plantea la incorporación del servicio de \texttt{@firma} mediante el applet. Tras consultar la documentación, se comprueba de que este servicio se encuentra obseleto. Por lo tanto, siguiendo los manuales se encuentra la herramienta de \texttt{Autoscript v1.9} el sustituto del miniaplet. 
+
 \section{Validación y cierre:}
+Para la validación de este servicio se han generado dos conjuntos de test unitarios, el primero de ellos se encarga de la validación automática de los métodos de la API no relacionado con las peticiones. El otro es específico de las peticiones y comprueba las características de seguridad asociadas a las mismas.
 
 
 
