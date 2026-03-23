@@ -125,6 +125,27 @@ services:
     depends_on:
       - medal-api-core
 
+# Apache: 
+  medal-afirma:
+    image: tomcat:9.0-jdk11-openjdk
+    container_name: afirma_server
+    ports:
+      - "${IP_TOMCAT}:${PORT_TOMCAT}:8080"
+    environment:
+      - CATALINA_OPTS=-Xms512M -Xmx2048M -Dclienteafirma.config.path=/usr/local/tomcat/conf/
+    
+    command: bash -c "cp -rv /usr/local/tomcat/webapps.dist/* /usr/local/tomcat/webapps/ && catalina.sh run"
+    
+    volumes:
+      - ./firma/war-despliegue/:/usr/local/tomcat/webapps
+      - ./firma/war-despliegue/tps_config.properties:/usr/local/tomcat/conf/tps_config.properties
+      - afirma_data:/opt/afirma
+      - afirma_temp:/tmp/afirma 
+      - ./firma/tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml
+      - ./firma/context.xml:/usr/local/tomcat/webapps.dist/manager/META-INF/context.xml
+      - ./firma/context.xml:/usr/local/tomcat/webapps.dist/host-manager/META-INF/context.xml
+    networks:
+      - medalnetwork
 # Frontend:
   medal-frontend:
     container_name: webMedal
@@ -139,6 +160,8 @@ services:
 volumes:
   pgdata_volume:
   redis_data:
+  afirma_data:
+  afirma_temp:
 
 
 networks:

@@ -1,6 +1,9 @@
 # Evitamos la subida de ficheros creados por el gobierno de España relativos al servicio de autofirma
 **/docker/firma/Autoscript v1-9.zip
 **/Despliegue
+**/*.war
+docker/firma/war-despliegue/
+docker/firma/zip-estado/
 # Evitamos la subida de las claves de los certificados:
 **certs.zip
 # Subida de certificados
