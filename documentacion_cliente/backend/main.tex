@@ -52,15 +52,18 @@ En este documento se presenta la información del servicio del backend se van a 
         Pruebas (Testing) & \textbf{Pytest}. \\
         Correo Electrónic & \textbf{Contraseña de aplicación Google} \\
         Digital Signature Service (DSS) & \textbf{Servicio de validación de firmas} \\
+        Apache Tomcat & \textbf{Servicio de @firma para el backend.} \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
 
 \chapter{Montaje del servicio del Backend:}
-La estructura del backend se monta mediante microservicios basados en docker. A continuación se detallan los pasos a seguir para el montaje.
+La estructura del backend se monta mediante microservicios basados en docker. A continuación se detallan los pasos a seguir para el montaje. 
 
 \begin{itemize}
+
+    \item \textbf{Configuración de Apache Tomcat:} Para el montaje del apache tomcat Es importante destacar que este proceso no se puede hacer por localhost o ip de loopback ya que este servicio bloquea esto. Los pasos para realizar la configuración se pueden encontrar en \texttt{docker/firma/README.md}. Tras la descarga de cada uno de los ficheros de la forma especificada en el árbol de directorios, se debe configurar las credenciales de acceso al manager de apache tomcat en \texttt{docker/firma/tomcat-users.xml} modificando el username y la password asociada.
 
     \item \textbf{Despliegue del servicio DSS (Digital Signature Service):} Para la validación de firmas electrónicas, el sistema integra la herramienta \textit{Digital Signature Service}. Debido a la complejidad de sus dependencias, se requiere la construcción previa de su imagen Docker. 
 
