@@ -251,7 +251,12 @@ export const login = async (req, res) => {
 	}
 	try {
 		// Log de inicio de sesión.
-		const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+		// const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+		console.log("IP Directa (Nginx):", req.connection.remoteAddress);
+		console.log("Cabecera Forwarded:", req.headers["x-forwarded-for"]);
+		console.log("IP que Express cree que es la real:", req.ip);
+		const ip = req.ip;
+
 		if (!contrasena) {
 			// login no exitoso.
 			const resLogLogin = await UserModel.intentoInicioSesion(
