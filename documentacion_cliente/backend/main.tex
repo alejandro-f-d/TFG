@@ -223,6 +223,12 @@ Para facilitar la integración y las pruebas de los diferentes \textit{endpoints
     \item \textbf{Funcionalidad:} Permite visualizar los esquemas de datos de entrada/salida, los códigos de respuesta HTTP y realizar pruebas de autenticación mediante el paso de tokens JWT en las cabeceras.
 \end{itemize}
 
+\section{Apache Tomcat Servicio de Firma:}
+
+El sistema de la firma electrónica requiere de un servidor apache tomcat funcionando con ciertos requisitos. Obligación de comunicación vía https mediante un dns o ip quedando excluidas \texttt{localhost y 127.0.0.1}. El administrador tiene la posibilidad de tener acceso vía web del manager de tomcat.
+
+
+
 \section{Monitorización de colas y procesos (BullBoard)}
 
 El sistema utiliza una arquitectura basada en trabajadores (\textit{workers}) para tareas pesadas, como la generación y firma de documentos PDF. Para la visualización de estas colas de mensajes gestionadas por \textbf{Redis}, se ha implementado un panel de control basado en \textbf{BullBoard}.
@@ -246,6 +252,15 @@ El sistema utiliza una arquitectura basada en trabajadores (\textit{workers}) pa
  \caption{Documentación de Swagger.}
  \label{fig:swagger}
 \end{figure}
+
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{tomcat.png}
+ \caption{Gestor online de tomcat.}
+ \label{fig:swagger}
+\end{figure}
+
 
 
 % queue-admin.png
