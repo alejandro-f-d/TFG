@@ -56,7 +56,7 @@ services:
       redis:
         condition: service_healthy
       medal-afirma:
-        condition: service_healthy
+        condition: service_started
     ports:
       - "${API_IP}:${API_PORT_EXTERNAL}:8080"
     healthcheck:

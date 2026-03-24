@@ -25,24 +25,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest requests
 
-      - name: Crear estructura falsa para medal-afirma
-        working-directory: ./docker
-        run: |
-          echo "Creando carpetas para medal-afirma..."
-
-          # Crear carpetas
-          mkdir -p firma/war-despliegue
-
-          # Archivos requeridos por los mounts del compose
-          touch firma/war-despliegue/tps_config.properties
-          touch firma/tomcat-users.xml
-          touch firma/context.xml
-
-          # Prevenir errores típicos de Tomcat si espera contenido XML
-          echo '<?xml version="1.0" encoding="UTF-8"?>' > firma/tomcat-users.xml
-          echo '<?xml version="1.0" encoding="UTF-8"?>' > firma/context.xml
-          echo '' > firma/war-despliegue/tps_config.properties
-
       - name: Configurar entorno y Levantar Servicios
         working-directory: ./docker
         run: |
@@ -70,7 +52,7 @@ jobs:
           echo "GMAIL_APP_PASSWORD=mvdpbpgavdcghhpw" >> .env
 
           # Levantar servicios necesarios
-          docker compose up -d --build medal-bdd-postgres redis medal-api-core medal-afirma
+          docker compose up -d --build medal-bdd-postgres redis medal-api-core
 
       - name: Esperar a que la API esté lista (Healthcheck)
         run: |
@@ -92,8 +74,6 @@ jobs:
           docker logs apiMedal
           echo "--- LOGS DE REDIS ---"
           docker logs redis_queue
-          echo "--- LOGS DE AFIRMA ---"
-          docker logs medal-afirma
 
       - name: Detener y limpiar servicios
         if: always()
