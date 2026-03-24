@@ -25,6 +25,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest requests
 
+      - name: Crear estructura falsa para medal-afirma
+        working-directory: ./docker
+        run: |
+          echo "Creando carpetas para medal-afirma..."
+
+          # Crear carpetas
+          mkdir -p firma/war-despliegue
+
+          # Archivos requeridos por los mounts del compose
+          touch firma/war-despliegue/tps_config.properties
+          touch firma/tomcat-users.xml
+          touch firma/context.xml
+
+          # Prevenir errores típicos de Tomcat si espera contenido XML
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > firma/tomcat-users.xml
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > firma/context.xml
+          echo '' > firma/war-despliegue/tps_config.properties
+
       - name: Configurar entorno y Levantar Servicios
         working-directory: ./docker
         run: |
