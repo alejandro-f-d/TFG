@@ -138,39 +138,40 @@ chmod +x docker/generate_jwt.sh
                        basicstyle=\ttfamily\scriptsize,
                        breaklines=true,
                        frame=single]
-# --- Configuracion de la Base de Datos ---
+# Configuración de la Base de Datos
 DB_USER=root
 DB_PASSWORD=1
 DB_NAME=medal
+API_PORT_EXTERNAL=8080
+DB_PORT_EXTERNAL=10001
 DB_HOST=medal-bdd-postgres
 DB_PORT_INTERNAL=5432
-DB_PORT_EXTERNAL=10001
-
-# --- Parametros de la API y Seguridad ---
-API_PORT_EXTERNAL=8080
-API_IP=127.0.0.1
 API_DIRECTION=http://localhost:8080
 JWT_SECRET=5e40edda6cd84b78d3944603a60d8a19fd736035765542a257f252dba23327ed
-
-# --- Configuracion de Redis ---
 REDIS_PASSWORD=vYVSiOC9Tadt4QlWQE6zDGdit97ksBWluVFdEMG5GIQQ0OtgPW
 REDIS_IP=127.0.0.1
-REDIS_HOST=redis
+API_IP=127.0.0.1
 PORT_REDIS=6379
+
+REDIS_HOST=redis
+
+# URL de conexión final
 REDIS_URL=redis://default:${REDIS_PASSWORD}@${REDIS_HOST}:6379
 
-# --- Servicios de Mensajeria y Almacenamiento ---
 GMAIL_USER=pgpprueba609@gmail.com
 GOOGLE_APP_PASSWORD=mvdpbpgavdcghhpw
 WEB_URL=http://MI_WEB/
 STORAGE_URL=http://medal-storage:3001
 
-# --- Firma Digital y DSS (Digital Signature Service) ---
+# Puerto del DSS
 DSS_PORT=7070
 DSS_IP=127.0.0.1
 DSS_URL=http://medal-sign-validator:8080
 COMMON_NAME="Servidor MEDAL"
 SERIAL=6AD8D99D14340F39D47D0DEC3B098D31B51E84F9
+IP_TOMCAT=127.0.0.1
+PORT_TOMCAT=9090
+DB_IP=127.0.0.1
     \end{lstlisting}
     Posteriormente a la configuración del archivo, se detalla la funcionalidad de los parámetros divididos por bloques de servicio:
 
@@ -298,4 +299,26 @@ En la Tabla \ref{tab:troubleshooting} se recogen las incidencias típicas detect
         \bottomrule
     \end{tabularx}
 \end{table}
+
+\chapter{Próximos pasos y Escalabilidad del Sistema}
+
+En la fase actual de despliegue, la arquitectura de la plataforma MEDAL ha sido diseñada bajo el principio de \textit{mínimo privilegio}. Esto implica que la mayor parte de los servicios críticos están restringidos exclusivamente al entorno de red interna (\texttt{localhost}) de la máquina anfitriona.
+
+\section{Seguridad Perimetral Actual}
+
+Actualmente, servicios sensibles como la \textbf{base de datos relacional (PostgreSQL)} y el \textbf{gestor de colas (Redis)} no son accesibles desde el exterior. Esta configuración minimiza vectores de ataque, asegurando que solo los contenedores autorizados dentro de la \texttt{medalnetwork} puedan interactuar con los datos.
+
+\section{Hoja de Ruta para el Acceso Remoto}
+
+Para habilitar la administración o consulta de estos servicios desde Internet en futuras iteraciones, se proponen las siguientes líneas de actuación:
+
+\begin{itemize}
+    \item \textbf{Cifrado de Punto a Punto (TLS/SSL):} Implementar certificados digitales específicos para las instancias de base de datos, garantizando que cualquier conexión externa viaje cifrada y protegida contra ataques de \textit{Man-in-the-Middle}.
+    \item \textbf{Exposición Controlada en Docker:} Modificar las directivas de puertos en el archivo \texttt{docker-compose.yml}. Se debe sustituir la restricción de IP de \texttt{127.0.0.1} por la interfaz correspondiente.
+    \item \textbf{Autenticación Robusta:} Antes de la apertura de puertos, es imperativo actualizar las credenciales por contraseñas con alta seguridad (DB\_PASSWORD y REDIS\_PASSWORD) por secretos gestionados de alta entropía.
+    \item \textbf{Monitorización de Accesos:} Configurar reglas de firewall (iptables/ufw) para permitir el tráfico entrante únicamente desde direcciones IP estáticas autorizadas correspondientes a las del laboratorio.
+\end{itemize}
+
+\notaseguridad{Se desaconseja la apertura pública de los puertos de bases de datos a Internet global sin restricciones.}
+
 \end{document}

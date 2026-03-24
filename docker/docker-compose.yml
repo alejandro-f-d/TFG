@@ -12,7 +12,7 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${DB_PORT_EXTERNAL}:5432"
+      - "${DB_IP}:${DB_PORT_EXTERNAL}:5432" # Si se quiere abrir al público mirar certificados.
     volumes:
       - pgdata_volume:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d
@@ -31,7 +31,7 @@ services:
     container_name: redis_queue
     command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
-      - "${REDIS_IP}:${PORT_REDIS}:6379" # Si quieres que sea accesible desde otra ip quitar el 127.0.0.1. Habría que mirar certificados para tener seguridad en este acceso.
+      - "${REDIS_IP}:${PORT_REDIS}:6379" # Si quieres que sea accesible desde otra ip quitar el 127.0.0.1. Habría que mirar certificados para tener seguridad en este acceso. Si se hiciera aprovechar proxy inverso del nginx.
     volumes:
       - redis_data:/data
     networks:
@@ -55,8 +55,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      medal-afirma:
+        condition: service_healthy
     ports:
       - "${API_IP}:${API_PORT_EXTERNAL}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     environment:
       DB_URL: postgres://${DB_USER}:${DB_PASSWORD}@medal-bdd-postgres:5432/${DB_NAME}
       JWT_SECRET: ${JWT_SECRET}
@@ -75,6 +83,7 @@ services:
   medal-worker:
     container_name: workerMedal
     build: ./worker
+    restart: always
     environment:
       DB_URL: postgres://${DB_USER}:${DB_PASSWORD}@medal-bdd-postgres:5432/${DB_NAME}
       API_URL: http://medal-api-core:8080
@@ -92,6 +101,7 @@ services:
 
   medal-storage:
     container_name: storageMedal
+    restart: always
     build: ./storage-service
     volumes:
       - ./storage/firmas:/app/data/pdfs
@@ -114,6 +124,7 @@ services:
   medal-nginx:
     container_name: nginxmedal
     image: nginx:1.25-bookworm 
+    restart: always
     ports:
       - "80:80"   
       - "443:443" 
@@ -123,7 +134,9 @@ services:
     networks:
       - medalnetwork
     depends_on:
-      - medal-api-core
+      medal-api-core:
+        condition: service_healthy
+
 
 # Apache: 
   medal-afirma:
@@ -135,7 +148,7 @@ services:
       - CATALINA_OPTS=-Xms512M -Xmx2048M -Dclienteafirma.config.path=/usr/local/tomcat/conf/
     
     command: bash -c "cp -rv /usr/local/tomcat/webapps.dist/* /usr/local/tomcat/webapps/ && catalina.sh run"
-    
+    restart: always 
     volumes:
       - ./firma/war-despliegue/:/usr/local/tomcat/webapps
       - ./firma/war-despliegue/tps_config.properties:/usr/local/tomcat/conf/tps_config.properties
@@ -146,6 +159,12 @@ services:
       - ./firma/context.xml:/usr/local/tomcat/webapps.dist/host-manager/META-INF/context.xml
     networks:
       - medalnetwork
+    healthcheck:
+      test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 # Frontend:
   medal-frontend:
     container_name: webMedal
