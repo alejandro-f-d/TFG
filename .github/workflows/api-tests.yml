@@ -52,7 +52,7 @@ jobs:
           echo "GMAIL_APP_PASSWORD=mvdpbpgavdcghhpw" >> .env
 
           # Levantar servicios necesarios
-          docker compose up -d --build medal-bdd-postgres redis medal-api-core
+          docker compose up -d --build medal-bdd-postgres redis medal-api-core medal-afirma
 
       - name: Esperar a que la API esté lista (Healthcheck)
         run: |
