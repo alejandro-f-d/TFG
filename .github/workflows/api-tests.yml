@@ -74,6 +74,8 @@ jobs:
           docker logs apiMedal
           echo "--- LOGS DE REDIS ---"
           docker logs redis_queue
+          echo "--- LOGS DE AFIRMA ---"
+          docker logs medal-afirma
 
       - name: Detener y limpiar servicios
         if: always()
