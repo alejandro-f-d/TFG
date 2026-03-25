@@ -8,9 +8,9 @@ const HeroSection = () => {
 	const router = useRouter();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(false); // Ahora se usará en el botón
 	const [showPassword, setShowPassword] = useState(false);
-	const [error, setError] = useState("");
+	const [error, setError] = useState(""); // Ahora se mostrará en el UI
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -70,6 +70,13 @@ const HeroSection = () => {
 					</div>
 
 					<div className="bg-white rounded-2xl shadow-xl p-8">
+						{/* --- SOLUCIÓN ERROR: Renderizado del mensaje de error --- */}
+						{error && (
+							<div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm text-center">
+								{error}
+							</div>
+						)}
+
 						<form onSubmit={handleSubmit} className="space-y-6">
 							<div>
 								<label
@@ -86,6 +93,7 @@ const HeroSection = () => {
 									className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
 									placeholder="********@****.upm.es"
 									required
+									disabled={loading} // Deshabilitar mientras carga
 								/>
 							</div>
 
@@ -105,6 +113,7 @@ const HeroSection = () => {
 										className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition pr-10"
 										placeholder="••••••••"
 										required
+										disabled={loading} // Deshabilitar mientras carga
 									/>
 									<button
 										type="button"
@@ -163,11 +172,42 @@ const HeroSection = () => {
 								</Link>
 							</div>
 
+							{/* --- SOLUCIÓN LOADING: Feedback en el botón --- */}
 							<button
 								type="submit"
-								className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-semibold"
+								disabled={loading}
+								className={`w-full text-white py-2 px-4 rounded-lg transition font-semibold flex justify-center items-center ${
+									loading
+										? "bg-blue-400 cursor-not-allowed"
+										: "bg-blue-600 hover:bg-blue-700"
+								}`}
 							>
-								Iniciar sesión
+								{loading ? (
+									<>
+										<svg
+											className="animate-spin h-5 w-5 mr-3 text-white"
+											viewBox="0 0 24 24"
+										>
+											<circle
+												className="opacity-25"
+												cx="12"
+												cy="12"
+												r="10"
+												stroke="currentColor"
+												strokeWidth="4"
+												fill="none"
+											/>
+											<path
+												className="opacity-75"
+												fill="currentColor"
+												d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+											/>
+										</svg>
+										Cargando...
+									</>
+								) : (
+									"Iniciar sesión"
+								)}
 							</button>
 						</form>
 					</div>
