@@ -19,6 +19,7 @@ const HeroSection = () => {
 
 		try {
 			const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+			console.log(`La url es: "${apiUrl}"`);
 
 			const response = await fetch(`${apiUrl}/api/user/login`, {
 				method: "POST",

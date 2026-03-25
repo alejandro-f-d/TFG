@@ -168,7 +168,10 @@ services:
 # Frontend:
   medal-frontend:
     container_name: webMedal
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     restart: always
     ports:
       - "${PORT_FRONTEND}:3000"

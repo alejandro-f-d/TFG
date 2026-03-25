@@ -40,8 +40,8 @@ const ResetPasswordForm = () => {
 		}
 
 		try {
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-			if (!apiUrl) throw new Error("URL de API no configurada");
+			const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+			// if (!apiUrl) throw new Error("URL de API no configurada");
 
 			const response = await fetch(`${apiUrl}/api/user/recuperarpassword`, {
 				method: "PATCH",
