@@ -1,21 +1,18 @@
 import React from "react";
-import Header from "@/components/landing/Header";
-import HeroSection from "@/components/landing/HeroSection";
-import FeaturesSection from "@/components/landing/FeaturesSection";
+import Header from "@/components/signin/Header";
 import Footer from "@/components/common/Footer";
+import HeroSection from "@/components/signin/HeroSection";
 
 export const metadata = {
-	title: "Medycal Analytics Laboratory | Gestión de Laboratorio",
+	title: "Medical Analytics Laboratory | Gestión de Laboratorio",
 	description:
 		"Plataforma de administración para gestionar datos personales, solicitudes de servicio y recursos del laboratorio.",
 };
-
 export default function Home() {
 	return (
 		<main className="min-h-screen flex flex-col">
 			<Header />
 			<HeroSection />
-			<FeaturesSection />
 			<Footer /> {}
 		</main>
 	);

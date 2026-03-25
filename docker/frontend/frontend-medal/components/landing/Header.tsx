@@ -17,7 +17,7 @@ const Header = () => {
 						<div className="relative w-12 h-12 md:w-16 md:h-16 transition-transform duration-200 group-hover:scale-105">
 							<Image
 								src="/logo.png"
-								alt="Medycal Analytics Laboratory"
+								alt="Medical Analytics Laboratory"
 								fill
 								priority // Carga prioritaria por ser el logo
 								className="object-contain"
@@ -30,7 +30,7 @@ const Header = () => {
 							- sm:inline-block: aparece a partir de pantallas pequeñas
 						*/}
 						<span className="text-lg md:text-xl font-bold text-gray-800 hidden sm:inline-block leading-tight">
-							Medycal Analytics <br className="md:hidden" /> Laboratory
+							Medical Analytics <br className="md:hidden" /> Laboratory
 						</span>
 					</Link>
 				</div>
@@ -38,11 +38,30 @@ const Header = () => {
 				{/* Contenedor Derecho: Navegación */}
 				<div className="flex items-center space-x-4 md:space-x-8">
 					<Link
+						href="https://www.ctb.upm.es/"
+						className="text-sm md:text-base text-gray-600 hover:text-blue-600 font-medium transition"
+					>
+						CTB
+					</Link>
+					<Link
+						href="http://138.4.92.136:8095/"
+						className="text-sm md:text-base text-gray-600 hover:text-blue-600 font-medium transition"
+					>
+						DockerFile generator
+					</Link>
+					<Link
 						href="https://medal.ctb.upm.es/"
 						className="text-sm md:text-base text-gray-600 hover:text-blue-600 font-medium transition"
 					>
 						Sobre Nosotros
 					</Link>
+					<Link
+						href="http://138.4.92.136:8087/"
+						className="text-sm md:text-base text-gray-600 hover:text-blue-600 font-medium transition"
+					>
+						Medal Wiki
+					</Link>
+
 					<Link
 						href="/auth/signin"
 						className="bg-blue-600 text-white px-4 py-2 md:px-6 md:py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm font-semibold text-sm md:text-base"

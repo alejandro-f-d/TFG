@@ -50,7 +50,7 @@ app.use(
 		explorer: false,
 	}),
 );
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 
 // Endpoints

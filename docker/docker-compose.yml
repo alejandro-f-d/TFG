@@ -171,11 +171,16 @@ services:
     build: ./frontend
     restart: always
     ports:
-      - "80:80"
+      - "${PORT_FRONTEND}:3000"
     depends_on:
       - medal-api-core
     networks:
       - medalnetwork
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      # AÑADE ESTA LÍNEA:
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+      WATCHPACK_POLLING: "true"
 volumes:
   pgdata_volume:
   redis_data:
