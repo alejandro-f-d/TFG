@@ -5,7 +5,7 @@ const Footer = () => {
 		<footer className="bg-gray-800 text-white py-8">
 			<div className="container mx-auto px-4 text-center">
 				<p className="text-sm">
-					&copy; {new Date().getFullYear()} Medycal Analytics Laboratory. Todos
+					&copy; {new Date().getFullYear()} Medical Analytics Laboratory. Todos
 					los derechos reservados.
 				</p>
 			</div>

@@ -317,6 +317,7 @@ export const login = async (req, res) => {
 			message: "Login Correcto.",
 			token: token,
 			permisos: resBbdd.permisos,
+			uuidUser: resBbdd.uuidusuario,
 		});
 	} catch (error) {
 		console.error("Error en login:", error);

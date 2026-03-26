@@ -6,10 +6,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface UserData {
+	idusuario?: number;
 	nombre?: string;
-	apellidos?: string;
-	correoInstitucional?: string;
-	avatar?: string; // URL de imagen
+	apellido1?: string;
+	apellido2?: string;
+	correoinstitucional?: string;
+	fotoperfil?: string | null;
+	[key: string]: any; // Para otras propiedades opcionales
 }
 
 const Header = () => {
@@ -22,28 +25,47 @@ const Header = () => {
 		const fetchUser = async () => {
 			try {
 				const token = localStorage.getItem("token");
+				const uuidUser = localStorage.getItem("uuidUser");
+				const permisos = localStorage.getItem("permisos");
+				console.log("Token obtenido en HeaderDashboard:", token);
+
 				if (!token) {
+					console.log("No hay token, redirigiendo a login");
 					router.push("/auth/signin");
 					return;
 				}
 
 				const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-				const response = await fetch(`${apiUrl}/api/user/`, {
-					// TODO: Cambiar la URI. En la gestión de post login obtener el array de los permisos y el uuid.
+				if (!apiUrl) {
+					throw new Error("NEXT_PUBLIC_API_URL no definida");
+				}
+				console.log("La url a verificar es:", `${apiUrl}/api/user/${uuidUser}`);
+
+				const response = await fetch(`${apiUrl}/api/user/${uuidUser}`, {
 					headers: {
 						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
 					},
 				});
 
 				if (!response.ok) {
-					throw new Error("No autorizado");
+					const errorText = await response.text();
+					console.error("Error al obtener perfil:", response.status, errorText);
+					throw new Error(`Error ${response.status}`);
 				}
 
 				const data = await response.json();
-				setUser(data);
+				console.log("Respuesta perfil completa:", data);
+
+				// Extraer el objeto info
+				if (data.info) {
+					setUser(data.info);
+					console.log("Usuario establecido:", data.info);
+				} else {
+					throw new Error("No se encontraron datos de usuario");
+				}
 			} catch (error) {
 				console.error("Error cargando usuario:", error);
-				// Borrado del token y vuelta a la página de login.
 				localStorage.removeItem("token");
 				router.push("/auth/signin");
 			} finally {
@@ -59,13 +81,22 @@ const Header = () => {
 		router.push("/auth/signin");
 	};
 
-	// Obtener iniciales para avatar de respaldo
 	const getInitials = () => {
 		if (!user) return "?";
 		const nombre = user.nombre || "";
-		const apellidos = user.apellidos || "";
-		return (nombre.charAt(0) + apellidos.charAt(0)).toUpperCase();
+		const apellido1 = user.apellido1 || "";
+		const apellido2 = user.apellido2 || "";
+		const initials = (
+			nombre.charAt(0) +
+			apellido1.charAt(0) +
+			apellido2.charAt(0)
+		).toUpperCase();
+		return initials || "?";
 	};
+
+	// Determina si el avatar es una URL válida o base64
+	const isDataUrl = (str?: string | null) =>
+		str?.startsWith("data:image") || str?.startsWith("http");
 
 	if (loading) {
 		return (
@@ -84,42 +115,50 @@ const Header = () => {
 	return (
 		<header className="bg-white shadow-md sticky top-0 z-50">
 			<div className="container mx-auto px-4 py-3 flex justify-between items-center">
-				{/* Logo y nombre */}
 				<Link href="/dashboard" className="flex items-center space-x-3">
 					<div className="relative w-10 h-10">
 						<Image
-							src="/logo.png" // Ajusta según tu logo
+							src="/logo.png"
 							alt="Laboratorio"
 							fill
 							className="object-contain"
 						/>
 					</div>
 					<span className="text-xl font-semibold text-gray-800 hidden sm:inline">
-						Medycal Analytics
+						Medical Analytics
 					</span>
 				</Link>
 
-				{/* Menú de usuario */}
 				<div className="relative">
 					<button
 						onClick={() => setMenuOpen(!menuOpen)}
 						className="flex items-center space-x-2 focus:outline-none"
 					>
-						<div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-							{user?.avatar ? (
-								<Image
-									src={user.avatar}
-									alt="Avatar"
-									width={40}
-									height={40}
-									className="rounded-full object-cover"
-								/>
+						<div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold overflow-hidden">
+							{user?.fotoperfil ? (
+								isDataUrl(user.fotoperfil) ? (
+									// eslint-disable-next-line @next/next/no-img-element
+									<img
+										src={user.fotoperfil}
+										alt="Avatar"
+										className="w-full h-full object-cover"
+									/>
+								) : (
+									<Image
+										src={user.fotoperfil}
+										alt="Avatar"
+										width={40}
+										height={40}
+										className="rounded-full object-cover"
+										unoptimized={user.fotoperfil.startsWith("http")}
+									/>
+								)
 							) : (
-								<span>{getInitials()}</span>
+								<span className="text-sm font-bold">{getInitials()}</span>
 							)}
 						</div>
 						<span className="text-gray-700 hidden md:inline">
-							{user?.nombre} {user?.apellidos}
+							{user?.nombre} {user?.apellido1} {user?.apellido2}
 						</span>
 						<svg
 							className="w-4 h-4 text-gray-500"

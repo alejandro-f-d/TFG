@@ -39,6 +39,8 @@ const HeroSection = () => {
 			}
 			if (data.token) {
 				localStorage.setItem("token", data.token);
+				localStorage.setItem("uuidUser", data.uuidUser);
+				localStorage.setItem("permisos", data.permisos);
 			}
 			router.push("/dashboard");
 		} catch (err) {

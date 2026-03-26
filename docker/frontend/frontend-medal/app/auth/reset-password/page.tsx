@@ -2,7 +2,7 @@ import ResetPasswordForm from "@/components/recovery/ResetPasswordForm";
 import { Suspense } from "react";
 
 export const metadata = {
-	title: "Restablecer contraseña | Medycal Analytics Laboratory",
+	title: "Restablecer contraseña | Medical Analytics Laboratory",
 };
 
 export default function ResetPasswordPage() {
