@@ -11,8 +11,8 @@ interface UserData {
 	apellido1?: string;
 	apellido2?: string;
 	correoinstitucional?: string;
-	fotoperfil?: string | null;
-	[key: string]: any; // Para otras propiedades opcionales
+	fotoperfil?: { type: string; data: number[] } | string | null;
+	[key: string]: any;
 }
 
 const Header = () => {
@@ -20,17 +20,15 @@ const Header = () => {
 	const [user, setUser] = useState<UserData | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [menuOpen, setMenuOpen] = useState(false);
+	const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
 	useEffect(() => {
 		const fetchUser = async () => {
 			try {
 				const token = localStorage.getItem("token");
 				const uuidUser = localStorage.getItem("uuidUser");
-				const permisos = localStorage.getItem("permisos");
-				console.log("Token obtenido en HeaderDashboard:", token);
 
 				if (!token) {
-					console.log("No hay token, redirigiendo a login");
 					router.push("/auth/signin");
 					return;
 				}
@@ -39,7 +37,6 @@ const Header = () => {
 				if (!apiUrl) {
 					throw new Error("NEXT_PUBLIC_API_URL no definida");
 				}
-				console.log("La url a verificar es:", `${apiUrl}/api/user/${uuidUser}`);
 
 				const response = await fetch(`${apiUrl}/api/user/${uuidUser}`, {
 					headers: {
@@ -49,23 +46,17 @@ const Header = () => {
 				});
 
 				if (!response.ok) {
-					const errorText = await response.text();
-					console.error("Error al obtener perfil:", response.status, errorText);
 					throw new Error(`Error ${response.status}`);
 				}
 
 				const data = await response.json();
-				console.log("Respuesta perfil completa:", data);
 
-				// Extraer el objeto info
 				if (data.info) {
 					setUser(data.info);
-					console.log("Usuario establecido:", data.info);
 				} else {
 					throw new Error("No se encontraron datos de usuario");
 				}
 			} catch (error) {
-				console.error("Error cargando usuario:", error);
 				localStorage.removeItem("token");
 				router.push("/auth/signin");
 			} finally {
@@ -75,6 +66,46 @@ const Header = () => {
 
 		fetchUser();
 	}, [router]);
+
+	// Conversión de Buffer → Base64
+	useEffect(() => {
+		if (!user?.fotoperfil) {
+			setAvatarUrl(null);
+			return;
+		}
+
+		// Caso: string directo (URL o base64)
+		if (typeof user.fotoperfil === "string") {
+			setAvatarUrl(user.fotoperfil);
+			return;
+		}
+
+		// Caso: Buffer
+		if (
+			typeof user.fotoperfil === "object" &&
+			user.fotoperfil.type === "Buffer" &&
+			Array.isArray(user.fotoperfil.data)
+		) {
+			try {
+				const uint8 = new Uint8Array(user.fotoperfil.data);
+
+				let binary = "";
+				for (let i = 0; i < uint8.length; i++) {
+					binary += String.fromCharCode(uint8[i]);
+				}
+
+				const base64 = btoa(binary);
+				setAvatarUrl(`data:image/png;base64,${base64}`);
+			} catch (err) {
+				console.error("Error al convertir imagen:", err);
+				setAvatarUrl(null);
+			}
+
+			return;
+		}
+
+		setAvatarUrl(null);
+	}, [user]);
 
 	const handleLogout = () => {
 		localStorage.removeItem("token");
@@ -93,10 +124,6 @@ const Header = () => {
 		).toUpperCase();
 		return initials || "?";
 	};
-
-	// Determina si el avatar es una URL válida o base64
-	const isDataUrl = (str?: string | null) =>
-		str?.startsWith("data:image") || str?.startsWith("http");
 
 	if (loading) {
 		return (
@@ -134,32 +161,24 @@ const Header = () => {
 						onClick={() => setMenuOpen(!menuOpen)}
 						className="flex items-center space-x-2 focus:outline-none"
 					>
-						<div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold overflow-hidden">
-							{user?.fotoperfil ? (
-								isDataUrl(user.fotoperfil) ? (
-									// eslint-disable-next-line @next/next/no-img-element
-									<img
-										src={user.fotoperfil}
-										alt="Avatar"
-										className="w-full h-full object-cover"
-									/>
-								) : (
-									<Image
-										src={user.fotoperfil}
-										alt="Avatar"
-										width={40}
-										height={40}
-										className="rounded-full object-cover"
-										unoptimized={user.fotoperfil.startsWith("http")}
-									/>
-								)
+						<div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+							{avatarUrl ? (
+								<img
+									src={avatarUrl}
+									alt="Avatar"
+									className="w-full h-full object-cover"
+								/>
 							) : (
-								<span className="text-sm font-bold">{getInitials()}</span>
+								<span className="text-sm font-bold text-blue-600">
+									{getInitials()}
+								</span>
 							)}
 						</div>
+
 						<span className="text-gray-700 hidden md:inline">
 							{user?.nombre} {user?.apellido1} {user?.apellido2}
 						</span>
+
 						<svg
 							className="w-4 h-4 text-gray-500"
 							fill="none"
