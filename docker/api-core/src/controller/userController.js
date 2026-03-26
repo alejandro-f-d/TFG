@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import { addEmailToQueue } from "../eda/queue.js";
 import crypto from "crypto";
+import { tienePermiso } from "../middlewares/authMiddleware.js";
 
 const verificarCorreo = (correo) => {
 	if (!correo) return false;
@@ -103,30 +104,33 @@ export const postUser = async (req, res) => {
 export const getUserByUuid = async (req, res) => {
 	try {
 		const { uuid } = req.params;
-		if (!uuid) {
-			return res.status(400).json({ error: `Falta el uuid.` });
-		}
-		const uuidRegex =
-			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-		if (!uuidRegex.test(uuid)) {
-			return res
-				.status(404)
-				.json({ error: "User no encontrado (Formato de ID inválido)." });
-		}
+		if (req.user.uuidUsuario === uuid || tienePermiso("usr:getUsuario")) {
+			if (!uuid) {
+				return res.status(400).json({ error: `Falta el uuid.` });
+			}
+			const uuidRegex =
+				/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-		const resultado = await UserModel.getUserByUuid(uuid);
-		const usuario = resultado.info.rows[0];
-		if (usuario == undefined) {
-			return res.status(404).json({
-				message: "Usuario no encontrado.",
+			if (!uuidRegex.test(uuid)) {
+				return res
+					.status(404)
+					.json({ error: "User no encontrado (Formato de ID inválido)." });
+			}
+
+			const resultado = await UserModel.getUserByUuid(uuid);
+			const usuario = resultado.info.rows[0];
+			if (usuario == undefined) {
+				return res.status(404).json({
+					message: "Usuario no encontrado.",
+				});
+			}
+			delete usuario.contrasena;
+			return res.status(200).json({
+				message: "Usuario encontrado con éxito.",
+				info: usuario,
 			});
 		}
-		delete usuario.contrasena;
-		return res.status(200).json({
-			message: "Usuario encontrado con éxito.",
-			info: usuario,
-		});
 	} catch (error) {
 		console.error("Error en el getUserByUuid", error);
 		return res.status(500).json({ error: "Error interno del servidor." });

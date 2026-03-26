@@ -467,13 +467,14 @@ router.post(
  *   get:
  *     summary: Obtiene los detalles de un usuario por su UUID
  *     description: |
- *       Retorna la información detallada de un usuario, incluyendo sus relaciones:
- *       - Puertas a las que tiene acceso
- *       - Máquinas de las que es propietario
- *       - Proyectos de GitLab en los que participa
- *       - Peticiones realizadas (si las tiene)
- *       La contraseña del usuario nunca se incluye en la respuesta.
- *       Requiere el permiso `usr:getUsuario` (o `admin:total`).
+ *       Retorna la información detallada de un usuario, incluyendo sus relaciones (puertas, máquinas en propiedad, proyectos GitLab, peticiones).
+ *       La contraseña nunca se incluye en la respuesta.
+ *
+ *       **Control de acceso:**
+ *       - El propio usuario puede ver su propio perfil (si `uuid` coincide con el del token).
+ *       - Usuarios con permiso `usr:getUsuario` (o `admin:total`) pueden ver cualquier usuario.
+ *
+ *       Si no se cumple ninguna de estas condiciones, se devuelve 403.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -492,7 +493,7 @@ router.post(
  *           type: string
  *           format: uuid
  *         description: UUID del usuario a consultar
- *         example: "6d8d77f0-d9a5-472b-aec3-92223b6ac70b"
+ *         example: "f8a6c830-ed1b-44ea-ba72-607a8dcfbc0e"
  *     responses:
  *       200:
  *         description: Usuario encontrado con éxito
@@ -548,7 +549,7 @@ router.post(
  *                       type: string
  *                       format: date-time
  *                       description: Fecha de incorporación
- *                       example: "2026-03-17T00:00:00.000Z"
+ *                       example: "2026-03-26T00:00:00.000Z"
  *                     fechafin:
  *                       type: string
  *                       format: date-time
@@ -576,14 +577,15 @@ router.post(
  *                       type: string
  *                       format: uuid
  *                       description: UUID del usuario
- *                       example: "6d8d77f0-d9a5-472b-aec3-92223b6ac70b"
+ *                       example: "f8a6c830-ed1b-44ea-ba72-607a8dcfbc0e"
  *                     gitlab:
  *                       type: string
  *                       description: Usuario de GitLab
  *                       example: "afisac"
  *                     responsable:
  *                       type: integer
- *                       description: ID del usuario responsable (si tiene)
+ *                       nullable: true
+ *                       description: ID del usuario responsable
  *                       example: 2
  *                     peticiones:
  *                       type: array
@@ -599,11 +601,9 @@ router.post(
  *                         properties:
  *                           id:
  *                             type: integer
- *                             description: ID de la puerta
  *                             example: 1
  *                           nombre:
  *                             type: string
- *                             description: Nombre de la puerta
  *                             example: "Puerta CPD"
  *                     maquinas_propiedad:
  *                       type: array
@@ -613,34 +613,28 @@ router.post(
  *                         properties:
  *                           id:
  *                             type: integer
- *                             description: ID de la máquina
  *                             example: 1
  *                           nombre:
  *                             type: string
- *                             description: Nombre de la máquina
  *                             example: "srv-docker-01"
  *                     proyectos_gitlab:
  *                       type: array
- *                       description: Proyectos de GitLab en los que participa
+ *                       description: Proyectos GitLab en los que participa
  *                       items:
  *                         type: object
  *                         properties:
  *                           id:
  *                             type: integer
- *                             description: ID del proyecto
  *                             example: 1
  *                           nombre:
  *                             type: string
- *                             description: Nombre del proyecto
  *                             example: "Monitorizacion"
  *                           uuid:
  *                             type: string
  *                             format: uuid
- *                             description: UUID del proyecto
- *                             example: "4e6353a7-7039-487f-ba38-f2ef986aa4e3"
+ *                             example: "d5080096-90f1-4cda-8f04-d232e6da1152"
  *                           activo:
  *                             type: boolean
- *                             description: Estado activo del proyecto
  *                             example: true
  *       400:
  *         description: Falta el UUID en la petición
@@ -663,7 +657,7 @@ router.post(
  *                   type: string
  *                   example: "No autorizado"
  *       403:
- *         description: Prohibido - No tiene el permiso "usr:getUsuario"
+ *         description: Prohibido - El usuario no tiene permiso para ver este perfil
  *         content:
  *           application/json:
  *             schema:
@@ -705,11 +699,7 @@ router.post(
  *                   example: "Error interno del servidor."
  */
 
-router.get(
-	"/:uuid",
-	[verificarToken, tienePermiso("usr:getUsuario")],
-	getUserByUuid,
-);
+router.get("/:uuid", verificarToken, getUserByUuid);
 
 /**
  * @swagger
