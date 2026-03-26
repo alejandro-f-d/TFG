@@ -37,12 +37,34 @@ const HeroSection = () => {
 			if (!response.ok) {
 				throw new Error(data.message || "Credenciales incorrectas");
 			}
+
 			if (data.token) {
+				// Guardar token
 				localStorage.setItem("token", data.token);
 				localStorage.setItem("uuidUser", data.uuidUser);
-				localStorage.setItem("permisos", data.permisos);
+
+				// Normalizar permisos: si es string separado por comas, convertirlo a array
+				let permisosArray: string[] = [];
+				if (Array.isArray(data.permisos)) {
+					permisosArray = data.permisos;
+				} else if (typeof data.permisos === "string") {
+					// Asumimos que vienen separados por comas, ej: "admin:total,peticion:firma_administrador"
+					permisosArray = data.permisos.split(",").map((p: string) => p.trim());
+				}
+
+				// Guardar como JSON válido
+				localStorage.setItem("permisos", JSON.stringify(permisosArray));
+				console.log("Permisos guardados:", localStorage.getItem("permisos"));
+
+				// Guardar nombre si está disponible
+				if (data.nombre) {
+					localStorage.setItem("userName", data.nombre);
+				}
+
+				router.push("/dashboard");
+			} else {
+				throw new Error("No se recibió token de autenticación");
 			}
-			router.push("/dashboard");
 		} catch (err) {
 			console.error("Error en login:", err);
 			setError(

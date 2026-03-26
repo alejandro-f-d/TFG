@@ -16,6 +16,7 @@ export default function DashboardPage() {
 	useEffect(() => {
 		const token = localStorage.getItem("token");
 		const permisosRaw = localStorage.getItem("permisos");
+		console.log("Los permisos de este usuario son:", permisosRaw);
 
 		if (!token) {
 			router.push("/auth/signin");
