@@ -18,7 +18,7 @@ export const usuarioSchema = Joi.object({
 	esResponsable: Joi.boolean().default(false),
 	contrasena: Joi.string(),
 
-	roles: Joi.array().items(Joi.number().integer()),
+	roles: Joi.array().items(Joi.number().integer()).min(1).required(),
 	puertasAutorizadas: Joi.array().items(Joi.number().integer()),
 	duenoMaquina: Joi.array().items(Joi.number().integer()),
 

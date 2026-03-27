@@ -34,7 +34,7 @@ app.set("trust proxy", true);
 
 // --- 1. MIDDLEWARES DE PARSEO (Deben ir primero) ---
 app.use(express.json());
-app.use(cookieParser()); // 👈 Ahora sí disponible para verificarToken en Swagger
+app.use(cookieParser());
 
 // --- 2. CONFIGURACIÓN DE SWAGGER ---
 const swaggerOptions = {
@@ -91,6 +91,6 @@ app.use((err, req, res, next) => {
 // Inicio del servidor
 const PORT = 8080;
 app.listen(PORT, "0.0.0.0", () => {
-	console.log(`🚀 API Medal corriendo en ${process.env.API_DIRECTION}`);
-	console.log(`📚 Documentación: ${process.env.API_DIRECTION}/api-docs`);
+	console.log(` API Medal corriendo en ${process.env.API_DIRECTION}`);
+	console.log(` Documentación: ${process.env.API_DIRECTION}/api-docs`);
 });
