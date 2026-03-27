@@ -176,4 +176,6 @@ export const USER_QUERIES = {
      WHERE idusuario = $1 
      ORDER BY fechacreacion DESC LIMIT 1`,
 	INSERT_PHOTO: `UPDATE medal.usuario SET fotoperfil = $1 WHERE uuidusuario = $2;`,
+	OBTENER_PASSWORD_UUID: `select contrasena FROM medal.usuario where uuidusuario = $1;`,
+	UPDATE_PASSWORD: `update medal.usuario SET contrasena = $1 WHERE uuidusuario = $2;`,
 };

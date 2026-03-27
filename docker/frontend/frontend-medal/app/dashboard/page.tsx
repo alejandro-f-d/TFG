@@ -6,6 +6,7 @@ import MenuCard from "@/components/common/MenuCard";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import { allMenuItems, MenuItem } from "@/components/config/menuItems"; // <- ruta correcta
+import { logout } from "@/lib/auth-common";
 
 export default function DashboardPage() {
 	const router = useRouter();
@@ -19,8 +20,7 @@ export default function DashboardPage() {
 		console.log("Los permisos de este usuario son:", permisosRaw);
 
 		if (!token) {
-			router.push("/auth/signin");
-			return;
+			logout();
 		}
 
 		let userPermissions: string[] = [];

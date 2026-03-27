@@ -401,3 +401,22 @@ export const monitorSchema = Joi.object({
 		"number.min": "El intervalo mínimo de monitoreo son 10 segundos",
 	}),
 });
+
+export const updatePasswordSchema = Joi.object({
+	passwordAnterior: Joi.string().required().messages({
+		"any.required": "La contraseña actual es obligatoria.",
+	}),
+
+	passwordNueva: Joi.string()
+		.min(8)
+		.max(30)
+		// Regex: Al menos una minúscula, una mayúscula, un número y un carácter especial
+		.pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])"))
+		.required()
+		.messages({
+			"string.min": "La nueva contraseña debe tener al menos 8 caracteres.",
+			"string.pattern.base":
+				"La contraseña debe contener al menos una mayúscula, un número y un símbolo (!@#$%^&*).",
+			"any.required": "La nueva contraseña es obligatoria.",
+		}),
+});

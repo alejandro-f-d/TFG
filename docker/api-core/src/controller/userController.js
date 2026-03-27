@@ -417,3 +417,45 @@ export const patchRecuperarPassword = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
+
+export const patchPasswordInterfaz = async (req, res) => {
+	try {
+		const { passwordAnterior, passwordNueva } = req.body;
+
+		if (!passwordAnterior || !passwordNueva) {
+			return res.status(400).json({ error: "Petición mal formada." });
+		}
+
+		const resBbdd = await UserModel.getPasswordByUuid(req.user.uuidUsuario);
+
+		if (resBbdd === 2) {
+			return res.status(404).json({ message: "Usuario no encontrado" });
+		}
+
+		const contrasenaHashGuardada = resBbdd.contrasena;
+
+		const esValidaContrasena = await bcrypt.compare(
+			passwordAnterior,
+			contrasenaHashGuardada,
+		);
+
+		if (!esValidaContrasena) {
+			return res
+				.status(422)
+				.json({ error: "La contraseña actual no coincide" });
+		}
+
+		const salt = await bcrypt.genSalt(10);
+		const passwordHasheada = await bcrypt.hash(passwordNueva, salt);
+
+		await UserModel.updatePasswordInterfaz(
+			passwordHasheada,
+			req.user.uuidUsuario,
+		);
+
+		return res.status(204).send();
+	} catch (error) {
+		console.error("Error al actualizar password:", error);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};

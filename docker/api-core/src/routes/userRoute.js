@@ -10,6 +10,7 @@ import {
 	login,
 	requestPasswordReset,
 	patchRecuperarPassword,
+	patchPasswordInterfaz,
 } from "../controller/userController.js";
 import { verificarToken, tienePermiso } from "../middlewares/authMiddleware.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
@@ -18,6 +19,7 @@ import {
 	maquinaSchema,
 	loginSchema,
 	usuarioPatchSchema,
+	updatePasswordSchema,
 } from "../schemas/index.js";
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -252,6 +254,105 @@ router.post("/recuperarpassword", recoveryLimiter, requestPasswordReset);
  */
 
 router.patch("/recuperarpassword", recoveryLimiter, patchRecuperarPassword);
+
+/**
+ * @swagger
+ * /api/user/updatePassword:
+ *   patch:
+ *     summary: Cambia la contraseña del usuario autenticado
+ *     description: |
+ *       Permite al usuario autenticado cambiar su propia contraseña.
+ *       Requiere proporcionar la contraseña actual y la nueva contraseña.
+ *       La nueva contraseña se almacena de forma segura mediante hashing.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - passwordAnterior
+ *               - passwordNueva
+ *             properties:
+ *               passwordAnterior:
+ *                 type: string
+ *                 format: password
+ *                 description: Contraseña actual del usuario
+ *                 example: "MiClaveActual123"
+ *               passwordNueva:
+ *                 type: string
+ *                 format: password
+ *                 description: Nueva contraseña deseada
+ *                 example: "NuevaClaveSegura456"
+ *           examples:
+ *             ejemploBasico:
+ *               summary: Cambio de contraseña estándar
+ *               value:
+ *                 passwordAnterior: "contraseñaActual"
+ *                 passwordNueva: "nuevaContraseña"
+ *     responses:
+ *       204:
+ *         description: Contraseña actualizada correctamente (sin contenido)
+ *       400:
+ *         description: Petición mal formada (faltan passwordAnterior o passwordNueva)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Petición mal formada."
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       404:
+ *         description: Usuario no encontrado (si el token corresponde a un usuario que ya no existe)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Usuario no encontrado"
+ *       422:
+ *         description: La contraseña actual proporcionada no coincide con la almacenada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "La contraseña actual no coincide"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.patch(
+	"/updatePassword",
+	[verificarToken, validarTipos(updatePasswordSchema)],
+	patchPasswordInterfaz,
+);
 
 /**
  * @swagger

@@ -329,6 +329,39 @@ class UserModel {
 			throw error;
 		}
 	}
+	static async getPasswordByUuid(uuid) {
+		try {
+			const res = await pool.query(USER_QUERIES.OBTENER_PASSWORD_UUID, [uuid]);
+			if (res.rowCount === 0) {
+				return 2;
+			}
+			return res.rows[0];
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener la contraseña actual del usuario via uuid",
+				error,
+			);
+			throw error;
+		}
+	}
+	static async updatePasswordInterfaz(contrasena, uuid) {
+		try {
+			const res = await pool.query(USER_QUERIES.UPDATE_PASSWORD, [
+				contrasena,
+				uuid,
+			]);
+			if (res.rowCount === 0) {
+				throw new Error("Error con el update de la password.");
+			}
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al hacer un update de la password de un usuario",
+				contrasena,
+				uuid,
+				error,
+			);
+		}
+	}
 }
 
 export default UserModel;
