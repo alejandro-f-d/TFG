@@ -1,7 +1,10 @@
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
 
+// Imports de rutas
 import userRoute from "./routes/userRoute.js";
 import healthCheckRoute from "./routes/healthCheckRoute.js";
 import permisosRoute from "./routes/permisosRoute.js";
@@ -15,6 +18,8 @@ import calendarioRoute from "./routes/calendarioRoute.js";
 import peticionRoute from "./routes/peticionRoute.js";
 import monitorRoute from "./routes/monitorRoute.js";
 import adminRoute from "./routes/adminRoute.js";
+
+// Swagger y Auth
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import { verificarToken, tienePermiso } from "./middlewares/authMiddleware.js";
@@ -22,23 +27,33 @@ import { verificarToken, tienePermiso } from "./middlewares/authMiddleware.js";
 dotenv.config();
 
 const app = express();
-app.set("trust proxy", true); // Al venir de un docker es necesario para poder extraer la ip de la que se realiza la petición.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Configuración necesaria para proxies (Nginx/Docker)
+app.set("trust proxy", true);
+
+// --- 1. MIDDLEWARES DE PARSEO (Deben ir primero) ---
+app.use(express.json());
+app.use(cookieParser()); // 👈 Ahora sí disponible para verificarToken en Swagger
+
+// --- 2. CONFIGURACIÓN DE SWAGGER ---
 const swaggerOptions = {
 	definition: {
 		openapi: "3.0.0",
 		info: {
 			title: "API Medal",
 			version: "1.0.0",
+			description: "Documentación de API Medal con acceso por Cookie/Header",
 		},
 		servers: [{ url: `${process.env.API_DIRECTION}` }],
 	},
-	apis: ["./src/routes/*.js"],
+	// Usamos path.join para evitar el error ENOENT en contenedores
+	apis: [path.join(__dirname, "./routes/*.js")],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
-// Middlewares
+// --- 3. RUTA DE SWAGGER PROTEGIDA ---
 app.use(
 	"/api-docs",
 	[verificarToken, tienePermiso("swagger:viewDocs")],
@@ -46,19 +61,18 @@ app.use(
 	swaggerUi.setup(swaggerDocs, {
 		swaggerOptions: {
 			supportedSubmitMethods: [], // Desactiva Try it Out
+			persistAuthorization: true,
 		},
 		explorer: false,
 	}),
 );
-// app.use(cors());
-app.use(express.json());
 
-// Endpoints
+// --- 4. ENDPOINTS ---
 app.use("/api/user", userRoute);
 app.use("/api/healthcheck", healthCheckRoute);
-app.use("/api/permisos", permisosRoute); // Para poder hacer un get de todos los permisos y poder mostrarlos en pantalla.
+app.use("/api/permisos", permisosRoute);
 app.use("/api/maquina", serverRoute);
-app.use("/api/servicios", serviciosRoute); // Para poder hacer un get de todos los servicios en todos los servidores.
+app.use("/api/servicios", serviciosRoute);
 app.use("/api/proyectosgitlab", proyectosGitlabRoute);
 app.use("/api/rol", rolRoute);
 app.use("/api/puertas", puertasRoute);
@@ -68,18 +82,15 @@ app.use("/api/peticion", peticionRoute);
 app.use("/api/monitor", monitorRoute);
 app.use("/admin/queues", adminRoute);
 
-// Errores interno 500
+// Manejo de errores 500
 app.use((err, req, res, next) => {
 	console.error(err.stack);
 	res.status(500).send({ error: "Algo salió mal en el servidor" });
 });
 
-app.listen("8080", "0.0.0.0", () => {
-	console.log(`API Medal corriendo en ${process.env.API_DIRECTION}`);
-	console.log(
-		`Documentación disponible en ${process.env.API_DIRECTION}/api-docs`,
-	);
-	console.log(
-		`HealthCheck de la aplicación disponible en ${process.env.API_DIRECTION}/api/healthCheck`,
-	);
+// Inicio del servidor
+const PORT = 8080;
+app.listen(PORT, "0.0.0.0", () => {
+	console.log(`🚀 API Medal corriendo en ${process.env.API_DIRECTION}`);
+	console.log(`📚 Documentación: ${process.env.API_DIRECTION}/api-docs`);
 });

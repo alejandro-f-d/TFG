@@ -54,6 +54,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('maq:delet
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('maq:editServer', 'Edición de la información de un servidor.', 'Permite al usuario que lo posee la edición del servidor por patch.', 'maquina');
 
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('servicios:get', 'Mostrar en el dashboard el get de servicios', 'Dashboard el get de servicios', 'servicios');
+
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('servicios:getAll', 'Obtener todo el listado de servicios.', 'Permite al usuario obtener todo el listado de servicios.', 'servicios');
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('gitlab:postProyecto', 'Creación de un nuevo proyecto.', 'Permite al usuario la creación de un nuevo proyecto de gitlab.', 'gitlab');
@@ -61,6 +63,8 @@ INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('gitlab:po
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('gitlab:getProyecto', 'Obtención de la lista de proyectos.', 'Permite al usuario obtener la lista de proyectos o un proyecto específico.', 'gitlab');
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('roles:postRoles', 'Creación de roles', 'Permite al usuario crear roles en la plataforma con unos permisos determinados.', 'roles');
+
+INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('roles:getRoles', 'Listado de roles', 'Permite al usuario listar roles en la plataforma con unos permisos determinados.', 'roles');
 
 INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) values('roles:deleteRol', 'Eliminar rol especifico.', 'Permite al usuario eliminar un rol', 'roles');
 

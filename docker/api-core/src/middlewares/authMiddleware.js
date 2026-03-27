@@ -5,11 +5,16 @@ import { AUTH_MIDDLEWARE_QUERY } from "../querys/authMiddlewareQuery.js";
 export const verificarToken = async (req, res, next) => {
 	try {
 		const authHeader = req.headers["authorization"];
-		const token = authHeader && authHeader.split(" ")[1];
+		let token = authHeader && authHeader.split(" ")[1];
+
+		if (!token && req.cookies && req.cookies.token) {
+			token = req.cookies.token;
+		}
+
 		if (!token) {
-			return res
-				.status(401)
-				.json({ error: "Acceso denegado se requiere token." });
+			return res.status(401).json({
+				error: "Acceso denegado, se requiere token (header o cookie).",
+			});
 		}
 
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -22,9 +27,10 @@ export const verificarToken = async (req, res, next) => {
 		const { rows } = await pool.query(AUTH_MIDDLEWARE_QUERY.GET_PERMS, [
 			uuidUsuario,
 		]);
-		const permisosUsuario = rows.map((r) => r.alias);
 
+		const permisosUsuario = rows.map((r) => r.alias);
 		const idUsuarioInterno = rows.length > 0 ? rows[0].idusuario : null;
+
 		req.user = {
 			...decoded,
 			permisos: permisosUsuario,
@@ -34,6 +40,7 @@ export const verificarToken = async (req, res, next) => {
 		next();
 	} catch (error) {
 		console.error("Error verificando token:", error);
+		// Si es un error de JWT (expirado/inválido) devolvemos 401
 		return res.status(401).json({ error: "Token inválido o expirado." });
 	}
 };

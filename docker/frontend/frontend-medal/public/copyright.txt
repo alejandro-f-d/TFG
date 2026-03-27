@@ -1,0 +1,3 @@
+apache-tomcat: The logo of Apache Tomcat – an implementation of the Java Servlet, JavaServer Pages, Java Expression Language and Java WebSocket technologies. Original: ™/®The Apache Software Foundation Vector: VulcanSphere and ReneeWrites.
+Swagger: https://logo.svgcdn.com/logos/swagger.png
+Gitlab: https://about.gitlab.com/press/press-kit/

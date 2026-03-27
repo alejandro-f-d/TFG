@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 const HeroSection = () => {
 	const router = useRouter();
@@ -19,13 +20,10 @@ const HeroSection = () => {
 
 		try {
 			const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-			console.log(`La url es: "${apiUrl}"`);
 
 			const response = await fetch(`${apiUrl}/api/user/login`, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					correoInstitucional: email,
 					contrasena: password,
@@ -39,24 +37,25 @@ const HeroSection = () => {
 			}
 
 			if (data.token) {
-				// Guardar token
-				localStorage.setItem("token", data.token);
+				const dosHoras = 1 / 12;
+				Cookies.set("token", data.token, {
+					expires: dosHoras,
+					path: "/",
+				});
+
+				// El resto de datos no sensibles pueden seguir en localStorage
+				localStorage.setItem("token", data.token); // Mantenerlo aquí también si tu código actual lo usa
 				localStorage.setItem("uuidUser", data.uuidUser);
 
-				// Normalizar permisos: si es string separado por comas, convertirlo a array
 				let permisosArray: string[] = [];
 				if (Array.isArray(data.permisos)) {
 					permisosArray = data.permisos;
 				} else if (typeof data.permisos === "string") {
-					// Asumimos que vienen separados por comas, ej: "admin:total,peticion:firma_administrador"
 					permisosArray = data.permisos.split(",").map((p: string) => p.trim());
 				}
 
-				// Guardar como JSON válido
 				localStorage.setItem("permisos", JSON.stringify(permisosArray));
-				console.log("Permisos guardados:", localStorage.getItem("permisos"));
 
-				// Guardar nombre si está disponible
 				if (data.nombre) {
 					localStorage.setItem("userName", data.nombre);
 				}
@@ -67,11 +66,7 @@ const HeroSection = () => {
 			}
 		} catch (err) {
 			console.error("Error en login:", err);
-			setError(
-				err instanceof Error
-					? err.message
-					: "Error de conexión con el servidor",
-			);
+			setError(err instanceof Error ? err.message : "Error de conexión");
 		} finally {
 			setLoading(false);
 		}

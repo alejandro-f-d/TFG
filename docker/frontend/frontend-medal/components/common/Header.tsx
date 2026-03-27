@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { logout } from "@/lib/auth-common";
 
 interface UserData {
 	idusuario?: number;
@@ -57,8 +58,7 @@ const Header = () => {
 					throw new Error("No se encontraron datos de usuario");
 				}
 			} catch (error) {
-				localStorage.removeItem("token");
-				router.push("/auth/signin");
+				logout();
 			} finally {
 				setLoading(false);
 			}
@@ -108,8 +108,7 @@ const Header = () => {
 	}, [user]);
 
 	const handleLogout = () => {
-		localStorage.removeItem("token");
-		router.push("/auth/signin");
+		logout();
 	};
 
 	const getInitials = () => {
