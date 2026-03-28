@@ -157,6 +157,7 @@ class UserModel {
 						"usuariovpn",
 						"correoinstitucional",
 						"activo",
+						"fechaincorporacion",
 						"fechafin",
 						"wifi",
 						"tarjetaacceso",
