@@ -1,14 +1,13 @@
-// config/userEditPermissions.ts
+// components/config/userEditPermissions.ts
 export interface EditFieldPermission {
 	field: string;
 	requiredPermissions: string[];
-	inputType?: string; // 'text', 'email', 'date', 'checkbox', 'select', 'password', 'file', 'multiselect'
+	inputType?: string;
 	label: string;
 	editableBySelf?: boolean;
 }
 
 export const editFieldPermissions: EditFieldPermission[] = [
-	// Campos editables por el propio usuario
 	{
 		field: "nombre",
 		requiredPermissions: [],
@@ -37,8 +36,6 @@ export const editFieldPermissions: EditFieldPermission[] = [
 		label: "Foto de perfil",
 		editableBySelf: true,
 	},
-
-	// Campos solo para admin/editor
 	{
 		field: "teams",
 		requiredPermissions: ["admin:total", "usr:editUsuario"],
@@ -153,32 +150,23 @@ export const editFieldPermissions: EditFieldPermission[] = [
 	},
 ];
 
-// Función para obtener los campos editables según los permisos del usuario
 export const getEditableFields = (
 	userPermissions: string[],
 	isOwnProfile: boolean,
 ): string[] => {
-	// Si el usuario tiene permisos de admin o editor, puede editar todo independientemente de si es su propio perfil
 	const isAdminOrEditor =
 		userPermissions.includes("admin:total") ||
 		userPermissions.includes("usr:editUsuario");
 
 	return editFieldPermissions
 		.filter((field) => {
-			// Si es admin/editor, puede editar todos los campos (sin restricción de editableBySelf)
-			if (isAdminOrEditor) {
-				return true;
-			}
-			// Si no es admin/editor y es su propio perfil, solo campos editableBySelf
-			if (isOwnProfile && field.editableBySelf) {
-				return true;
-			}
+			if (isAdminOrEditor) return true;
+			if (isOwnProfile && field.editableBySelf) return true;
 			return false;
 		})
 		.map((field) => field.field);
 };
 
-// Función para obtener la configuración de un campo específico
 export const getFieldConfig = (field: string) => {
 	return editFieldPermissions.find((f) => f.field === field);
 };

@@ -143,11 +143,35 @@ class UserModel {
 		const client = await pool.connect();
 		try {
 			await client.query("BEGIN");
+
+			["roles", "puertasAutorizadas", "duenoMaquina"].forEach((field) => {
+				if (typeof campos[field] === "string") {
+					try {
+						campos[field] = JSON.parse(campos[field]);
+					} catch (e) {
+						console.error(`Error parseando el campo ${field}:`, e);
+						campos[field] = [];
+					}
+				}
+			});
+
+			const booleanFields = ["teams", "esresponsable", "activo", "wifi"];
+			booleanFields.forEach((field) => {
+				if (campos[field] !== undefined) {
+					if (campos[field] === "true") campos[field] = true;
+					if (campos[field] === "false") campos[field] = false;
+				}
+			});
+
+			if (campos.responsable && typeof campos.responsable === "string") {
+				campos.responsable = parseInt(campos.responsable, 10);
+			}
+
 			const { roles, puertasAutorizadas, duenoMaquina, ...camposUsuario } =
 				campos;
 
 			const camposPermitidos = esUser
-				? ["nombre", "apellido1", "apellido2", "fotoPerfil"]
+				? ["nombre", "apellido1", "apellido2"]
 				: [
 						"nombre",
 						"apellido1",
@@ -165,17 +189,21 @@ class UserModel {
 						"contrasena",
 						"gitlab",
 						"responsable",
-						"fotoPerfil",
 					];
 
 			const camposFiltrados = {};
 			Object.keys(camposUsuario).forEach((key) => {
-				if (camposPermitidos.includes(key))
+				if (
+					camposPermitidos.includes(key) &&
+					camposUsuario[key] !== undefined
+				) {
 					camposFiltrados[key.toLowerCase()] = camposUsuario[key];
+				}
 			});
 
 			let idUsuarioReal;
 			const keys = Object.keys(camposFiltrados);
+
 			if (keys.length > 0) {
 				const values = Object.values(camposFiltrados);
 				values.push(uuid);
@@ -198,21 +226,25 @@ class UserModel {
 				if (roles !== undefined) {
 					await client.query(USER_QUERIES.DELETE_ROLES_USER, [idUsuarioReal]);
 					if (Array.isArray(roles)) {
-						for (const rId of roles)
-							await client.query(USER_QUERIES.INSERT_ROL_RELACION, [
-								rId,
-								idUsuarioReal,
-							]);
+						for (const rId of roles) {
+							if (rId)
+								await client.query(USER_QUERIES.INSERT_ROL_RELACION, [
+									rId,
+									idUsuarioReal,
+								]);
+						}
 					}
 				}
 				if (puertasAutorizadas !== undefined) {
 					await client.query(USER_QUERIES.DELETE_PUERTAS_USER, [idUsuarioReal]);
 					if (Array.isArray(puertasAutorizadas)) {
-						for (const pId of puertasAutorizadas)
-							await client.query(USER_QUERIES.INSERT_PUERTA_RELACION, [
-								idUsuarioReal,
-								pId,
-							]);
+						for (const pId of puertasAutorizadas) {
+							if (pId)
+								await client.query(USER_QUERIES.INSERT_PUERTA_RELACION, [
+									idUsuarioReal,
+									pId,
+								]);
+						}
 					}
 				}
 				if (duenoMaquina !== undefined) {
@@ -220,22 +252,26 @@ class UserModel {
 						idUsuarioReal,
 					]);
 					if (Array.isArray(duenoMaquina)) {
-						for (const mId of duenoMaquina)
-							await client.query(USER_QUERIES.INSERT_MAQUINA_RELACION, [
-								idUsuarioReal,
-								mId,
-							]);
+						for (const mId of duenoMaquina) {
+							if (mId)
+								await client.query(USER_QUERIES.INSERT_MAQUINA_RELACION, [
+									idUsuarioReal,
+									mId,
+								]);
+						}
 					}
 				}
 			}
+
 			if (fotoFile) {
 				await client.query(USER_QUERIES.INSERT_PHOTO, [fotoFile.buffer, uuid]);
 			}
 
 			await client.query("COMMIT");
-			return { status: "OK" };
+			return { status: "OK", idusuario: idUsuarioReal };
 		} catch (error) {
 			await client.query("ROLLBACK");
+			console.error("Error en UserModel.patchUser:", error);
 			throw error;
 		} finally {
 			client.release();

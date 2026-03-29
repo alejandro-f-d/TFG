@@ -171,6 +171,7 @@ export const patchUser = async (req, res) => {
 	try {
 		const { uuid } = req.params;
 		const camposCambiados = req.body;
+		console.log("El body es:", req.body);
 		const darBaja = req.query.darBaja === "true";
 		// console.log(darBaja);
 		const permisos = req.user?.permisos || [];

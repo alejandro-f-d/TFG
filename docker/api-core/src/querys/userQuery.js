@@ -22,6 +22,17 @@ export const USER_QUERIES = {
 	GET_BY_UUID: `
     SELECT 
         u.*,
+        -- Roles asociados al usuario
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', r.idrole,
+                'nombre', r.nombre
+            ))
+            FROM medal.rolestiene rt
+            JOIN medal.roles r ON rt.idrole = r.idrole
+            WHERE rt.idusuario = u.idusuario
+            ), '[]'
+        ) AS roles,
         -- Peticiones asociadas
         COALESCE(
             (SELECT json_agg(json_build_object(
