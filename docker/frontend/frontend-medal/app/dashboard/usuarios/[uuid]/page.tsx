@@ -102,8 +102,11 @@ export default function UserDetailPage() {
 
 	const [rolesList, setRolesList] = useState<Role[]>([]);
 	const [puertasList, setPuertasList] = useState<Puerta[]>([]);
-	const [maquinasList, setMaquinasList] = useState<Maquina[]>([]);
 	const [responsablesList, setResponsablesList] = useState<any[]>([]);
+
+	const [maquinasList, setMaquinasList] = useState<Maquina[]>([]);
+	const [maquinaSearch, setMaquinaSearch] = useState("");
+	const [searchingMaquinas, setSearchingMaquinas] = useState(false);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -125,9 +128,6 @@ export default function UserDetailPage() {
 					? userData.info[0]
 					: userData.info;
 
-				if (!info) throw new Error("No se pudo procesar la información");
-
-				// Normalizamos el estado inicial para que coincida con los nombres de la config
 				const normalizedInfo = {
 					...info,
 					roles: info.roles || [],
@@ -138,6 +138,7 @@ export default function UserDetailPage() {
 				setUser(info);
 				setEditForm(normalizedInfo);
 				setAvatarPreview(getAvatarUrl(info.fotoperfil));
+				setMaquinasList(normalizedInfo.duenoMaquina);
 
 				const isOwnProfile = currentUuid === uuid;
 				setEditableFields(getEditableFields(userPermissions, isOwnProfile));
@@ -146,14 +147,11 @@ export default function UserDetailPage() {
 					userPermissions.includes("admin:total") ||
 					userPermissions.includes("usr:editUsuario")
 				) {
-					const [rRes, pRes, mRes, uRes] = await Promise.all([
+					const [rRes, pRes, uRes] = await Promise.all([
 						fetch(`${apiUrl}/api/rol?limit=1000`, {
 							headers: { Authorization: `Bearer ${token}` },
 						}),
 						fetch(`${apiUrl}/api/puertas`, {
-							headers: { Authorization: `Bearer ${token}` },
-						}),
-						fetch(`${apiUrl}/api/maquina?limit=1000`, {
 							headers: { Authorization: `Bearer ${token}` },
 						}),
 						fetch(`${apiUrl}/api/user?limit=1000`, {
@@ -181,16 +179,6 @@ export default function UserDetailPage() {
 							})),
 						);
 					}
-					if (mRes.ok) {
-						const d = await mRes.json();
-						const rows = Array.isArray(d) ? d : d.info?.rows || d.info || [];
-						setMaquinasList(
-							rows.map((m: any) => ({
-								id: m.idmaquina || m.id,
-								nombre: m.nombre,
-							})),
-						);
-					}
 					if (uRes.ok) {
 						const d = await uRes.json();
 						const rows = d.info?.rows || d.info || d;
@@ -207,6 +195,44 @@ export default function UserDetailPage() {
 		};
 		fetchData();
 	}, [uuid, router]);
+
+	// Búsqueda de máquinas
+	useEffect(() => {
+		if (!isEditing || maquinaSearch.length < 2) return;
+		const delayDebounceFn = setTimeout(async () => {
+			setSearchingMaquinas(true);
+			try {
+				const token = localStorage.getItem("token");
+				const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
+				const res = await fetch(
+					`${apiUrl}/api/maquina?search=${maquinaSearch}&limit=10`,
+					{
+						headers: { Authorization: `Bearer ${token}` },
+					},
+				);
+				if (res.ok) {
+					const d = await res.json();
+					const rows = d.info?.rows || d.info || d || [];
+					const currentSelected = editForm.duenoMaquina || [];
+					const newResults = rows.map((m: any) => ({
+						id: m.idmaquina || m.id,
+						nombre: m.nombre,
+					}));
+					const combined = [...currentSelected];
+					newResults.forEach((nr: any) => {
+						if (!combined.some((c) => (c.id || c.idmaquina) === nr.id))
+							combined.push(nr);
+					});
+					setMaquinasList(combined);
+				}
+			} catch (e) {
+				console.error(e);
+			} finally {
+				setSearchingMaquinas(false);
+			}
+		}, 500);
+		return () => clearTimeout(delayDebounceFn);
+	}, [maquinaSearch, isEditing, editForm.duenoMaquina]);
 
 	const handleSave = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -228,7 +254,6 @@ export default function UserDetailPage() {
 						return;
 					}
 				}
-
 				if (value === undefined || value === null) return;
 
 				if (typeof value === "boolean") {
@@ -279,55 +304,106 @@ export default function UserDetailPage() {
 		const config = getFieldConfig(field);
 
 		if (isEditing && editableFields.includes(field)) {
-			// Caso Multiselect (Checkboxes)
-			if (["roles", "puertasAutorizadas", "duenoMaquina"].includes(field)) {
-				const options =
-					field === "roles"
-						? rolesList
-						: field === "puertasAutorizadas"
-							? puertasList
-							: maquinasList;
-				const selectedIds = Array.isArray(value)
-					? value.map((v) =>
-							typeof v === "object" ? v.id || v.idpuerta || v.idmaquina : v,
-						)
-					: [];
-
+			// WIFI CHECK (Funcionalidad 2)
+			if (field === "wifi") {
 				return (
-					<div className="grid grid-cols-1 gap-2 p-3 border-2 border-blue-50 rounded-2xl bg-slate-50 max-h-48 overflow-y-auto shadow-inner">
-						{options.map((opt) => {
-							const optId =
-								opt.id || (opt as any).idpuerta || (opt as any).idmaquina;
-							const isChecked = selectedIds.includes(optId);
-							return (
-								<label
-									key={optId}
-									className={`flex items-center space-x-3 p-2 rounded-xl transition-all cursor-pointer ${isChecked ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
-								>
-									<input
-										type="checkbox"
-										checked={isChecked}
-										onChange={(e) => {
-											const newIds = e.target.checked
-												? [...selectedIds, optId]
-												: selectedIds.filter((id) => id !== optId);
-											setEditForm({ ...editForm, [field]: newIds });
-										}}
-										className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-									/>
-									<span
-										className={`text-xs font-bold ${isChecked ? "text-blue-700" : "text-slate-600"}`}
-									>
-										{opt.nombre}
-									</span>
-								</label>
-							);
-						})}
+					<div className="flex items-center space-x-3 bg-white p-2.5 rounded-xl border shadow-sm">
+						<input
+							type="checkbox"
+							checked={!!value}
+							onChange={(e) =>
+								setEditForm({ ...editForm, [field]: e.target.checked })
+							}
+							className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-slate-300 transition-all"
+						/>
+						<span className="text-sm font-black text-slate-700 uppercase">
+							Acceso Permitido
+						</span>
 					</div>
 				);
 			}
 
-			if (config?.inputType === "select") {
+			// MÁQUINAS
+			if (field === "duenoMaquina") {
+				const selectedIds = Array.isArray(value)
+					? value.map((v: any) => v.id || v.idmaquina)
+					: [];
+				return (
+					<div className="space-y-4 w-full">
+						<div className="relative group">
+							<input
+								type="text"
+								placeholder="Escribe el nombre de la máquina..."
+								value={maquinaSearch}
+								onChange={(e) => setMaquinaSearch(e.target.value)}
+								className="w-full p-3 pl-11 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm focus:border-blue-400 outline-none transition-all placeholder:text-slate-300"
+							/>
+							<div className="absolute left-4 top-3.5">
+								{searchingMaquinas ? (
+									<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+								) : (
+									<span className="text-slate-400">🔍</span>
+								)}
+							</div>
+						</div>
+						<div className="grid grid-cols-1 gap-2 p-4 border-2 border-slate-50 rounded-[2rem] bg-slate-50/50 max-h-60 overflow-y-auto shadow-inner">
+							{maquinasList.length > 0 ? (
+								maquinasList.map((m: any) => {
+									const mId = m.id || m.idmaquina;
+									const isChecked = selectedIds.includes(mId);
+									return (
+										<label
+											key={mId}
+											className={`flex items-center space-x-3 p-3 rounded-2xl transition-all cursor-pointer ${isChecked ? "bg-white shadow-md border-transparent" : "hover:bg-white/60 border-transparent"} border-2`}
+										>
+											<input
+												type="checkbox"
+												checked={isChecked}
+												onChange={(e) => {
+													const newSelected = e.target.checked
+														? [...(value || []), m]
+														: value.filter(
+																(item: any) =>
+																	(item.id || item.idmaquina) !== mId,
+															);
+													setEditForm({ ...editForm, [field]: newSelected });
+												}}
+												className="w-5 h-5 rounded-lg text-blue-600 focus:ring-blue-500 border-slate-300"
+											/>
+											<span
+												className={`text-sm font-black ${isChecked ? "text-blue-700" : "text-slate-500"}`}
+											>
+												{m.nombre}
+											</span>
+										</label>
+									);
+								})
+							) : (
+								<p className="text-[10px] text-slate-400 text-center py-4 font-black uppercase tracking-widest">
+									Escribe para buscar...
+								</p>
+							)}
+						</div>
+					</div>
+				);
+			}
+
+			// SELECTS (ACTIVO / RESPONSABLE)
+			if (field === "activo") {
+				return (
+					<select
+						value={String(value)}
+						onChange={(e) =>
+							setEditForm({ ...editForm, [field]: e.target.value === "true" })
+						}
+						className="w-full p-2.5 border rounded-xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500"
+					>
+						<option value="true">ACTIVO</option>
+						<option value="false">INACTIVO</option>
+					</select>
+				);
+			}
+			if (config?.inputType === "select" && field === "responsable") {
 				return (
 					<select
 						value={value ?? ""}
@@ -362,12 +438,17 @@ export default function UserDetailPage() {
 			);
 		}
 
-		// --- MODO VISUALIZACIÓN ---
-		if (
-			field === "roles" ||
-			field === "puertasAutorizadas" ||
-			field === "duenoMaquina"
-		) {
+		// VISTA LECTURA
+		if (field === "wifi") {
+			return (
+				<span
+					className={`px-3 py-1 rounded-lg text-[10px] font-black border uppercase ${value ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-slate-50 text-slate-400 border-slate-100"}`}
+				>
+					{value ? "📶 Acceso WiFi ON" : "🚫 Sin Acceso WiFi"}
+				</span>
+			);
+		}
+		if (["roles", "puertasAutorizadas", "duenoMaquina"].includes(field)) {
 			return (
 				<div className="flex flex-wrap gap-2">
 					{value && value.length > 0 ? (
@@ -390,7 +471,7 @@ export default function UserDetailPage() {
 				<span
 					className={`px-3 py-1 rounded-full text-[10px] font-black ${value ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
 				>
-					{value ? "SÍ" : "NO"}
+					{value ? "ACTIVO" : "INACTIVO"}
 				</span>
 			);
 		}
@@ -413,6 +494,7 @@ export default function UserDetailPage() {
 				{ field: "usuariovpn", label: "Usuario VPN" },
 				{ field: "gitlab", label: "GitLab" },
 				{ field: "tarjetaacceso", label: "Nº Tarjeta" },
+				{ field: "wifi", label: "Acceso WiFi" },
 			],
 		},
 		{
@@ -451,64 +533,76 @@ export default function UserDetailPage() {
 					>
 						← VOLVER
 					</button>
-					{!isEditing && (
-						<button
-							onClick={() => setIsEditing(true)}
-							className="bg-white border-2 border-slate-100 px-8 py-3 rounded-2xl font-black text-[10px] tracking-widest shadow-sm hover:bg-slate-50 active:scale-95 transition-all"
-						>
-							✏️ EDITAR PERFIL
-						</button>
-					)}
 				</div>
 
 				<div className="bg-white rounded-[3.5rem] shadow-2xl shadow-slate-200 overflow-hidden border border-white">
-					<div className="relative h-64 bg-slate-900">
-						<div className="absolute -bottom-14 left-14 flex items-end space-x-10">
-							<div className="relative group w-52 h-52 rounded-[3.5rem] border-[10px] border-white overflow-hidden bg-slate-100 shadow-2xl">
-								{avatarPreview ? (
-									<img
-										src={avatarPreview}
-										className="w-full h-full object-cover"
+					{/* CABECERA */}
+					<div className="relative bg-slate-900 pt-24 pb-20 px-14 flex flex-col md:flex-row items-center md:items-end gap-12">
+						<div className="relative group w-52 h-52 rounded-[3.5rem] border-[10px] border-white overflow-hidden bg-slate-100 shadow-2xl shrink-0 -mb-32 z-10">
+							{avatarPreview ? (
+								<img
+									src={avatarPreview}
+									alt="Avatar"
+									className="w-full h-full object-cover"
+								/>
+							) : (
+								<div className="flex h-full items-center justify-center text-6xl font-black text-slate-300">
+									{user?.nombre?.[0]}
+								</div>
+							)}
+							{isEditing && (
+								<label className="absolute inset-0 bg-blue-600/60 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer backdrop-blur-sm transition-all">
+									<input
+										type="file"
+										className="hidden"
+										accept="image/*"
+										onChange={(e) => {
+											const file = e.target.files?.[0];
+											if (file) {
+												setAvatarFile(file);
+												const r = new FileReader();
+												r.onload = () => setAvatarPreview(r.result as string);
+												r.readAsDataURL(file);
+											}
+										}}
 									/>
-								) : (
-									<div className="flex h-full items-center justify-center text-6xl font-black text-slate-300">
-										{user?.nombre?.[0]}
-									</div>
-								)}
-								{isEditing && (
-									<label className="absolute inset-0 bg-blue-600/60 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer backdrop-blur-sm transition-all">
-										<input
-											type="file"
-											className="hidden"
-											accept="image/*"
-											onChange={(e) => {
-												const file = e.target.files?.[0];
-												if (file) {
-													setAvatarFile(file);
-													const r = new FileReader();
-													r.onload = () => setAvatarPreview(r.result as string);
-													r.readAsDataURL(file);
-												}
-											}}
-										/>
-										<span className="text-white text-[10px] font-black tracking-widest">
-											CAMBIAR FOTO
-										</span>
-									</label>
-								)}
-							</div>
-							<div className="mb-6">
-								<h1 className="text-5xl font-black text-white tracking-tighter drop-shadow-lg">
+									<span className="text-white text-[10px] font-black tracking-widest text-center px-4">
+										CAMBIAR FOTO
+									</span>
+								</label>
+							)}
+						</div>
+						<div className="flex-1 flex flex-col md:flex-row items-center md:items-end justify-between gap-6 mb-2 w-full text-center md:text-left">
+							<div>
+								<h1 className="text-5xl font-black text-white tracking-tighter drop-shadow-xl leading-[1.1] mb-6">
 									{user?.nombre} {user?.apellido1}
 								</h1>
-								<p className="text-blue-200 font-bold text-xs opacity-80 mt-1">
-									{user?.correoinstitucional}
-								</p>
+								<div className="inline-flex items-center gap-4 bg-white/10 border border-white/10 px-5 py-2.5 rounded-2xl backdrop-blur-md shadow-sm">
+									<div className="relative flex h-3 w-3">
+										{user?.activo && (
+											<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+										)}
+										<span
+											className={`relative inline-flex rounded-full h-3 w-3 ${user?.activo ? "bg-green-500" : "bg-red-500"}`}
+										></span>
+									</div>
+									<p className="text-blue-100 font-bold text-sm tracking-wide">
+										{user?.correoinstitucional}
+									</p>
+								</div>
 							</div>
+							{!isEditing && (
+								<button
+									onClick={() => setIsEditing(true)}
+									className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-3xl font-black text-[10px] tracking-widest shadow-xl hover:bg-white/10 active:scale-95 transition-all backdrop-blur-sm shrink-0 self-center md:self-end"
+								>
+									✏️ EDITAR PERFIL
+								</button>
+							)}
 						</div>
 					</div>
 
-					<div className="h-24"></div>
+					<div className="h-40"></div>
 
 					<div className="px-20 pb-20">
 						{error && (
@@ -547,6 +641,97 @@ export default function UserDetailPage() {
 										</div>
 									</div>
 								))}
+
+								{/* PROYECTOS GITLAB */}
+								<div className="md:col-span-2 pt-10">
+									<h3 className="text-slate-900 font-black text-[10px] uppercase tracking-[0.3em] mb-10 flex items-center gap-4">
+										<span className="w-10 h-[2px] bg-slate-900"></span>GitLab
+										(Clic para detalles)
+									</h3>
+									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+										{user?.proyectos_gitlab?.length ? (
+											user.proyectos_gitlab.map((proy) => (
+												<div
+													key={proy.uuid}
+													onClick={() =>
+														router.push(
+															`/dashboard/proyectosgitlab/${proy.uuid}`,
+														)
+													}
+													className="bg-slate-50 border border-slate-100 p-6 rounded-[2rem] hover:bg-white hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group active:scale-95"
+												>
+													<div className="flex justify-between items-start mb-4">
+														<span className="text-xs font-black text-slate-800 uppercase line-clamp-2 group-hover:text-blue-600">
+															{proy.nombre}
+														</span>
+														<div
+															className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase ${proy.activo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+														>
+															{proy.activo ? "Activo" : "Inactivo"}
+														</div>
+													</div>
+													<div className="text-[9px] font-bold text-slate-400 font-mono truncate">
+														UUID: {proy.uuid.substring(0, 13)}...
+													</div>
+												</div>
+											))
+										) : (
+											<p className="text-slate-400 font-black text-[10px] uppercase p-10 bg-slate-50 rounded-3xl text-center border-2 border-dashed">
+												Sin proyectos
+											</p>
+										)}
+									</div>
+								</div>
+
+								{/* PETICIONES (Funcionalidad 1) */}
+								<div className="md:col-span-2 pt-10">
+									<h3 className="text-amber-600 font-black text-[10px] uppercase tracking-[0.3em] mb-10 flex items-center gap-4">
+										<span className="w-10 h-[2px] bg-amber-600"></span>
+										Peticiones Recientes
+									</h3>
+									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+										{user?.peticiones?.length ? (
+											user.peticiones.map((p) => (
+												<div
+													key={p.id}
+													onClick={() =>
+														router.push(
+															`/dashboard/peticiones/${user.uuidusuario}`,
+														)
+													}
+													className="bg-amber-50/30 border border-amber-100 p-6 rounded-[2rem] hover:bg-white hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group active:scale-95"
+												>
+													<div className="flex justify-between items-center mb-4">
+														<span className="text-xs font-black text-slate-800 uppercase group-hover:text-amber-600">
+															Petición #{p.id}
+														</span>
+														<span
+															className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase ${p.estado === "Completado" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}
+														>
+															{p.estado}
+														</span>
+													</div>
+													<p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter line-clamp-1">
+														{p.proyecto}
+													</p>
+												</div>
+											))
+										) : (
+											<div
+												onClick={() =>
+													router.push(
+														`/dashboard/peticiones/${user?.uuidusuario}`,
+													)
+												}
+												className="col-span-full bg-slate-50 border-2 border-dashed border-slate-200 p-8 rounded-[2rem] text-center hover:bg-white transition-all cursor-pointer group"
+											>
+												<p className="text-slate-400 font-black text-[10px] uppercase tracking-widest group-hover:text-blue-500">
+													Ver todas las peticiones del usuario →
+												</p>
+											</div>
+										)}
+									</div>
+								</div>
 							</div>
 
 							{isEditing && (
