@@ -147,7 +147,15 @@ class UserModel {
 			["roles", "puertasAutorizadas", "duenoMaquina"].forEach((field) => {
 				if (typeof campos[field] === "string") {
 					try {
-						campos[field] = JSON.parse(campos[field]);
+						if (
+							!campos[field] ||
+							campos[field] === "null" ||
+							campos[field] === "[]"
+						) {
+							campos[field] = [];
+						} else {
+							campos[field] = JSON.parse(campos[field]);
+						}
 					} catch (e) {
 						console.error(`Error parseando el campo ${field}:`, e);
 						campos[field] = [];
@@ -163,8 +171,27 @@ class UserModel {
 				}
 			});
 
-			if (campos.responsable && typeof campos.responsable === "string") {
+			const nullableFields = [
+				"fechafin",
+				"fechaincorporacion",
+				"responsable",
+				"tarjetaacceso",
+				"usuariovpn",
+				"gitlab",
+			];
+			nullableFields.forEach((field) => {
+				if (
+					campos[field] === "" ||
+					campos[field] === "null" ||
+					campos[field] === "undefined"
+				) {
+					campos[field] = null;
+				}
+			});
+
+			if (campos.responsable !== undefined && campos.responsable !== null) {
 				campos.responsable = parseInt(campos.responsable, 10);
+				if (isNaN(campos.responsable)) campos.responsable = null;
 			}
 
 			const { roles, puertasAutorizadas, duenoMaquina, ...camposUsuario } =
