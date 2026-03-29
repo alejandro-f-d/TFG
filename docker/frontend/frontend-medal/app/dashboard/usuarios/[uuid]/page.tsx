@@ -196,7 +196,6 @@ export default function UserDetailPage() {
 		fetchData();
 	}, [uuid, router]);
 
-	// Búsqueda de máquinas
 	useEffect(() => {
 		if (!isEditing || maquinaSearch.length < 2) return;
 		const delayDebounceFn = setTimeout(async () => {
@@ -304,91 +303,93 @@ export default function UserDetailPage() {
 		const config = getFieldConfig(field);
 
 		if (isEditing && editableFields.includes(field)) {
-			// WIFI CHECK (Funcionalidad 2)
+			// WIFI CHECK
 			if (field === "wifi") {
 				return (
-					<div className="flex items-center space-x-3 bg-white p-2.5 rounded-xl border shadow-sm">
+					<label className="flex items-center space-x-3 bg-white p-3 rounded-2xl border-2 border-slate-50 shadow-sm cursor-pointer hover:bg-slate-50 transition-all">
 						<input
 							type="checkbox"
 							checked={!!value}
 							onChange={(e) =>
 								setEditForm({ ...editForm, [field]: e.target.checked })
 							}
-							className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-slate-300 transition-all"
+							className="w-6 h-6 rounded-lg text-blue-600 focus:ring-blue-500 border-slate-300"
 						/>
-						<span className="text-sm font-black text-slate-700 uppercase">
+						<span className="text-xs font-black text-slate-700 uppercase tracking-widest">
 							Acceso Permitido
 						</span>
-					</div>
+					</label>
 				);
 			}
 
-			// MÁQUINAS
-			if (field === "duenoMaquina") {
+			// MULTISELECT ROLES/PUERTAS/MAQUINAS
+			if (["roles", "puertasAutorizadas", "duenoMaquina"].includes(field)) {
+				const options =
+					field === "roles"
+						? rolesList
+						: field === "puertasAutorizadas"
+							? puertasList
+							: maquinasList;
 				const selectedIds = Array.isArray(value)
-					? value.map((v: any) => v.id || v.idmaquina)
+					? value.map((v: any) => v.id || v.idpuerta || v.idmaquina)
 					: [];
+
 				return (
 					<div className="space-y-4 w-full">
-						<div className="relative group">
-							<input
-								type="text"
-								placeholder="Escribe el nombre de la máquina..."
-								value={maquinaSearch}
-								onChange={(e) => setMaquinaSearch(e.target.value)}
-								className="w-full p-3 pl-11 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm focus:border-blue-400 outline-none transition-all placeholder:text-slate-300"
-							/>
-							<div className="absolute left-4 top-3.5">
-								{searchingMaquinas ? (
-									<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-								) : (
-									<span className="text-slate-400">🔍</span>
-								)}
+						{field === "duenoMaquina" && (
+							<div className="relative group">
+								<input
+									type="text"
+									placeholder="Escribe el nombre de la máquina..."
+									value={maquinaSearch}
+									onChange={(e) => setMaquinaSearch(e.target.value)}
+									className="w-full p-3 pl-11 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm focus:border-blue-400 outline-none transition-all"
+								/>
+								<div className="absolute left-4 top-3.5">
+									{searchingMaquinas ? (
+										<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+									) : (
+										<span className="text-slate-400">🔍</span>
+									)}
+								</div>
 							</div>
-						</div>
-						<div className="grid grid-cols-1 gap-2 p-4 border-2 border-slate-50 rounded-[2rem] bg-slate-50/50 max-h-60 overflow-y-auto shadow-inner">
-							{maquinasList.length > 0 ? (
-								maquinasList.map((m: any) => {
-									const mId = m.id || m.idmaquina;
-									const isChecked = selectedIds.includes(mId);
-									return (
-										<label
-											key={mId}
-											className={`flex items-center space-x-3 p-3 rounded-2xl transition-all cursor-pointer ${isChecked ? "bg-white shadow-md border-transparent" : "hover:bg-white/60 border-transparent"} border-2`}
+						)}
+						<div className="grid grid-cols-1 gap-2 p-4 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/50 max-h-60 overflow-y-auto shadow-inner">
+							{options.map((opt: any) => {
+								const optId = opt.id || opt.idpuerta || opt.idmaquina;
+								const isChecked = selectedIds.includes(optId);
+								return (
+									<label
+										key={optId}
+										className={`flex items-center space-x-3 p-3 rounded-2xl transition-all cursor-pointer border-2 ${isChecked ? "bg-white shadow-md border-transparent" : "hover:bg-white/60 border-transparent"}`}
+									>
+										<input
+											type="checkbox"
+											checked={isChecked}
+											onChange={(e) => {
+												const newItems = e.target.checked
+													? [...(value || []), opt]
+													: value.filter(
+															(v: any) =>
+																(v.id || v.idpuerta || v.idmaquina) !== optId,
+														);
+												setEditForm({ ...editForm, [field]: newItems });
+											}}
+											className="w-5 h-5 rounded-lg text-blue-600 focus:ring-blue-500 border-slate-300"
+										/>
+										<span
+											className={`text-sm font-black ${isChecked ? "text-blue-700" : "text-slate-500"}`}
 										>
-											<input
-												type="checkbox"
-												checked={isChecked}
-												onChange={(e) => {
-													const newSelected = e.target.checked
-														? [...(value || []), m]
-														: value.filter(
-																(item: any) =>
-																	(item.id || item.idmaquina) !== mId,
-															);
-													setEditForm({ ...editForm, [field]: newSelected });
-												}}
-												className="w-5 h-5 rounded-lg text-blue-600 focus:ring-blue-500 border-slate-300"
-											/>
-											<span
-												className={`text-sm font-black ${isChecked ? "text-blue-700" : "text-slate-500"}`}
-											>
-												{m.nombre}
-											</span>
-										</label>
-									);
-								})
-							) : (
-								<p className="text-[10px] text-slate-400 text-center py-4 font-black uppercase tracking-widest">
-									Escribe para buscar...
-								</p>
-							)}
+											{opt.nombre}
+										</span>
+									</label>
+								);
+							})}
 						</div>
 					</div>
 				);
 			}
 
-			// SELECTS (ACTIVO / RESPONSABLE)
 			if (field === "activo") {
 				return (
 					<select
@@ -396,7 +397,7 @@ export default function UserDetailPage() {
 						onChange={(e) =>
 							setEditForm({ ...editForm, [field]: e.target.value === "true" })
 						}
-						className="w-full p-2.5 border rounded-xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500"
+						className="w-full p-3 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500 transition-all"
 					>
 						<option value="true">ACTIVO</option>
 						<option value="false">INACTIVO</option>
@@ -410,7 +411,7 @@ export default function UserDetailPage() {
 						onChange={(e) =>
 							setEditForm({ ...editForm, [field]: e.target.value })
 						}
-						className="w-full p-2.5 border rounded-xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500"
+						className="w-full p-3 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500 transition-all"
 					>
 						<option value="">Sin responsable</option>
 						{responsablesList.map((r) => (
@@ -433,29 +434,29 @@ export default function UserDetailPage() {
 					onChange={(e) =>
 						setEditForm({ ...editForm, [field]: e.target.value })
 					}
-					className="w-full p-2.5 border rounded-xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500"
+					className="w-full p-3 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500 transition-all"
 				/>
 			);
 		}
 
-		// VISTA LECTURA
+		// --- VISTA LECTURA (CORREGIDA PARA EVITAR [object Object]) ---
 		if (field === "wifi") {
 			return (
 				<span
-					className={`px-3 py-1 rounded-lg text-[10px] font-black border uppercase ${value ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-slate-50 text-slate-400 border-slate-100"}`}
+					className={`px-4 py-1.5 rounded-xl text-[10px] font-black border uppercase tracking-widest shadow-sm ${value ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-slate-50 text-slate-400 border-slate-100"}`}
 				>
-					{value ? "📶 Acceso WiFi ON" : "🚫 Sin Acceso WiFi"}
+					{value ? "📶 WiFi Activo" : "🚫 WiFi Inactivo"}
 				</span>
 			);
 		}
 		if (["roles", "puertasAutorizadas", "duenoMaquina"].includes(field)) {
 			return (
 				<div className="flex flex-wrap gap-2">
-					{value && value.length > 0 ? (
+					{Array.isArray(value) && value.length > 0 ? (
 						value.map((v: any) => (
 							<span
 								key={v.id || v.idpuerta || v.idmaquina}
-								className={`px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-wider ${field === "roles" ? getRoleStyle(v.nombre) : "bg-white text-slate-600 border-slate-200 shadow-sm"}`}
+								className={`px-4 py-1.5 rounded-xl text-[10px] font-black border uppercase tracking-widest shadow-sm ${field === "roles" ? getRoleStyle(v.nombre) : "bg-white text-slate-600 border-slate-200"}`}
 							>
 								{v.nombre}
 							</span>
@@ -469,7 +470,7 @@ export default function UserDetailPage() {
 		if (typeof value === "boolean") {
 			return (
 				<span
-					className={`px-3 py-1 rounded-full text-[10px] font-black ${value ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+					className={`px-4 py-1.5 rounded-full text-[10px] font-black ${value ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
 				>
 					{value ? "ACTIVO" : "INACTIVO"}
 				</span>
@@ -529,9 +530,9 @@ export default function UserDetailPage() {
 				<div className="flex justify-between items-center mb-10">
 					<button
 						onClick={() => router.back()}
-						className="text-xs font-black tracking-widest text-slate-400 hover:text-blue-600 transition-colors"
+						className="text-xs font-black tracking-widest text-slate-400 hover:text-blue-600 transition-colors uppercase"
 					>
-						← VOLVER
+						← Volver
 					</button>
 				</div>
 
@@ -594,7 +595,7 @@ export default function UserDetailPage() {
 							{!isEditing && (
 								<button
 									onClick={() => setIsEditing(true)}
-									className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-3xl font-black text-[10px] tracking-widest shadow-xl hover:bg-white/10 active:scale-95 transition-all backdrop-blur-sm shrink-0 self-center md:self-end"
+									className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-3xl font-black text-[10px] tracking-widest shadow-xl hover:bg-white/10 active:scale-95 transition-all backdrop-blur-sm shrink-0 self-center md:self-end border-b-4 border-white/5"
 								>
 									✏️ EDITAR PERFIL
 								</button>
@@ -606,34 +607,34 @@ export default function UserDetailPage() {
 
 					<div className="px-20 pb-20">
 						{error && (
-							<div className="bg-red-50 border-2 border-red-100 text-red-600 p-5 rounded-2xl mb-10 font-black text-[10px] uppercase tracking-widest">
+							<div className="bg-red-50 border-2 border-red-100 text-red-600 p-5 rounded-3xl mb-10 font-black text-[10px] uppercase tracking-widest animate-pulse">
 								⚠️ {error}
 							</div>
 						)}
 						{success && (
-							<div className="bg-emerald-50 border-2 border-emerald-100 text-emerald-600 p-5 rounded-2xl mb-10 font-black text-[10px] uppercase tracking-widest">
+							<div className="bg-emerald-50 border-2 border-emerald-100 text-emerald-600 p-5 rounded-3xl mb-10 font-black text-[10px] uppercase tracking-widest">
 								✅ {success}
 							</div>
 						)}
 
-						<form onSubmit={handleSave} className="space-y-20">
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-x-24 gap-y-16">
+						<form onSubmit={handleSave} className="space-y-24">
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-x-24 gap-y-20">
 								{sections.map((section) => (
 									<div key={section.title}>
-										<h3 className="text-blue-600 font-black text-[10px] uppercase tracking-[0.3em] mb-10 flex items-center gap-4">
-											<span className="w-10 h-[2px] bg-blue-600"></span>
+										<h3 className="text-blue-600 font-black text-[10px] uppercase tracking-[0.4em] mb-12 flex items-center gap-4">
+											<span className="w-12 h-[2px] bg-blue-600"></span>
 											{section.title}
 										</h3>
-										<div className="space-y-10">
+										<div className="space-y-12">
 											{section.fields.map((f) => (
 												<div
 													key={f.field}
-													className="flex flex-col space-y-3 pl-8 border-l-2 border-slate-50 hover:border-blue-100 transition-colors group"
+													className="flex flex-col space-y-4 pl-8 border-l-2 border-slate-50 hover:border-blue-100 transition-colors group"
 												>
 													<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest group-hover:text-blue-400">
 														{f.label}
 													</label>
-													<div className="min-h-[24px]">
+													<div className="min-h-[28px]">
 														{renderField(f.field, editForm[f.field])}
 													</div>
 												</div>
@@ -644,11 +645,11 @@ export default function UserDetailPage() {
 
 								{/* PROYECTOS GITLAB */}
 								<div className="md:col-span-2 pt-10">
-									<h3 className="text-slate-900 font-black text-[10px] uppercase tracking-[0.3em] mb-10 flex items-center gap-4">
-										<span className="w-10 h-[2px] bg-slate-900"></span>GitLab
-										(Clic para detalles)
+									<h3 className="text-slate-900 font-black text-[10px] uppercase tracking-[0.4em] mb-12 flex items-center gap-4">
+										<span className="w-12 h-[2px] bg-slate-900"></span>Proyectos
+										GitLab
 									</h3>
-									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 										{user?.proyectos_gitlab?.length ? (
 											user.proyectos_gitlab.map((proy) => (
 												<div
@@ -658,38 +659,38 @@ export default function UserDetailPage() {
 															`/dashboard/proyectosgitlab/${proy.uuid}`,
 														)
 													}
-													className="bg-slate-50 border border-slate-100 p-6 rounded-[2rem] hover:bg-white hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group active:scale-95"
+													className="bg-slate-50 border border-slate-100 p-8 rounded-[2.5rem] hover:bg-white hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer group active:scale-95 border-b-4 hover:border-blue-500"
 												>
-													<div className="flex justify-between items-start mb-4">
+													<div className="flex justify-between items-start mb-6">
 														<span className="text-xs font-black text-slate-800 uppercase line-clamp-2 group-hover:text-blue-600">
 															{proy.nombre}
 														</span>
 														<div
-															className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase ${proy.activo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+															className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase ${proy.activo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
 														>
 															{proy.activo ? "Activo" : "Inactivo"}
 														</div>
 													</div>
 													<div className="text-[9px] font-bold text-slate-400 font-mono truncate">
-														UUID: {proy.uuid.substring(0, 13)}...
+														ID: {proy.uuid.substring(0, 16)}...
 													</div>
 												</div>
 											))
 										) : (
-											<p className="text-slate-400 font-black text-[10px] uppercase p-10 bg-slate-50 rounded-3xl text-center border-2 border-dashed">
-												Sin proyectos
+											<p className="text-slate-400 font-black text-[10px] uppercase p-12 bg-slate-50 rounded-[2.5rem] text-center border-2 border-dashed border-slate-200">
+												Sin proyectos asignados
 											</p>
 										)}
 									</div>
 								</div>
 
-								{/* PETICIONES (Funcionalidad 1) */}
+								{/* PETICIONES */}
 								<div className="md:col-span-2 pt-10">
-									<h3 className="text-amber-600 font-black text-[10px] uppercase tracking-[0.3em] mb-10 flex items-center gap-4">
-										<span className="w-10 h-[2px] bg-amber-600"></span>
+									<h3 className="text-amber-600 font-black text-[10px] uppercase tracking-[0.4em] mb-12 flex items-center gap-4">
+										<span className="w-12 h-[2px] bg-amber-600"></span>
 										Peticiones Recientes
 									</h3>
-									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 										{user?.peticiones?.length ? (
 											user.peticiones.map((p) => (
 												<div
@@ -699,14 +700,14 @@ export default function UserDetailPage() {
 															`/dashboard/peticiones/${user.uuidusuario}`,
 														)
 													}
-													className="bg-amber-50/30 border border-amber-100 p-6 rounded-[2rem] hover:bg-white hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group active:scale-95"
+													className="bg-amber-50/40 border border-amber-100 p-8 rounded-[2.5rem] hover:bg-white hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer group active:scale-95 border-b-4 hover:border-amber-500"
 												>
-													<div className="flex justify-between items-center mb-4">
-														<span className="text-xs font-black text-slate-800 uppercase group-hover:text-amber-600">
+													<div className="flex justify-between items-center mb-6">
+														<span className="text-xs font-black text-slate-800 uppercase group-hover:text-amber-600 tracking-tighter">
 															Petición #{p.id}
 														</span>
 														<span
-															className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase ${p.estado === "Completado" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}
+															className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase ${p.estado === "Completado" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}
 														>
 															{p.estado}
 														</span>
@@ -723,9 +724,9 @@ export default function UserDetailPage() {
 														`/dashboard/peticiones/${user?.uuidusuario}`,
 													)
 												}
-												className="col-span-full bg-slate-50 border-2 border-dashed border-slate-200 p-8 rounded-[2rem] text-center hover:bg-white transition-all cursor-pointer group"
+												className="col-span-full bg-slate-50 border-2 border-dashed border-slate-200 p-12 rounded-[2.5rem] text-center hover:bg-white transition-all cursor-pointer group"
 											>
-												<p className="text-slate-400 font-black text-[10px] uppercase tracking-widest group-hover:text-blue-500">
+												<p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] group-hover:text-amber-600">
 													Ver todas las peticiones del usuario →
 												</p>
 											</div>
@@ -735,11 +736,11 @@ export default function UserDetailPage() {
 							</div>
 
 							{isEditing && (
-								<div className="flex gap-6 pt-16 border-t border-slate-50">
+								<div className="flex gap-8 pt-16 border-t border-slate-100">
 									<button
 										type="submit"
 										disabled={saving}
-										className="flex-[2] bg-slate-900 text-white py-6 rounded-[2rem] font-black text-xs tracking-[0.2em] shadow-2xl hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50"
+										className="flex-[2] bg-slate-900 text-white py-7 rounded-[2.5rem] font-black text-xs tracking-[0.3em] shadow-2xl hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50 border-b-4 border-black"
 									>
 										{saving ? "PROCESANDO..." : "CONFIRMAR CAMBIOS"}
 									</button>
@@ -750,7 +751,7 @@ export default function UserDetailPage() {
 											setEditForm(user);
 											setAvatarPreview(getAvatarUrl(user?.fotoperfil));
 										}}
-										className="flex-1 bg-slate-100 text-slate-500 py-6 rounded-[2rem] font-black text-xs tracking-[0.2em] hover:bg-slate-200 transition-all"
+										className="flex-1 bg-slate-100 text-slate-500 py-7 rounded-[2.5rem] font-black text-xs tracking-[0.3em] hover:bg-slate-200 transition-all border-b-4 border-slate-200"
 									>
 										CANCELAR
 									</button>
