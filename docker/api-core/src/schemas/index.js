@@ -16,7 +16,18 @@ export const usuarioSchema = Joi.object({
 	tarjetaAcceso: Joi.string().max(20).allow(null, ""),
 	teams: Joi.boolean().default(false),
 	esResponsable: Joi.boolean().default(false),
-	contrasena: Joi.string(),
+	contrasena: Joi.string()
+		.min(8)
+		.max(30)
+		// Regex: Al menos una minúscula, una mayúscula, un número y un carácter especial
+		.pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])"))
+		.required()
+		.messages({
+			"string.min": "La nueva contraseña debe tener al menos 8 caracteres.",
+			"string.pattern.base":
+				"La contraseña debe contener al menos una mayúscula, un número y un símbolo (!@#$%^&*).",
+			"any.required": "La nueva contraseña es obligatoria.",
+		}),
 
 	roles: Joi.array().items(Joi.number().integer()).min(1).required(),
 	puertasAutorizadas: Joi.array().items(Joi.number().integer()),
