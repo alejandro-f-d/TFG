@@ -58,7 +58,6 @@ interface User {
 	fotoperfil?: any;
 }
 
-// --- Helpers Visuales ---
 const getAvatarUrl = (fotoperfil: any): string | null => {
 	if (!fotoperfil) return null;
 	if (typeof fotoperfil === "string") return fotoperfil;
@@ -82,8 +81,6 @@ const getRoleStyle = (roleName: string) => {
 	if (name.includes("admin")) return "bg-red-50 text-red-700 border-red-200";
 	if (name.includes("responsable"))
 		return "bg-purple-50 text-purple-700 border-purple-200";
-	if (name.includes("jefe") || name.includes("tecnico"))
-		return "bg-amber-50 text-amber-700 border-amber-200";
 	return "bg-blue-50 text-blue-700 border-blue-200";
 };
 
@@ -124,26 +121,22 @@ export default function UserDetailPage() {
 				});
 				if (!userRes.ok) throw new Error("Usuario no encontrado");
 				const userData = await userRes.json();
+				const info = Array.isArray(userData.info)
+					? userData.info[0]
+					: userData.info;
 
-				let info: User | undefined;
-				if (Array.isArray(userData.info)) {
-					info =
-						userData.info.find((u: any) => u.uuidusuario === uuid) ||
-						userData.info[0];
-				} else {
-					info = userData.info;
-				}
+				if (!info) throw new Error("No se pudo procesar la información");
 
-				if (!info)
-					throw new Error("No se pudo procesar la información del usuario");
-
-				// Asegurar arrays
-				info.roles = info.roles || [];
-				info.puertas = info.puertas || [];
-				info.maquinas_propiedad = info.maquinas_propiedad || [];
+				// Normalizamos el estado inicial para que coincida con los nombres de la config
+				const normalizedInfo = {
+					...info,
+					roles: info.roles || [],
+					puertasAutorizadas: info.puertas || [],
+					duenoMaquina: info.maquinas_propiedad || [],
+				};
 
 				setUser(info);
-				setEditForm(info);
+				setEditForm(normalizedInfo);
 				setAvatarPreview(getAvatarUrl(info.fotoperfil));
 
 				const isOwnProfile = currentUuid === uuid;
@@ -170,12 +163,7 @@ export default function UserDetailPage() {
 
 					if (rRes.ok) {
 						const d = await rRes.json();
-						// Estructura: { info: { rows: [...] } } o { rows: [...] } o array directo
-						let rows = [];
-						if (d.info?.rows) rows = d.info.rows;
-						else if (d.rows) rows = d.rows;
-						else if (Array.isArray(d)) rows = d;
-						else if (Array.isArray(d.info)) rows = d.info;
+						const rows = d.info?.rows || d.rows || (Array.isArray(d) ? d : []);
 						setRolesList(
 							rows.map((r: any) => ({
 								id: r.idrole || r.id,
@@ -185,10 +173,7 @@ export default function UserDetailPage() {
 					}
 					if (pRes.ok) {
 						const d = await pRes.json();
-						let rows = [];
-						if (d.info?.rows) rows = d.info.rows;
-						else if (Array.isArray(d.info)) rows = d.info;
-						else if (Array.isArray(d)) rows = d;
+						const rows = d.info?.rows || (Array.isArray(d.info) ? d.info : d);
 						setPuertasList(
 							rows.map((p: any) => ({
 								id: p.idpuerta || p.id,
@@ -198,11 +183,7 @@ export default function UserDetailPage() {
 					}
 					if (mRes.ok) {
 						const d = await mRes.json();
-						let rows = [];
-						// La respuesta puede ser un array directamente o { info: [...] }
-						if (Array.isArray(d)) rows = d;
-						else if (d.info?.rows) rows = d.info.rows;
-						else if (Array.isArray(d.info)) rows = d.info;
+						const rows = Array.isArray(d) ? d : d.info?.rows || d.info || [];
 						setMaquinasList(
 							rows.map((m: any) => ({
 								id: m.idmaquina || m.id,
@@ -212,10 +193,7 @@ export default function UserDetailPage() {
 					}
 					if (uRes.ok) {
 						const d = await uRes.json();
-						let rows = [];
-						if (d.info?.rows) rows = d.info.rows;
-						else if (Array.isArray(d.info)) rows = d.info;
-						else if (Array.isArray(d)) rows = d;
+						const rows = d.info?.rows || d.info || d;
 						setResponsablesList(
 							rows.filter((r: any) => r.uuidusuario !== uuid),
 						);
@@ -235,7 +213,6 @@ export default function UserDetailPage() {
 		setSaving(true);
 		setError("");
 		setSuccess("");
-
 		try {
 			const token = localStorage.getItem("token");
 			const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
@@ -243,46 +220,35 @@ export default function UserDetailPage() {
 
 			editableFields.forEach((field) => {
 				if (field === "fotoPerfil") return;
-
 				let value = editForm[field];
-				let backendKey = field;
 
-				// 1. Manejo de Fechas y Responsable (Evitar "null" como string)
-				// Si el valor es nulo, vacío o indefinido, NO lo enviamos o enviamos cadena vacía
-				// Dependiendo de tu API, es mejor enviar una cadena vacía que la palabra "null"
-				if (field === "fechafin" || field === "responsable") {
-					if (!value || value === "null" || value === "") {
-						// Importante: No hagas append o manda string vacío
-						// Si tu API usa un parser, esto llegará como null o vacío
-						formData.append(field, "");
+				if (["fechafin", "responsable", "fechaincorporacion"].includes(field)) {
+					if (!value || value === "" || value === "null") {
+						formData.append(field, "null");
 						return;
 					}
 				}
 
-				// 2. Filtro general para el resto de campos
 				if (value === undefined || value === null) return;
 
-				// 3. Mapeo de nombres para el backend
-				if (field === "puertas") backendKey = "puertasAutorizadas";
-				if (field === "maquinas_propiedad") backendKey = "duenoMaquina";
-
-				// 4. Tratamiento de tipos según contenido
 				if (typeof value === "boolean") {
-					formData.append(backendKey, value ? "true" : "false");
-				} else if (["roles", "puertas", "maquinas_propiedad"].includes(field)) {
+					formData.append(field, value ? "true" : "false");
+				} else if (
+					["roles", "puertasAutorizadas", "duenoMaquina"].includes(field)
+				) {
 					const ids = Array.isArray(value)
 						? value.map((v) =>
 								typeof v === "object" ? v.id || v.idpuerta || v.idmaquina : v,
 							)
 						: [];
-					formData.append(backendKey, JSON.stringify(ids));
+					formData.append(field, JSON.stringify(ids));
 				} else {
-					// Para fechas válidas, asegúrate de enviar solo la parte YYYY-MM-DD
-					if (field === "fechafin" || field === "fechaincorporacion") {
-						formData.append(backendKey, value.split("T")[0]);
-					} else {
-						formData.append(backendKey, String(value));
-					}
+					formData.append(
+						field,
+						field.includes("fecha")
+							? String(value).split("T")[0]
+							: String(value),
+					);
 				}
 			});
 
@@ -294,11 +260,10 @@ export default function UserDetailPage() {
 				body: formData,
 			});
 
-			// ... resto de la lógica de respuesta (si es 204 o ok, recargar datos) ...
 			if (res.ok || res.status === 204) {
-				setSuccess("Usuario actualizado");
+				setSuccess("Usuario actualizado con éxito");
 				setIsEditing(false);
-				// Aquí deberías refrescar los datos del usuario como ya tenías
+				setTimeout(() => window.location.reload(), 1000);
 			} else {
 				const d = await res.json();
 				throw new Error(d.error || "Error al actualizar");
@@ -314,27 +279,62 @@ export default function UserDetailPage() {
 		const config = getFieldConfig(field);
 
 		if (isEditing && editableFields.includes(field)) {
-			if (config?.inputType === "checkbox") {
+			// Caso Multiselect (Checkboxes)
+			if (["roles", "puertasAutorizadas", "duenoMaquina"].includes(field)) {
+				const options =
+					field === "roles"
+						? rolesList
+						: field === "puertasAutorizadas"
+							? puertasList
+							: maquinasList;
+				const selectedIds = Array.isArray(value)
+					? value.map((v) =>
+							typeof v === "object" ? v.id || v.idpuerta || v.idmaquina : v,
+						)
+					: [];
+
 				return (
-					<input
-						type="checkbox"
-						checked={!!value}
-						onChange={(e) =>
-							setEditForm({ ...editForm, [field]: e.target.checked })
-						}
-						className="w-6 h-6 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-					/>
+					<div className="grid grid-cols-1 gap-2 p-3 border-2 border-blue-50 rounded-2xl bg-slate-50 max-h-48 overflow-y-auto shadow-inner">
+						{options.map((opt) => {
+							const optId =
+								opt.id || (opt as any).idpuerta || (opt as any).idmaquina;
+							const isChecked = selectedIds.includes(optId);
+							return (
+								<label
+									key={optId}
+									className={`flex items-center space-x-3 p-2 rounded-xl transition-all cursor-pointer ${isChecked ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
+								>
+									<input
+										type="checkbox"
+										checked={isChecked}
+										onChange={(e) => {
+											const newIds = e.target.checked
+												? [...selectedIds, optId]
+												: selectedIds.filter((id) => id !== optId);
+											setEditForm({ ...editForm, [field]: newIds });
+										}}
+										className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+									/>
+									<span
+										className={`text-xs font-bold ${isChecked ? "text-blue-700" : "text-slate-600"}`}
+									>
+										{opt.nombre}
+									</span>
+								</label>
+							);
+						})}
+					</div>
 				);
 			}
+
 			if (config?.inputType === "select") {
 				return (
 					<select
-						// Forzamos que si el valor es null/undefined, sea una string vacía
-						value={editForm[field] ?? ""}
+						value={value ?? ""}
 						onChange={(e) =>
 							setEditForm({ ...editForm, [field]: e.target.value })
 						}
-						className="w-full p-2.5 border rounded-xl bg-white text-gray-900 shadow-sm outline-none focus:border-blue-500"
+						className="w-full p-2.5 border rounded-xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500"
 					>
 						<option value="">Sin responsable</option>
 						{responsablesList.map((r) => (
@@ -345,178 +345,55 @@ export default function UserDetailPage() {
 					</select>
 				);
 			}
-			if (["roles", "puertas", "maquinas_propiedad"].includes(field)) {
-				const options =
-					field === "roles"
-						? rolesList
-						: field === "puertas"
-							? puertasList
-							: maquinasList;
-				const selectedIds = Array.isArray(value)
-					? value.map((v) => (typeof v === "object" ? v.id : v))
-					: [];
-				return (
-					<div className="grid grid-cols-1 gap-1.5 p-3 border rounded-xl bg-slate-50 max-h-48 overflow-y-auto shadow-inner">
-						{options.length === 0 ? (
-							<p className="text-sm text-gray-500 text-center py-2">
-								Cargando opciones...
-							</p>
-						) : (
-							options.map((opt) => (
-								<label
-									key={opt.id}
-									className="flex items-center space-x-3 text-sm p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all cursor-pointer"
-								>
-									<input
-										type="checkbox"
-										checked={selectedIds.includes(opt.id)}
-										onChange={(e) => {
-											const newIds = e.target.checked
-												? [...selectedIds, opt.id]
-												: selectedIds.filter((id) => id !== opt.id);
-											setEditForm({ ...editForm, [field]: newIds });
-										}}
-										className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-									/>
-									<span className="text-slate-700 font-medium">
-										{opt.nombre}
-									</span>
-								</label>
-							))
-						)}
-					</div>
-				);
-			}
-			if (config?.inputType === "date") {
-				return (
-					<input
-						type="date"
-						value={value ? value.split("T")[0] : ""}
-						onChange={(e) =>
-							setEditForm({ ...editForm, [field]: e.target.value })
-						}
-						className="w-full p-2.5 border rounded-xl bg-white text-gray-900 shadow-sm outline-none"
-					/>
-				);
-			}
+
 			return (
 				<input
-					type="text"
-					value={value ?? ""}
+					type={config?.inputType === "date" ? "date" : "text"}
+					value={
+						field.includes("fecha") && value
+							? value.split("T")[0]
+							: (value ?? "")
+					}
 					onChange={(e) =>
 						setEditForm({ ...editForm, [field]: e.target.value })
 					}
-					className="w-full p-2.5 border rounded-xl bg-white text-gray-900 shadow-sm outline-none"
+					className="w-full p-2.5 border rounded-xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500"
 				/>
 			);
 		}
 
-		// Modo visualización
-		if (field === "roles") {
+		// --- MODO VISUALIZACIÓN ---
+		if (
+			field === "roles" ||
+			field === "puertasAutorizadas" ||
+			field === "duenoMaquina"
+		) {
 			return (
 				<div className="flex flex-wrap gap-2">
 					{value && value.length > 0 ? (
-						value.map((v: Role) => (
+						value.map((v: any) => (
 							<span
-								key={v.id}
-								className={`px-3 py-1 rounded-lg text-[10px] font-black border ${getRoleStyle(v.nombre)} uppercase tracking-wider`}
+								key={v.id || v.idpuerta || v.idmaquina}
+								className={`px-3 py-1 rounded-lg text-[10px] font-black border uppercase tracking-wider ${field === "roles" ? getRoleStyle(v.nombre) : "bg-white text-slate-600 border-slate-200 shadow-sm"}`}
 							>
 								{v.nombre}
 							</span>
 						))
 					) : (
-						<span className="text-slate-400 text-xs italic">
-							Sin roles asignados
-						</span>
+						<span className="text-slate-400 text-xs italic">Sin asignar</span>
 					)}
 				</div>
 			);
 		}
-
-		if (field === "puertas") {
-			return (
-				<div className="flex flex-wrap gap-1.5">
-					{value && value.length > 0 ? (
-						value.map((v: Puerta) => (
-							<span
-								key={v.id}
-								className="bg-white text-slate-600 px-3 py-1 rounded-md text-[11px] font-bold border border-slate-200 shadow-sm"
-							>
-								{v.nombre}
-							</span>
-						))
-					) : (
-						<span className="text-slate-400 text-xs italic">
-							Sin puertas asignadas
-						</span>
-					)}
-				</div>
-			);
-		}
-
-		if (field === "maquinas_propiedad") {
-			return (
-				<div className="flex flex-wrap gap-1.5">
-					{value && value.length > 0 ? (
-						value.map((v: Maquina) => (
-							<span
-								key={v.id}
-								className="bg-white text-slate-600 px-3 py-1 rounded-md text-[11px] font-bold border border-slate-200 shadow-sm"
-							>
-								{v.nombre}
-							</span>
-						))
-					) : (
-						<span className="text-slate-400 text-xs italic">
-							Sin máquinas asignadas
-						</span>
-					)}
-				</div>
-			);
-		}
-
-		if (field === "proyectos_gitlab") {
-			return (
-				<div className="grid grid-cols-1 gap-2">
-					{value && value.length > 0 ? (
-						value.map((p: ProyectoGitlab) => (
-							<div
-								key={p.uuid}
-								className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-100"
-							>
-								<span className="text-sm font-bold text-slate-700">
-									{p.nombre}
-								</span>
-								<span
-									className={`text-[10px] px-2 py-0.5 rounded-full font-black ${p.activo ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}
-								>
-									{p.activo ? "ACTIVO" : "INACTIVO"}
-								</span>
-							</div>
-						))
-					) : (
-						<span className="text-slate-400 text-xs italic">
-							No participa en proyectos
-						</span>
-					)}
-				</div>
-			);
-		}
-
 		if (typeof value === "boolean") {
 			return (
 				<span
-					className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black ${value ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+					className={`px-3 py-1 rounded-full text-[10px] font-black ${value ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
 				>
 					{value ? "SÍ" : "NO"}
 				</span>
 			);
 		}
-
-		if (field === "fechafin" && !value) {
-			return <span className="text-slate-400 text-xs italic">Sin fecha</span>;
-		}
-
 		return <span className="text-slate-800 font-bold">{value || "-"}</span>;
 	};
 
@@ -527,97 +404,79 @@ export default function UserDetailPage() {
 				{ field: "nombre", label: "Nombre" },
 				{ field: "apellido1", label: "Primer Apellido" },
 				{ field: "apellido2", label: "Segundo Apellido" },
-				{ field: "correoinstitucional", label: "Correo Electrónico" },
+				{ field: "correoinstitucional", label: "Correo" },
 			],
 		},
 		{
 			title: "Identidad Digital",
 			fields: [
 				{ field: "usuariovpn", label: "Usuario VPN" },
-				{ field: "gitlab", label: "Handle GitLab" },
-				{ field: "tarjetaacceso", label: "Nº Tarjeta Física" },
-				{ field: "diriplastlogin", label: "Última IP Conocida" },
+				{ field: "gitlab", label: "GitLab" },
+				{ field: "tarjetaacceso", label: "Nº Tarjeta" },
 			],
 		},
 		{
-			title: "Laboral y Estado",
+			title: "Laboral y Organización",
 			fields: [
 				{ field: "fechaincorporacion", label: "Fecha Alta" },
 				{ field: "fechafin", label: "Fecha Baja" },
-				{ field: "activo", label: "Estado de Cuenta" },
-				{ field: "responsable", label: "ID Responsable" },
+				{ field: "responsable", label: "Responsable" },
+				{ field: "activo", label: "Estado Cuenta" },
 			],
 		},
 		{
-			title: "Permisos y Accesos",
+			title: "Permisos y Equipos",
 			fields: [
-				{ field: "roles", label: "Roles Asignados" },
-				{ field: "puertas", label: "Acceso a Espacios" },
-				{ field: "maquinas_propiedad", label: "Equipos Vinculados" },
-				{ field: "proyectos_gitlab", label: "Proyectos en Curso" },
+				{ field: "roles", label: "Roles" },
+				{ field: "puertasAutorizadas", label: "Accesos (Puertas)" },
+				{ field: "duenoMaquina", label: "Responsable de Máquinas" },
 			],
 		},
 	];
 
 	if (loading)
 		return (
-			<div className="flex flex-col h-screen items-center justify-center bg-slate-50 space-y-4">
-				<div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-				<p className="text-slate-500 font-bold animate-pulse uppercase tracking-widest text-xs">
-					Sincronizando datos...
-				</p>
-			</div>
-		);
-
-	if (!user)
-		return (
-			<div className="p-20 text-center text-red-500 font-bold uppercase tracking-widest">
-				⚠️ Error: Usuario no encontrado
+			<div className="h-screen flex items-center justify-center font-black text-slate-400 animate-pulse uppercase text-xs tracking-widest">
+				Cargando perfil...
 			</div>
 		);
 
 	return (
-		<div className="min-h-screen bg-[#F8FAFC] py-12">
-			<div className="max-w-5xl mx-auto px-6">
+		<div className="min-h-screen bg-[#F8FAFC] py-12 px-6">
+			<div className="max-w-5xl mx-auto">
 				<div className="flex justify-between items-center mb-10">
 					<button
 						onClick={() => router.back()}
-						className="group flex items-center text-slate-400 hover:text-blue-600 transition-all font-black text-xs tracking-widest"
+						className="text-xs font-black tracking-widest text-slate-400 hover:text-blue-600 transition-colors"
 					>
-						<span className="mr-2 transition-transform group-hover:-translate-x-1">
-							←
-						</span>{" "}
-						PANEL GENERAL
+						← VOLVER
 					</button>
 					{!isEditing && (
 						<button
 							onClick={() => setIsEditing(true)}
-							className="bg-white border border-slate-200 text-slate-700 px-8 py-3 rounded-2xl shadow-sm hover:bg-slate-50 transition-all active:scale-95 font-black text-xs tracking-widest flex items-center gap-2"
+							className="bg-white border-2 border-slate-100 px-8 py-3 rounded-2xl font-black text-[10px] tracking-widest shadow-sm hover:bg-slate-50 active:scale-95 transition-all"
 						>
-							<span>✏️</span> EDITAR PERFIL
+							✏️ EDITAR PERFIL
 						</button>
 					)}
 				</div>
 
-				<div className="bg-white rounded-[3rem] shadow-2xl shadow-slate-200 overflow-hidden border border-white">
-					<div className="relative h-64 bg-gradient-to-br from-[#1E293B] to-[#0F172A]">
-						<div className="absolute -bottom-12 left-12 flex items-center space-x-10 w-[calc(100%-3rem)]">
-							<div className="relative group shrink-0">
-								<div className="w-48 h-48 rounded-[3rem] border-[8px] border-white overflow-hidden bg-white shadow-2xl">
-									{avatarPreview ? (
-										<img
-											src={avatarPreview}
-											className="w-full h-full object-cover"
-											alt="Avatar"
-										/>
-									) : (
-										<div className="flex h-full items-center justify-center text-7xl font-black text-slate-200 bg-slate-100">
-											{user.nombre?.[0] || "?"}
-										</div>
-									)}
-								</div>
+				<div className="bg-white rounded-[3.5rem] shadow-2xl shadow-slate-200 overflow-hidden border border-white">
+					<div className="relative h-64 bg-slate-900">
+						<div className="absolute -bottom-14 left-14 flex items-end space-x-10">
+							<div className="relative group w-52 h-52 rounded-[3.5rem] border-[10px] border-white overflow-hidden bg-slate-100 shadow-2xl">
+								{avatarPreview ? (
+									<img
+										src={avatarPreview}
+										className="w-full h-full object-cover"
+									/>
+								) : (
+									<div className="flex h-full items-center justify-center text-6xl font-black text-slate-300">
+										{user?.nombre?.[0]}
+									</div>
+								)}
 								{isEditing && (
-									<label className="absolute inset-0 bg-blue-600/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer rounded-[3rem] backdrop-blur-sm">
+									<label className="absolute inset-0 bg-blue-600/60 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer backdrop-blur-sm transition-all">
 										<input
 											type="file"
 											className="hidden"
@@ -632,40 +491,34 @@ export default function UserDetailPage() {
 												}
 											}}
 										/>
-										<span className="text-white font-black text-[10px] tracking-[0.2em]">
-											CAMBIAR
+										<span className="text-white text-[10px] font-black tracking-widest">
+											CAMBIAR FOTO
 										</span>
 									</label>
 								)}
 							</div>
-
-							<div className="flex flex-col mb-2">
-								<h1 className="text-5xl font-black text-white tracking-tighter drop-shadow-xl mb-3">
-									{user.nombre} {user.apellido1}
+							<div className="mb-6">
+								<h1 className="text-5xl font-black text-white tracking-tighter drop-shadow-lg">
+									{user?.nombre} {user?.apellido1}
 								</h1>
-								<div className="flex items-center gap-3 bg-white/10 backdrop-blur-xl px-4 py-1.5 rounded-full w-fit border border-white/10">
-									<span
-										className={`w-2.5 h-2.5 rounded-full ${user.activo ? "bg-green-400" : "bg-red-400"} shadow-[0_0_12px_rgba(74,222,128,0.5)]`}
-									></span>
-									<p className="text-blue-100/90 font-black text-[10px] tracking-[0.15em] uppercase">
-										{user.correoinstitucional}
-									</p>
-								</div>
+								<p className="text-blue-200 font-bold text-xs opacity-80 mt-1">
+									{user?.correoinstitucional}
+								</p>
 							</div>
 						</div>
 					</div>
 
 					<div className="h-24"></div>
 
-					<div className="px-16 pb-16 pt-4">
+					<div className="px-20 pb-20">
 						{error && (
-							<div className="bg-red-50 border-2 border-red-100 text-red-600 p-4 rounded-2xl mb-10 flex items-center gap-3 font-black text-xs tracking-wide uppercase">
-								<span>⚠️</span> {error}
+							<div className="bg-red-50 border-2 border-red-100 text-red-600 p-5 rounded-2xl mb-10 font-black text-[10px] uppercase tracking-widest">
+								⚠️ {error}
 							</div>
 						)}
 						{success && (
-							<div className="bg-emerald-50 border-2 border-emerald-100 text-emerald-600 p-4 rounded-2xl mb-10 flex items-center gap-3 font-black text-xs tracking-wide uppercase">
-								<span>✅</span> {success}
+							<div className="bg-emerald-50 border-2 border-emerald-100 text-emerald-600 p-5 rounded-2xl mb-10 font-black text-[10px] uppercase tracking-widest">
+								✅ {success}
 							</div>
 						)}
 
@@ -681,9 +534,9 @@ export default function UserDetailPage() {
 											{section.fields.map((f) => (
 												<div
 													key={f.field}
-													className="flex flex-col space-y-2.5 border-l-2 border-slate-50 pl-8 hover:border-blue-100 transition-colors group/field"
+													className="flex flex-col space-y-3 pl-8 border-l-2 border-slate-50 hover:border-blue-100 transition-colors group"
 												>
-													<label className="text-slate-400 text-[9px] font-black uppercase tracking-[0.15em] group-hover/field:text-blue-400 transition-colors">
+													<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest group-hover:text-blue-400">
 														{f.label}
 													</label>
 													<div className="min-h-[24px]">
@@ -697,24 +550,22 @@ export default function UserDetailPage() {
 							</div>
 
 							{isEditing && (
-								<div className="flex gap-6 pt-16 border-t border-slate-100">
+								<div className="flex gap-6 pt-16 border-t border-slate-50">
 									<button
 										type="submit"
 										disabled={saving}
-										className="flex-[2] bg-slate-900 text-white py-6 rounded-[2rem] font-black shadow-2xl hover:bg-black transition-all disabled:opacity-50 hover:-translate-y-1 active:translate-y-0 tracking-[0.2em] text-xs"
+										className="flex-[2] bg-slate-900 text-white py-6 rounded-[2rem] font-black text-xs tracking-[0.2em] shadow-2xl hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50"
 									>
-										{saving
-											? "PROCESANDO ACTUALIZACIÓN..."
-											: "CONFIRMAR CAMBIOS"}
+										{saving ? "PROCESANDO..." : "CONFIRMAR CAMBIOS"}
 									</button>
 									<button
 										type="button"
 										onClick={() => {
 											setIsEditing(false);
 											setEditForm(user);
-											setAvatarPreview(getAvatarUrl(user.fotoperfil));
+											setAvatarPreview(getAvatarUrl(user?.fotoperfil));
 										}}
-										className="flex-1 bg-slate-100 text-slate-500 py-6 rounded-[2rem] font-black hover:bg-slate-200 transition-all text-xs tracking-[0.2em]"
+										className="flex-1 bg-slate-100 text-slate-500 py-6 rounded-[2rem] font-black text-xs tracking-[0.2em] hover:bg-slate-200 transition-all"
 									>
 										CANCELAR
 									</button>
@@ -722,12 +573,6 @@ export default function UserDetailPage() {
 							)}
 						</form>
 					</div>
-				</div>
-
-				<div className="mt-12 text-center opacity-30">
-					<p className="text-slate-500 text-[9px] font-black uppercase tracking-[0.4em]">
-						System ID: {user.uuidusuario} • Secure Connection Active
-					</p>
 				</div>
 			</div>
 		</div>

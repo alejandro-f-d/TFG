@@ -274,6 +274,7 @@ class UserModel {
 						}
 					}
 				}
+				// Máquinas
 				if (duenoMaquina !== undefined) {
 					await client.query(USER_QUERIES.DELETE_MAQUINAS_USER, [
 						idUsuarioReal,
@@ -304,7 +305,6 @@ class UserModel {
 			client.release();
 		}
 	}
-
 	static async darBaja(uuid) {
 		return await pool.query(USER_QUERIES.DAR_BAJA, [uuid]);
 	}
