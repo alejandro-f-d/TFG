@@ -1,9 +1,7 @@
-// app/dashboard/profile/page.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Footer from "@/components/common/Footer";
 import { logout } from "@/lib/auth-common";
 
 interface UserProfile {
@@ -15,42 +13,8 @@ interface UserProfile {
 	usuariovpn: string;
 	gitlab: string;
 	tarjetaacceso: string;
-	wifi: boolean;
-	teams: boolean;
-	fotoperfil?: { type: string; data: number[] } | string | null;
-	[key: string]: any;
+	fotoperfil?: any;
 }
-
-// Validación de contraseña según el esquema del backend
-const validatePassword = (
-	password: string,
-): { isValid: boolean; errors: string[] } => {
-	const errors: string[] = [];
-
-	if (password.length < 8) {
-		errors.push("La contraseña debe tener al menos 8 caracteres");
-	}
-	if (password.length > 30) {
-		errors.push("La contraseña no puede tener más de 30 caracteres");
-	}
-	if (!/[a-z]/.test(password)) {
-		errors.push("Debe contener al menos una letra minúscula");
-	}
-	if (!/[A-Z]/.test(password)) {
-		errors.push("Debe contener al menos una letra mayúscula");
-	}
-	if (!/[0-9]/.test(password)) {
-		errors.push("Debe contener al menos un número");
-	}
-	if (!/[!@#$%^&*]/.test(password)) {
-		errors.push("Debe contener al menos un carácter especial (!@#$%^&*)");
-	}
-
-	return {
-		isValid: errors.length === 0,
-		errors,
-	};
-};
 
 export default function ProfilePage() {
 	const router = useRouter();
@@ -60,7 +24,7 @@ export default function ProfilePage() {
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
 
-	// Estados para edición
+	// Estados para Edición y Avatar
 	const [isEditing, setIsEditing] = useState(false);
 	const [editForm, setEditForm] = useState({
 		nombre: "",
@@ -71,53 +35,47 @@ export default function ProfilePage() {
 	const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	// Estados para cambio de contraseña
+	// Estados para Contraseña
 	const [showPasswordForm, setShowPasswordForm] = useState(false);
+	const [showPass, setShowPass] = useState(false);
 	const [passwordData, setPasswordData] = useState({
 		currentPassword: "",
 		newPassword: "",
 		confirmPassword: "",
 	});
-	const [passwordError, setPasswordError] = useState("");
-	const [passwordSuccess, setPasswordSuccess] = useState("");
-	const [savingPassword, setSavingPassword] = useState(false);
-	const [passwordValidationErrors, setPasswordValidationErrors] = useState<
-		string[]
-	>([]);
 
-	// Función para convertir array de bytes a URL de imagen
-	const getAvatarUrl = (fotoperfil: any): string | null => {
-		if (!fotoperfil) return null;
-		if (typeof fotoperfil === "string") return fotoperfil;
-		if (fotoperfil.type === "Buffer" && Array.isArray(fotoperfil.data)) {
+	// Validación de contraseña (Regex Joi)
+	const passwordChecks = {
+		length:
+			passwordData.newPassword.length >= 8 &&
+			passwordData.newPassword.length <= 30,
+		hasUpper: /[A-Z]/.test(passwordData.newPassword),
+		hasLower: /[a-z]/.test(passwordData.newPassword),
+		hasNumber: /[0-9]/.test(passwordData.newPassword),
+		hasSymbol: /[!@#$%^&*]/.test(passwordData.newPassword),
+	};
+	const isPasswordValid = Object.values(passwordChecks).every(Boolean);
+
+	// --- Función Maestra de Conversión de Imagen ---
+	const getAvatarUrl = (foto: any): string | null => {
+		if (!foto) return null;
+		if (typeof foto === "string") return foto;
+
+		if (foto.type === "Buffer" && Array.isArray(foto.data)) {
 			try {
-				const uint8 = new Uint8Array(fotoperfil.data);
+				const uint8 = new Uint8Array(foto.data);
 				let binary = "";
-				for (let i = 0; i < uint8.length; i++) {
+				const len = uint8.byteLength;
+				for (let i = 0; i < len; i++) {
 					binary += String.fromCharCode(uint8[i]);
 				}
-				const base64 = btoa(binary);
-				return `data:image/png;base64,${base64}`;
-			} catch {
+				return `data:image/png;base64,${btoa(binary)}`;
+			} catch (e) {
+				console.error("Error procesando buffer de imagen:", e);
 				return null;
 			}
 		}
 		return null;
-	};
-
-	// Iniciales para fallback
-	const getInitials = () => {
-		if (!profile) return "?";
-		const nombre = profile.nombre || "";
-		const apellido1 = profile.apellido1 || "";
-		const apellido2 = profile.apellido2 || "";
-		return (
-			(
-				nombre.charAt(0) +
-				apellido1.charAt(0) +
-				apellido2.charAt(0)
-			).toUpperCase() || "?"
-		);
 	};
 
 	useEffect(() => {
@@ -138,7 +96,10 @@ export default function ProfilePage() {
 
 				if (!res.ok) throw new Error("Error al cargar perfil");
 
-				const data = await res.json();
+				// Verificación segura de JSON
+				const text = await res.text();
+				const data = text ? JSON.parse(text) : {};
+
 				if (data.info) {
 					setProfile(data.info);
 					setEditForm({
@@ -146,36 +107,18 @@ export default function ProfilePage() {
 						apellido1: data.info.apellido1 || "",
 						apellido2: data.info.apellido2 || "",
 					});
-					// Previsualizar avatar existente
-					const preview = getAvatarUrl(data.info.fotoperfil);
-					setAvatarPreview(preview);
-				} else {
-					throw new Error("Datos de perfil no encontrados");
+					if (data.info.fotoperfil) {
+						setAvatarPreview(getAvatarUrl(data.info.fotoperfil));
+					}
 				}
 			} catch (err) {
-				console.error(err);
-				setError("No se pudo cargar la información del perfil.");
+				setError("No se pudo sincronizar la información del perfil.");
 			} finally {
 				setLoading(false);
 			}
 		};
-
 		fetchProfile();
 	}, [router]);
-
-	const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setEditForm({ ...editForm, [e.target.name]: e.target.value });
-	};
-
-	const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (file) {
-			setAvatarFile(file);
-			const reader = new FileReader();
-			reader.onloadend = () => setAvatarPreview(reader.result as string);
-			reader.readAsDataURL(file);
-		}
-	};
 
 	const handleSaveProfile = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -186,348 +129,311 @@ export default function ProfilePage() {
 		try {
 			const token = localStorage.getItem("token");
 			const uuidUser = localStorage.getItem("uuidUser");
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+			const formData = new FormData();
+			formData.append("nombre", editForm.nombre);
+			formData.append("apellido1", editForm.apellido1);
+			formData.append("apellido2", editForm.apellido2);
+			if (avatarFile) formData.append("fotoFile", avatarFile);
 
-			// Construir FormData para enviar (si hay archivo, usamos FormData, si no, JSON)
-			let body: any;
-			let headers: HeadersInit = { Authorization: `Bearer ${token}` };
-			if (avatarFile) {
-				const formData = new FormData();
-				formData.append("nombre", editForm.nombre);
-				formData.append("apellido1", editForm.apellido1);
-				formData.append("apellido2", editForm.apellido2);
-				formData.append("fotoperfil", avatarFile);
-				body = formData;
-				// No establecemos Content-Type para que el navegador lo ponga con boundary
+			const res = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/api/user/${uuidUser}`,
+				{
+					method: "PATCH",
+					headers: { Authorization: `Bearer ${token}` },
+					body: formData,
+				},
+			);
+
+			if (res.ok) {
+				// SOLUCIÓN AL ERROR 204: No intentar .json() si no hay contenido
+				const contentType = res.headers.get("content-type");
+				if (
+					res.status !== 204 &&
+					contentType &&
+					contentType.includes("application/json")
+				) {
+					const updated = await res.json();
+					setProfile(updated.info || updated);
+				} else {
+					// Actualización optimista: ya que el servidor dijo OK (204), actualizamos local
+					setProfile((prev) =>
+						prev
+							? {
+									...prev,
+									nombre: editForm.nombre,
+									apellido1: editForm.apellido1,
+									apellido2: editForm.apellido2,
+								}
+							: null,
+					);
+				}
+
+				setSuccess("Cambios guardados correctamente");
+				setIsEditing(false);
+				setAvatarFile(null);
 			} else {
-				headers["Content-Type"] = "application/json";
-				body = JSON.stringify(editForm);
+				const errorData = await res.json().catch(() => ({}));
+				throw new Error(errorData.error || "Error al actualizar los datos.");
 			}
-
-			const res = await fetch(`${apiUrl}/api/user/${uuidUser}`, {
-				method: "PUT",
-				headers,
-				body,
-			});
-
-			if (!res.ok) {
-				const errorData = await res.json();
-				throw new Error(errorData.message || "Error al actualizar perfil");
-			}
-
-			const updated = await res.json();
-			setProfile(updated.info || updated);
-			setSuccess("Perfil actualizado correctamente");
-			setIsEditing(false);
-			setAvatarFile(null); // limpiar archivo pendiente
 		} catch (err: any) {
-			setError(err.message);
+			setError(err.message || "Error al actualizar los datos.");
 		} finally {
 			setSaving(false);
 		}
 	};
 
-	const handlePasswordChange = async (e: React.FormEvent) => {
+	const handlePasswordSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		setPasswordError("");
-		setPasswordSuccess("");
-		setPasswordValidationErrors([]);
-
-		// Validar que las contraseñas coincidan
-		if (passwordData.newPassword !== passwordData.confirmPassword) {
-			setPasswordError("Las contraseñas nuevas no coinciden");
+		if (
+			!isPasswordValid ||
+			passwordData.newPassword !== passwordData.confirmPassword
+		)
 			return;
-		}
 
-		// Validar la nueva contraseña con las reglas del backend
-		const validation = validatePassword(passwordData.newPassword);
-		if (!validation.isValid) {
-			setPasswordValidationErrors(validation.errors);
-			return;
-		}
+		const token = localStorage.getItem("token");
+		fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/updatePassword`, {
+			method: "PATCH",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${token}`,
+			},
+			body: JSON.stringify({
+				passwordAnterior: passwordData.currentPassword,
+				passwordNueva: passwordData.newPassword,
+			}),
+		}).catch((err) => console.error("Error enviando contraseña:", err));
 
-		setSavingPassword(true);
-		try {
-			const token = localStorage.getItem("token");
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-			const res = await fetch(`${apiUrl}/api/user/updatePassword`, {
-				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-				},
-				body: JSON.stringify({
-					passwordAnterior: passwordData.currentPassword,
-					passwordNueva: passwordData.newPassword,
-				}),
-			});
-
-			if (!res.ok) {
-				const errorData = await res.json();
-				throw new Error(errorData.message || "Error al cambiar contraseña");
-			}
-
-			setPasswordSuccess("Contraseña actualizada correctamente");
-			setPasswordData({
-				currentPassword: "",
-				newPassword: "",
-				confirmPassword: "",
-			});
-			setShowPasswordForm(false);
-		} catch (err: any) {
-			setPasswordError(err.message);
-		} finally {
-			setSavingPassword(false);
-		}
+		setSuccess("Petición de seguridad enviada con éxito");
+		setShowPasswordForm(false);
+		setPasswordData({
+			currentPassword: "",
+			newPassword: "",
+			confirmPassword: "",
+		});
 	};
 
-	// Validar la nueva contraseña en tiempo real mientras el usuario escribe
-	const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newPassword = e.target.value;
-		setPasswordData({ ...passwordData, newPassword });
-
-		// Validación en tiempo real (opcional)
-		if (newPassword.length > 0) {
-			const validation = validatePassword(newPassword);
-			setPasswordValidationErrors(validation.isValid ? [] : validation.errors);
-		} else {
-			setPasswordValidationErrors([]);
-		}
-	};
-
-	if (loading) {
+	if (loading)
 		return (
-			<>
-				<div className="min-h-screen bg-gray-100 py-12">
-					<div className="container mx-auto px-4">
-						<div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-6 animate-pulse">
-							<div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
-							<div className="h-10 bg-gray-200 rounded mb-4"></div>
-							<div className="h-10 bg-gray-200 rounded"></div>
-						</div>
-					</div>
+			<div className="min-h-screen bg-slate-50 flex items-center justify-center">
+				<div className="text-center space-y-4">
+					<div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+					<p className="font-black text-[10px] uppercase tracking-[0.3em] text-slate-400">
+						Sincronizando Perfil...
+					</p>
 				</div>
-				<Footer />
-			</>
+			</div>
 		);
-	}
 
 	return (
-		<>
-			<div className="min-h-screen bg-gray-100 py-12">
-				<div className="container mx-auto px-4">
-					<div className="max-w-2xl mx-auto">
-						{/* Perfil */}
-						<div className="bg-white rounded-xl shadow-md p-6 mb-6">
-							<div className="flex justify-between items-center mb-6">
-								<h1 className="text-2xl font-bold text-gray-800">Mi perfil</h1>
-								{!isEditing && (
-									<button
-										onClick={() => setIsEditing(true)}
-										className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-									>
-										Editar
-									</button>
+		<div className="min-h-screen bg-[#F8FAFC] py-12 px-6">
+			<div className="max-w-4xl mx-auto">
+				<div className="bg-white rounded-[3.5rem] shadow-2xl shadow-slate-200 overflow-hidden border border-white">
+					<div className="bg-slate-900 py-16 px-14 flex flex-col md:flex-row items-center gap-10">
+						<div className="relative group">
+							<div className="w-36 h-36 rounded-[3rem] bg-slate-800 border-4 border-slate-700 overflow-hidden flex items-center justify-center shadow-2xl transition-transform group-hover:scale-[1.02]">
+								{avatarPreview ? (
+									<img
+										src={avatarPreview}
+										className="w-full h-full object-cover"
+										alt="Avatar"
+									/>
+								) : (
+									<span className="text-5xl font-black text-white uppercase tracking-tighter">
+										{profile?.nombre?.charAt(0)}
+										{profile?.apellido1?.charAt(0)}
+									</span>
 								)}
 							</div>
-
-							{error && (
-								<div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-									{error}
-								</div>
-							)}
-							{success && (
-								<div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-									{success}
-								</div>
-							)}
-
-							{/* Foto de perfil */}
-							<div className="flex justify-center mb-6">
-								<div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
-									{avatarPreview ? (
-										<img
-											src={avatarPreview}
-											alt="Avatar"
-											className="w-full h-full object-cover"
-										/>
-									) : profile?.fotoperfil ? (
-										<img
-											src={getAvatarUrl(profile.fotoperfil) || ""}
-											alt="Avatar"
-											className="w-full h-full object-cover"
-										/>
-									) : (
-										<span className="text-2xl font-bold text-blue-600">
-											{getInitials()}
-										</span>
-									)}
-								</div>
-							</div>
-
 							{isEditing && (
-								<div className="mb-4 text-center">
-									<label className="cursor-pointer text-blue-600 hover:text-blue-800 text-sm">
-										<input
-											type="file"
-											accept="image/*"
-											className="hidden"
-											ref={fileInputRef}
-											onChange={handleAvatarChange}
-										/>
-										Cambiar foto
-									</label>
-									{avatarFile && (
-										<p className="text-xs text-gray-500 mt-1">
-											Archivo seleccionado
-										</p>
-									)}
-								</div>
+								<button
+									onClick={() => fileInputRef.current?.click()}
+									className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-4 rounded-2xl shadow-xl hover:bg-blue-500 transition-all border-4 border-slate-900"
+								>
+									📷
+								</button>
 							)}
+							<input
+								type="file"
+								ref={fileInputRef}
+								className="hidden"
+								accept="image/*"
+								onChange={(e) => {
+									const file = e.target.files?.[0];
+									if (file) {
+										setAvatarFile(file);
+										const reader = new FileReader();
+										reader.onloadend = () =>
+											setAvatarPreview(reader.result as string);
+										reader.readAsDataURL(file);
+									}
+								}}
+							/>
+						</div>
 
-							{isEditing ? (
-								<form onSubmit={handleSaveProfile} className="space-y-4">
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Nombre
+						<div className="text-center md:text-left flex-1">
+							<h1 className="text-4xl font-black text-white tracking-tighter uppercase leading-none">
+								{profile?.nombre} {profile?.apellido1}
+							</h1>
+							<p className="text-blue-400 font-bold text-xs mt-3 opacity-80 tracking-widest uppercase">
+								ID {profile?.idusuario} • {profile?.correoinstitucional}
+							</p>
+							{!isEditing && (
+								<button
+									onClick={() => setIsEditing(true)}
+									className="mt-6 px-8 py-3 bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border border-slate-700 hover:bg-white hover:text-slate-900 transition-all"
+								>
+									Editar mis datos
+								</button>
+							)}
+						</div>
+					</div>
+
+					<div className="p-14 md:p-20">
+						{success && (
+							<div className="mb-12 bg-emerald-50 border-2 border-emerald-100 text-emerald-600 p-6 rounded-3xl font-black text-[10px] uppercase tracking-widest">
+								✅ {success}
+							</div>
+						)}
+						{error && (
+							<div className="mb-12 bg-red-50 border-2 border-red-100 text-red-600 p-6 rounded-3xl font-black text-[10px] uppercase tracking-widest">
+								⚠️ {error}
+							</div>
+						)}
+
+						<form
+							onSubmit={handleSaveProfile}
+							className="grid grid-cols-1 md:grid-cols-2 gap-16"
+						>
+							<div className="space-y-10">
+								<h3 className="text-blue-600 font-black text-[10px] uppercase tracking-[0.4em] flex items-center gap-4">
+									<span className="w-10 h-[2px] bg-blue-600"></span> Identidad
+									Personal
+								</h3>
+
+								<div className="flex flex-col space-y-2">
+									<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+										Nombre
+									</label>
+									<input
+										disabled={!isEditing}
+										type="text"
+										value={editForm.nombre}
+										onChange={(e) =>
+											setEditForm({ ...editForm, nombre: e.target.value })
+										}
+										className={`w-full p-4 border-2 rounded-2xl font-bold text-sm transition-all ${isEditing ? "border-slate-100 bg-white focus:border-blue-400 shadow-sm" : "border-transparent bg-slate-50 text-slate-500 cursor-not-allowed"}`}
+									/>
+								</div>
+
+								<div className="grid grid-cols-2 gap-4">
+									<div className="flex flex-col space-y-2">
+										<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+											1º Apellido
 										</label>
 										<input
+											disabled={!isEditing}
 											type="text"
-											name="nombre"
-											value={editForm.nombre}
-											onChange={handleEditChange}
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-											required
-										/>
-									</div>
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Primer apellido
-										</label>
-										<input
-											type="text"
-											name="apellido1"
 											value={editForm.apellido1}
-											onChange={handleEditChange}
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-											required
+											onChange={(e) =>
+												setEditForm({ ...editForm, apellido1: e.target.value })
+											}
+											className={`w-full p-4 border-2 rounded-2xl font-bold text-sm ${isEditing ? "border-slate-100 bg-white shadow-sm" : "border-transparent bg-slate-50 text-slate-500 cursor-not-allowed"}`}
 										/>
 									</div>
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Segundo apellido
+									<div className="flex flex-col space-y-2">
+										<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+											2º Apellido
 										</label>
 										<input
+											disabled={!isEditing}
 											type="text"
-											name="apellido2"
 											value={editForm.apellido2}
-											onChange={handleEditChange}
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+											onChange={(e) =>
+												setEditForm({ ...editForm, apellido2: e.target.value })
+											}
+											className={`w-full p-4 border-2 rounded-2xl font-bold text-sm ${isEditing ? "border-slate-100 bg-white shadow-sm" : "border-transparent bg-slate-50 text-slate-500 cursor-not-allowed"}`}
 										/>
 									</div>
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Correo institucional
-										</label>
-										<input
-											type="email"
-											value={profile?.correoinstitucional || ""}
-											disabled
-											className="w-full px-4 py-2 border border-gray-200 bg-gray-100 rounded-lg cursor-not-allowed"
-										/>
-										<p className="text-xs text-gray-500 mt-1">
-											Este campo no se puede modificar
-										</p>
-									</div>
-									<div className="flex space-x-3">
+								</div>
+
+								{isEditing && (
+									<div className="flex gap-4 pt-6">
 										<button
 											type="submit"
 											disabled={saving}
-											className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+											className="flex-2 bg-slate-900 text-white px-10 py-5 rounded-[1.5rem] font-black text-[10px] tracking-widest uppercase shadow-xl hover:bg-black border-b-4 border-black transition-all"
 										>
-											{saving ? "Guardando..." : "Guardar cambios"}
+											{saving ? "Guardando..." : "Confirmar Cambios"}
 										</button>
 										<button
 											type="button"
-											onClick={() => {
-												setIsEditing(false);
-												setError("");
-												setSuccess("");
-												setAvatarFile(null);
-												if (profile) {
-													setEditForm({
-														nombre: profile.nombre,
-														apellido1: profile.apellido1,
-														apellido2: profile.apellido2,
-													});
-													setAvatarPreview(getAvatarUrl(profile.fotoperfil));
-												}
-											}}
-											className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+											onClick={() => setIsEditing(false)}
+											className="flex-1 bg-slate-100 text-slate-400 py-5 rounded-[1.5rem] font-black text-[10px] tracking-widest uppercase hover:bg-slate-200 transition-all"
 										>
 											Cancelar
 										</button>
 									</div>
-								</form>
-							) : (
-								<div className="space-y-3">
-									<p className="text-gray-700">
-										<span className="font-semibold">Nombre completo:</span>{" "}
-										{profile?.nombre} {profile?.apellido1} {profile?.apellido2}
-									</p>
-									<p className="text-gray-700">
-										<span className="font-semibold">Correo institucional:</span>{" "}
-										{profile?.correoinstitucional}
-									</p>
-									<p className="text-gray-700">
-										<span className="font-semibold">Usuario VPN:</span>{" "}
-										{profile?.usuariovpn || "No asignado"}
-									</p>
-									<p className="text-gray-700">
-										<span className="font-semibold">GitLab:</span>{" "}
-										{profile?.gitlab || "No asignado"}
-									</p>
-									<p className="text-gray-700">
-										<span className="font-semibold">Tarjeta acceso:</span>{" "}
-										{profile?.tarjetaacceso || "No asignada"}
-									</p>
-								</div>
-							)}
-						</div>
+								)}
+							</div>
 
-						{/* Cambiar contraseña */}
-						<div className="bg-white rounded-xl shadow-md p-6">
-							<div className="flex justify-between items-center mb-4">
-								<h2 className="text-xl font-bold text-gray-800">Seguridad</h2>
+							<div className="space-y-10">
+								<h3 className="text-blue-600 font-black text-[10px] uppercase tracking-[0.4em] flex items-center gap-4">
+									<span className="w-10 h-[2px] bg-blue-600"></span>{" "}
+									Conectividad y Accesos
+								</h3>
+								<div className="grid grid-cols-1 gap-4">
+									{[
+										{ label: "Usuario VPN", value: profile?.usuariovpn },
+										{ label: "GitLab User", value: profile?.gitlab },
+										{
+											label: "Nº Tarjeta Acceso",
+											value: profile?.tarjetaacceso,
+										},
+									].map((item, idx) => (
+										<div
+											key={idx}
+											className="p-6 bg-slate-50 rounded-[2.2rem] border-2 border-slate-50 flex items-center justify-between group hover:bg-white hover:border-slate-100 transition-all"
+										>
+											<span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+												{item.label}
+											</span>
+											<span className="text-sm font-bold text-slate-900">
+												{item.value || "—"}
+											</span>
+										</div>
+									))}
+								</div>
+							</div>
+						</form>
+
+						<div className="mt-24 pt-16 border-t border-slate-100">
+							<div className="flex justify-between items-center mb-12">
+								<h3 className="text-slate-900 font-black text-[10px] uppercase tracking-[0.4em] flex items-center gap-4">
+									<span className="w-10 h-[2px] bg-slate-900"></span> Protección
+									de Cuenta
+								</h3>
 								{!showPasswordForm && (
 									<button
 										onClick={() => setShowPasswordForm(true)}
-										className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+										className="bg-blue-50 text-blue-600 px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-sm"
 									>
-										Cambiar contraseña
+										Modificar Clave
 									</button>
 								)}
 							</div>
 
 							{showPasswordForm && (
-								<form onSubmit={handlePasswordChange} className="space-y-4">
-									{passwordError && (
-										<div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-											{passwordError}
-										</div>
-									)}
-									{passwordSuccess && (
-										<div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
-											{passwordSuccess}
-										</div>
-									)}
-
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Contraseña actual
+								<form
+									onSubmit={handlePasswordSubmit}
+									className="max-w-2xl space-y-8 bg-slate-50 p-12 rounded-[3.5rem] border-2 border-slate-50 shadow-inner"
+								>
+									<div className="flex flex-col space-y-2">
+										<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+											Clave Actual
 										</label>
 										<input
 											type="password"
+											required
 											value={passwordData.currentPassword}
 											onChange={(e) =>
 												setPasswordData({
@@ -535,45 +441,65 @@ export default function ProfilePage() {
 													currentPassword: e.target.value,
 												})
 											}
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-											required
+											className="w-full p-4 bg-white border-2 border-white rounded-2xl font-bold text-sm shadow-sm outline-none focus:border-blue-400"
 										/>
 									</div>
 
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Nueva contraseña
+									<div className="flex flex-col space-y-4">
+										<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+											Nueva Clave de Acceso
 										</label>
-										<input
-											type="password"
-											value={passwordData.newPassword}
-											onChange={handleNewPasswordChange}
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-											required
-										/>
-										{passwordValidationErrors.length > 0 && (
-											<div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-												<p className="text-xs font-semibold text-yellow-800 mb-1">
-													Requisitos de contraseña:
-												</p>
-												<ul className="text-xs text-yellow-700 space-y-0.5">
-													{passwordValidationErrors.map((err, idx) => (
-														<li key={idx} className="flex items-start">
-															<span className="mr-1">•</span>
-															<span>{err}</span>
-														</li>
-													))}
-												</ul>
-											</div>
-										)}
+										<div className="relative">
+											<input
+												type={showPass ? "text" : "password"}
+												required
+												value={passwordData.newPassword}
+												onChange={(e) =>
+													setPasswordData({
+														...passwordData,
+														newPassword: e.target.value,
+													})
+												}
+												className="w-full p-5 bg-white border-2 border-white rounded-2xl font-bold text-sm shadow-sm outline-none focus:border-blue-500"
+											/>
+											<button
+												type="button"
+												onClick={() => setShowPass(!showPass)}
+												className="absolute right-5 top-5 text-slate-300 hover:text-blue-600"
+											>
+												{showPass ? "👁️" : "👁️‍🗨️"}
+											</button>
+										</div>
+
+										<div className="grid grid-cols-2 gap-y-3 gap-x-6 ml-2 pt-2">
+											{Object.entries({
+												"8-30 Caracteres": passwordChecks.length,
+												"Mayúsculas/Minúsculas":
+													passwordChecks.hasUpper && passwordChecks.hasLower,
+												"Un Número": passwordChecks.hasNumber,
+												"Símbolo Especial": passwordChecks.hasSymbol,
+											}).map(([text, active]) => (
+												<div key={text} className="flex items-center gap-2">
+													<div
+														className={`w-2 h-2 rounded-full ${active ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-slate-300"}`}
+													></div>
+													<span
+														className={`text-[9px] font-bold uppercase tracking-tighter ${active ? "text-green-600" : "text-slate-400"}`}
+													>
+														{text}
+													</span>
+												</div>
+											))}
+										</div>
 									</div>
 
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Confirmar nueva contraseña
+									<div className="flex flex-col space-y-2">
+										<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+											Repetir Clave
 										</label>
 										<input
 											type="password"
+											required
 											value={passwordData.confirmPassword}
 											onChange={(e) =>
 												setPasswordData({
@@ -581,60 +507,32 @@ export default function ProfilePage() {
 													confirmPassword: e.target.value,
 												})
 											}
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-											required
+											className={`w-full p-4 bg-white border-2 rounded-2xl font-bold text-sm shadow-sm transition-all ${passwordData.confirmPassword && passwordData.confirmPassword !== passwordData.newPassword ? "border-red-200 bg-red-50/20" : "border-white"}`}
 										/>
-										{passwordData.confirmPassword &&
-											passwordData.newPassword !==
-												passwordData.confirmPassword && (
-												<p className="text-xs text-red-500 mt-1">
-													Las contraseñas no coinciden
-												</p>
-											)}
 									</div>
 
-									<div className="flex space-x-3">
+									<div className="flex gap-4 pt-6">
 										<button
 											type="submit"
-											disabled={savingPassword}
-											className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+											disabled={!isPasswordValid}
+											className={`flex-1 py-5 rounded-[1.8rem] font-black text-[10px] tracking-widest uppercase shadow-2xl transition-all ${isPasswordValid ? "bg-slate-900 text-white hover:bg-black border-b-4 border-black" : "bg-slate-200 text-slate-400 cursor-not-allowed border-b-4 border-slate-300"}`}
 										>
-											{savingPassword
-												? "Actualizando..."
-												: "Actualizar contraseña"}
+											Actualizar Credenciales
 										</button>
 										<button
 											type="button"
-											onClick={() => {
-												setShowPasswordForm(false);
-												setPasswordError("");
-												setPasswordSuccess("");
-												setPasswordValidationErrors([]);
-												setPasswordData({
-													currentPassword: "",
-													newPassword: "",
-													confirmPassword: "",
-												});
-											}}
-											className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+											onClick={() => setShowPasswordForm(false)}
+											className="px-10 bg-white text-slate-400 py-5 rounded-[1.8rem] font-black text-[10px] tracking-widest uppercase hover:text-slate-900 hover:bg-slate-100 transition-all"
 										>
-											Cancelar
+											Descartar
 										</button>
 									</div>
 								</form>
-							)}
-
-							{!showPasswordForm && (
-								<p className="text-gray-500 text-sm">
-									Cambia tu contraseña periódicamente para mantener tu cuenta
-									segura.
-								</p>
 							)}
 						</div>
 					</div>
 				</div>
 			</div>
-			<Footer />
-		</>
+		</div>
 	);
 }

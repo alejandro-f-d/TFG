@@ -175,7 +175,7 @@ export const patchUser = async (req, res) => {
 		const darBaja = req.query.darBaja === "true";
 		// console.log(darBaja);
 		const permisos = req.user?.permisos || [];
-		const uuidDelToken = req.user?.uuid;
+		const uuidDelToken = req.user?.uuidUsuario;
 		const fotoFile = req.file;
 
 		const uuidRegex =
