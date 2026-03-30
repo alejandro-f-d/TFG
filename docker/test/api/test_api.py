@@ -63,7 +63,7 @@ class TestGestionUsuarios:
             "fechaFin": "2027-02-23", "wifi": True, "activo": True,
             "tarjetaAcceso": "T-00000", "teams": False, 
             "esResponsable": False, "roles": [3], "puertasAutorizadas": [],
-            "duenoMaquina": [], "contrasena": "test"
+            "duenoMaquina": [], "contrasena": "3DcW5N%DL3R!f26CC2"
         }
         res = requests.post(self.BASE_URL_USER, json=payload, headers=headers)
         assert res.status_code in [201, 200]
@@ -92,7 +92,7 @@ class TestGestionUsuarios:
             "fechaFin": "2027-02-16", "wifi": True, "activo": True,
             "tarjetaAcceso": "A-88923", "teams": True, 
             "esResponsable": False, "roles": [2], "puertasAutorizadas": [1],
-            "duenoMaquina": [1, 2], "contrasena": "test"
+            "duenoMaquina": [1, 2], "contrasena": "3DcW5N%DL3R!f26CC2"
         }
         res = requests.post(self.BASE_URL_USER, json=payload, headers=headers)
         assert res.status_code in [201, 200]
@@ -112,11 +112,11 @@ class TestGestionUsuarios:
     def test_05_logins_usuarios_nuevos(self):
         """Obtener tokens para los usuarios creados."""
         # Token Role 2
-        r2 = requests.post(self.LOGIN_URL, json={"correoInstitucional": "alejandro.nuevo.test@test.com", "contrasena": "test"})
+        r2 = requests.post(self.LOGIN_URL, json={"correoInstitucional": "alejandro.nuevo.test@test.com", "contrasena": "3DcW5N%DL3R!f26CC2"})
         TestGestionUsuarios.token_role_2 = r2.json().get("token")
         
         # Token Sin Roles
-        rs = requests.post(self.LOGIN_URL, json={"correoInstitucional": "user.sin.permisos@test.com", "contrasena": "test"})
+        rs = requests.post(self.LOGIN_URL, json={"correoInstitucional": "user.sin.permisos@test.com", "contrasena": "3DcW5N%DL3R!f26CC2"})
         TestGestionUsuarios.token_sin_roles = rs.json().get("token")
         
         assert self.token_role_2 and self.token_sin_roles
