@@ -112,7 +112,7 @@ services:
 # Servicio de validación de firmas digitales en el sistema:
   medal-sign-validator:
     container_name: signValidatorMedal
-    image: dss-demo:latest
+    image: dss_demo:latest
     ports:
       - "${DSS_IP}:${DSS_PORT}:8080" # Si quieres que sea accesible desde otra ip quitar el 127.0.0.1. Habría que mirar certificados para tener seguridad en este acceso.
     restart: always

@@ -10,7 +10,7 @@ class TestPeticion:
     role_supervisor_crear = {
         "nombre": "Supervisor Role",
         "descripcion": "Role encargado de realizar la firma del usuario base.",
-        "permisos": [21, 22]
+        "permisos": [23,24]
     } 
 
     role_base_crear = {
@@ -117,7 +117,7 @@ class TestPeticion:
             "fechaFin": "2027-02-23", "wifi": True, "activo": True,
             "tarjetaAcceso": "T-00000", "teams": False, 
             "esResponsable": True, "roles": [self.id_rol_supervisor], "puertasAutorizadas": [],
-            "duenoMaquina": [], "contrasena": "test"
+            "duenoMaquina": [], "contrasena": "2y45uc5#bD3d7thMbT"
         }
         res = requests.post(f"{self.BASE_URL}/user", json=payload, headers=headers)
         assert res.status_code in [201, 200]
@@ -162,7 +162,7 @@ class TestPeticion:
             "fechaFin": "2027-02-23", "wifi": True, "activo": True,
             "tarjetaAcceso": "T-00000", "teams": False, 
             "esResponsable": False, "roles": [self.id_rol_base], "puertasAutorizadas": [],
-            "duenoMaquina": [], "contrasena": "test"
+            "duenoMaquina": [], "contrasena": "2y45uc5#bD3d7thMbT"
         }
         res = requests.post(f"{self.BASE_URL}/user", json=payload, headers=headers)
         assert res.status_code in [201, 200]
@@ -179,7 +179,7 @@ class TestPeticion:
         """Caso: Login para obtener token de supervisor."""
         payload = {
             "correoInstitucional": "alejandro.fisac@alumnos.upm.es",
-            "contrasena": "test"
+            "contrasena": "2y45uc5#bD3d7thMbT"
         }
         res = requests.post(f"{self.BASE_URL}/user/login", json=payload)
         assert res.status_code == 200
@@ -192,7 +192,7 @@ class TestPeticion:
         """Caso: Login para obtener token de user_base."""
         payload = {
             "correoInstitucional": "pgpprueba609@gmail.com",
-            "contrasena": "test"
+            "contrasena": "2y45uc5#bD3d7thMbT"
         }
         res = requests.post(f"{self.BASE_URL}/user/login", json=payload)
         assert res.status_code == 200
