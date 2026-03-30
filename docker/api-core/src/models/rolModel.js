@@ -160,7 +160,6 @@ class RolModel {
 			if (keys.length > 0) {
 				const values = Object.values(camposFiltrados);
 				values.push(uuid);
-
 				const sqlUpdate = ROL_QUERY.UPDATE_ROLE_DYNAMIC(keys);
 				const res = await client.query(sqlUpdate, values);
 				idRole = res.rows[0]?.idrole;
@@ -175,38 +174,55 @@ class RolModel {
 			}
 
 			if (permisos !== undefined) {
-				// 1. Obtener IDs de permisos especiales para comparar
 				const resEspeciales = await client.query(
-					ROL_QUERY.OBTENER_ID_ESPECIALES,
+					"SELECT idpermiso, alias FROM medal.permisos WHERE alias IN ('null:null', 'admin:total')",
 				);
 				const pNull = resEspeciales.rows.find((p) => p.alias === "null:null");
 				const pAdmin = resEspeciales.rows.find(
 					(p) => p.alias === "admin:total",
 				);
 
-				// 2. Limpiar permisos actuales
-				await client.query(ROL_QUERY.DELETE_PERMISOS_ASIGNADOS, [idRole]);
+				const tieneAdminTotalElLogueado =
+					permisosUsuarioLogueado.includes("admin:total");
+				let forzarAdminTotal = false;
 
-				// 3. Forzar el permiso null:null si existe
-				if (pNull && !permisos.includes(Number(pNull.idpermiso))) {
-					permisos.push(Number(pNull.idpermiso));
+				if (pAdmin) {
+					const checkAdminRes = await client.query(
+						ROL_QUERY.VERIFICAR_EXISTENCIA,
+						[idRole, pAdmin.idpermiso],
+					);
+
+					if (checkAdminRes.rowCount > 0 && !tieneAdminTotalElLogueado) {
+						forzarAdminTotal = true;
+					}
 				}
 
-				if (Array.isArray(permisos)) {
-					const tieneAdminTotal =
-						permisosUsuarioLogueado.includes("admin:total");
+				await client.query(ROL_QUERY.BORRAR_OPERACON, [idRole]);
 
-					for (const permisoId of permisos) {
-						if (pAdmin && Number(permisoId) === Number(pAdmin.idpermiso)) {
-							if (!tieneAdminTotal) {
-								continue;
-							}
+				let nuevosPermisosIds = Array.isArray(permisos)
+					? permisos.map(Number)
+					: [];
+
+				if (pNull && !nuevosPermisosIds.includes(Number(pNull.idpermiso))) {
+					nuevosPermisosIds.push(Number(pNull.idpermiso));
+				}
+
+				if (
+					forzarAdminTotal &&
+					pAdmin &&
+					!nuevosPermisosIds.includes(Number(pAdmin.idpermiso))
+				) {
+					nuevosPermisosIds.push(Number(pAdmin.idpermiso));
+				}
+
+				for (const permisoId of nuevosPermisosIds) {
+					if (pAdmin && Number(permisoId) === Number(pAdmin.idpermiso)) {
+						if (!tieneAdminTotalElLogueado && !forzarAdminTotal) {
+							continue;
 						}
-						await client.query(ROL_QUERY.INSERT_PERMISO_ROL, [
-							idRole,
-							permisoId,
-						]);
 					}
+
+					await client.query(ROL_QUERY.INSERT_OPERA_CON, [idRole, permisoId]);
 				}
 			}
 
@@ -214,9 +230,9 @@ class RolModel {
 			return { status: "OK" };
 		} catch (error) {
 			await client.query("ROLLBACK");
-			console.error("Error en patchRole (Model):", {
+			console.error("Error crítico en patchRole (Model):", {
 				uuid,
-				error: error.message,
+				mensaje: error.message,
 			});
 			throw error;
 		} finally {

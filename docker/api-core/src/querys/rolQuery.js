@@ -99,4 +99,6 @@ export const ROL_QUERY = {
         INSERT INTO medal.operacon (idrole, idpermiso) 
         VALUES ($1, $2);
     `,
+	BORRAR_OPERACON: `DELETE FROM medal.operaCon WHERE idRole = $1`,
+	VERIFICAR_EXISTENCIA: `SELECT 1 FROM medal.operaCon WHERE idRole = $1 AND idPermiso = $2`,
 };

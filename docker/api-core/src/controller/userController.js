@@ -301,7 +301,7 @@ export const login = async (req, res) => {
 		const token = jwt.sign(
 			{
 				uuidUsuario: resBbdd.uuidusuario,
-				// permisos: resBbdd.permisos || [],
+				permisos: resBbdd.permisos || [],
 			},
 			process.env.JWT_SECRET,
 			{ expiresIn: "2h" },

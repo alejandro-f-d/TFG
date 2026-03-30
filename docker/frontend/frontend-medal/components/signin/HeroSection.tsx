@@ -46,6 +46,7 @@ const HeroSection = () => {
 				// El resto de datos no sensibles pueden seguir en localStorage
 				localStorage.setItem("token", data.token); // Mantenerlo aquí también si tu código actual lo usa
 				localStorage.setItem("uuidUser", data.uuidUser);
+				localStorage.setItem("permisos", data.permisos);
 
 				let permisosArray: string[] = [];
 				if (Array.isArray(data.permisos)) {

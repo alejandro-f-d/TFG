@@ -69,7 +69,7 @@ export default function AdminUsersPage() {
 			const token = localStorage.getItem("token");
 			const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/user`);
 			url.searchParams.append("page", page.toString());
-			url.searchParams.append("limit", "8");
+			url.searchParams.append("limit", "5");
 			url.searchParams.append("filtroStatus", statusTab);
 			if (nameFilter) url.searchParams.append("filtroNombre", nameFilter);
 
@@ -153,7 +153,7 @@ export default function AdminUsersPage() {
 					<div className="relative flex-1 w-full">
 						<input
 							type="text"
-							placeholder="BUSCAR POR NOMBRE O APELLIDOS..."
+							placeholder="BUSCAR POR NOMBRE..."
 							value={nameFilter}
 							onChange={(e) => setNameFilter(e.target.value)}
 							className="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-[2.2rem] px-10 py-5 font-bold text-xs tracking-widest uppercase outline-none transition-all"
