@@ -147,11 +147,11 @@ export const USER_QUERIES = {
             ), '[]'
         ) AS proyectos_gitlab
     FROM medal.usuario u
-    WHERE u.nombre ILIKE $3
+    WHERE u.nombre ILIKE $3 AND u.activo = $4
     ORDER BY u.idusuario ASC
     LIMIT $1 OFFSET $2;`,
 
-	COUNT_BY_NOMBRE: `SELECT COUNT(*) FROM medal.usuario WHERE nombre ILIKE $1;`,
+	COUNT_BY_NOMBRE: `SELECT COUNT(*) FROM medal.usuario WHERE nombre ILIKE $1 AND activo = $2;`,
 
 	GET_ID_BY_UUID: `SELECT idusuario FROM medal.usuario WHERE uuidusuario = $1;`,
 

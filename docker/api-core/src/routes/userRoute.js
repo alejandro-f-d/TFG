@@ -806,12 +806,16 @@ router.get("/:uuid", verificarToken, getUserByUuid);
  * @swagger
  * /api/user:
  *   get:
- *     summary: Obtiene listado paginado de usuarios
+ *     summary: Obtiene listado paginado de usuarios con filtros
  *     description: |
  *       Retorna una lista de usuarios con paginación.
  *       Los usuarios incluyen sus relaciones: puertas, máquinas en propiedad, proyectos GitLab y peticiones.
  *       La contraseña nunca se incluye en la respuesta.
  *       Requiere el permiso `usr:getUsuario` (o `admin:total`).
+ *
+ *       **Filtros disponibles:**
+ *       - `filtroNombre`: Búsqueda parcial por nombre o apellidos
+ *       - `filtroStatus`: Filtro por estado activo/inactivo (`activo` o `inactivo`)
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -843,8 +847,16 @@ router.get("/:uuid", verificarToken, getUserByUuid);
  *         name: filtroNombre
  *         schema:
  *           type: string
- *         description: Filtro por nombre (búsqueda parcial en nombre, apellidos)
+ *         description: Filtro por nombre o apellidos del usuario (búsqueda parcial)
  *         example: "Alejandro"
+ *       - in: query
+ *         name: filtroStatus
+ *         schema:
+ *           type: string
+ *           enum: [activo, inactivo]
+ *           default: activo
+ *         description: Filtro por estado del usuario (activo/inactivo)
+ *         example: "activo"
  *     responses:
  *       200:
  *         description: Lista de usuarios devuelta correctamente
@@ -950,20 +962,7 @@ router.get("/:uuid", verificarToken, getUserByUuid);
  *                         description: Peticiones realizadas por el usuario
  *                         items:
  *                           type: object
- *                           properties:
- *                             id:
- *                               type: integer
- *                               example: 1
- *                             uuid:
- *                               type: string
- *                               format: uuid
- *                               example: "a682584b-a138-475d-99ac-3b78565681d9"
- *                             proyecto:
- *                               type: string
- *                               example: "IA-Research"
- *                             estado:
- *                               type: string
- *                               example: "APROBADA"
+ *                         example: []
  *                       puertas:
  *                         type: array
  *                         description: Puertas a las que tiene acceso
@@ -1053,7 +1052,7 @@ router.get("/:uuid", verificarToken, getUserByUuid);
  *                   type: string
  *                   example: "No tiene permisos para realizar esta acción"
  *       404:
- *         description: No se encontraron usuarios con el filtro aplicado
+ *         description: No se encontraron usuarios con los filtros aplicados
  *         content:
  *           application/json:
  *             schema:

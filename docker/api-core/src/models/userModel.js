@@ -111,17 +111,20 @@ class UserModel {
 		}
 	}
 
-	static async getAllUsers(page, limit, filtroNombre) {
+	static async getAllUsers(page, limit, filtroNombre, filtroStatus) {
 		try {
 			const offset = (page - 1) * limit;
 			const busqueda = `%${filtroNombre}%`;
+			const status = filtroStatus === "activo";
 			const res = await pool.query(USER_QUERIES.GET_ALL_PAGINADO, [
 				limit,
 				offset,
 				busqueda,
+				status,
 			]);
 			const countRes = await pool.query(USER_QUERIES.COUNT_BY_NOMBRE, [
 				busqueda,
+				status,
 			]);
 
 			const totalItems = parseInt(countRes.rows[0].count);
