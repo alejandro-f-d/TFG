@@ -4,30 +4,25 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
 
+// --- INTERFACES ---
 interface Dispositivo {
 	uuiddispositivo: string;
 	nombre: string;
-	puntomontaje: string;
 	capacidad: number;
-	capacidadusada: number;
-	tecnologia: string;
 }
+
 interface Reserva {
 	uuidcalendario: string;
 	nombre_reserva: string;
-	descripcion: string;
-	fechainicio: string;
-	fechafin: string;
 	nombre_completo_responsable: string;
 }
+
 interface Servicio {
 	uuidservicio: string;
 	nombreservicio: string;
-	status: string;
 	softwarebase: string;
-	entorno: string;
-	lista_puertos: { puerto: number; protocolo: string; nombre: string }[];
 }
+
 interface MaquinaFull {
 	idmaquina: number;
 	uuidmaquina: string;
@@ -42,7 +37,6 @@ interface MaquinaFull {
 	direccionippublicav6: string | null;
 	puertaenlacev6: string | null;
 	certificadosslactivo: boolean;
-	caducidadssl: string | null;
 	emisorssl: string | null;
 	dispositivos: Dispositivo[];
 }
@@ -55,11 +49,13 @@ export default function MachineDetailPage() {
 	const [reservas, setReservas] = useState<Reserva[]>([]);
 	const [servicios, setServicios] = useState<Servicio[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [isDeleting, setIsDeleting] = useState(false); // ESTADO PARA EL REDIRECT/BORRADO
 	const [userPerms, setUserPerms] = useState<string[]>([]);
 
+	// ESTADOS DE ACCIÓN
 	const [isEditingMachine, setIsEditingMachine] = useState(false);
 	const [machineForm, setMachineForm] = useState<Partial<MaquinaFull>>({});
+	const [showDeleteAlert, setShowDeleteAlert] = useState(false); // AVISO CENTRAL
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	// --- PERMISOS ---
 	useEffect(() => {
@@ -67,14 +63,11 @@ export default function MachineDetailPage() {
 		if (stored) {
 			const parsed = JSON.parse(stored);
 			setUserPerms(parsed);
-			if (
-				!(
-					parsed.includes("admin:total") ||
-					parsed.includes("maq:getAll") ||
-					parsed.includes("maq:getServer")
-				)
-			)
-				router.push("/dashboard");
+			const canView =
+				parsed.includes("admin:total") ||
+				parsed.includes("maq:getAll") ||
+				parsed.includes("maq:getServer");
+			if (!canView) router.push("/dashboard");
 		} else {
 			logout();
 		}
@@ -84,10 +77,12 @@ export default function MachineDetailPage() {
 	const canEdit = isAdmin || userPerms.includes("maq:editServer");
 	const canDelete = isAdmin || userPerms.includes("maq:delete");
 
+	// --- FETCH DATA ---
 	const fetchData = useCallback(async () => {
 		setLoading(true);
 		const token = localStorage.getItem("token");
 		const headers = { Authorization: `Bearer ${token}` };
+
 		try {
 			const resMaq = await fetch(
 				`${process.env.NEXT_PUBLIC_API_URL}/api/maquina/${uuid}`,
@@ -101,21 +96,23 @@ export default function MachineDetailPage() {
 				});
 				setMachineForm(dataMaq.info);
 			}
+
 			const resRes = await fetch(
 				`${process.env.NEXT_PUBLIC_API_URL}/api/maquina/${uuid}/reserva`,
 				{ headers },
 			);
 			if (resRes.ok) {
-				const d = await resRes.json();
-				setReservas(d.info || []);
+				const dataRes = await resRes.json();
+				setReservas(dataRes.info || []);
 			}
+
 			const resServ = await fetch(
 				`${process.env.NEXT_PUBLIC_API_URL}/api/maquina/${uuid}/servicios?limit=10`,
 				{ headers },
 			);
 			if (resServ.ok) {
-				const d = await resServ.json();
-				setServicios(d.info.data || []);
+				const dataServ = await resServ.json();
+				setServicios(dataServ.info.data || []);
 			}
 		} catch (e) {
 			console.error(e);
@@ -128,6 +125,7 @@ export default function MachineDetailPage() {
 		fetchData();
 	}, [fetchData]);
 
+	// --- ACCIONES ---
 	const handleUpdateMachine = async () => {
 		try {
 			const token = localStorage.getItem("token");
@@ -152,7 +150,7 @@ export default function MachineDetailPage() {
 	};
 
 	const handleDeleteMachine = async () => {
-		setIsDeleting(true); // INICIAR ESTADO VISUAL DE BORRADO
+		setIsDeleting(true);
 		try {
 			const token = localStorage.getItem("token");
 			const res = await fetch(
@@ -166,10 +164,11 @@ export default function MachineDetailPage() {
 				router.push("/dashboard/maquinas");
 			} else {
 				setIsDeleting(false);
-				alert("Error al borrar el servidor.");
+				setShowDeleteAlert(false);
 			}
 		} catch (e) {
 			setIsDeleting(false);
+			setShowDeleteAlert(false);
 		}
 	};
 
@@ -184,13 +183,13 @@ export default function MachineDetailPage() {
 	return (
 		<div className="min-h-screen bg-[#F8FAFC] py-12 px-6">
 			<style jsx global>{`
-                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-            `}</style>
+				.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+				.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+				.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+			`}</style>
 
 			<div className="max-w-7xl mx-auto">
-				{/* HEADER ACTIONS */}
+				{/* BARRA SUPERIOR */}
 				<div className="flex justify-between items-center mb-12">
 					<button
 						onClick={() => router.push("/dashboard/maquinas")}
@@ -201,11 +200,10 @@ export default function MachineDetailPage() {
 					<div className="flex items-center gap-4">
 						{canDelete && (
 							<button
-								onClick={handleDeleteMachine}
-								disabled={isDeleting}
-								className={`px-6 py-4 rounded-[2rem] font-black text-[9px] uppercase tracking-widest transition-all ${isDeleting ? "bg-red-500 text-white animate-pulse" : "bg-white border border-red-100 text-red-500 hover:bg-red-50"}`}
+								onClick={() => setShowDeleteAlert(true)}
+								className="bg-white border border-red-100 text-red-500 hover:bg-red-50 px-6 py-4 rounded-[2rem] font-black text-[9px] uppercase tracking-widest transition-all"
 							>
-								{isDeleting ? "Purgando..." : "Borrar"}
+								Borrar
 							</button>
 						)}
 						{canEdit && (
@@ -213,12 +211,13 @@ export default function MachineDetailPage() {
 								onClick={() => setIsEditingMachine(true)}
 								className="bg-slate-900 text-white px-8 py-4 rounded-[2rem] font-black text-[9px] uppercase tracking-widest hover:bg-blue-600 shadow-lg shadow-slate-200 transition-all"
 							>
-								Sincronizar
+								Editar
 							</button>
 						)}
 					</div>
 				</div>
 
+				{/* HEADER PRINCIPAL */}
 				<div className="mb-16">
 					<h1 className="text-8xl font-black text-slate-900 tracking-tighter uppercase leading-none break-all">
 						{maquina.nombre}
@@ -230,7 +229,7 @@ export default function MachineDetailPage() {
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-					{/* COL 1: RED (IPv4 + IPv6 con GATEWAY) */}
+					{/* COL 1: RED (Incluye Gateway IPv6) */}
 					<div className="lg:col-span-4 space-y-10">
 						<div className="bg-slate-900 p-8 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
 							<div className="absolute top-0 right-0 p-6 opacity-10 text-[40px] font-black italic">
@@ -291,7 +290,6 @@ export default function MachineDetailPage() {
 										{maquina.direccionippublicav6 || "---"}
 									</p>
 								</div>
-								{/* GATEWAY IPv6 AÑADIDO A LA VISTA PRINCIPAL */}
 								<div>
 									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
 										Gateway v6
@@ -304,9 +302,9 @@ export default function MachineDetailPage() {
 						</div>
 					</div>
 
-					{/* ... (Resto de columnas se mantienen igual) */}
+					{/* COL 2: HARDWARE Y SERVICIOS */}
 					<div className="lg:col-span-4 space-y-10">
-						<div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl min-h-[300px]">
+						<div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl">
 							<h2 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-8 italic">
 								Hardware
 							</h2>
@@ -347,6 +345,7 @@ export default function MachineDetailPage() {
 						</div>
 					</div>
 
+					{/* COL 3: CALENDARIO */}
 					<div className="lg:col-span-4">
 						<div className="bg-blue-600 p-10 rounded-[3.5rem] text-white shadow-2xl">
 							<h2 className="text-[10px] font-black text-blue-100 uppercase tracking-[0.3em] mb-10 italic">
@@ -375,7 +374,41 @@ export default function MachineDetailPage() {
 				</div>
 			</div>
 
-			{/* --- MODAL EDICIÓN CON GATEWAY IPv6 --- */}
+			{/* --- MODAL AVISO DE BORRADO (CENTRAL) --- */}
+			{showDeleteAlert && (
+				<div className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[100] flex items-center justify-center p-6">
+					<div className="bg-white w-full max-w-md rounded-[3rem] p-12 shadow-2xl text-center">
+						<div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8">
+							<span className="text-red-600 text-3xl font-black">!</span>
+						</div>
+						<h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900 mb-4">
+							¿Eliminar Activo?
+						</h3>
+						<p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest leading-relaxed mb-10">
+							Esta acción purgará el servidor{" "}
+							<span className="text-red-500">{maquina.nombre}</span> y todas sus
+							dependencias del inventario de forma irreversible.
+						</p>
+						<div className="flex flex-col gap-4">
+							<button
+								onClick={handleDeleteMachine}
+								disabled={isDeleting}
+								className={`w-full py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all ${isDeleting ? "bg-slate-100 text-slate-400 animate-pulse" : "bg-red-600 text-white hover:bg-red-700 shadow-xl shadow-red-200"}`}
+							>
+								{isDeleting ? "Eliminando..." : "Confirmar Eliminación"}
+							</button>
+							<button
+								onClick={() => setShowDeleteAlert(false)}
+								className="w-full py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors"
+							>
+								Cancelar
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* --- MODAL EDICIÓN --- */}
 			{isEditingMachine && (
 				<div className="fixed inset-0 bg-slate-900/95 backdrop-blur-2xl z-50 flex items-center justify-center p-4 md:p-10">
 					<div className="bg-white w-full max-w-6xl rounded-[4rem] shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
@@ -385,21 +418,21 @@ export default function MachineDetailPage() {
 							</h2>
 							<button
 								onClick={() => setIsEditingMachine(false)}
-								className="text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-colors bg-slate-50 px-6 py-3 rounded-full italic"
+								className="text-[10px] font-black uppercase text-slate-400 bg-slate-50 px-6 py-3 rounded-full italic"
 							>
 								[ Cerrar ]
 							</button>
 						</div>
 
 						<div className="flex-1 overflow-y-auto px-12 lg:px-16 py-10 custom-scrollbar">
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 								<div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-10 rounded-[3rem] mb-4">
 									<div className="flex flex-col gap-2">
 										<label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">
 											Hostname
 										</label>
 										<input
-											className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600 shadow-sm"
+											className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600"
 											defaultValue={maquina.nombre}
 											onChange={(e) =>
 												setMachineForm({
@@ -411,10 +444,10 @@ export default function MachineDetailPage() {
 									</div>
 									<div className="flex flex-col gap-2">
 										<label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">
-											S.O.
+											Sistema Operativo
 										</label>
 										<input
-											className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600 shadow-sm"
+											className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600"
 											defaultValue={maquina.sistemaoperativo}
 											onChange={(e) =>
 												setMachineForm({
@@ -430,7 +463,7 @@ export default function MachineDetailPage() {
 										</label>
 										<input
 											type="number"
-											className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600 shadow-sm"
+											className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600"
 											defaultValue={maquina.ram}
 											onChange={(e) =>
 												setMachineForm({
@@ -444,11 +477,11 @@ export default function MachineDetailPage() {
 
 								<div className="space-y-4">
 									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-blue-600 pl-4 italic">
-										IPv4
+										IPv4 Stack
 									</h3>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs outline-none focus:bg-white"
-										placeholder="IP Privada"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs outline-none"
+										placeholder="Privada"
 										defaultValue={maquina.direccionipprivadav4 || ""}
 										onChange={(e) =>
 											setMachineForm({
@@ -458,8 +491,8 @@ export default function MachineDetailPage() {
 										}
 									/>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs outline-none focus:bg-white"
-										placeholder="IP Pública"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs outline-none"
+										placeholder="Pública"
 										defaultValue={maquina.direccionippublicav4 || ""}
 										onChange={(e) =>
 											setMachineForm({
@@ -469,7 +502,7 @@ export default function MachineDetailPage() {
 										}
 									/>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs outline-none focus:bg-white"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs outline-none"
 										placeholder="Gateway"
 										defaultValue={maquina.puertaenlacev4 || ""}
 										onChange={(e) =>
@@ -483,11 +516,11 @@ export default function MachineDetailPage() {
 
 								<div className="space-y-4">
 									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-slate-900 pl-4 italic">
-										IPv6
+										IPv6 Stack
 									</h3>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px] outline-none focus:bg-white"
-										placeholder="IP Privada"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px] outline-none"
+										placeholder="Privada"
 										defaultValue={maquina.direccionipprivadav6 || ""}
 										onChange={(e) =>
 											setMachineForm({
@@ -497,8 +530,8 @@ export default function MachineDetailPage() {
 										}
 									/>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px] outline-none focus:bg-white"
-										placeholder="IP Pública"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px] outline-none"
+										placeholder="Pública"
 										defaultValue={maquina.direccionippublicav6 || ""}
 										onChange={(e) =>
 											setMachineForm({
@@ -507,9 +540,8 @@ export default function MachineDetailPage() {
 											})
 										}
 									/>
-									{/* CAMPO GATEWAY IPv6 REINSTAURADO EN EDICIÓN */}
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px] outline-none focus:bg-white"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px] outline-none focus:ring-1 focus:ring-slate-900"
 										placeholder="Gateway IPv6"
 										defaultValue={maquina.puertaenlacev6 || ""}
 										onChange={(e) =>
@@ -573,13 +605,12 @@ export default function MachineDetailPage() {
 								</div>
 							</div>
 						</div>
-
 						<div className="p-10 bg-white border-t border-slate-50">
 							<button
 								onClick={handleUpdateMachine}
-								className="w-full bg-slate-900 text-white py-10 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.6em] hover:bg-blue-600 transition-all shadow-2xl active:scale-[0.98]"
+								className="w-full bg-slate-900 text-white py-10 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.6em] hover:bg-blue-600 transition-all shadow-2xl"
 							>
-								Confirmar cambios en activo
+								Confirmar cambios
 							</button>
 						</div>
 					</div>
