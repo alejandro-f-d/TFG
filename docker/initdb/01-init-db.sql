@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS medal.usuario (
   fotoPerfil BYTEA,
   uuidUsuario UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(), 
   contrasena VARCHAR(1000),
-  gitlab VARCHAR(50) UNIQUE, 
+  gitlab INTEGER UNIQUE, 
   responsable INTEGER,
   -- jefeLaboratorio BOOLEAN DEFAULT false,
   CONSTRAINT fk_responsable_usuario 

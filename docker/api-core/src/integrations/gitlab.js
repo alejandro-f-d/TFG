@@ -83,10 +83,7 @@ export async function anadirUsuarioAlProyecto(
 	}
 }
 
-export async function crearProyecto(
-	nombreProyecto,
-	arrayNombreUsuarioBaseDatos,
-) {
+export async function crearProyecto(nombreProyecto, arrayIdsGitlabBaseDatos) {
 	console.log("La URI es: ", `${process.env.URI_GITLAB}/api/v4/projects`);
 	try {
 		const response = await axios.post(
@@ -95,8 +92,7 @@ export async function crearProyecto(
 			{ headers: { "Private-Token": process.env.GITLAB_TOKEN } },
 		);
 		const projectId = response.data.id;
-		for (const username of arrayNombreUsuarioBaseDatos) {
-			const userId = await obtenerIdPorUsername(username);
+		for (const userId of arrayIdsGitlabBaseDatos) {
 			// El código de developer es el 30.
 			await anadirUsuarioAlProyecto(projectId, userId, 30);
 		}

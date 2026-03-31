@@ -143,6 +143,7 @@ export const getUsers = async (req, res) => {
 		const limit = parseInt(req.query.limit) || 5;
 		const filtroNombre = req.query.filtroNombre || "";
 		const filtroStatus = req.query.filtroStatus || "activo";
+		const filtroGitlab = req.query.filtroGitlab || false;
 		if (page < 1 || limit < 1) {
 			return res.status(400).json({ error: "Petición invalida" });
 		}
@@ -152,6 +153,7 @@ export const getUsers = async (req, res) => {
 			limit,
 			filtroNombre,
 			filtroStatus,
+			filtroGitlab,
 		);
 		if (resultado.totalItems === 0) {
 			return res.status(404).json({

@@ -8,10 +8,9 @@ export const postProyectoGitlab = async (req, res) => {
 		return res.status(400).json({ error: "Petición mal formada." });
 	}
 	try {
-		const nombresUsersGitlab =
-			await ProyectosGitlabModel.getGitlabUsernamesByIds(participantes);
-		const idProyecto = await crearProyecto(nombre, nombresUsersGitlab);
-		console.log("El id del proyecto es:", idProyecto);
+		const idUserGitlab =
+			await ProyectosGitlabModel.getGitlabIdByIds(participantes);
+		const idProyecto = await crearProyecto(nombre, idUserGitlab);
 		const resPost = await ProyectosGitlabModel.postProyectoGitlab(
 			req.body,
 			idProyecto,

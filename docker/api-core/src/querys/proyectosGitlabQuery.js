@@ -54,7 +54,7 @@ export const PROYECTOS_QUERY = {
 
 	ADD_PARTICIPANTE: `INSERT INTO medal.participa (idusuario, idproyecto) VALUES ($1, $2);`,
 
-	GET_NOMBRES_USERS_GITLAB: `SELECT u.gitlab
+	GET_ID_USERS_GITLAB: `SELECT u.gitlab
         FROM unnest($1::int[]) WITH ORDINALITY AS input(idusuario, orden)
         LEFT JOIN medal.usuario u ON u.idusuario = input.idusuario
         ORDER BY input.orden;`,

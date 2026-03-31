@@ -169,11 +169,11 @@ class ProyectosGitlabModel {
 			client.release();
 		}
 	}
-	static async getGitlabUsernamesByIds(ids) {
+	static async getGitlabIdByIds(ids) {
 		if (!ids || ids.length === 0) return [];
 		const client = await pool.connect();
 		try {
-			const res = await client.query(PROYECTOS_QUERY.GET_NOMBRES_USERS_GITLAB, [
+			const res = await client.query(PROYECTOS_QUERY.GET_ID_USERS_GITLAB, [
 				ids,
 			]);
 			return res.rows.map((row) => row.gitlab);

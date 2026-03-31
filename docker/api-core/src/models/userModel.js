@@ -116,12 +116,10 @@ class UserModel {
 			const offset = (page - 1) * limit;
 			const busqueda = `%${filtroNombre}%`;
 			const status = filtroStatus === "activo";
-			const res = await pool.query(USER_QUERIES.GET_ALL_PAGINADO, [
-				limit,
-				offset,
-				busqueda,
-				status,
-			]);
+			const query = filtroStatus
+				? USER_QUERIES.GET_ALL_PAGINADO_GITLAB
+				: USER_QUERIES.GET_ALL_PAGINADO;
+			const res = await pool.query(query, [limit, offset, busqueda, status]);
 			const countRes = await pool.query(USER_QUERIES.COUNT_BY_NOMBRE, [
 				busqueda,
 				status,
