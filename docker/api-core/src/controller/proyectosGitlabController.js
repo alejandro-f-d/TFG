@@ -10,8 +10,12 @@ export const postProyectoGitlab = async (req, res) => {
 	try {
 		const nombresUsersGitlab =
 			await ProyectosGitlabModel.getGitlabUsernamesByIds(participantes);
-		await crearProyecto(nombre, nombresUsersGitlab);
-		const resPost = await ProyectosGitlabModel.postProyectoGitlab(req.body);
+		const idProyecto = await crearProyecto(nombre, nombresUsersGitlab);
+		console.log("El id del proyecto es:", idProyecto);
+		const resPost = await ProyectosGitlabModel.postProyectoGitlab(
+			req.body,
+			idProyecto,
+		);
 		const uuidPost = resPost.uuid;
 		return res
 			.status(201)

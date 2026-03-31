@@ -92,7 +92,8 @@ CREATE TABLE IF NOT EXISTS medal.proyectosGitlab(
   uuidProyecto UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
   fechaInicio DATE NOT NULL DEFAULT CURRENT_DATE,
   fechaFin DATE,
-  activo BOOLEAN DEFAULT TRUE
+  activo BOOLEAN DEFAULT TRUE,
+  idGitlab INTEGER UNIQUE
 );
 
 -- 8. PARTICIPA

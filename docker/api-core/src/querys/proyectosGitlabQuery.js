@@ -1,5 +1,5 @@
 export const PROYECTOS_QUERY = {
-	POST: `INSERT INTO medal.proyectosgitlab(nombre, descripcion, uuidproyecto, fechainicio, fechafin, activo) VALUES($1, $2, $3, $4, $5, $6) RETURNING idproyecto;`,
+	POST: `INSERT INTO medal.proyectosgitlab(nombre, descripcion, uuidproyecto, fechainicio, fechafin, activo, idGitlab ) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING idproyecto;`,
 
 	GET_ALL_PROYECTS: `
     SELECT g.*, 

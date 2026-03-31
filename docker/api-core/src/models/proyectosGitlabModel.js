@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { PROYECTOS_QUERY } from "../querys/proyectosGitlabQuery.js";
 
 class ProyectosGitlabModel {
-	static async postProyectoGitlab(data) {
+	static async postProyectoGitlab(data, idGitlab) {
 		const {
 			nombre,
 			descripcion,
@@ -22,6 +22,7 @@ class ProyectosGitlabModel {
 				fechaInicio,
 				fechaFin,
 				activo,
+				idGitlab,
 			];
 			await client.query("BEGIN");
 			const resCreateProyecto = await client.query(

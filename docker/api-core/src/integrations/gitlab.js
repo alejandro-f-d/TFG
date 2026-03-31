@@ -16,6 +16,41 @@ async function obtenerIdPorUsername(username) {
 		throw error;
 	}
 }
+async function obtenerIdProyectoPorNombre(nombreProyecto) {
+	try {
+		const response = await axios.get(
+			`${process.env.URI_GITLAB}/api/v4/projects`,
+			{
+				params: {
+					search: nombreProyecto,
+					simple: true,
+				},
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+
+		const proyecto = response.data.find(
+			(p) => p.name === nombreProyecto || p.path === nombreProyecto,
+		);
+
+		if (proyecto) {
+			console.log(`Proyecto encontrado: ${proyecto.name} (ID: ${proyecto.id})`);
+			return proyecto.id;
+		} else {
+			console.warn(
+				`No se encontró ningún proyecto con el nombre: ${nombreProyecto}`,
+			);
+			return null;
+		}
+	} catch (error) {
+		console.error(
+			"Error al buscar el ID del proyecto:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}
+
 export async function anadirUsuarioAlProyecto(
 	projectId,
 	userId,
@@ -65,6 +100,7 @@ export async function crearProyecto(
 			// El código de developer es el 30.
 			await anadirUsuarioAlProyecto(projectId, userId, 30);
 		}
+		return projectId;
 	} catch (error) {
 		console.error(
 			"Se ha producido un error al crear el proyecto en el gitlab.",
@@ -97,6 +133,36 @@ export async function eliminarUsuarioDelProyecto(projectId, userId) {
 		}
 		console.error(
 			"Error al eliminar el usuario del proyecto:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}
+
+export async function archivarProyecto(nombreProyecto) {
+	try {
+		const proyectId = await obtenerIdProyectoPorNombre(nombreProyecto);
+		if (!projectId) {
+			return 2; //404 proyecto no encontrado.
+		}
+		const response = await axios.post(
+			`${process.env.URI_GITLAB}/api/v4/projects/${projectId}/archive`,
+			{},
+			{
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+
+		console.log(`Proyecto ${projectId} archivado con éxito.`);
+		return response.data;
+	} catch (error) {
+		if (error.response && error.response.status === 404) {
+			console.error(`No se encontró el proyecto con ID ${projectId}.`);
+			return 2;
+		}
+
+		console.error(
+			"Error al archivar el proyecto:",
 			error.response?.data || error.message,
 		);
 		throw error;
