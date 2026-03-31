@@ -816,6 +816,7 @@ router.get("/:uuid", verificarToken, getUserByUuid);
  *       **Filtros disponibles:**
  *       - `filtroNombre`: Búsqueda parcial por nombre o apellidos
  *       - `filtroStatus`: Filtro por estado activo/inactivo (`activo` o `inactivo`)
+ *       - `filtroGitlab`: Filtro para usuarios con cuenta de GitLab asociada
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -857,6 +858,13 @@ router.get("/:uuid", verificarToken, getUserByUuid);
  *           default: activo
  *         description: Filtro por estado del usuario (activo/inactivo)
  *         example: "activo"
+ *       - in: query
+ *         name: filtroGitlab
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Si es `true`, filtra solo usuarios que tienen cuenta de GitLab asociada
+ *         example: true
  *     responses:
  *       200:
  *         description: Lista de usuarios devuelta correctamente

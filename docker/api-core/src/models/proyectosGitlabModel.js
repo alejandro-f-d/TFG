@@ -12,6 +12,7 @@ class ProyectosGitlabModel {
 			activo,
 			participantes,
 		} = data;
+		console.log("La fecha de inicio que llega al back es:", fechaInicio);
 		const client = await pool.connect();
 		try {
 			const uuid = uuidv4();

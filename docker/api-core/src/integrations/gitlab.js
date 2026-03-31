@@ -84,24 +84,38 @@ export async function anadirUsuarioAlProyecto(
 }
 
 export async function crearProyecto(nombreProyecto, arrayIdsGitlabBaseDatos) {
-	console.log("La URI es: ", `${process.env.URI_GITLAB}/api/v4/projects`);
 	try {
+		const safePath = nombreProyecto
+			.toLowerCase()
+			.replace(/\s+/g, "-")
+			.replace(/[^\w-]/g, "");
+
 		const response = await axios.post(
 			`${process.env.URI_GITLAB}/api/v4/projects`,
-			{ name: nombreProyecto },
+			{
+				name: nombreProyecto,
+				path: safePath,
+				initialize_with_readme: true,
+			},
 			{ headers: { "Private-Token": process.env.GITLAB_TOKEN } },
 		);
+
 		const projectId = response.data.id;
+		console.log(`Proyecto creado en GitLab con ID: ${projectId}`);
+
 		for (const userId of arrayIdsGitlabBaseDatos) {
-			// El código de developer es el 30.
 			await anadirUsuarioAlProyecto(projectId, userId, 30);
 		}
 		return projectId;
 	} catch (error) {
-		console.error(
-			"Se ha producido un error al crear el proyecto en el gitlab.",
-			error,
-		);
+		if (error.response && error.response.data) {
+			console.error(
+				"Detalle del error 400 de GitLab:",
+				JSON.stringify(error.response.data),
+			);
+		} else {
+			console.error("Error de conexión o desconocido:", error.message);
+		}
 		throw error;
 	}
 }

@@ -111,12 +111,19 @@ class UserModel {
 		}
 	}
 
-	static async getAllUsers(page, limit, filtroNombre, filtroStatus) {
+	static async getAllUsers(
+		page,
+		limit,
+		filtroNombre,
+		filtroStatus,
+		filtroGitlab,
+	) {
 		try {
+			console.log("");
 			const offset = (page - 1) * limit;
 			const busqueda = `%${filtroNombre}%`;
 			const status = filtroStatus === "activo";
-			const query = filtroStatus
+			const query = filtroGitlab
 				? USER_QUERIES.GET_ALL_PAGINADO_GITLAB
 				: USER_QUERIES.GET_ALL_PAGINADO;
 			const res = await pool.query(query, [limit, offset, busqueda, status]);
