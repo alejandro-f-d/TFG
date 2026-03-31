@@ -37,6 +37,7 @@ interface MaquinaFull {
 	direccionippublicav6: string | null;
 	puertaenlacev6: string | null;
 	certificadosslactivo: boolean;
+	caducidadssl: string | null;
 	emisorssl: string | null;
 	dispositivos: Dispositivo[];
 }
@@ -54,7 +55,7 @@ export default function MachineDetailPage() {
 	// ESTADOS DE ACCIÓN
 	const [isEditingMachine, setIsEditingMachine] = useState(false);
 	const [machineForm, setMachineForm] = useState<Partial<MaquinaFull>>({});
-	const [showDeleteAlert, setShowDeleteAlert] = useState(false); // AVISO CENTRAL
+	const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 
 	// --- PERMISOS ---
@@ -125,7 +126,6 @@ export default function MachineDetailPage() {
 		fetchData();
 	}, [fetchData]);
 
-	// --- ACCIONES ---
 	const handleUpdateMachine = async () => {
 		try {
 			const token = localStorage.getItem("token");
@@ -160,9 +160,8 @@ export default function MachineDetailPage() {
 					headers: { Authorization: `Bearer ${token}` },
 				},
 			);
-			if (res.ok) {
-				router.push("/dashboard/maquinas");
-			} else {
+			if (res.ok) router.push("/dashboard/maquinas");
+			else {
 				setIsDeleting(false);
 				setShowDeleteAlert(false);
 			}
@@ -229,21 +228,25 @@ export default function MachineDetailPage() {
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-					{/* COL 1: RED (Incluye Gateway IPv6) */}
+					{/* COL 1: RED (v4/v6) Y SEGURIDAD SSL */}
 					<div className="lg:col-span-4 space-y-10">
+						{/* IPv4 */}
 						<div className="bg-slate-900 p-8 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
-							<div className="absolute top-0 right-0 p-6 opacity-10 text-[40px] font-black italic">
+							{/* MARCA DE AGUA UNIFICADA */}
+							<div className="absolute top-0 right-0 p-6 opacity-[0.07] text-[80px] font-black italic leading-none pointer-events-none select-none text-white">
 								v4
 							</div>
-							<h2 className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em] mb-8 italic">
+
+							<h2 className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em] mb-8 italic relative z-10">
 								Network IPv4
 							</h2>
-							<div className="space-y-4">
+
+							<div className="space-y-4 relative z-10">
 								<div>
 									<p className="text-[7px] text-slate-500 uppercase font-black mb-1">
 										Privada
 									</p>
-									<p className="font-mono text-sm">
+									<p className="font-mono text-[11px] text-white">
 										{maquina.direccionipprivadav4 || "---"}
 									</p>
 								</div>
@@ -251,7 +254,7 @@ export default function MachineDetailPage() {
 									<p className="text-[7px] text-slate-500 uppercase font-black mb-1">
 										Pública
 									</p>
-									<p className="font-mono text-sm text-blue-200">
+									<p className="font-mono text-[11px] text-blue-200">
 										{maquina.direccionippublicav4 || "---"}
 									</p>
 								</div>
@@ -266,19 +269,23 @@ export default function MachineDetailPage() {
 							</div>
 						</div>
 
+						{/* IPv6 */}
 						<div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl relative overflow-hidden">
-							<div className="absolute top-0 right-0 p-6 opacity-5 text-[40px] font-black italic">
+							{/* MARCA DE AGUA UNIFICADA */}
+							<div className="absolute top-0 right-0 p-6 opacity-[0.03] text-[80px] font-black italic leading-none pointer-events-none select-none text-slate-900">
 								v6
 							</div>
-							<h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 italic">
+
+							<h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 italic relative z-10">
 								Network IPv6
 							</h2>
-							<div className="space-y-4">
+
+							<div className="space-y-4 relative z-10">
 								<div>
 									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
 										Privada
 									</p>
-									<p className="font-mono text-[10px] text-slate-900 break-all">
+									<p className="font-mono text-[11px] text-slate-900 break-all">
 										{maquina.direccionipprivadav6 || "---"}
 									</p>
 								</div>
@@ -286,7 +293,7 @@ export default function MachineDetailPage() {
 									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
 										Pública
 									</p>
-									<p className="font-mono text-[10px] text-blue-600 break-all">
+									<p className="font-mono text-[11px] text-blue-600 break-all">
 										{maquina.direccionippublicav6 || "---"}
 									</p>
 								</div>
@@ -294,8 +301,47 @@ export default function MachineDetailPage() {
 									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
 										Gateway v6
 									</p>
-									<p className="font-mono text-[9px] text-slate-300 break-all">
+									<p className="font-mono text-[10px] text-slate-300 break-all">
 										{maquina.puertaenlacev6 || "---"}
+									</p>
+								</div>
+							</div>
+						</div>
+						{/* SEGURIDAD SSL */}
+						<div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl relative overflow-hidden">
+							<div
+								className={`absolute top-0 right-0 w-2 h-full ${maquina.certificadosslactivo ? "bg-emerald-500" : "bg-red-500"}`}
+							></div>
+							<h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 italic">
+								Seguridad SSL
+							</h2>
+							<div className="space-y-5">
+								<div className="flex items-center gap-3">
+									<div
+										className={`w-2 h-2 rounded-full ${maquina.certificadosslactivo ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}
+									></div>
+									<p className="text-[10px] font-black uppercase text-slate-900">
+										{maquina.certificadosslactivo
+											? "Certificado Activo"
+											: "Sin Protección TLS"}
+									</p>
+								</div>
+								<div>
+									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
+										Emisor
+									</p>
+									<p className="text-[10px] font-black text-slate-700 uppercase">
+										{maquina.emisorssl || "N/A"}
+									</p>
+								</div>
+								<div>
+									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
+										Caducidad
+									</p>
+									<p className="text-[10px] font-mono text-blue-600 font-bold">
+										{maquina.caducidadssl
+											? new Date(maquina.caducidadssl).toLocaleDateString()
+											: "SIN FECHA"}
 									</p>
 								</div>
 							</div>
@@ -374,7 +420,7 @@ export default function MachineDetailPage() {
 				</div>
 			</div>
 
-			{/* --- MODAL AVISO DE BORRADO (CENTRAL) --- */}
+			{/* MODAL AVISO BORRADO */}
 			{showDeleteAlert && (
 				<div className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[100] flex items-center justify-center p-6">
 					<div className="bg-white w-full max-w-md rounded-[3rem] p-12 shadow-2xl text-center">
@@ -384,10 +430,10 @@ export default function MachineDetailPage() {
 						<h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900 mb-4">
 							¿Eliminar Activo?
 						</h3>
-						<p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest leading-relaxed mb-10">
+						<p className="text-slate-400 text-[11px] font-bold uppercase mb-10 tracking-widest leading-relaxed">
 							Esta acción purgará el servidor{" "}
-							<span className="text-red-500">{maquina.nombre}</span> y todas sus
-							dependencias del inventario de forma irreversible.
+							<span className="text-red-500">{maquina.nombre}</span> de forma
+							irreversible.
 						</p>
 						<div className="flex flex-col gap-4">
 							<button
@@ -399,7 +445,7 @@ export default function MachineDetailPage() {
 							</button>
 							<button
 								onClick={() => setShowDeleteAlert(false)}
-								className="w-full py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors"
+								className="w-full py-6 rounded-2xl font-black text-[10px] uppercase text-slate-400 hover:text-slate-900 transition-colors"
 							>
 								Cancelar
 							</button>
@@ -408,7 +454,7 @@ export default function MachineDetailPage() {
 				</div>
 			)}
 
-			{/* --- MODAL EDICIÓN --- */}
+			{/* MODAL EDICIÓN COMPLETO (v4, v6 y SSL) */}
 			{isEditingMachine && (
 				<div className="fixed inset-0 bg-slate-900/95 backdrop-blur-2xl z-50 flex items-center justify-center p-4 md:p-10">
 					<div className="bg-white w-full max-w-6xl rounded-[4rem] shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
@@ -426,9 +472,10 @@ export default function MachineDetailPage() {
 
 						<div className="flex-1 overflow-y-auto px-12 lg:px-16 py-10 custom-scrollbar">
 							<div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+								{/* INFO BASE */}
 								<div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-10 rounded-[3rem] mb-4">
 									<div className="flex flex-col gap-2">
-										<label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">
+										<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
 											Hostname
 										</label>
 										<input
@@ -443,8 +490,8 @@ export default function MachineDetailPage() {
 										/>
 									</div>
 									<div className="flex flex-col gap-2">
-										<label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">
-											Sistema Operativo
+										<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
+											S.O.
 										</label>
 										<input
 											className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600"
@@ -458,7 +505,7 @@ export default function MachineDetailPage() {
 										/>
 									</div>
 									<div className="flex flex-col gap-2">
-										<label className="text-[9px] font-black uppercase text-slate-400 ml-4 italic">
+										<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
 											RAM (GB)
 										</label>
 										<input
@@ -475,12 +522,13 @@ export default function MachineDetailPage() {
 									</div>
 								</div>
 
+								{/* IPv4 Stack */}
 								<div className="space-y-4">
 									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-blue-600 pl-4 italic">
 										IPv4 Stack
 									</h3>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs outline-none"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs"
 										placeholder="Privada"
 										defaultValue={maquina.direccionipprivadav4 || ""}
 										onChange={(e) =>
@@ -491,7 +539,7 @@ export default function MachineDetailPage() {
 										}
 									/>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs outline-none"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs"
 										placeholder="Pública"
 										defaultValue={maquina.direccionippublicav4 || ""}
 										onChange={(e) =>
@@ -502,7 +550,7 @@ export default function MachineDetailPage() {
 										}
 									/>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs outline-none"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs"
 										placeholder="Gateway"
 										defaultValue={maquina.puertaenlacev4 || ""}
 										onChange={(e) =>
@@ -514,13 +562,14 @@ export default function MachineDetailPage() {
 									/>
 								</div>
 
+								{/* IPv6 Stack */}
 								<div className="space-y-4">
-									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-slate-900 pl-4 italic">
+									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-slate-400 pl-4 italic">
 										IPv6 Stack
 									</h3>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px] outline-none"
-										placeholder="Privada"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px]"
+										placeholder="Privada v6"
 										defaultValue={maquina.direccionipprivadav6 || ""}
 										onChange={(e) =>
 											setMachineForm({
@@ -530,8 +579,8 @@ export default function MachineDetailPage() {
 										}
 									/>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px] outline-none"
-										placeholder="Pública"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px]"
+										placeholder="Pública v6"
 										defaultValue={maquina.direccionippublicav6 || ""}
 										onChange={(e) =>
 											setMachineForm({
@@ -541,8 +590,8 @@ export default function MachineDetailPage() {
 										}
 									/>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px] outline-none focus:ring-1 focus:ring-slate-900"
-										placeholder="Gateway IPv6"
+										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px]"
+										placeholder="Gateway v6"
 										defaultValue={maquina.puertaenlacev6 || ""}
 										onChange={(e) =>
 											setMachineForm({
@@ -553,9 +602,10 @@ export default function MachineDetailPage() {
 									/>
 								</div>
 
+								{/* Seguridad y SSL */}
 								<div className="space-y-4">
 									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-emerald-500 pl-4 italic">
-										Seguridad
+										Seguridad / TLS
 									</h3>
 									<input
 										className="w-full bg-slate-50 rounded-xl p-4 font-bold text-xs"
@@ -565,6 +615,21 @@ export default function MachineDetailPage() {
 											setMachineForm({
 												...machineForm,
 												emisorssl: e.target.value,
+											})
+										}
+									/>
+									<input
+										type="date"
+										className="w-full bg-slate-50 rounded-xl p-4 font-bold text-xs"
+										defaultValue={
+											maquina.caducidadssl
+												? maquina.caducidadssl.split("T")[0]
+												: ""
+										}
+										onChange={(e) =>
+											setMachineForm({
+												...machineForm,
+												caducidadssl: e.target.value,
 											})
 										}
 									/>
@@ -610,7 +675,7 @@ export default function MachineDetailPage() {
 								onClick={handleUpdateMachine}
 								className="w-full bg-slate-900 text-white py-10 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.6em] hover:bg-blue-600 transition-all shadow-2xl"
 							>
-								Confirmar cambios
+								Confirmar cambios en activo
 							</button>
 						</div>
 					</div>

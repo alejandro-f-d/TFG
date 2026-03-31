@@ -39,6 +39,7 @@ export const getMaquinas = async (req, res) => {
 	const page = parseInt(req.query.page) || 1;
 	const limit = parseInt(req.query.limit) || 5;
 	const filtroNombre = req.query.filtroNombre || "";
+	const soloServidores = req.query.soloServidores || false;
 	if (page < 1 || limit < 1) {
 		return res.status(400).json({ error: "Petición invalida" });
 	}
@@ -46,14 +47,21 @@ export const getMaquinas = async (req, res) => {
 	try {
 		const permisos = req.user?.permisos || [];
 		let maquinas;
-		if (permisos.includes("admin:total") || permisos.includes("maq:getAll")) {
+		if (
+			(permisos.includes("admin:total") || permisos.includes("maq:getAll")) &&
+			!soloServidores
+		) {
 			maquinas = await ServerModel.getMaquinas(
 				false,
 				page,
 				limit,
 				filtroNombre,
 			);
-		} else if (permisos.includes("maq:getServer")) {
+		} else if (
+			permisos.includes("maq:getServer") ||
+			permisos.includes("admin:total") ||
+			permisos.includes("maq:getAll")
+		) {
 			maquinas = await ServerModel.getMaquinas(true, page, limit, filtroNombre);
 		} else {
 			return res

@@ -125,7 +125,7 @@ export const allMenuItems: MenuItem[] = [
 	{
 		icon: "☁️",
 		title: "Servidores",
-		description: "Gestión de la monitorización de servicios web",
+		description: "Gestión de los servidores.",
 		path: "/dashboard/servidores",
 		requiredPermissions: [
 			"maq:postMaquina",

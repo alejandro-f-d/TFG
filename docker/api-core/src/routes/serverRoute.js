@@ -230,11 +230,15 @@ router.post(
  *   get:
  *     summary: Obtiene listado paginado de máquinas/servidores
  *     description: |
- *       Retorna un array de máquinas. El resultado varía según los permisos:
- *       - `admin:total` o `maq:getAll` → todas las máquinas
- *       - `maq:getServer` → solo servidores (`esservidor = true`)
- *       - Otros → 403
- *       Soporta paginación mediante los parámetros `page` y `limit`, y filtro por nombre.
+ *       Retorna un array de máquinas con paginación. El resultado varía según los permisos:
+ *
+ *       **Permisos:**
+ *       - `admin:total` o `maq:getAll` → pueden ver todas las máquinas (o solo servidores si `soloServidores=true`)
+ *       - `maq:getServer` → solo pueden ver servidores (`esservidor = true`)
+ *
+ *       **Filtros:**
+ *       - `soloServidores=true` → filtra solo máquinas que sean servidores
+ *       - `filtroNombre` → búsqueda parcial por nombre
  *     tags: [Máquinas]
  *     security:
  *       - bearerAuth: []
@@ -268,81 +272,98 @@ router.post(
  *           type: string
  *         description: Filtro por nombre de la máquina (búsqueda parcial)
  *         example: "srv"
+ *       - in: query
+ *         name: soloServidores
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Si es `true`, filtra solo las máquinas que son servidores (`esservidor = true`)
+ *         example: true
  *     responses:
  *       200:
  *         description: Listado de máquinas obtenido correctamente
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   idmaquina:
- *                     type: integer
- *                     description: ID interno de la máquina
- *                     example: 1
- *                   nombre:
- *                     type: string
- *                     description: Nombre de la máquina
- *                     example: "srv-docker-01"
- *                   caducidadssl:
- *                     type: string
- *                     format: date-time
- *                     description: Fecha de caducidad del certificado SSL
- *                     example: "2026-12-31T00:00:00.000Z"
- *                   certificadosslactivo:
- *                     type: boolean
- *                     description: Indica si el certificado SSL está activo
- *                     example: true
- *                   emisorssl:
- *                     type: string
- *                     description: Emisor del certificado SSL
- *                     example: "LetsEncrypt"
- *                   direccionipprivadav4:
- *                     type: string
- *                     description: Dirección IP privada IPv4
- *                     example: "192.168.1.10"
- *                   uuidmaquina:
- *                     type: string
- *                     format: uuid
- *                     description: UUID único de la máquina
- *                     example: "93ec7f27-bcb5-427d-934f-1772e8e30ce9"
- *                   direccionippublicav4:
- *                     type: string
- *                     description: Dirección IP pública IPv4
- *                     example: "80.80.80.10"
- *                   direccionipprivadav6:
- *                     type: string
- *                     nullable: true
- *                     description: Dirección IP privada IPv6
- *                     example: null
- *                   direccionippublicav6:
- *                     type: string
- *                     nullable: true
- *                     description: Dirección IP pública IPv6
- *                     example: null
- *                   puertaenlacev4:
- *                     type: string
- *                     description: Puerta de enlace IPv4
- *                     example: "192.168.1.1"
- *                   puertaenlacev6:
- *                     type: string
- *                     nullable: true
- *                     description: Puerta de enlace IPv6
- *                     example: null
- *                   ram:
- *                     type: integer
- *                     description: Cantidad de RAM en GB
- *                     example: 64
- *                   sistemaoperativo:
- *                     type: string
- *                     description: Sistema operativo
- *                     example: "Ubuntu 22.04"
- *                   esservidor:
- *                     type: boolean
- *                     description: Indica si la máquina es un servidor
- *                     example: false
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Listado de máquinas obtenido correctamente"
+ *                 info:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       idmaquina:
+ *                         type: integer
+ *                         description: ID interno de la máquina
+ *                         example: 3
+ *                       nombre:
+ *                         type: string
+ *                         description: Nombre de la máquina
+ *                         example: "srv-prod-01"
+ *                       caducidadssl:
+ *                         type: string
+ *                         format: date-time
+ *                         nullable: true
+ *                         description: Fecha de caducidad del certificado SSL
+ *                         example: null
+ *                       certificadosslactivo:
+ *                         type: boolean
+ *                         nullable: true
+ *                         description: Indica si el certificado SSL está activo
+ *                         example: null
+ *                       emisorssl:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Emisor del certificado SSL
+ *                         example: null
+ *                       direccionipprivadav4:
+ *                         type: string
+ *                         description: Dirección IP privada IPv4
+ *                         example: "192.168.1.100"
+ *                       uuidmaquina:
+ *                         type: string
+ *                         format: uuid
+ *                         description: UUID único de la máquina
+ *                         example: "8dda22c1-aa05-44a5-ab3c-bf30d35a9e8b"
+ *                       direccionippublicav4:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Dirección IP pública IPv4
+ *                         example: null
+ *                       direccionipprivadav6:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Dirección IP privada IPv6
+ *                         example: null
+ *                       direccionippublicav6:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Dirección IP pública IPv6
+ *                         example: null
+ *                       puertaenlacev4:
+ *                         type: string
+ *                         description: Puerta de enlace IPv4
+ *                         example: "192.168.1.1"
+ *                       puertaenlacev6:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Puerta de enlace IPv6
+ *                         example: null
+ *                       ram:
+ *                         type: integer
+ *                         description: Cantidad de RAM en GB
+ *                         example: 16
+ *                       sistemaoperativo:
+ *                         type: string
+ *                         description: Sistema operativo
+ *                         example: "Ubuntu 22.04 LTS"
+ *                       esservidor:
+ *                         type: boolean
+ *                         description: Indica si la máquina es un servidor
+ *                         example: true
  *       400:
  *         description: Parámetros de paginación inválidos (page/limit < 1)
  *         content:
@@ -364,7 +385,7 @@ router.post(
  *                   type: string
  *                   example: "No autorizado"
  *       403:
- *         description: Prohibido - No tiene ninguno de los permisos requeridos (maq:getAll, maq:getServer, admin:total)
+ *         description: Prohibido - No tiene ninguno de los permisos requeridos
  *         content:
  *           application/json:
  *             schema:
@@ -394,6 +415,7 @@ router.post(
  *                   type: string
  *                   example: "Error interno del servidor."
  */
+
 router.get("/", verificarToken, getMaquinas);
 
 /**
