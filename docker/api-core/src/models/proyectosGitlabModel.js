@@ -168,6 +168,21 @@ class ProyectosGitlabModel {
 			client.release();
 		}
 	}
+	static async getGitlabUsernamesByIds(ids) {
+		if (!ids || ids.length === 0) return [];
+		const client = await pool.connect();
+		try {
+			const res = await client.query(PROYECTOS_QUERY.GET_NOMBRES_USERS_GITLAB, [
+				ids,
+			]);
+			return res.rows.map((row) => row.gitlab);
+		} catch (error) {
+			console.error("Error en getGitlabUsernamesByIds:", error.message);
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 }
 
 export default ProyectosGitlabModel;

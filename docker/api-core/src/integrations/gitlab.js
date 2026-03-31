@@ -1,0 +1,104 @@
+import axios from "axios";
+async function obtenerIdPorUsername(username) {
+	try {
+		const response = await axios.get(`${process.env.URI_GITLAB}/api/v4/users`, {
+			params: { username: username },
+			headers: { "Private-Token": process.env.GITLAB_TOKEN },
+		});
+
+		if (response.data.length > 0) {
+			return response.data[0].id;
+		} else {
+			throw new Error("Usuario no encontrado");
+		}
+	} catch (error) {
+		console.error("Error buscando ID de usuario:", error.message);
+		throw error;
+	}
+}
+export async function anadirUsuarioAlProyecto(
+	projectId,
+	userId,
+	accessLevel = 30,
+) {
+	try {
+		const response = await axios.post(
+			`${process.env.URI_GITLAB}/api/v4/projects/${projectId}/members`,
+			{
+				user_id: userId,
+				access_level: accessLevel,
+			},
+			{
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+		return response.data;
+	} catch (error) {
+		// Si el usuario ya es miembro, GitLab devuelve un 409 Conflict
+		if (error.response && error.response.status === 409) {
+			console.warn("El usuario ya es miembro de este proyecto.");
+			return error.response.data;
+		}
+
+		console.error(
+			"Error al añadir usuario al proyecto:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}
+
+export async function crearProyecto(
+	nombreProyecto,
+	arrayNombreUsuarioBaseDatos,
+) {
+	console.log("La URI es: ", `${process.env.URI_GITLAB}/api/v4/projects`);
+	try {
+		const response = await axios.post(
+			`${process.env.URI_GITLAB}/api/v4/projects`,
+			{ name: nombreProyecto },
+			{ headers: { "Private-Token": process.env.GITLAB_TOKEN } },
+		);
+		const projectId = response.data.id;
+		for (const username of arrayNombreUsuarioBaseDatos) {
+			const userId = await obtenerIdPorUsername(username);
+			// El código de developer es el 30.
+			await anadirUsuarioAlProyecto(projectId, userId, 30);
+		}
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al crear el proyecto en el gitlab.",
+			error,
+		);
+		throw error;
+	}
+}
+
+export async function eliminarUsuarioDelProyecto(projectId, userId) {
+	try {
+		const response = await axios.delete(
+			`${process.env.URI_GITLAB}/api/v4/projects/${projectId}/members/${userId}`,
+			{
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+		return { success: true, status: response.status };
+	} catch (error) {
+		if (error.response) {
+			if (error.response.status === 404) {
+				console.warn(
+					`El usuario ${userId} no se encontró como miembro del proyecto ${projectId}.`,
+				);
+				return {
+					success: false,
+					message: "El usuario no pertenece al proyecto",
+				};
+			}
+		}
+		console.error(
+			"Error al eliminar el usuario del proyecto:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}
