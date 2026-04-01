@@ -308,3 +308,47 @@ export async function obtenerEstadisticasCommits(projectId, desdeFecha = null) {
 		throw error;
 	}
 }
+
+export async function actualizarUsernameGitlab(idGitlab, nuevoUsername) {
+	try {
+		//Preprocesado del nombre de usuario.
+		const usernameLimpio = nuevoUsername
+			.toLowerCase()
+			.replace(/\s+/g, "-")
+			.replace(/[^\w-]/g, "");
+
+		const response = await axios.put(
+			`${process.env.URI_GITLAB}/api/v4/users/${idGitlab}`,
+			{
+				username: usernameLimpio,
+			},
+			{
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+
+		console.log(
+			`Username actualizado con éxito: ID ${idGitlab} ahora es @${usernameLimpio}`,
+		);
+		return response.data;
+	} catch (error) {
+		if (error.response) {
+			// Error 409: El username ya está en uso
+			if (error.response.status === 409) {
+				console.error("Error: El nuevo username ya está en uso.");
+				throw new Error("El nombre de usuario ya existe en GitLab.");
+			}
+			// Error 404: El ID no existe
+			if (error.response.status === 404) {
+				console.error(`No se encontró al usuario con ID: ${idGitlab}`);
+				throw new Error("Usuario no encontrado en GitLab.");
+			}
+		}
+
+		console.error(
+			"Error al editar username:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}

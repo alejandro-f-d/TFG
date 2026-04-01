@@ -2,7 +2,10 @@ import pool from "../bbdd/conexion.js";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 import { USER_QUERIES } from "../querys/userQuery.js";
-import { crearUsuarioGitlab } from "../integrations/gitlab.js";
+import {
+	crearUsuarioGitlab,
+	actualizarUsernameGitlab,
+} from "../integrations/gitlab.js";
 
 class UserModel {
 	static async guardarBdd(datos, userId, client = pool) {
@@ -253,6 +256,22 @@ class UserModel {
 					}
 				} else {
 					// En este punto lo que hay que hacer es cambiar el usuario su username.
+					try {
+						const idGitlabRes = await pool.query(USER_QUERIES.GET_GITLAB_ID, [
+							uuid,
+						]);
+						await actualizarUsernameGitlab(
+							idGitlabRes.rows[0].gitlab,
+							camposUsuario.gitlab,
+						);
+						// Aqui no se modifica el valor del base de datos.
+					} catch (error) {
+						console.error(
+							"Se ha producido un error al modificar el nombre del usuario",
+							error,
+						);
+						throw error;
+					}
 				}
 			}
 

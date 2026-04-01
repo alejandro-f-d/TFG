@@ -256,7 +256,7 @@ export const USER_QUERIES = {
                 'uuid', pg.uuidproyecto,
                 'activo', pg.activo
             ))
-            FROM medal.participa part
+     FROM medal.participa part
             JOIN medal.proyectosgitlab pg ON part.idproyecto = pg.idproyecto
             WHERE part.idusuario = u.idusuario
             ), '[]'
@@ -266,5 +266,6 @@ export const USER_QUERIES = {
     ORDER BY u.idusuario ASC
     LIMIT $1 OFFSET $2;`,
 	GET_CORREO: `SELECT nombre, correoinstitucional from medal.usuario WHERE uuidusuario = $1;`,
-	UPDATE_ID_GITLAB: `UPDATE medal.usuario SET gitlab=$1 where uuidusuario =$2;`,
+	UPDATE_ID_GITLAB: `UPDATE medal.usuario SET gitlab=$1 where uuidusuario = $2;`,
+	GET_GITLAB_ID: `SELECT gitlab from medal.usuario WHERE uuidusuario = $1;`,
 };
