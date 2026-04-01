@@ -1,6 +1,10 @@
 import { v4 as uuidv4 } from "uuid";
 import ProyectosGitlabModel from "../models/proyectosGitlabModel.js";
-import { crearProyecto } from "../integrations/gitlab.js";
+import {
+	crearProyecto,
+	obtenerDetallesProyecto,
+	obtenerEstadisticasCommits,
+} from "../integrations/gitlab.js";
 
 export const postProyectoGitlab = async (req, res) => {
 	const { nombre, participantes } = req.body;
@@ -85,9 +89,26 @@ export const getProyectoGitlabByUuid = async (req, res) => {
 				message: `No se ha encontrado ningún proyecto con el UUID: ${uuid}`,
 			});
 		}
+		// También obtenemos la información que podemos sacar del servidor gitlab mediante la api.
+		let infoServidor;
+		let statistics;
+		if (proyecto.idgitlab != null) {
+			try {
+				infoServidor = await obtenerDetallesProyecto(proyecto.idgitlab);
+				statistics = await obtenerEstadisticasCommits(proyecto.idgitlab);
+			} catch (error) {
+				console.error(
+					"Se ha producido un error al obtener las stats del proyecto de gitlab.",
+				);
+				infoServidor = null;
+				statistics = null;
+			}
+		}
 		return res.status(200).json({
 			message: "Proyecto de GitLab encontrado correctamente.",
 			info: proyecto,
+			inforepo: infoServidor,
+			statistics: statistics,
 		});
 	} catch (error) {
 		console.error("Error al obtener proyecto por UUID:", {

@@ -191,7 +191,7 @@ export default function NuevoProyectoGitLab() {
 									type="text"
 									value={nombre}
 									onChange={(e) => setNombre(e.target.value)}
-									placeholder="EJ: PROYECTO ALPHA"
+									placeholder="EJ: MEDAL WEB SERVER."
 									className="w-full bg-slate-50 border-none rounded-2xl px-6 py-5 font-mono text-sm outline-none focus:ring-4 focus:ring-orange-100 transition-all uppercase"
 								/>
 							</div>

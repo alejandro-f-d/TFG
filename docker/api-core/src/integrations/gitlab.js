@@ -244,3 +244,67 @@ export async function crearUsuarioGitlab(email, username, name, password) {
 		throw error;
 	}
 }
+
+export async function obtenerDetallesProyecto(projectId) {
+	try {
+		const response = await axios.get(
+			`${process.env.URI_GITLAB}/api/v4/projects/${projectId}`,
+			{
+				params: {
+					statistics: true,
+					license: true,
+				},
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+
+		console.log(`Datos obtenidos para el proyecto: ${response.data.name}`);
+		return response.data;
+	} catch (error) {
+		if (error.response && error.response.status === 404) {
+			console.error(`El proyecto con ID ${projectId} no existe en GitLab.`);
+			return null;
+		}
+
+		console.error(
+			"Error al obtener detalles del proyecto:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}
+
+export async function obtenerEstadisticasCommits(projectId, desdeFecha = null) {
+	try {
+		const params = {
+			per_page: 100,
+			all: true,
+		};
+
+		if (desdeFecha) {
+			params.since = desdeFecha;
+		}
+
+		const response = await axios.get(
+			`${process.env.URI_GITLAB}/api/v4/projects/${projectId}/repository/commits`,
+			{
+				params,
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+
+		const fechasCommits = response.data.map((commit) => ({
+			id: commit.id,
+			fecha: commit.created_at,
+			autor: commit.author_name,
+		}));
+
+		return fechasCommits;
+	} catch (error) {
+		console.error(
+			"Error al obtener commits:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}

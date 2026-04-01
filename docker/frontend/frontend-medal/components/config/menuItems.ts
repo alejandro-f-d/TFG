@@ -84,7 +84,7 @@ export const allMenuItems: MenuItem[] = [
 		path: "/dashboard/gitlab",
 		requiredPermissions: [
 			"gitlab:postProyecto",
-			"itlab:getProyecto",
+			"gitlab:getProyecto",
 			"admin:total",
 		],
 	},
