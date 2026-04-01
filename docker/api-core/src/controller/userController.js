@@ -5,7 +5,10 @@ import jwt from "jsonwebtoken";
 import { addEmailToQueue } from "../eda/queue.js";
 import crypto from "crypto";
 import { tienePermiso } from "../middlewares/authMiddleware.js";
-import { obtenerUsernamePorId } from "../integrations/gitlab.js";
+import {
+	obtenerUsernamePorId,
+	crearUsuarioGitlab,
+} from "../integrations/gitlab.js";
 
 const verificarCorreo = (correo) => {
 	if (!correo) return false;
@@ -30,7 +33,6 @@ export const postUser = async (req, res) => {
 			roles,
 			correoInstitucional,
 			usuarioVpn,
-			gitlab,
 			puertasAutorizadas,
 			profesorResponsable,
 			fechaIncorporacion,
@@ -44,6 +46,8 @@ export const postUser = async (req, res) => {
 			duenoMaquina,
 			esResponsable,
 		} = req.body;
+
+		let gitlab = req.body.gitlab;
 
 		if (
 			!nombre ||
@@ -60,12 +64,36 @@ export const postUser = async (req, res) => {
 			return res.status(400).json({ error: `El correo está mal formado.` });
 		}
 
+		if (gitlab === "") {
+			gitlab = null;
+			req.body.gitlab = null;
+		}
+
+		if (gitlab !== null) {
+			try {
+				const resCrearGitlab = await crearUsuarioGitlab(
+					correoInstitucional,
+					gitlab,
+					nombre,
+					contrasena,
+				);
+				gitlab = resCrearGitlab.id;
+				req.body.gitlab = resCrearGitlab.id;
+			} catch (error) {
+				console.error("Error al crear usuario en GitLab:", error);
+				return res
+					.status(500)
+					.json({ error: "Error al crear la cuenta en GitLab." });
+			}
+		}
+
+		console.log("ID de GitLab final:", req.body.gitlab);
+
 		let resultado;
 		const dominio = obtenerDominio(correoInstitucional).toLowerCase();
 
-		// console.log(dominio);
 		if (dominio.includes("upm") && false) {
-			// TODO: Cambiar dependiendo de si se incorpora el login de la upm.
+			// TODO: Lógica UPM
 			resultado = await UserModel.postUserUpm(req.body);
 		} else {
 			if (!contrasena) {
@@ -76,10 +104,9 @@ export const postUser = async (req, res) => {
 			resultado = await UserModel.postUser(req.body);
 		}
 
-		if (resultado.status === "OK") {
-			// EDA: Correo electrónico de alta en el sistema.
+		if (resultado && resultado.status === "OK") {
 			await addEmailToQueue({
-				template: "WELCOME_USER", // Identificador de la plantilla
+				template: "WELCOME_USER",
 				to: correoInstitucional,
 				nombre: nombre,
 				loginUrl: `${process.env.API_DIRECTION}/login`,
@@ -94,7 +121,9 @@ export const postUser = async (req, res) => {
 					url: `${process.env.API_DIRECTION}/api/user/${resultado.id}`,
 				});
 		} else {
-			return res.status(500).json({ error: resultado.error });
+			return res.status(500).json({
+				error: resultado?.error || "Error al guardar en base de datos",
+			});
 		}
 	} catch (error) {
 		console.error("Error en postUser Controller:", error);

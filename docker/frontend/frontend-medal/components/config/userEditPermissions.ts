@@ -115,7 +115,11 @@ export const editFieldPermissions: EditFieldPermission[] = [
 	},
 	{
 		field: "gitlab",
-		requiredPermissions: ["admin:total", "usr:editUsuario"],
+		requiredPermissions: [
+			"admin:total",
+			"gitlab:getProyecto",
+			"gitlab:postProyecto",
+		],
 		inputType: "text",
 		label: "GitLab",
 		editableBySelf: false,

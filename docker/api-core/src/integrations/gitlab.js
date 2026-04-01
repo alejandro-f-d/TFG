@@ -209,3 +209,38 @@ export async function obtenerUsernamePorId(userId) {
 		throw error;
 	}
 }
+
+export async function crearUsuarioGitlab(email, username, name, password) {
+	try {
+		const response = await axios.post(
+			`${process.env.URI_GITLAB}/api/v4/users`,
+			{
+				email,
+				username,
+				name,
+				password,
+				skip_confirmation: true,
+				admin: false,
+			},
+			{
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+
+		console.log(
+			`Usuario creado en GitLab: @${username} (ID: ${response.data.id})`,
+		);
+		return response.data;
+	} catch (error) {
+		if (error.response && error.response.status === 409) {
+			console.error("Error: El email o el username ya existen en GitLab.");
+			throw new Error("Usuario o email ya registrado en GitLab.");
+		}
+
+		console.error(
+			"Error al crear usuario en GitLab:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}
