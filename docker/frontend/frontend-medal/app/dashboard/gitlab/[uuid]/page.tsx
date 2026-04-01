@@ -89,6 +89,7 @@ export default function DetalleProyectoGitLab() {
 		else logout();
 	}, []);
 
+	// El permiso "admin:total" permite realizar cualquier acción de edición
 	const canEdit =
 		userPerms.includes("admin:total") ||
 		userPerms.includes("git:patchProyecto");
@@ -206,14 +207,14 @@ export default function DetalleProyectoGitLab() {
 						<a
 							href={proyecto.inforepo.web_url}
 							target="_blank"
-							className="flex-1 sm:flex-none text-center bg-white border border-slate-200 text-slate-900 px-6 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all"
+							className="flex-1 sm:flex-none text-center bg-white border border-slate-200 text-slate-900 px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all"
 						>
-							ABRIR GITLAB ↗
+							ABRIR EN GITLAB ↗
 						</a>
 						{canEdit && (
 							<button
 								onClick={handleOpenEdit}
-								className="flex-1 sm:flex-none bg-slate-900 text-white px-6 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl"
+								className="flex-1 sm:flex-none bg-slate-900 text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl"
 							>
 								EDITAR_PROYECTO
 							</button>
@@ -222,7 +223,7 @@ export default function DetalleProyectoGitLab() {
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
-					{/* SECCIÓN IZQUIERDA (CONTENIDO PRINCIPAL) */}
+					{/* SECCIÓN IZQUIERDA */}
 					<div className="lg:col-span-8 space-y-12">
 						<header className="space-y-4">
 							<div className="flex flex-wrap items-center gap-3">
@@ -230,46 +231,45 @@ export default function DetalleProyectoGitLab() {
 									className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${proyecto.info.activo ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"}`}
 								>
 									{proyecto.info.activo
-										? "● Sitema_Online"
-										: "○ Sistema_Offline"}
+										? "● SISTEMA_ONLINE"
+										: "○ SISTEMA_OFFLINE"}
 								</span>
-								<span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-3 py-1 rounded-md">
-									ID_{proyecto.info.uuidproyecto.split("-")[0].toUpperCase()}
+								<span className="text-[10px] font-mono text-slate-300">
+									UUID_{proyecto.info.uuidproyecto.split("-")[0]}
 								</span>
 							</div>
 
-							{/* TÍTULO ADAPTATIVO */}
-							<h1 className="text-[12vw] sm:text-[clamp(3.5rem,8vw,6.5rem)] font-black text-slate-900 tracking-tighter uppercase leading-[0.8] break-words">
+							<h1 className="text-[10vw] sm:text-[clamp(3rem,7vw,6rem)] font-black text-slate-900 tracking-tighter uppercase leading-[0.9] break-words">
 								{proyecto.info.nombre}
 							</h1>
-
-							<p className="text-slate-500 font-medium text-base md:text-xl leading-relaxed max-w-2xl italic">
+							<p className="text-slate-400 font-medium text-lg italic">
 								{proyecto.info.descripcion ||
 									"Sin descripción técnica disponible."}
 							</p>
 						</header>
 
 						{/* CHART CARD */}
-						<div className="bg-white p-6 md:p-10 rounded-[3rem] md:rounded-[4rem] shadow-2xl shadow-slate-200/50 border border-slate-50">
-							<div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
+						<div className="bg-white p-8 md:p-12 rounded-[4rem] shadow-2xl shadow-slate-200/60 border border-slate-50">
+							<div className="flex justify-between items-start mb-10">
 								<div>
 									<h3 className="text-[13px] font-black uppercase tracking-widest text-slate-900">
-										Actividad_Semanal
+										ACTIVIDAD SEMANAL
 									</h3>
-									<p className="text-[10px] font-bold text-slate-300 uppercase mt-1">
-										Branch: {proyecto.inforepo.default_branch}
+									<p className="text-[9px] font-bold text-slate-300 uppercase mt-1 tracking-widest">
+										COMMITS REGISTRADOS EN LA RAMA{" "}
+										{proyecto.inforepo.default_branch}
 									</p>
 								</div>
-								<div className="bg-orange-50 px-6 py-4 rounded-3xl text-center min-w-[140px]">
-									<p className="text-4xl md:text-5xl font-black text-orange-500 leading-none">
+								<div className="text-right">
+									<p className="text-6xl font-black text-orange-500 leading-none">
 										{proyecto.inforepo.statistics.commit_count}
 									</p>
-									<p className="text-[9px] font-black text-orange-300 uppercase mt-2">
-										Commits_Totales
+									<p className="text-[9px] font-black text-slate-300 uppercase mt-2 tracking-widest">
+										COMMITS_TOTALES
 									</p>
 								</div>
 							</div>
-							<div className="h-[250px] md:h-[300px] w-full">
+							<div className="h-[300px] w-full">
 								<ResponsiveContainer width="100%" height="100%">
 									<AreaChart data={chartData}>
 										<CartesianGrid
@@ -281,15 +281,19 @@ export default function DetalleProyectoGitLab() {
 											dataKey="name"
 											axisLine={false}
 											tickLine={false}
-											tick={{ fontSize: 9, fontWeight: "900", fill: "#cbd5e1" }}
-											dy={10}
+											tick={{
+												fontSize: 10,
+												fontWeight: "900",
+												fill: "#cbd5e1",
+											}}
+											dy={15}
 										/>
 										<Tooltip
 											contentStyle={{
-												borderRadius: "20px",
+												borderRadius: "25px",
 												border: "none",
 												boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
-												fontSize: "10px",
+												fontSize: "11px",
 												fontWeight: "900",
 											}}
 										/>
@@ -297,80 +301,44 @@ export default function DetalleProyectoGitLab() {
 											type="monotone"
 											dataKey="commits"
 											stroke="#f97316"
-											strokeWidth={6}
+											strokeWidth={5}
 											fill="#f97316"
-											fillOpacity={0.08}
+											fillOpacity={0.05}
 										/>
 									</AreaChart>
 								</ResponsiveContainer>
 							</div>
 						</div>
-
-						{/* CLONE INFO */}
-						<div className="bg-slate-900 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden group">
-							<div className="relative z-10 space-y-8">
-								<p className="text-orange-500 font-black text-[11px] uppercase tracking-[0.4em]">
-									GIT_ENDPOINTS
-								</p>
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-									<div className="space-y-3">
-										<p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-											Protocolo_HTTP
-										</p>
-										<div className="bg-white/5 hover:bg-white/10 transition-colors p-4 rounded-2xl border border-white/10 font-mono text-[11px] text-orange-200 truncate select-all">
-											{proyecto.inforepo.http_url_to_repo}
-										</div>
-									</div>
-									<div className="space-y-3">
-										<p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-											Protocolo_SSH
-										</p>
-										<div className="bg-white/5 hover:bg-white/10 transition-colors p-4 rounded-2xl border border-white/10 font-mono text-[11px] text-slate-400 truncate select-all">
-											{proyecto.inforepo.ssh_url_to_repo}
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
 					</div>
 
-					{/* SECCIÓN DERECHA (MÉTRICAS Y TEAM) */}
+					{/* SECCIÓN DERECHA */}
 					<div className="lg:col-span-4 space-y-8">
-						{/* ESTADÍSTICAS */}
-						<div className="bg-white p-8 md:p-10 rounded-[3.5rem] shadow-xl border border-slate-100">
+						<div className="bg-white p-10 rounded-[3.5rem] shadow-xl border border-slate-100">
 							<h4 className="text-[12px] font-black uppercase text-slate-900 mb-10 tracking-[0.2em] italic">
-								Estadísticas_Repo
+								ESTADÍSTICAS DEL REPOSITORIO.
 							</h4>
-							<div className="space-y-7">
+							<div className="space-y-8">
 								{[
 									{
-										label: "Visibilidad",
+										label: "VISIBILIDAD",
 										value: proyecto.inforepo.visibility,
 										highlight: false,
 									},
 									{
-										label: "Rama principal",
+										label: "RAMA PRINCIPAL",
 										value: proyecto.inforepo.default_branch,
 										highlight: true,
 									},
 									{
-										label: "Almacenamiento",
+										label: "ALMACENAMIENTO",
 										value: (() => {
-											const b =
-												proyecto.inforepo.statistics.storage_size ||
-												proyecto.inforepo.statistics.repository_size ||
-												0;
-											if (b === 0) return "0 KB";
-											if (b < 1024) return `${b} B`;
-											const kb = b / 1024;
-											return kb < 1024
-												? `${kb.toFixed(2)} KB`
-												: `${(kb / 1024).toFixed(2)} MB`;
+											const b = proyecto.inforepo.statistics.storage_size || 0;
+											return `${(b / 1024).toFixed(2)} KB`;
 										})(),
 										highlight: false,
 									},
 									{
-										label: "Último Update",
+										label: "ÚLTIMO UPDATE",
 										value: new Date(
 											proyecto.inforepo.last_activity_at,
 										).toLocaleDateString(),
@@ -379,7 +347,7 @@ export default function DetalleProyectoGitLab() {
 								].map((item, idx) => (
 									<div
 										key={idx}
-										className="flex justify-between items-center border-b border-slate-50 pb-5"
+										className="flex justify-between items-center border-b border-slate-50 pb-6"
 									>
 										<p className="text-[10px] font-black text-slate-300 uppercase tracking-tighter">
 											{item.label}
@@ -394,81 +362,92 @@ export default function DetalleProyectoGitLab() {
 							</div>
 						</div>
 
-						{/* TEAM CARD */}
-						<div className="bg-white p-8 md:p-10 rounded-[3.5rem] shadow-xl border border-slate-100">
-							<div className="flex justify-between items-center mb-10">
+						<div className="bg-white p-10 rounded-[4rem] shadow-xl border border-slate-100">
+							<div className="flex justify-between items-center mb-4">
 								<h4 className="text-[12px] font-black uppercase text-slate-900 tracking-widest">
-									Active_Team
+									ACTIVE_TEAM
 								</h4>
-								<span className="bg-slate-900 text-white text-[10px] font-black px-3 py-1 rounded-xl">
+								<span className="bg-slate-900 text-white text-[10px] font-black px-3 py-1 rounded-full">
 									{proyecto.info.participantes.length}
 								</span>
 							</div>
 							<div className="space-y-5">
-								{proyecto.info.participantes.map((p) => {
-									const avatar = formatAvatarUrl(p.fotoperfil);
-									return (
-										<div
-											key={p.idusuario}
-											className="flex items-center gap-5 group"
-										>
-											<div className="w-12 h-12 rounded-full bg-slate-900 overflow-hidden flex items-center justify-center text-white font-black text-xs ring-4 ring-transparent group-hover:ring-orange-100 transition-all">
-												{avatar ? (
-													<img
-														src={avatar}
-														alt="P"
-														className="w-full h-full object-cover"
-													/>
-												) : (
-													p.nombre[0]
-												)}
-											</div>
-											<div className="truncate">
-												<p className="text-[11px] font-black uppercase text-slate-900 truncate leading-tight">
-													{p.nombre} {p.apellido1}
-												</p>
-												<p className="text-[9px] font-bold text-orange-500 italic uppercase tracking-tighter">
-													@{p.gitlab}
-												</p>
-											</div>
+								{proyecto.info.participantes.map((p) => (
+									<div key={p.idusuario} className="flex items-center gap-5">
+										<div className="w-12 h-12 rounded-full bg-slate-900 overflow-hidden flex items-center justify-center text-white font-black text-xs">
+											{formatAvatarUrl(p.fotoperfil) ? (
+												<img
+													src={formatAvatarUrl(p.fotoperfil)!}
+													className="w-full h-full object-cover"
+												/>
+											) : (
+												p.nombre[0]
+											)}
 										</div>
-									);
-								})}
+										<div className="truncate">
+											<p className="text-[11px] font-black uppercase text-slate-900 truncate leading-tight">
+												{p.nombre} {p.apellido1}
+											</p>
+											<p className="text-[9px] font-bold text-orange-500 italic lowercase tracking-tighter">
+												@{p.gitlab}
+											</p>
+										</div>
+									</div>
+								))}
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			{/* MODAL RESPONSIVE */}
+			{/* MODAL CON BOTÓN DE ESTADO INCORPORADO */}
 			{isEditing && (
 				<div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4">
-					<div className="bg-white w-full max-w-5xl rounded-[3rem] md:rounded-[5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-in fade-in zoom-in duration-300">
+					<div className="bg-white w-full max-w-6xl rounded-[4rem] md:rounded-[5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-in fade-in zoom-in duration-300">
 						<div className="grid grid-cols-1 md:grid-cols-2 h-full overflow-hidden">
-							{/* MODAL IZQ: FORM */}
-							<div className="p-8 md:p-16 space-y-10 overflow-y-auto border-b md:border-b-0 md:border-r border-slate-100">
-								<h2 className="text-4xl font-black text-slate-900 uppercase italic tracking-tighter">
-									Patch_Data
-								</h2>
-								<div className="space-y-6">
-									<div className="space-y-2">
-										<label className="text-[10px] font-black uppercase text-slate-400 ml-4">
-											Nombre_Proyecto
+							{/* COLUMNA IZQUIERDA: FORMULARIO */}
+							<div className="p-10 md:p-20 space-y-12 overflow-y-auto border-b md:border-b-0 md:border-r border-slate-50">
+								<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+									<h2 className="text-5xl font-black text-slate-900 uppercase italic tracking-tighter">
+										Edición Proyecto
+									</h2>
+
+									{/* BOTÓN DE CAMBIO DE ESTADO (ACTIVO/INACTIVO) */}
+									<button
+										type="button"
+										onClick={() =>
+											setEditForm({ ...editForm, activo: !editForm.activo })
+										}
+										className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${
+											editForm.activo
+												? "bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100"
+												: "bg-red-50 border-red-100 text-red-600 hover:bg-red-100"
+										}`}
+									>
+										{editForm.activo ? "● ACTIVO" : "○ INACTIVO"}
+									</button>
+								</div>
+
+								<div className="space-y-10">
+									<div className="space-y-3">
+										<label className="text-[11px] font-black uppercase text-slate-300 ml-6 tracking-widest">
+											NOMBRE_PROYECTO
 										</label>
 										<input
-											className="w-full bg-slate-50 border-none rounded-[2rem] px-8 py-5 font-black text-[13px] uppercase outline-none focus:ring-4 focus:ring-orange-100 transition-all"
+											className="w-full bg-slate-50/50 border-none rounded-[2rem] px-10 py-7 font-black text-[14px] uppercase outline-none focus:ring-4 focus:ring-orange-100 transition-all"
 											value={editForm.nombre}
 											onChange={(e) =>
 												setEditForm({ ...editForm, nombre: e.target.value })
 											}
 										/>
 									</div>
-									<div className="space-y-2">
-										<label className="text-[10px] font-black uppercase text-slate-400 ml-4">
-											Documentación
+
+									<div className="space-y-3">
+										<label className="text-[11px] font-black uppercase text-slate-300 ml-6 tracking-widest">
+											DOCUMENTACIÓN
 										</label>
 										<textarea
-											className="w-full bg-slate-50 border-none rounded-[2rem] px-8 py-5 font-bold text-slate-600 h-40 outline-none resize-none focus:ring-4 focus:ring-orange-100"
+											className="w-full bg-slate-50/50 border-none rounded-[2.5rem] px-10 py-8 font-bold text-slate-600 h-52 outline-none resize-none focus:ring-4 focus:ring-orange-100"
 											value={editForm.descripcion}
 											onChange={(e) =>
 												setEditForm({
@@ -479,37 +458,38 @@ export default function DetalleProyectoGitLab() {
 										/>
 									</div>
 								</div>
-								<div className="flex flex-col sm:flex-row gap-4">
+
+								<div className="flex flex-col sm:flex-row items-center gap-8 pt-6">
 									<button
 										onClick={() => setIsEditing(false)}
-										className="flex-1 py-5 text-[11px] font-black uppercase text-slate-400 hover:text-slate-900"
+										className="text-[11px] font-black uppercase text-slate-400 hover:text-slate-900 tracking-[0.2em] transition-colors"
 									>
-										Descartar
+										DESCARTAR
 									</button>
 									<button
 										onClick={handleSave}
-										className="flex-[2] bg-slate-900 text-white py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] hover:bg-orange-600 shadow-2xl transition-all active:scale-95"
+										className="w-full sm:w-auto bg-slate-900 text-white px-14 py-7 rounded-[2.5rem] text-[11px] font-black uppercase tracking-[0.3em] hover:bg-orange-600 shadow-2xl transition-all active:scale-95"
 									>
-										Guardar_Patch
+										Sincronizar
 									</button>
 								</div>
 							</div>
 
-							{/* MODAL DER: EQUIPO */}
-							<div className="bg-slate-50/50 p-8 md:p-16 flex flex-col h-full overflow-hidden">
-								<div className="flex justify-between items-center mb-8">
-									<h3 className="text-[12px] font-black uppercase text-slate-900 tracking-widest italic">
-										User_Assign ({seleccionados.length})
-									</h3>
+							{/* COLUMNA DERECHA: ASIGNACIÓN DE EQUIPO */}
+							<div className="bg-slate-50/30 p-10 md:p-20 flex flex-col h-full overflow-hidden">
+								<h3 className="text-[14px] font-black uppercase text-slate-900 tracking-widest italic mb-10">
+									USER_ASSIGN ({seleccionados.length})
+								</h3>
+								<div className="relative mb-10">
+									<input
+										type="text"
+										placeholder="BUSCAR_USUARIO..."
+										className="w-full bg-white border border-slate-100 rounded-[1.8rem] px-10 py-5 font-black text-[11px] uppercase outline-none focus:border-orange-500 shadow-sm transition-all"
+										value={busqueda}
+										onChange={(e) => setBusqueda(e.target.value)}
+									/>
 								</div>
-								<input
-									type="text"
-									placeholder="BUSCAR_USUARIO..."
-									className="w-full bg-white border border-slate-200 rounded-[1.5rem] px-8 py-4 font-black text-[11px] uppercase outline-none mb-8 focus:border-orange-500 shadow-sm"
-									value={busqueda}
-									onChange={(e) => setBusqueda(e.target.value)}
-								/>
-								<div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-slate-200">
+								<div className="flex-1 overflow-y-auto space-y-4 pr-3 custom-scrollbar">
 									{usuariosSugeridos.map((u) => {
 										const isSelected = seleccionados.includes(u.idusuario);
 										const avatar = formatAvatarUrl(u.fotoperfil);
@@ -523,14 +503,13 @@ export default function DetalleProyectoGitLab() {
 															: [...prev, u.idusuario],
 													)
 												}
-												className={`flex items-center justify-between p-5 rounded-[2rem] cursor-pointer transition-all ${isSelected ? "bg-orange-500 text-white shadow-xl scale-[1.02]" : "bg-white hover:bg-slate-100 border border-slate-100 shadow-sm"}`}
+												className={`flex items-center justify-between p-6 rounded-[2.5rem] cursor-pointer transition-all border-2 ${isSelected ? "bg-white border-orange-500 shadow-xl scale-[1.02]" : "bg-white border-transparent hover:border-slate-100 shadow-sm"}`}
 											>
-												<div className="flex items-center gap-4">
-													<div className="w-10 h-10 rounded-full bg-slate-800 overflow-hidden flex items-center justify-center text-white font-black text-[10px]">
+												<div className="flex items-center gap-5">
+													<div className="w-14 h-14 rounded-full bg-slate-900 overflow-hidden flex items-center justify-center text-white font-black text-xs">
 														{avatar ? (
 															<img
 																src={avatar}
-																alt="U"
 																className="w-full h-full object-cover"
 															/>
 														) : (
@@ -538,18 +517,16 @@ export default function DetalleProyectoGitLab() {
 														)}
 													</div>
 													<div className="truncate">
-														<p className="text-[11px] font-black uppercase truncate leading-none mb-1">
+														<p className="text-[12px] font-black uppercase truncate leading-tight text-slate-900">
 															{u.nombre} {u.apellido1}
 														</p>
-														<p
-															className={`text-[9px] font-mono ${isSelected ? "text-orange-100" : "text-orange-500"}`}
-														>
+														<p className="text-[10px] font-bold text-orange-500 mt-0.5">
 															@{u.gitlab}
 														</p>
 													</div>
 												</div>
 												<div
-													className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] ${isSelected ? "bg-white border-white text-orange-500" : "border-slate-100 text-transparent"}`}
+													className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[11px] transition-all ${isSelected ? "bg-orange-500 border-orange-500 text-white" : "border-slate-100 text-transparent"}`}
 												>
 													✓
 												</div>
