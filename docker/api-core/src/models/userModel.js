@@ -2,6 +2,7 @@ import pool from "../bbdd/conexion.js";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 import { USER_QUERIES } from "../querys/userQuery.js";
+import { crearUsuarioGitlab } from "../integrations/gitlab.js";
 
 class UserModel {
 	static async guardarBdd(datos, userId, client = pool) {
@@ -222,9 +223,38 @@ class UserModel {
 						"tarjetaacceso",
 						"diriplastlogin",
 						"contrasena",
-						"gitlab",
+						// "gitlab",
 						"responsable",
 					];
+
+			// Apartado de gitlab de los usuarios:
+			if (!esUser && camposUsuario.gitlab != null) {
+				if (camposUsuario.passwordGitlab != null) {
+					// En este punto es porque el usuario es 100% nuevo y hay que crearlo de 0.
+					try {
+						let correoInsitutcionalGitlab = await pool.query(
+							USER_QUERIES.GET_CORREO,
+							[uuid],
+						);
+						const resCrearGitlab = await crearUsuarioGitlab(
+							correoInsitutcionalGitlab.rows[0].correoinstitucional,
+							camposUsuario.gitlab,
+							correoInsitutcionalGitlab.rows[0].nombre,
+							camposUsuario.passwordGitlab,
+						);
+						let idGitlab = resCrearGitlab.id;
+						await pool.query(USER_QUERIES.UPDATE_ID_GITLAB, [idGitlab, uuid]);
+					} catch (error) {
+						console.error(
+							"Se ha producido un error en el gitlab al crear un usuario",
+							error,
+						);
+						throw error;
+					}
+				} else {
+					// En este punto lo que hay que hacer es cambiar el usuario su username.
+				}
+			}
 
 			const camposFiltrados = {};
 			Object.keys(camposUsuario).forEach((key) => {

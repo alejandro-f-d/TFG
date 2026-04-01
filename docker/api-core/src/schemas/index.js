@@ -91,6 +91,8 @@ export const maquinaSchema = Joi.object({
 		ram: Joi.number().integer().min(0).allow(null),
 		esServidor: Joi.boolean().required(),
 	}).required(),
+
+	passwordGitlab: Joi.string(),
 });
 
 export const maquinaPatchSchema = maquinaSchema.fork(

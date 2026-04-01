@@ -265,4 +265,6 @@ export const USER_QUERIES = {
     WHERE u.nombre ILIKE $3 AND u.activo = $4 AND u.gitlab IS NOT NULL
     ORDER BY u.idusuario ASC
     LIMIT $1 OFFSET $2;`,
+	GET_CORREO: `SELECT nombre, correoinstitucional from medal.usuario WHERE uuidusuario = $1;`,
+	UPDATE_ID_GITLAB: `UPDATE medal.usuario SET gitlab=$1 where uuidusuario =$2;`,
 };

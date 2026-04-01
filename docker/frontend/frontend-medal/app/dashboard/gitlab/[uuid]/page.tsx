@@ -7,7 +7,6 @@ import {
 	AreaChart,
 	Area,
 	XAxis,
-	YAxis,
 	CartesianGrid,
 	Tooltip,
 	ResponsiveContainer,
@@ -70,7 +69,7 @@ export default function DetalleProyectoGitLab() {
 	const formatAvatarUrl = (foto: any): string | null => {
 		if (!foto) return null;
 		if (typeof foto === "string") return foto;
-		if (foto.type === "Buffer" && Array.isArray(foto.data)) {
+		if (foto?.type === "Buffer" && Array.isArray(foto.data)) {
 			try {
 				const uint8 = new Uint8Array(foto.data);
 				let binary = "";
@@ -123,7 +122,6 @@ export default function DetalleProyectoGitLab() {
 			url.searchParams.append("filtroNombre", val);
 			url.searchParams.append("filtroStatus", "activo");
 			url.searchParams.append("filtroGitlab", "true");
-			url.searchParams.append("limit", "20");
 			const res = await fetch(url.toString(), {
 				headers: { Authorization: `Bearer ${token}` },
 			});
@@ -194,81 +192,84 @@ export default function DetalleProyectoGitLab() {
 		return <div className="min-h-screen bg-[#F8FAFC]" />;
 
 	return (
-		<div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-12">
+		<div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 lg:p-12 overflow-x-hidden">
 			<div className="max-w-7xl mx-auto">
-				{/* HEADER ACTIONS */}
-				<div className="flex justify-between items-center mb-10">
+				{/* TOP NAVIGATION */}
+				<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12">
 					<button
 						onClick={() => router.back()}
 						className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-orange-500 transition-all"
 					>
 						← VOLVER AL DASHBOARD
 					</button>
-					<div className="flex gap-4">
+					<div className="flex flex-wrap gap-3 w-full sm:w-auto">
 						<a
 							href={proyecto.inforepo.web_url}
 							target="_blank"
-							className="bg-white border border-slate-200 text-slate-900 px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
+							className="flex-1 sm:flex-none text-center bg-white border border-slate-200 text-slate-900 px-6 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all"
 						>
-							Abrir en gitlab ↗
+							ABRIR GITLAB ↗
 						</a>
 						{canEdit && (
 							<button
 								onClick={handleOpenEdit}
-								className="bg-slate-900 text-white px-8 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl"
+								className="flex-1 sm:flex-none bg-slate-900 text-white px-6 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl"
 							>
-								Edición del repositorio.
+								EDITAR_PROYECTO
 							</button>
 						)}
 					</div>
 				</div>
 
-				<div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-					{/* IZQUIERDA: IDENTIDAD Y ACTIVIDAD */}
-					<div className="lg:col-span-8 space-y-10">
-						<header>
-							<div className="flex items-center gap-3 mb-4">
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+					{/* SECCIÓN IZQUIERDA (CONTENIDO PRINCIPAL) */}
+					<div className="lg:col-span-8 space-y-12">
+						<header className="space-y-4">
+							<div className="flex flex-wrap items-center gap-3">
 								<span
-									className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${proyecto.info.activo ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"}`}
+									className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${proyecto.info.activo ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"}`}
 								>
 									{proyecto.info.activo
-										? "● Sistema_Online"
+										? "● Sitema_Online"
 										: "○ Sistema_Offline"}
 								</span>
-								<span className="text-[10px] font-mono text-slate-300">
-									UUID_{proyecto.info.uuidproyecto.split("-")[0]}
+								<span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-3 py-1 rounded-md">
+									ID_{proyecto.info.uuidproyecto.split("-")[0].toUpperCase()}
 								</span>
 							</div>
-							<h1 className="text-7xl md:text-8xl font-black text-slate-900 tracking-tighter uppercase leading-[0.85] mb-6">
+
+							{/* TÍTULO ADAPTATIVO */}
+							<h1 className="text-[12vw] sm:text-[clamp(3.5rem,8vw,6.5rem)] font-black text-slate-900 tracking-tighter uppercase leading-[0.8] break-words">
 								{proyecto.info.nombre}
 							</h1>
-							<p className="text-slate-500 font-medium text-lg leading-relaxed max-w-2xl">
-								{proyecto.info.descripcion}
+
+							<p className="text-slate-500 font-medium text-base md:text-xl leading-relaxed max-w-2xl italic">
+								{proyecto.info.descripcion ||
+									"Sin descripción técnica disponible."}
 							</p>
 						</header>
 
-						{/* GRÁFICA DE ACTIVIDAD */}
-						<div className="bg-white p-10 rounded-[4rem] shadow-2xl border border-slate-50">
-							<div className="flex justify-between items-end mb-8">
+						{/* CHART CARD */}
+						<div className="bg-white p-6 md:p-10 rounded-[3rem] md:rounded-[4rem] shadow-2xl shadow-slate-200/50 border border-slate-50">
+							<div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
 								<div>
-									<h3 className="text-[12px] font-black uppercase tracking-widest text-slate-900">
-										Actividad Semanal
+									<h3 className="text-[13px] font-black uppercase tracking-widest text-slate-900">
+										Actividad_Semanal
 									</h3>
-									<p className="text-[9px] font-bold text-slate-300 uppercase italic">
-										Commits registrados en la rama{" "}
-										{proyecto.inforepo.default_branch}
+									<p className="text-[10px] font-bold text-slate-300 uppercase mt-1">
+										Branch: {proyecto.inforepo.default_branch}
 									</p>
 								</div>
-								<div className="text-right">
-									<p className="text-5xl font-black text-orange-500 leading-none">
+								<div className="bg-orange-50 px-6 py-4 rounded-3xl text-center min-w-[140px]">
+									<p className="text-4xl md:text-5xl font-black text-orange-500 leading-none">
 										{proyecto.inforepo.statistics.commit_count}
 									</p>
-									<p className="text-[10px] font-black text-slate-400 uppercase mt-2">
+									<p className="text-[9px] font-black text-orange-300 uppercase mt-2">
 										Commits_Totales
 									</p>
 								</div>
 							</div>
-							<div className="h-[250px] w-full">
+							<div className="h-[250px] md:h-[300px] w-full">
 								<ResponsiveContainer width="100%" height="100%">
 									<AreaChart data={chartData}>
 										<CartesianGrid
@@ -280,28 +281,25 @@ export default function DetalleProyectoGitLab() {
 											dataKey="name"
 											axisLine={false}
 											tickLine={false}
-											tick={{
-												fontSize: 10,
-												fontWeight: "900",
-												fill: "#cbd5e1",
-											}}
+											tick={{ fontSize: 9, fontWeight: "900", fill: "#cbd5e1" }}
 											dy={10}
 										/>
 										<Tooltip
 											contentStyle={{
 												borderRadius: "20px",
 												border: "none",
-												boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+												boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
 												fontSize: "10px",
+												fontWeight: "900",
 											}}
 										/>
 										<Area
 											type="monotone"
 											dataKey="commits"
 											stroke="#f97316"
-											strokeWidth={5}
+											strokeWidth={6}
 											fill="#f97316"
-											fillOpacity={0.05}
+											fillOpacity={0.08}
 										/>
 									</AreaChart>
 								</ResponsiveContainer>
@@ -309,124 +307,116 @@ export default function DetalleProyectoGitLab() {
 						</div>
 
 						{/* CLONE INFO */}
-						<div className="bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden">
-							<div className="absolute top-0 right-0 p-10 opacity-10">
-								<svg
-									width="100"
-									height="100"
-									viewBox="0 0 24 24"
-									fill="currentColor"
-								>
-									<path d="M2.25 18.75a6 6 0 0111.75-1.5h6.75a.75.75 0 010 1.5h-6.75a6 6 0 01-11.75 0z" />
-								</svg>
-							</div>
-							<p className="text-orange-500 font-black text-[10px] uppercase tracking-[0.4em] mb-8">
-								GIT Clone Endpoints
-							</p>
-							<div className="space-y-6 relative z-10">
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-										<p className="text-[8px] font-bold text-slate-500 uppercase mb-2">
-											Clone HTTP
+						<div className="bg-slate-900 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden group">
+							<div className="relative z-10 space-y-8">
+								<p className="text-orange-500 font-black text-[11px] uppercase tracking-[0.4em]">
+									GIT_ENDPOINTS
+								</p>
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+									<div className="space-y-3">
+										<p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+											Protocolo_HTTP
 										</p>
-										<p className="font-mono text-xs text-orange-200 select-all truncate">
+										<div className="bg-white/5 hover:bg-white/10 transition-colors p-4 rounded-2xl border border-white/10 font-mono text-[11px] text-orange-200 truncate select-all">
 											{proyecto.inforepo.http_url_to_repo}
-										</p>
+										</div>
 									</div>
-									<div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-										<p className="text-[8px] font-bold text-slate-500 uppercase mb-2">
-											Clone SSH
+									<div className="space-y-3">
+										<p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+											Protocolo_SSH
 										</p>
-										<p className="font-mono text-xs text-slate-400 select-all truncate">
+										<div className="bg-white/5 hover:bg-white/10 transition-colors p-4 rounded-2xl border border-white/10 font-mono text-[11px] text-slate-400 truncate select-all">
 											{proyecto.inforepo.ssh_url_to_repo}
-										</p>
+										</div>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 
-					{/* DERECHA: ESTADÍSTICAS Y EQUIPO */}
-					<div className="lg:col-span-4 space-y-10">
-						{/* REPO METRICS */}
-						<div className="bg-white p-8 rounded-[3.5rem] shadow-xl border border-slate-100">
-							<h4 className="text-[11px] font-black uppercase text-slate-900 mb-8 tracking-widest italic">
-								Estadísticas del repositorio.
+					{/* SECCIÓN DERECHA (MÉTRICAS Y TEAM) */}
+					<div className="lg:col-span-4 space-y-8">
+						{/* ESTADÍSTICAS */}
+						<div className="bg-white p-8 md:p-10 rounded-[3.5rem] shadow-xl border border-slate-100">
+							<h4 className="text-[12px] font-black uppercase text-slate-900 mb-10 tracking-[0.2em] italic">
+								Estadísticas_Repo
 							</h4>
-							<div className="space-y-6">
-								<div className="flex justify-between items-center border-b border-slate-50 pb-4">
-									<p className="text-[9px] font-black text-slate-300 uppercase">
-										Visibilidad
-									</p>
-									<p className="text-[10px] font-black text-slate-900 uppercase">
-										{proyecto.inforepo.visibility}
-									</p>
-								</div>
-								<div className="flex justify-between items-center border-b border-slate-50 pb-4">
-									<p className="text-[9px] font-black text-slate-300 uppercase">
-										Rama principal
-									</p>
-									<p className="text-[10px] font-black text-orange-500">
-										{proyecto.inforepo.default_branch}
-									</p>
-								</div>
-								<div className="flex justify-between items-center border-b border-slate-50 pb-4">
-									<p className="text-[9px] font-black text-slate-300 uppercase">
-										Almacenamiento
-									</p>
-									<p className="text-[10px] font-black text-slate-900 uppercase">
-										{(() => {
-											// GitLab suele devolver esto en Bytes.
-											// Usamos repository_size como prioridad si storage_size es 0
-											const bytes =
+							<div className="space-y-7">
+								{[
+									{
+										label: "Visibilidad",
+										value: proyecto.inforepo.visibility,
+										highlight: false,
+									},
+									{
+										label: "Rama principal",
+										value: proyecto.inforepo.default_branch,
+										highlight: true,
+									},
+									{
+										label: "Almacenamiento",
+										value: (() => {
+											const b =
 												proyecto.inforepo.statistics.storage_size ||
 												proyecto.inforepo.statistics.repository_size ||
 												0;
-
-											if (bytes === 0) return "0 KB";
-											if (bytes < 1024) return `${bytes} B`;
-											const kb = bytes / 1024;
-											if (kb < 1024) return `${kb.toFixed(2)} KB`;
-											const mb = kb / 1024;
-											return `${mb.toFixed(2)} MB`;
-										})()}
-									</p>
-								</div>
-								<div className="flex justify-between items-center">
-									<p className="text-[9px] font-black text-slate-300 uppercase">
-										Último Update
-									</p>
-									<p className="text-[10px] font-black text-slate-900 uppercase">
-										{new Date(
+											if (b === 0) return "0 KB";
+											if (b < 1024) return `${b} B`;
+											const kb = b / 1024;
+											return kb < 1024
+												? `${kb.toFixed(2)} KB`
+												: `${(kb / 1024).toFixed(2)} MB`;
+										})(),
+										highlight: false,
+									},
+									{
+										label: "Último Update",
+										value: new Date(
 											proyecto.inforepo.last_activity_at,
-										).toLocaleDateString()}
-									</p>
-								</div>
+										).toLocaleDateString(),
+										highlight: false,
+									},
+								].map((item, idx) => (
+									<div
+										key={idx}
+										className="flex justify-between items-center border-b border-slate-50 pb-5"
+									>
+										<p className="text-[10px] font-black text-slate-300 uppercase tracking-tighter">
+											{item.label}
+										</p>
+										<p
+											className={`text-[11px] font-black uppercase ${item.highlight ? "text-orange-500" : "text-slate-900"}`}
+										>
+											{item.value}
+										</p>
+									</div>
+								))}
 							</div>
 						</div>
 
-						{/* TEAM */}
-						<div className="bg-white p-8 rounded-[3.5rem] shadow-xl border border-slate-100">
-							<div className="flex justify-between items-center mb-6">
-								<h4 className="text-[11px] font-black uppercase text-slate-900 tracking-widest">
+						{/* TEAM CARD */}
+						<div className="bg-white p-8 md:p-10 rounded-[3.5rem] shadow-xl border border-slate-100">
+							<div className="flex justify-between items-center mb-10">
+								<h4 className="text-[12px] font-black uppercase text-slate-900 tracking-widest">
 									Active_Team
 								</h4>
-								<span className="bg-slate-900 text-white text-[9px] px-2 py-1 rounded-lg">
+								<span className="bg-slate-900 text-white text-[10px] font-black px-3 py-1 rounded-xl">
 									{proyecto.info.participantes.length}
 								</span>
 							</div>
-							<div className="space-y-4">
+							<div className="space-y-5">
 								{proyecto.info.participantes.map((p) => {
 									const avatar = formatAvatarUrl(p.fotoperfil);
 									return (
 										<div
 											key={p.idusuario}
-											className="flex items-center gap-4 group"
+											className="flex items-center gap-5 group"
 										>
-											<div className="w-10 h-10 rounded-full bg-slate-900 overflow-hidden flex items-center justify-center text-white font-black text-[10px] group-hover:bg-orange-500 transition-colors">
+											<div className="w-12 h-12 rounded-full bg-slate-900 overflow-hidden flex items-center justify-center text-white font-black text-xs ring-4 ring-transparent group-hover:ring-orange-100 transition-all">
 												{avatar ? (
 													<img
 														src={avatar}
+														alt="P"
 														className="w-full h-full object-cover"
 													/>
 												) : (
@@ -434,10 +424,10 @@ export default function DetalleProyectoGitLab() {
 												)}
 											</div>
 											<div className="truncate">
-												<p className="text-[10px] font-black uppercase text-slate-900 truncate leading-tight">
+												<p className="text-[11px] font-black uppercase text-slate-900 truncate leading-tight">
 													{p.nombre} {p.apellido1}
 												</p>
-												<p className="text-[8px] font-bold text-orange-500 italic uppercase">
+												<p className="text-[9px] font-bold text-orange-500 italic uppercase tracking-tighter">
 													@{p.gitlab}
 												</p>
 											</div>
@@ -450,64 +440,76 @@ export default function DetalleProyectoGitLab() {
 				</div>
 			</div>
 
-			{/* MODAL DE EDICIÓN (MANTENIDO IGUAL) */}
+			{/* MODAL RESPONSIVE */}
 			{isEditing && (
-				<div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-xl p-4">
-					<div className="bg-white w-full max-w-4xl rounded-[4rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+				<div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4">
+					<div className="bg-white w-full max-w-5xl rounded-[3rem] md:rounded-[5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-in fade-in zoom-in duration-300">
 						<div className="grid grid-cols-1 md:grid-cols-2 h-full overflow-hidden">
-							<div className="p-12 space-y-8 overflow-y-auto border-r border-slate-50">
-								<h2 className="text-4xl font-black text-slate-900 uppercase italic">
-									Patch_Config
+							{/* MODAL IZQ: FORM */}
+							<div className="p-8 md:p-16 space-y-10 overflow-y-auto border-b md:border-b-0 md:border-r border-slate-100">
+								<h2 className="text-4xl font-black text-slate-900 uppercase italic tracking-tighter">
+									Patch_Data
 								</h2>
-								<div className="space-y-4">
-									<label className="text-[10px] font-black uppercase text-slate-400 ml-4">
-										Nombre_Proyecto
-									</label>
-									<input
-										className="w-full bg-slate-50 border-none rounded-[2rem] px-8 py-5 font-black text-[12px] uppercase outline-none focus:ring-2 focus:ring-orange-500"
-										value={editForm.nombre}
-										onChange={(e) =>
-											setEditForm({ ...editForm, nombre: e.target.value })
-										}
-									/>
-									<label className="text-[10px] font-black uppercase text-slate-400 ml-4">
-										Documentación
-									</label>
-									<textarea
-										className="w-full bg-slate-50 border-none rounded-[2rem] px-8 py-5 font-bold text-slate-600 h-32 outline-none resize-none"
-										value={editForm.descripcion}
-										onChange={(e) =>
-											setEditForm({ ...editForm, descripcion: e.target.value })
-										}
-									/>
+								<div className="space-y-6">
+									<div className="space-y-2">
+										<label className="text-[10px] font-black uppercase text-slate-400 ml-4">
+											Nombre_Proyecto
+										</label>
+										<input
+											className="w-full bg-slate-50 border-none rounded-[2rem] px-8 py-5 font-black text-[13px] uppercase outline-none focus:ring-4 focus:ring-orange-100 transition-all"
+											value={editForm.nombre}
+											onChange={(e) =>
+												setEditForm({ ...editForm, nombre: e.target.value })
+											}
+										/>
+									</div>
+									<div className="space-y-2">
+										<label className="text-[10px] font-black uppercase text-slate-400 ml-4">
+											Documentación
+										</label>
+										<textarea
+											className="w-full bg-slate-50 border-none rounded-[2rem] px-8 py-5 font-bold text-slate-600 h-40 outline-none resize-none focus:ring-4 focus:ring-orange-100"
+											value={editForm.descripcion}
+											onChange={(e) =>
+												setEditForm({
+													...editForm,
+													descripcion: e.target.value,
+												})
+											}
+										/>
+									</div>
 								</div>
-								<div className="flex gap-4">
+								<div className="flex flex-col sm:flex-row gap-4">
 									<button
 										onClick={() => setIsEditing(false)}
-										className="flex-1 py-5 text-[10px] font-black uppercase text-slate-400"
+										className="flex-1 py-5 text-[11px] font-black uppercase text-slate-400 hover:text-slate-900"
 									>
 										Descartar
 									</button>
 									<button
 										onClick={handleSave}
-										className="flex-[2] bg-slate-900 text-white py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 shadow-xl"
+										className="flex-[2] bg-slate-900 text-white py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] hover:bg-orange-600 shadow-2xl transition-all active:scale-95"
 									>
-										Sincronizar Cambios
+										Guardar_Patch
 									</button>
 								</div>
 							</div>
-							<div className="bg-slate-50/50 p-12 flex flex-col h-full overflow-hidden">
-								<h3 className="text-[11px] font-black uppercase text-slate-900 mb-6 tracking-widest">
-									Gestionar_Equipo ({seleccionados.length})
-								</h3>
+
+							{/* MODAL DER: EQUIPO */}
+							<div className="bg-slate-50/50 p-8 md:p-16 flex flex-col h-full overflow-hidden">
+								<div className="flex justify-between items-center mb-8">
+									<h3 className="text-[12px] font-black uppercase text-slate-900 tracking-widest italic">
+										User_Assign ({seleccionados.length})
+									</h3>
+								</div>
 								<input
 									type="text"
-									placeholder="BUSCAR USUARIO..."
-									className="w-full bg-white border border-slate-200 rounded-2xl px-6 py-4 font-black text-[10px] uppercase outline-none mb-6 focus:border-orange-500"
+									placeholder="BUSCAR_USUARIO..."
+									className="w-full bg-white border border-slate-200 rounded-[1.5rem] px-8 py-4 font-black text-[11px] uppercase outline-none mb-8 focus:border-orange-500 shadow-sm"
 									value={busqueda}
 									onChange={(e) => setBusqueda(e.target.value)}
 								/>
-								<div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scroll">
+								<div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-slate-200">
 									{usuariosSugeridos.map((u) => {
 										const isSelected = seleccionados.includes(u.idusuario);
 										const avatar = formatAvatarUrl(u.fotoperfil);
@@ -521,25 +523,35 @@ export default function DetalleProyectoGitLab() {
 															: [...prev, u.idusuario],
 													)
 												}
-												className={`flex items-center justify-between p-4 rounded-3xl cursor-pointer transition-all ${isSelected ? "bg-orange-500 text-white shadow-lg" : "bg-white hover:bg-slate-100 shadow-sm"}`}
+												className={`flex items-center justify-between p-5 rounded-[2rem] cursor-pointer transition-all ${isSelected ? "bg-orange-500 text-white shadow-xl scale-[1.02]" : "bg-white hover:bg-slate-100 border border-slate-100 shadow-sm"}`}
 											>
-												<div className="flex items-center gap-3">
-													<div className="w-10 h-10 rounded-full bg-slate-800 overflow-hidden flex items-center justify-center text-white font-black text-[9px]">
+												<div className="flex items-center gap-4">
+													<div className="w-10 h-10 rounded-full bg-slate-800 overflow-hidden flex items-center justify-center text-white font-black text-[10px]">
 														{avatar ? (
 															<img
 																src={avatar}
+																alt="U"
 																className="w-full h-full object-cover"
 															/>
 														) : (
 															u.nombre[0]
 														)}
 													</div>
-													<div className="truncate text-[10px] font-black uppercase">
-														{u.nombre} {u.apellido1}
+													<div className="truncate">
+														<p className="text-[11px] font-black uppercase truncate leading-none mb-1">
+															{u.nombre} {u.apellido1}
+														</p>
+														<p
+															className={`text-[9px] font-mono ${isSelected ? "text-orange-100" : "text-orange-500"}`}
+														>
+															@{u.gitlab}
+														</p>
 													</div>
 												</div>
-												<div className="text-[10px]">
-													{isSelected ? "●" : "○"}
+												<div
+													className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] ${isSelected ? "bg-white border-white text-orange-500" : "border-slate-100 text-transparent"}`}
+												>
+													✓
 												</div>
 											</div>
 										);

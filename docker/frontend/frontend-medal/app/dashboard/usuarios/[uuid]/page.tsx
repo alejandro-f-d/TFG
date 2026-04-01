@@ -97,13 +97,13 @@ export default function UserDetailPage() {
 	const [isEditing, setIsEditing] = useState(false);
 	const [editableFields, setEditableFields] = useState<string[]>([]);
 	const [editForm, setEditForm] = useState<any>({});
+	const [gitlabPassword, setGitlabPassword] = useState(""); // Nuevo estado para creación
 	const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 	const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
 	const [rolesList, setRolesList] = useState<Role[]>([]);
 	const [puertasList, setPuertasList] = useState<Puerta[]>([]);
 	const [responsablesList, setResponsablesList] = useState<any[]>([]);
-
 	const [maquinasList, setMaquinasList] = useState<Maquina[]>([]);
 	const [maquinaSearch, setMaquinaSearch] = useState("");
 	const [searchingMaquinas, setSearchingMaquinas] = useState(false);
@@ -212,12 +212,11 @@ export default function UserDetailPage() {
 				if (res.ok) {
 					const d = await res.json();
 					const rows = d.info?.rows || d.info || d || [];
-					const currentSelected = editForm.duenoMaquina || [];
 					const newResults = rows.map((m: any) => ({
 						id: m.idmaquina || m.id,
 						nombre: m.nombre,
 					}));
-					const combined = [...currentSelected];
+					const combined = [...(editForm.duenoMaquina || [])];
 					newResults.forEach((nr: any) => {
 						if (!combined.some((c) => (c.id || c.idmaquina) === nr.id))
 							combined.push(nr);
@@ -276,6 +275,11 @@ export default function UserDetailPage() {
 				}
 			});
 
+			// Lógica GitLab: Si el usuario no tenía gitlab y ahora se le pone uno, mandamos la password
+			if (!user?.gitlab && editForm.gitlab && gitlabPassword) {
+				formData.append("passwordGitlab", gitlabPassword);
+			}
+
 			if (avatarFile) formData.append("fotoFile", avatarFile);
 
 			const res = await fetch(`${apiUrl}/api/user/${uuid}`, {
@@ -303,7 +307,39 @@ export default function UserDetailPage() {
 		const config = getFieldConfig(field);
 
 		if (isEditing && editableFields.includes(field)) {
-			// WIFI CHECK
+			// NUEVO: Lógica especial para GitLab (Creación)
+			if (field === "gitlab" && !user?.gitlab) {
+				return (
+					<div className="space-y-4 w-full animate-in slide-in-from-top-2 duration-300">
+						<div className="bg-orange-50/50 p-6 rounded-[2rem] border-2 border-orange-100/50">
+							<p className="text-[9px] font-black text-orange-600 uppercase mb-4 tracking-widest">
+								Crear Cuenta GitLab
+							</p>
+							<div className="space-y-4">
+								<input
+									type="text"
+									placeholder="NOMBRE_USUARIO_GITLAB"
+									value={value ?? ""}
+									onChange={(e) =>
+										setEditForm({ ...editForm, gitlab: e.target.value })
+									}
+									className="w-full p-3 border-2 border-orange-200 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-orange-500 transition-all placeholder:text-orange-200"
+								/>
+								{editForm.gitlab && (
+									<input
+										type="password"
+										placeholder="CONTRASEÑA_GITLAB"
+										value={gitlabPassword}
+										onChange={(e) => setGitlabPassword(e.target.value)}
+										className="w-full p-3 border-2 border-orange-200 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-orange-500 transition-all animate-in fade-in"
+									/>
+								)}
+							</div>
+						</div>
+					</div>
+				);
+			}
+
 			if (field === "wifi") {
 				return (
 					<label className="flex items-center space-x-3 bg-white p-3 rounded-2xl border-2 border-slate-50 shadow-sm cursor-pointer hover:bg-slate-50 transition-all">
@@ -322,7 +358,6 @@ export default function UserDetailPage() {
 				);
 			}
 
-			// MULTISELECT ROLES/PUERTAS/MAQUINAS
 			if (["roles", "puertasAutorizadas", "duenoMaquina"].includes(field)) {
 				const options =
 					field === "roles"
@@ -404,6 +439,7 @@ export default function UserDetailPage() {
 					</select>
 				);
 			}
+
 			if (config?.inputType === "select" && field === "responsable") {
 				return (
 					<select
@@ -439,7 +475,19 @@ export default function UserDetailPage() {
 			);
 		}
 
-		// --- VISTA LECTURA (CORREGIDA PARA EVITAR [object Object]) ---
+		// --- VISTA LECTURA ---
+		if (field === "gitlab") {
+			return value ? (
+				<span className="bg-orange-50 text-orange-700 px-4 py-1.5 rounded-xl text-[10px] font-black border border-orange-100 uppercase tracking-widest shadow-sm">
+					🦊 {value}
+				</span>
+			) : (
+				<span className="text-slate-300 text-[10px] font-black uppercase tracking-widest italic">
+					Sin cuenta vinculada
+				</span>
+			);
+		}
+
 		if (field === "wifi") {
 			return (
 				<span
@@ -655,9 +703,7 @@ export default function UserDetailPage() {
 												<div
 													key={proy.uuid}
 													onClick={() =>
-														router.push(
-															`/dashboard/proyectosgitlab/${proy.uuid}`,
-														)
+														router.push(`/dashboard/gitlab/${proy.uuid}`)
 													}
 													className="bg-slate-50 border border-slate-100 p-8 rounded-[2.5rem] hover:bg-white hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer group active:scale-95 border-b-4 hover:border-blue-500"
 												>
@@ -683,56 +729,6 @@ export default function UserDetailPage() {
 										)}
 									</div>
 								</div>
-
-								{/* PETICIONES */}
-								<div className="md:col-span-2 pt-10">
-									<h3 className="text-amber-600 font-black text-[10px] uppercase tracking-[0.4em] mb-12 flex items-center gap-4">
-										<span className="w-12 h-[2px] bg-amber-600"></span>
-										Peticiones Recientes
-									</h3>
-									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-										{user?.peticiones?.length ? (
-											user.peticiones.map((p) => (
-												<div
-													key={p.id}
-													onClick={() =>
-														router.push(
-															`/dashboard/peticiones/${user.uuidusuario}`,
-														)
-													}
-													className="bg-amber-50/40 border border-amber-100 p-8 rounded-[2.5rem] hover:bg-white hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer group active:scale-95 border-b-4 hover:border-amber-500"
-												>
-													<div className="flex justify-between items-center mb-6">
-														<span className="text-xs font-black text-slate-800 uppercase group-hover:text-amber-600 tracking-tighter">
-															Petición #{p.id}
-														</span>
-														<span
-															className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase ${p.estado === "Completado" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}
-														>
-															{p.estado}
-														</span>
-													</div>
-													<p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter line-clamp-1">
-														{p.proyecto}
-													</p>
-												</div>
-											))
-										) : (
-											<div
-												onClick={() =>
-													router.push(
-														`/dashboard/peticiones/${user?.uuidusuario}`,
-													)
-												}
-												className="col-span-full bg-slate-50 border-2 border-dashed border-slate-200 p-12 rounded-[2.5rem] text-center hover:bg-white transition-all cursor-pointer group"
-											>
-												<p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] group-hover:text-amber-600">
-													Ver todas las peticiones del usuario →
-												</p>
-											</div>
-										)}
-									</div>
-								</div>
 							</div>
 
 							{isEditing && (
@@ -749,6 +745,7 @@ export default function UserDetailPage() {
 										onClick={() => {
 											setIsEditing(false);
 											setEditForm(user);
+											setGitlabPassword("");
 											setAvatarPreview(getAvatarUrl(user?.fotoperfil));
 										}}
 										className="flex-1 bg-slate-100 text-slate-500 py-7 rounded-[2.5rem] font-black text-xs tracking-[0.3em] hover:bg-slate-200 transition-all border-b-4 border-slate-200"

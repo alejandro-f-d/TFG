@@ -76,7 +76,9 @@ export default function GitLabProjectsPage() {
 			const parsed = JSON.parse(stored);
 			setUserPerms(parsed);
 			const canView =
-				parsed.includes("admin:total") || parsed.includes("git:getProyecto");
+				parsed.includes("admin:total") ||
+				parsed.includes("gitlab:getProyecto") ||
+				parsed.includes("gitlab:postProyecto");
 			if (!canView) router.push("/dashboard");
 		} else {
 			logout();
