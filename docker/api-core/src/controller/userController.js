@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { addEmailToQueue } from "../eda/queue.js";
 import crypto from "crypto";
 import { tienePermiso } from "../middlewares/authMiddleware.js";
+import { obtenerUsernamePorId } from "../integrations/gitlab.js";
 
 const verificarCorreo = (correo) => {
 	if (!correo) return false;
@@ -126,6 +127,25 @@ export const getUserByUuid = async (req, res) => {
 				});
 			}
 			delete usuario.contrasena;
+
+			//Obtener el nombre de usuario en base al id de gitlab en la base de datos en caso de que sea posible.
+			if (usuario.gitlab) {
+				try {
+					const nombreUsuarioGitlab = await obtenerUsernamePorId(
+						usuario.gitlab,
+					);
+
+					if (nombreUsuarioGitlab) {
+						usuario.gitlab = nombreUsuarioGitlab;
+					}
+				} catch (error) {
+					console.error(
+						"Se ha producido un error al obtener el nombre asociado a un id de gitlab.",
+						error,
+					);
+				}
+			}
+
 			return res.status(200).json({
 				message: "Usuario encontrado con éxito.",
 				info: usuario,

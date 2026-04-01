@@ -178,3 +178,34 @@ export async function archivarProyecto(nombreProyecto) {
 		throw error;
 	}
 }
+
+export async function obtenerUsernamePorId(userId) {
+	try {
+		const response = await axios.get(
+			`${process.env.URI_GITLAB}/api/v4/users/${userId}`,
+			{
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+
+		if (response.data && response.data.username) {
+			// console.log(
+			// 	`ID ${userId} corresponde al usuario: ${response.data.username}`,
+			// );
+			return response.data.username;
+		} else {
+			throw new Error("Usuario no encontrado en la respuesta de GitLab");
+		}
+	} catch (error) {
+		if (error.response && error.response.status === 404) {
+			console.error(`El ID de usuario ${userId} no existe en GitLab.`);
+			return null;
+		}
+
+		console.error(
+			"Error al obtener username por ID:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}
