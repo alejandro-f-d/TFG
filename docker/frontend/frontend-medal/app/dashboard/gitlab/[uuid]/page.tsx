@@ -146,13 +146,28 @@ export default function DetalleProyectoGitLab() {
 			descripcion: proyecto.info.descripcion,
 			activo: proyecto.info.activo,
 		});
-		setSeleccionados(proyecto.info.participantes.map((p) => p.idusuario));
+
+		// Filtramos los participantes actuales por si vienen con IDs nulos de base de datos
+		const idsExistentes = proyecto.info.participantes
+			.map((p) => p.idusuario)
+			.filter((id) => id !== null && id !== undefined);
+
+		setSeleccionados(idsExistentes);
 		setIsEditing(true);
 	};
 
 	const handleSave = async () => {
 		try {
 			const token = localStorage.getItem("token");
+
+			// Si no hay seleccionados, enviamos null en lugar de un array vacío
+			const participantesData = seleccionados.length > 0 ? seleccionados : null;
+
+			const body = {
+				...editForm,
+				participantes: participantesData,
+			};
+
 			const res = await fetch(
 				`${process.env.NEXT_PUBLIC_API_URL}/api/proyectosgitlab/${uuid}`,
 				{
@@ -161,9 +176,10 @@ export default function DetalleProyectoGitLab() {
 						"Content-Type": "application/json",
 						Authorization: `Bearer ${token}`,
 					},
-					body: JSON.stringify({ ...editForm, participantes: seleccionados }),
+					body: JSON.stringify(body),
 				},
 			);
+
 			if (res.status === 204) {
 				setIsEditing(false);
 				fetchDetalle();
@@ -223,7 +239,6 @@ export default function DetalleProyectoGitLab() {
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
-					{/* SECCIÓN IZQUIERDA */}
 					<div className="lg:col-span-8 space-y-12">
 						<header className="space-y-4">
 							<div className="flex flex-wrap items-center gap-3">
@@ -309,7 +324,6 @@ export default function DetalleProyectoGitLab() {
 						</div>
 					</div>
 
-					{/* SIDEBAR */}
 					<div className="lg:col-span-4 space-y-8">
 						<div className="bg-white p-10 rounded-[3.5rem] shadow-xl border border-slate-100">
 							<h4 className="text-[12px] font-black uppercase text-slate-900 mb-10 tracking-[0.2em] italic">
@@ -357,7 +371,6 @@ export default function DetalleProyectoGitLab() {
 							</div>
 						</div>
 
-						{/* TEAM CARD REDISEÑADA */}
 						<div className="bg-white p-10 rounded-[4rem] shadow-xl border border-slate-100">
 							<div className="flex justify-between items-center mb-8">
 								<h4 className="text-[12px] font-black uppercase text-slate-900 tracking-widest">
@@ -420,16 +433,11 @@ export default function DetalleProyectoGitLab() {
 										onClick={() =>
 											setEditForm({ ...editForm, activo: !editForm.activo })
 										}
-										className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${
-											editForm.activo
-												? "bg-emerald-50 border-emerald-100 text-emerald-600"
-												: "bg-red-50 border-red-100 text-red-600"
-										}`}
+										className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${editForm.activo ? "bg-emerald-50 border-emerald-100 text-emerald-600" : "bg-red-50 border-red-100 text-red-600"}`}
 									>
 										{editForm.activo ? "● ACTIVO" : "○ INACTIVO"}
 									</button>
 								</div>
-
 								<div className="space-y-10">
 									<div className="space-y-3">
 										<label className="text-[11px] font-black uppercase text-slate-300 ml-6 tracking-widest">
@@ -459,7 +467,6 @@ export default function DetalleProyectoGitLab() {
 										/>
 									</div>
 								</div>
-
 								<div className="flex flex-col sm:flex-row items-center gap-8 pt-6">
 									<button
 										onClick={() => setIsEditing(false)}
