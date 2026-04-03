@@ -11,6 +11,9 @@ export default function CreateMachinePage() {
 
 	const [formData, setFormData] = useState({
 		nombre: "",
+		caducidadSsl: "",
+		certificadoSslActivo: false,
+		emisorSsl: "",
 		red: {
 			direccionIpPrivadaV4: "",
 			direccionIpPublicav4: "",
@@ -46,6 +49,14 @@ export default function CreateMachinePage() {
 
 		try {
 			const token = localStorage.getItem("token");
+			// Formateamos la fecha a ISO si existe para cumplir con el esquema Joi
+			const payload = {
+				...formData,
+				caducidadSsl: formData.caducidadSsl
+					? new Date(formData.caducidadSsl).toISOString()
+					: null,
+			};
+
 			const res = await fetch(
 				`${process.env.NEXT_PUBLIC_API_URL}/api/maquina`,
 				{
@@ -54,7 +65,7 @@ export default function CreateMachinePage() {
 						Authorization: `Bearer ${token}`,
 						"Content-Type": "application/json",
 					},
-					body: JSON.stringify(formData),
+					body: JSON.stringify(payload),
 				},
 			);
 
@@ -279,11 +290,71 @@ export default function CreateMachinePage() {
 						</div>
 					</section>
 
-					{/* BLOQUE 04: RECURSOS */}
+					{/* BLOQUE NUEVO: TLS / SSL SECURITY */}
+					<section className="bg-emerald-50/30 p-12 rounded-[4rem] border border-emerald-100 shadow-xl relative overflow-hidden">
+						<div className="absolute top-0 right-0 p-12 opacity-10 text-8xl font-black italic text-emerald-200">
+							SSL
+						</div>
+						<h2 className="text-[11px] font-black uppercase text-emerald-600 tracking-[0.4em] mb-12 italic relative z-10">
+							04. Security Layer (TLS/SSL)
+						</h2>
+						<div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center relative z-10">
+							<div className="md:col-span-3">
+								<div
+									onClick={() =>
+										setFormData({
+											...formData,
+											certificadoSslActivo: !formData.certificadoSslActivo,
+										})
+									}
+									className={`p-8 rounded-[2.5rem] cursor-pointer transition-all border-4 flex flex-col items-center justify-center gap-2 ${
+										formData.certificadoSslActivo
+											? "bg-emerald-600 border-emerald-200 text-white shadow-lg"
+											: "bg-white border-slate-100 text-slate-300"
+									}`}
+								>
+									<span className="text-[9px] font-black uppercase tracking-widest">
+										Status
+									</span>
+									<span className="text-xl font-black uppercase tracking-tighter">
+										{formData.certificadoSslActivo ? "Cert Active" : "Inactive"}
+									</span>
+								</div>
+							</div>
+							<div className="md:col-span-4 flex flex-col gap-4">
+								<label className="text-[8px] font-black uppercase text-slate-400 ml-4 tracking-widest">
+									Fecha de Caducidad
+								</label>
+								<input
+									type="date"
+									className="bg-white rounded-2xl p-6 font-black text-xs uppercase text-emerald-700 outline-none border border-emerald-100 focus:ring-4 focus:ring-emerald-50"
+									value={formData.caducidadSsl}
+									onChange={(e) =>
+										setFormData({ ...formData, caducidadSsl: e.target.value })
+									}
+								/>
+							</div>
+							<div className="md:col-span-5 flex flex-col gap-4">
+								<label className="text-[8px] font-black uppercase text-slate-400 ml-4 tracking-widest">
+									Entidad Emisora
+								</label>
+								<input
+									placeholder="p.ej. Let's Encrypt / ZeroSSL"
+									className="bg-white rounded-2xl p-6 font-bold text-sm text-slate-700 outline-none border border-emerald-100 focus:ring-4 focus:ring-emerald-50"
+									value={formData.emisorSsl}
+									onChange={(e) =>
+										setFormData({ ...formData, emisorSsl: e.target.value })
+									}
+								/>
+							</div>
+						</div>
+					</section>
+
+					{/* BLOQUE 05: RECURSOS */}
 					<section className="bg-white p-12 rounded-[4rem] shadow-xl shadow-slate-200/50 flex flex-col md:flex-row items-center gap-12">
 						<div className="flex-1 w-full">
 							<h2 className="text-[11px] font-black uppercase text-slate-300 tracking-[0.4em] mb-10 italic">
-								04. Asignación de Recursos
+								05. Asignación de Recursos
 							</h2>
 							<div className="flex items-end gap-4">
 								<input

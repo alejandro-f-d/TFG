@@ -216,6 +216,29 @@ class ProyectosGitlabModel {
 			throw error;
 		}
 	}
+
+	static async getGitlabIdsByUserIds(ids) {
+		if (!ids || ids.length === 0) return [];
+
+		const client = await pool.connect();
+		try {
+			const query = `
+            SELECT u.gitlab
+            FROM unnest($1::int[]) WITH ORDINALITY AS input(idusuario, orden)
+            LEFT JOIN medal.usuario u ON u.idusuario = input.idusuario
+            ORDER BY input.orden;
+        `;
+
+			const res = await client.query(query, [ids]);
+
+			return res.rows.map((row) => row.gitlab);
+		} catch (error) {
+			console.error("Error en getGitlabIdsByUserIds (Model):", error.message);
+			throw error;
+		} finally {
+			client.release();
+		}
+	}
 }
 
 export default ProyectosGitlabModel;

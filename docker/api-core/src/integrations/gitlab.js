@@ -391,3 +391,54 @@ export async function desarchivarProyecto(projectId) {
 		throw error;
 	}
 }
+
+export async function sincronizarParticipantesGitlab(projectId, idsDeseados) {
+	const ROOT_ID = process.env.ROOT_ID;
+
+	console.log("El id del repo es:", projectId);
+	try {
+		const response = await axios.get(
+			`${process.env.URI_GITLAB}/api/v4/projects/${projectId}/members`,
+			{ headers: { "Private-Token": process.env.GITLAB_TOKEN } },
+		);
+
+		const miembrosActuales = response.data.map((m) => m.id);
+
+		const paraEliminar = miembrosActuales.filter(
+			(id) => !idsDeseados.includes(id) && id !== ROOT_ID,
+		);
+
+		const paraAnadir = idsDeseados.filter(
+			(id) => !miembrosActuales.includes(id) && id !== ROOT_ID,
+		);
+
+		console.log(
+			`[SYNC] Proyecto ${projectId}: Eliminando ${paraEliminar.length}, Añadiendo ${paraAnadir.length}`,
+		);
+
+		for (const userId of paraEliminar) {
+			try {
+				await eliminarUsuarioDelProyecto(projectId, userId);
+			} catch (err) {
+				console.error(`Error al eliminar usuario ${userId}:`, err.message);
+			}
+		}
+
+		for (const userId of paraAnadir) {
+			try {
+				await anadirUsuarioAlProyecto(projectId, userId, 30);
+			} catch (err) {
+				console.error(`Error al añadir usuario ${userId}:`, err.message);
+			}
+		}
+
+		return {
+			status: "Sincronización completada",
+			rootProtegido: true,
+			cambios: { eliminados: paraEliminar, anadidos: paraAnadir },
+		};
+	} catch (error) {
+		console.error("Fallo crítico en sincronización:", error.message);
+		throw error;
+	}
+}

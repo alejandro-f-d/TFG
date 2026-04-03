@@ -6,6 +6,7 @@ import {
 	obtenerEstadisticasCommits,
 	archivarProyecto,
 	desarchivarProyecto,
+	sincronizarParticipantesGitlab,
 } from "../integrations/gitlab.js";
 
 export const postProyectoGitlab = async (req, res) => {
@@ -142,9 +143,10 @@ export const patchProyectoGitlab = async (req, res) => {
 	}
 
 	try {
+		const estadoActual = await ProyectosGitlabModel.getEstado(uuid);
+
 		// Verificación de si pasa a inactivo el proyecto.
 		if (camposCambiados.activo != null) {
-			const estadoActual = await ProyectosGitlabModel.getEstado(uuid);
 			if (estadoActual === 2) {
 				return res.status(404).json({ error: "Proyecto Gitlab not found" });
 			}
@@ -171,6 +173,14 @@ export const patchProyectoGitlab = async (req, res) => {
 			}
 		}
 		if (camposCambiados.activo === null || camposCambiados.activo) {
+			// Obtener los ids de los miembros que deben estar presentes.
+			const userIdsGitlab = await ProyectosGitlabModel.getGitlabIdsByUserIds(
+				req.body.participantes,
+			);
+			await sincronizarParticipantesGitlab(
+				estadoActual.idGitlab,
+				userIdsGitlab,
+			);
 			const resPatch = await ProyectosGitlabModel.patchProyecto(
 				uuid,
 				camposCambiados,

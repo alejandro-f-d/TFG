@@ -74,6 +74,7 @@ services:
       DSS_URL: ${DSS_URL}
       SERIAL: ${SERIAL}
       COMMON_NAME: ${COMMON_NAME}
+      ROOT_ID: ${ROOT_ID_GITLAB}
     networks:
       - medalnetwork
     env_file:
