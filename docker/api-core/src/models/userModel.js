@@ -483,6 +483,21 @@ class UserModel {
 			);
 		}
 	}
+	static async getGitlabId(uuid) {
+		try {
+			const resGitlabId = await pool.query(USER_QUERIES.GET_GITLAB_ID, [uuid]);
+			if (resGitlabId.rowCount === 0) {
+				return 2;
+			}
+			return resGitlabId.rows[0].gitlab;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener el gitlab id por el uuid del usuario.",
+				error,
+			);
+			throw error;
+		}
+	}
 }
 
 export default UserModel;

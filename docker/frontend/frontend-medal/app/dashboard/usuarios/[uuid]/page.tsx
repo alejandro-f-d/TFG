@@ -6,6 +6,7 @@ import {
 	getEditableFields,
 	getFieldConfig,
 } from "@/components/config/userEditPermissions";
+import { logout } from "@/lib/auth-common";
 
 // --- Interfaces ---
 interface Role {
@@ -97,7 +98,7 @@ export default function UserDetailPage() {
 	const [isEditing, setIsEditing] = useState(false);
 	const [editableFields, setEditableFields] = useState<string[]>([]);
 	const [editForm, setEditForm] = useState<any>({});
-	const [gitlabPassword, setGitlabPassword] = useState(""); // Nuevo estado para creación
+	const [gitlabPassword, setGitlabPassword] = useState("");
 	const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 	const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
@@ -112,7 +113,7 @@ export default function UserDetailPage() {
 		const fetchData = async () => {
 			try {
 				const token = localStorage.getItem("token");
-				if (!token) return router.push("/auth/signin");
+				if (!token) return logout();
 
 				const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
 				const currentUuid = localStorage.getItem("uuidUser");
@@ -242,6 +243,13 @@ export default function UserDetailPage() {
 			const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
 			const formData = new FormData();
 
+			// --- LÓGICA DE BAJA ESPECIAL ---
+			// Detectamos si el usuario estaba activo y se ha cambiado a inactivo en el formulario
+			const isSetToInactive =
+				user?.activo === true && editForm.activo === false;
+			const queryParam = isSetToInactive ? "?darBaja=true" : "";
+			console.log("El queryparam es:", queryParam);
+
 			editableFields.forEach((field) => {
 				if (field === "fotoPerfil") return;
 				let value = editForm[field];
@@ -275,21 +283,24 @@ export default function UserDetailPage() {
 				}
 			});
 
-			// Lógica GitLab: Si el usuario no tenía gitlab y ahora se le pone uno, mandamos la password
 			if (!user?.gitlab && editForm.gitlab && gitlabPassword) {
 				formData.append("passwordGitlab", gitlabPassword);
 			}
 
 			if (avatarFile) formData.append("fotoFile", avatarFile);
 
-			const res = await fetch(`${apiUrl}/api/user/${uuid}`, {
+			const res = await fetch(`${apiUrl}/api/user/${uuid}${queryParam}`, {
 				method: "PATCH",
 				headers: { Authorization: `Bearer ${token}` },
 				body: formData,
 			});
 
 			if (res.ok || res.status === 204) {
-				setSuccess("Usuario actualizado con éxito");
+				setSuccess(
+					isSetToInactive
+						? "Usuario dado de baja con éxito"
+						: "Usuario actualizado con éxito",
+				);
 				setIsEditing(false);
 				setTimeout(() => window.location.reload(), 1000);
 			} else {
@@ -307,7 +318,6 @@ export default function UserDetailPage() {
 		const config = getFieldConfig(field);
 
 		if (isEditing && editableFields.includes(field)) {
-			// NUEVO: Lógica especial para GitLab (Creación)
 			if (field === "gitlab" && !user?.gitlab) {
 				return (
 					<div className="space-y-4 w-full animate-in slide-in-from-top-2 duration-300">
@@ -475,7 +485,7 @@ export default function UserDetailPage() {
 			);
 		}
 
-		// --- VISTA LECTURA ---
+		// --- Lectura ---
 		if (field === "gitlab") {
 			return value ? (
 				<span className="bg-orange-50 text-orange-700 px-4 py-1.5 rounded-xl text-[10px] font-black border border-orange-100 uppercase tracking-widest shadow-sm">
@@ -487,7 +497,6 @@ export default function UserDetailPage() {
 				</span>
 			);
 		}
-
 		if (field === "wifi") {
 			return (
 				<span
@@ -585,7 +594,6 @@ export default function UserDetailPage() {
 				</div>
 
 				<div className="bg-white rounded-[3.5rem] shadow-2xl shadow-slate-200 overflow-hidden border border-white">
-					{/* CABECERA */}
 					<div className="relative bg-slate-900 pt-24 pb-20 px-14 flex flex-col md:flex-row items-center md:items-end gap-12">
 						<div className="relative group w-52 h-52 rounded-[3.5rem] border-[10px] border-white overflow-hidden bg-slate-100 shadow-2xl shrink-0 -mb-32 z-10">
 							{avatarPreview ? (
@@ -690,8 +698,6 @@ export default function UserDetailPage() {
 										</div>
 									</div>
 								))}
-
-								{/* PROYECTOS GITLAB */}
 								<div className="md:col-span-2 pt-10">
 									<h3 className="text-slate-900 font-black text-[10px] uppercase tracking-[0.4em] mb-12 flex items-center gap-4">
 										<span className="w-12 h-[2px] bg-slate-900"></span>Proyectos

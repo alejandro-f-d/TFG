@@ -8,6 +8,7 @@ import { tienePermiso } from "../middlewares/authMiddleware.js";
 import {
 	obtenerUsernamePorId,
 	crearUsuarioGitlab,
+	bloquearUsuarioGitlab,
 } from "../integrations/gitlab.js";
 
 const verificarCorreo = (correo) => {
@@ -228,79 +229,81 @@ export const patchUser = async (req, res) => {
 	try {
 		const { uuid } = req.params;
 		const camposCambiados = req.body;
-		console.log("El body es:", req.body);
-		const darBaja = req.query.darBaja === "true";
-		// console.log(darBaja);
+		const fotoFile = req.file;
+		const darBajaQuery = req.query.darBaja === "true";
+
 		const permisos = req.user?.permisos || [];
 		const uuidDelToken = req.user?.uuidUsuario;
-		const fotoFile = req.file;
 
 		const uuidRegex =
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 		if (!uuidRegex.test(uuid)) {
-			return res
-				.status(404)
-				.json({ error: "User no encontrado (Formato de ID inválido)." });
+			return res.status(404).json({ error: "Formato de ID inválido." });
 		}
-		if (
-			permisos.includes("admin:total") ||
-			permisos.includes("usr:editUsuario") ||
-			uuidDelToken === uuid
-		) {
-			if (camposCambiados.contrasena) {
-				const salt = await bcrypt.genSalt(10);
-				camposCambiados.contrasena = await bcrypt.hash(
-					camposCambiados.contrasena,
-					salt,
-				);
-			}
-			if (darBaja && !uuidDelToken === uuid) {
-				//Si está activo, solamente se pasa el usuario a que ya no está activo, el resto de campos se mantienen igual.
-				const resultado = await UserModel.darBaja(uuid);
-				if (resultado == 2) {
-					return res.status(404).json({ error: "Usuario no encontrado." });
-				}
-				if (resultado.rowCount === 0) {
-					return res.status(404).json({
-						error: "Usuario al que se le quiere dar de baja no encontrado.",
-					});
-				}
-				return res.status(204).json({
-					message: "Usuario dado de baja de manera correcta.",
-				});
-			}
-			if (Object.keys(camposCambiados).length === 0 && !fotoFile) {
-				return res
-					.status(400)
-					.json({ error: "No se han enviado campos a actualizar." });
-			}
-			const resultado = await UserModel.patchUser(
-				uuid,
-				camposCambiados,
-				uuidDelToken === uuid &&
-					!permisos.includes("usr:editUsuario") &&
-					!permisos.includes("admin:total"),
-				fotoFile,
-			);
-			if (resultado.rowCount === 0) {
-				return res.status(404).json({ error: "Usuario no encontrado." });
-			}
-			if (resultado == 2) {
-				return res.status(404).json({ error: "Usuario no encontrado." });
-			}
 
-			return res.status(204).json({
-				message: "Usuario actualizado.",
-			});
-		} else {
+		const esDueno = uuidDelToken === uuid;
+		const tienePermisoEdicion =
+			permisos.includes("admin:total") || permisos.includes("usr:editUsuario");
+
+		if (!esDueno && !tienePermisoEdicion) {
 			return res
 				.status(403)
-				.json({ error: "Careces de los permisos necesarios" });
+				.json({ error: "Careces de los permisos necesarios." });
 		}
+
+		const solicitarBaja = darBajaQuery || camposCambiados.activo === false;
+
+		if (solicitarBaja) {
+			console.log("entramos en dar la baja.");
+			const idGitlabIdUser = await UserModel.getGitlabId(uuid);
+			if (idGitlabIdUser === 2) {
+				return res.status(404).json({ error: "Usuario no encontrado" });
+			}
+			await bloquearUsuarioGitlab(idGitlabIdUser);
+			const resultadoBaja = await UserModel.darBaja(uuid);
+
+			if (resultadoBaja === 2 || resultadoBaja?.rowCount === 0) {
+				return res
+					.status(404)
+					.json({ error: "Usuario no encontrado para dar de baja." });
+			}
+
+			if (Object.keys(camposCambiados).length <= 1 && !fotoFile) {
+				return res.status(204).send();
+			}
+		}
+
+		if (camposCambiados.contrasena) {
+			const salt = await bcrypt.genSalt(10);
+			camposCambiados.contrasena = await bcrypt.hash(
+				camposCambiados.contrasena,
+				salt,
+			);
+		}
+
+		if (Object.keys(camposCambiados).length === 0 && !fotoFile) {
+			return res
+				.status(400)
+				.json({ error: "No se han enviado campos a actualizar." });
+		}
+
+		const soloEdicionPerfil = esDueno && !tienePermisoEdicion;
+
+		const resultado = await UserModel.patchUser(
+			uuid,
+			camposCambiados,
+			soloEdicionPerfil,
+			fotoFile,
+		);
+
+		if (resultado === 2 || resultado?.rowCount === 0) {
+			return res.status(404).json({ error: "Usuario no encontrado." });
+		}
+
+		return res.status(204).send();
 	} catch (error) {
-		console.error("Error en el patchUser", error);
-		return res.status(500).json({ error: "Error en el servidor." });
+		console.error("Error en patchUser Controller:", error);
+		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
 

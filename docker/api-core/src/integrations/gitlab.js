@@ -442,3 +442,24 @@ export async function sincronizarParticipantesGitlab(projectId, idsDeseados) {
 		throw error;
 	}
 }
+
+export async function bloquearUsuarioGitlab(userId) {
+	try {
+		const response = await axios.post(
+			`${process.env.URI_GITLAB}/api/v4/users/${userId}/block`,
+			{},
+			{
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+
+		console.log(`[!] Usuario ID ${userId} ha sido BLOQUEADO (Baja técnica).`);
+		return { success: true, message: "Cuenta desactivada correctamente" };
+	} catch (error) {
+		console.error(
+			"Error al bloquear usuario:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}
