@@ -156,20 +156,19 @@ class UserModel {
 		try {
 			await client.query("BEGIN");
 
-			["roles", "puertasAutorizadas", "duenoMaquina"].forEach((field) => {
+			const jsonFields = ["roles", "puertasAutorizadas", "duenoMaquina"];
+			jsonFields.forEach((field) => {
 				if (typeof campos[field] === "string") {
 					try {
-						if (
-							!campos[field] ||
-							campos[field] === "null" ||
-							campos[field] === "[]"
-						) {
-							campos[field] = [];
-						} else {
-							campos[field] = JSON.parse(campos[field]);
-						}
+						const val = campos[field].trim();
+						campos[field] =
+							val === "" ||
+							val === "null" ||
+							val === "undefined" ||
+							val === "[]"
+								? []
+								: JSON.parse(val);
 					} catch (e) {
-						console.error(`Error parseando el campo ${field}:`, e);
 						campos[field] = [];
 					}
 				}
@@ -178,8 +177,9 @@ class UserModel {
 			const booleanFields = ["teams", "esresponsable", "activo", "wifi"];
 			booleanFields.forEach((field) => {
 				if (campos[field] !== undefined) {
-					if (campos[field] === "true") campos[field] = true;
-					if (campos[field] === "false") campos[field] = false;
+					if (typeof campos[field] === "string") {
+						campos[field] = campos[field].toLowerCase() === "true";
+					}
 				}
 			});
 
@@ -201,13 +201,18 @@ class UserModel {
 				}
 			});
 
-			if (campos.responsable !== undefined && campos.responsable !== null) {
+			if (campos.responsable) {
 				campos.responsable = parseInt(campos.responsable, 10);
 				if (isNaN(campos.responsable)) campos.responsable = null;
 			}
 
-			const { roles, puertasAutorizadas, duenoMaquina, ...camposUsuario } =
-				campos;
+			const {
+				roles,
+				puertasAutorizadas,
+				duenoMaquina,
+				passwordGitlab,
+				...camposUsuario
+			} = campos;
 
 			const camposPermitidos = esUser
 				? ["nombre", "apellido1", "apellido2"]
@@ -226,62 +231,64 @@ class UserModel {
 						"tarjetaacceso",
 						"diriplastlogin",
 						"contrasena",
-						// "gitlab",
 						"responsable",
 					];
 
-			// Apartado de gitlab de los usuarios:
-			if (!esUser && camposUsuario.gitlab != null) {
-				if (camposUsuario.passwordGitlab != null) {
-					// En este punto es porque el usuario es 100% nuevo y hay que crearlo de 0.
-					try {
-						let correoInsitutcionalGitlab = await pool.query(
-							USER_QUERIES.GET_CORREO,
-							[uuid],
-						);
-						const resCrearGitlab = await crearUsuarioGitlab(
-							correoInsitutcionalGitlab.rows[0].correoinstitucional,
-							camposUsuario.gitlab,
-							correoInsitutcionalGitlab.rows[0].nombre,
-							camposUsuario.passwordGitlab,
-						);
-						let idGitlab = resCrearGitlab.id;
-						await pool.query(USER_QUERIES.UPDATE_ID_GITLAB, [idGitlab, uuid]);
-					} catch (error) {
-						console.error(
-							"Se ha producido un error en el gitlab al crear un usuario",
-							error,
-						);
-						throw error;
-					}
-				} else {
-					// En este punto lo que hay que hacer es cambiar el usuario su username.
-					try {
-						const idGitlabRes = await pool.query(USER_QUERIES.GET_GITLAB_ID, [
-							uuid,
-						]);
-						await actualizarUsernameGitlab(
-							idGitlabRes.rows[0].gitlab,
-							camposUsuario.gitlab,
-						);
-						// Aqui no se modifica el valor del base de datos.
-					} catch (error) {
-						console.error(
-							"Se ha producido un error al modificar el nombre del usuario",
-							error,
-						);
-						throw error;
+			if (!esUser && camposUsuario.gitlab !== undefined) {
+				const statusActivo =
+					camposUsuario.activo !== undefined ? camposUsuario.activo : true;
+
+				if (camposUsuario.gitlab !== null && statusActivo) {
+					if (passwordGitlab) {
+						// CASO A: Crear usuario en GitLab (Tiene password temporal)
+						try {
+							const userActual = await client.query(USER_QUERIES.GET_CORREO, [
+								uuid,
+							]);
+							if (userActual.rows.length > 0) {
+								const resCrearGitlab = await crearUsuarioGitlab(
+									userActual.rows[0].correoinstitucional,
+									camposUsuario.gitlab,
+									userActual.rows[0].nombre,
+									passwordGitlab,
+								);
+								await client.query(USER_QUERIES.UPDATE_ID_GITLAB, [
+									resCrearGitlab.id,
+									uuid,
+								]);
+							}
+						} catch (error) {
+							console.error("Error creando usuario en GitLab:", error);
+							throw new Error("No se pudo crear la cuenta en GitLab.");
+						}
+					} else {
+						// CASO B: Actualizar nombre de usuario en GitLab
+						try {
+							const idGitlabRes = await client.query(
+								USER_QUERIES.GET_GITLAB_ID,
+								[uuid],
+							);
+							if (idGitlabRes.rows.length > 0 && idGitlabRes.rows[0].gitlab) {
+								await actualizarUsernameGitlab(
+									idGitlabRes.rows[0].gitlab,
+									camposUsuario.gitlab,
+								);
+							}
+						} catch (error) {
+							console.error("Error actualizando username en GitLab:", error);
+						}
 					}
 				}
 			}
 
 			const camposFiltrados = {};
 			Object.keys(camposUsuario).forEach((key) => {
+				const dbKey = key.toLowerCase();
 				if (
 					camposPermitidos.includes(key) &&
 					camposUsuario[key] !== undefined
 				) {
-					camposFiltrados[key.toLowerCase()] = camposUsuario[key];
+					camposFiltrados[dbKey] = camposUsuario[key];
 				}
 			});
 
@@ -303,46 +310,43 @@ class UserModel {
 
 			if (!idUsuarioReal) {
 				await client.query("ROLLBACK");
-				return 2;
+				return 2; // Not Found
 			}
 
 			if (!esUser) {
-				if (roles !== undefined) {
-					await client.query(USER_QUERIES.DELETE_ROLES_USER, [idUsuarioReal]);
-					if (Array.isArray(roles)) {
-						for (const rId of roles) {
-							if (rId)
-								await client.query(USER_QUERIES.INSERT_ROL_RELACION, [
-									rId,
-									idUsuarioReal,
-								]);
-						}
-					}
-				}
-				if (puertasAutorizadas !== undefined) {
-					await client.query(USER_QUERIES.DELETE_PUERTAS_USER, [idUsuarioReal]);
-					if (Array.isArray(puertasAutorizadas)) {
-						for (const pId of puertasAutorizadas) {
-							if (pId)
-								await client.query(USER_QUERIES.INSERT_PUERTA_RELACION, [
-									idUsuarioReal,
-									pId,
-								]);
-						}
-					}
-				}
-				// Máquinas
-				if (duenoMaquina !== undefined) {
-					await client.query(USER_QUERIES.DELETE_MAQUINAS_USER, [
-						idUsuarioReal,
-					]);
-					if (Array.isArray(duenoMaquina)) {
-						for (const mId of duenoMaquina) {
-							if (mId)
-								await client.query(USER_QUERIES.INSERT_MAQUINA_RELACION, [
-									idUsuarioReal,
-									mId,
-								]);
+				const relaciones = [
+					{
+						data: roles,
+						deleteQuery: USER_QUERIES.DELETE_ROLES_USER,
+						insertQuery: USER_QUERIES.INSERT_ROL_RELACION,
+						inverse: false,
+					},
+					{
+						data: puertasAutorizadas,
+						deleteQuery: USER_QUERIES.DELETE_PUERTAS_USER,
+						insertQuery: USER_QUERIES.INSERT_PUERTA_RELACION,
+						inverse: true,
+					},
+					{
+						data: duenoMaquina,
+						deleteQuery: USER_QUERIES.DELETE_MAQUINAS_USER,
+						insertQuery: USER_QUERIES.INSERT_MAQUINA_RELACION,
+						inverse: true,
+					},
+				];
+
+				for (const rel of relaciones) {
+					if (rel.data !== undefined) {
+						await client.query(rel.deleteQuery, [idUsuarioReal]);
+						if (Array.isArray(rel.data)) {
+							for (const itemId of rel.data) {
+								if (itemId) {
+									const params = rel.inverse
+										? [idUsuarioReal, itemId]
+										: [itemId, idUsuarioReal];
+									await client.query(rel.insertQuery, params);
+								}
+							}
 						}
 					}
 				}
@@ -356,7 +360,7 @@ class UserModel {
 			return { status: "OK", idusuario: idUsuarioReal };
 		} catch (error) {
 			await client.query("ROLLBACK");
-			console.error("Error en UserModel.patchUser:", error);
+			console.error("Error crítico en UserModel.patchUser:", error);
 			throw error;
 		} finally {
 			client.release();
@@ -494,6 +498,35 @@ class UserModel {
 			console.error(
 				"Se ha producido un error al obtener el gitlab id por el uuid del usuario.",
 				error,
+			);
+			throw error;
+		}
+	}
+	static async getStatusUser(uuid) {
+		try {
+			const resGetStatus = await pool.query(USER_QUERIES.GET_STATUS_USER, [
+				uuid,
+			]);
+			return {
+				status: resGetStatus.rows[0].activo,
+				gitlab: resGetStatus.rows[0].gitlab,
+			};
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener la información del estado del usuario y sus servicios.",
+				error,
+			);
+			throw error;
+		}
+	}
+	static async activar(uuid) {
+		try {
+			await pool.query(USER_QUERIES.ACTIVAR, [uuid]);
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al activar el usuario.",
+				error,
+				uuid,
 			);
 			throw error;
 		}

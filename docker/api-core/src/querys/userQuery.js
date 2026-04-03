@@ -268,4 +268,6 @@ export const USER_QUERIES = {
 	GET_CORREO: `SELECT nombre, correoinstitucional from medal.usuario WHERE uuidusuario = $1;`,
 	UPDATE_ID_GITLAB: `UPDATE medal.usuario SET gitlab=$1 where uuidusuario = $2;`,
 	GET_GITLAB_ID: `SELECT gitlab from medal.usuario WHERE uuidusuario = $1;`,
+	GET_STATUS_USER: `select activo, gitlab from medal.usuario where uuidusuario = $1;`,
+	ACTIVAR: `UPDATE medal.usuario SET activo = true WHERE uuidusuario =$1;`,
 };

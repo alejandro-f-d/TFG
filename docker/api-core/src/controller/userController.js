@@ -9,6 +9,7 @@ import {
 	obtenerUsernamePorId,
 	crearUsuarioGitlab,
 	bloquearUsuarioGitlab,
+	reactivarUsuarioGitlab,
 } from "../integrations/gitlab.js";
 
 const verificarCorreo = (correo) => {
@@ -232,6 +233,12 @@ export const patchUser = async (req, res) => {
 		const fotoFile = req.file;
 		const darBajaQuery = req.query.darBaja === "true";
 
+		// Normalización para evitar errores.
+		if (camposCambiados.activo !== undefined) {
+			if (camposCambiados.activo === "true") camposCambiados.activo = true;
+			if (camposCambiados.activo === "false") camposCambiados.activo = false;
+		}
+
 		const permisos = req.user?.permisos || [];
 		const uuidDelToken = req.user?.uuidUsuario;
 
@@ -251,26 +258,39 @@ export const patchUser = async (req, res) => {
 				.json({ error: "Careces de los permisos necesarios." });
 		}
 
+		const statusActual = await UserModel.getStatusUser(uuid);
+		if (!statusActual) {
+			return res.status(404).json({ error: "Usuario no encontrado." });
+		}
+
+		let estaActivoEnBD = !!statusActual.status;
+
+		//Baja
 		const solicitarBaja = darBajaQuery || camposCambiados.activo === false;
 
-		if (solicitarBaja) {
-			console.log("entramos en dar la baja.");
-			const idGitlabIdUser = await UserModel.getGitlabId(uuid);
-			if (idGitlabIdUser === 2) {
-				return res.status(404).json({ error: "Usuario no encontrado" });
-			}
-			await bloquearUsuarioGitlab(idGitlabIdUser);
-			const resultadoBaja = await UserModel.darBaja(uuid);
+		if (solicitarBaja && estaActivoEnBD) {
+			console.log("Procesando baja de usuario en servicios externos...");
+			const idGitlab =
+				statusActual.id_gitlab || (await UserModel.getGitlabId(uuid));
+			if (idGitlab) await bloquearUsuarioGitlab(idGitlab);
 
-			if (resultadoBaja === 2 || resultadoBaja?.rowCount === 0) {
-				return res
-					.status(404)
-					.json({ error: "Usuario no encontrado para dar de baja." });
-			}
+			await UserModel.darBaja(uuid);
+			estaActivoEnBD = false;
 
 			if (Object.keys(camposCambiados).length <= 1 && !fotoFile) {
 				return res.status(204).send();
 			}
+		}
+
+		//Reactivación.
+		if (!estaActivoEnBD && camposCambiados.activo === true) {
+			console.log("Reactivando usuario en servicios externos...");
+			const idGitlab =
+				statusActual.id_gitlab || (await UserModel.getGitlabId(uuid));
+			if (idGitlab) await reactivarUsuarioGitlab(idGitlab);
+
+			await UserModel.activar(uuid);
+			estaActivoEnBD = true;
 		}
 
 		if (camposCambiados.contrasena) {
@@ -282,13 +302,10 @@ export const patchUser = async (req, res) => {
 		}
 
 		if (Object.keys(camposCambiados).length === 0 && !fotoFile) {
-			return res
-				.status(400)
-				.json({ error: "No se han enviado campos a actualizar." });
+			return res.status(204).send();
 		}
 
 		const soloEdicionPerfil = esDueno && !tienePermisoEdicion;
-
 		const resultado = await UserModel.patchUser(
 			uuid,
 			camposCambiados,
@@ -297,13 +314,15 @@ export const patchUser = async (req, res) => {
 		);
 
 		if (resultado === 2 || resultado?.rowCount === 0) {
-			return res.status(404).json({ error: "Usuario no encontrado." });
+			return res.status(404).json({
+				error: "Usuario no encontrado durante la actualización final.",
+			});
 		}
 
 		return res.status(204).send();
 	} catch (error) {
 		console.error("Error en patchUser Controller:", error);
-		return res.status(500).json({ error: "Error interno del servidor." });
+		return res.status(500).json({ error: `Error interno: ${error.message}` });
 	}
 };
 

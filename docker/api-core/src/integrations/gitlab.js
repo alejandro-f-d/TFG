@@ -463,3 +463,34 @@ export async function bloquearUsuarioGitlab(userId) {
 		throw error;
 	}
 }
+
+export async function reactivarUsuarioGitlab(userId) {
+	try {
+		const response = await axios.post(
+			`${process.env.URI_GITLAB}/api/v4/users/${userId}/unblock`,
+			{},
+			{
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+
+		console.log(`[+] Usuario ID ${userId} ha sido REACTIVADO con éxito.`);
+
+		return {
+			success: true,
+			message: "Acceso restaurado correctamente",
+			usuario: response.data,
+		};
+	} catch (error) {
+		if (error.response && error.response.status === 404) {
+			console.error(`Error: El usuario con ID ${userId} no existe.`);
+			throw new Error("Usuario no encontrado en GitLab.");
+		}
+
+		console.error(
+			"Error al reactivar usuario:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}
