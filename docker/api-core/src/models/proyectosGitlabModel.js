@@ -185,6 +185,37 @@ class ProyectosGitlabModel {
 			client.release();
 		}
 	}
+	static async getEstado(uuid) {
+		try {
+			const resStatus = await pool.query(PROYECTOS_QUERY.GET_ESTADO, [uuid]);
+			if (resStatus.rowCount === 0) {
+				return 2;
+			}
+			return {
+				status: resStatus.rows[0].activo,
+				idGitlab: resStatus.rows[0].idgitlab,
+			};
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener el estado de un proyecto en la base de datos",
+				uuid,
+				error,
+			);
+			throw error;
+		}
+	}
+	static async setStatus(uuid, status) {
+		try {
+			await pool.query(PROYECTOS_QUERY.SET_STATUS, [uuid, status]);
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al establecer el status",
+				uuid,
+				error,
+			);
+			throw error;
+		}
+	}
 }
 
 export default ProyectosGitlabModel;

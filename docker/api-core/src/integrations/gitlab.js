@@ -95,7 +95,7 @@ export async function crearProyecto(nombreProyecto, arrayIdsGitlabBaseDatos) {
 			{
 				name: nombreProyecto,
 				path: safePath,
-				initialize_with_readme: true,
+				initialize_with_readme: true, // Esto crea la rama 'main'
 			},
 			{ headers: { "Private-Token": process.env.GITLAB_TOKEN } },
 		);
@@ -103,14 +103,31 @@ export async function crearProyecto(nombreProyecto, arrayIdsGitlabBaseDatos) {
 		const projectId = response.data.id;
 		console.log(`Proyecto creado en GitLab con ID: ${projectId}`);
 
+		try {
+			await axios.delete(
+				`${process.env.URI_GITLAB}/api/v4/projects/${projectId}/protected_branches/main`,
+				{ headers: { "Private-Token": process.env.GITLAB_TOKEN } },
+			);
+			console.log(
+				`Protección de la rama 'main' eliminada para el proyecto ${projectId}`,
+			);
+		} catch (protError) {
+			console.warn(
+				"No se pudo desproteger 'main' (quizás aún se está creando el repo).",
+				protError.message,
+			);
+		}
+
+		//Añadir a los usuarios.
 		for (const userId of arrayIdsGitlabBaseDatos) {
 			await anadirUsuarioAlProyecto(projectId, userId, 30);
 		}
+
 		return projectId;
 	} catch (error) {
 		if (error.response && error.response.data) {
 			console.error(
-				"Detalle del error 400 de GitLab:",
+				"Detalle del error de GitLab:",
 				JSON.stringify(error.response.data),
 			);
 		} else {
@@ -149,12 +166,8 @@ export async function eliminarUsuarioDelProyecto(projectId, userId) {
 	}
 }
 
-export async function archivarProyecto(nombreProyecto) {
+export async function archivarProyecto(projectId) {
 	try {
-		const proyectId = await obtenerIdProyectoPorNombre(nombreProyecto);
-		if (!projectId) {
-			return 2; //404 proyecto no encontrado.
-		}
 		const response = await axios.post(
 			`${process.env.URI_GITLAB}/api/v4/projects/${projectId}/archive`,
 			{},
@@ -245,10 +258,10 @@ export async function crearUsuarioGitlab(email, username, name, password) {
 	}
 }
 
-export async function obtenerDetallesProyecto(projectId) {
+export async function obtenerDetallesProyecto(proyecto) {
 	try {
 		const response = await axios.get(
-			`${process.env.URI_GITLAB}/api/v4/projects/${projectId}`,
+			`${process.env.URI_GITLAB}/api/v4/projects/${proyecto}`,
 			{
 				params: {
 					statistics: true,
@@ -347,6 +360,32 @@ export async function actualizarUsernameGitlab(idGitlab, nuevoUsername) {
 
 		console.error(
 			"Error al editar username:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}
+
+export async function desarchivarProyecto(projectId) {
+	try {
+		const response = await axios.post(
+			`${process.env.URI_GITLAB}/api/v4/projects/${projectId}/unarchive`,
+			{},
+			{
+				headers: { "Private-Token": process.env.GITLAB_TOKEN },
+			},
+		);
+
+		console.log(`Proyecto ${projectId} desarchivado con éxito.`);
+		return response.data;
+	} catch (error) {
+		if (error.response && error.response.status === 404) {
+			console.error(`No se encontró el proyecto con ID ${projectId}.`);
+			return 2;
+		}
+
+		console.error(
+			"Error al desarchivar el proyecto:",
 			error.response?.data || error.message,
 		);
 		throw error;

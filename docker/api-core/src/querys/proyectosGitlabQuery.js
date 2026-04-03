@@ -58,4 +58,6 @@ export const PROYECTOS_QUERY = {
         FROM unnest($1::int[]) WITH ORDINALITY AS input(idusuario, orden)
         LEFT JOIN medal.usuario u ON u.idusuario = input.idusuario
         ORDER BY input.orden;`,
+	GET_ESTADO: `SELECT idgitlab, activo from medal.proyectosgitlab where uuidproyecto = $1;`,
+	SET_STATUS: `UPDATE medal.proyectosgitlab SET activo = $2 WHERE uuidproyecto = $1;`,
 };

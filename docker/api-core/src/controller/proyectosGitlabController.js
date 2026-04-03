@@ -4,6 +4,8 @@ import {
 	crearProyecto,
 	obtenerDetallesProyecto,
 	obtenerEstadisticasCommits,
+	archivarProyecto,
+	desarchivarProyecto,
 } from "../integrations/gitlab.js";
 
 export const postProyectoGitlab = async (req, res) => {
@@ -140,12 +142,42 @@ export const patchProyectoGitlab = async (req, res) => {
 	}
 
 	try {
-		const resPatch = await ProyectosGitlabModel.patchProyecto(
-			uuid,
-			camposCambiados,
-		);
-		if (resPatch == 2) {
-			return res.status(404).json({ error: "Proyecto gitlab no encontrado" });
+		// Verificación de si pasa a inactivo el proyecto.
+		if (camposCambiados.activo != null) {
+			const estadoActual = await ProyectosGitlabModel.getEstado(uuid);
+			if (estadoActual === 2) {
+				return res.status(404).json({ error: "Proyecto Gitlab not found" });
+			}
+			console.log(
+				"Los estados que se estan checkeando son:",
+				camposCambiados.activo,
+				camposCambiados.activo != estadoActual.status,
+			);
+			if (
+				!camposCambiados.activo &&
+				camposCambiados.activo != estadoActual.status
+			) {
+				console.log("Entro en archivar proyecto.", estadoActual.idGitlab);
+				// El proyecto está marcado como activo. Hay que marcarlo como inactivo.
+				await archivarProyecto(estadoActual.idGitlab);
+				await ProyectosGitlabModel.setStatus(uuid, camposCambiados.activo);
+			} else if (
+				camposCambiados.activo &&
+				camposCambiados.activo != estadoActual.status
+			) {
+				// El proyecto está marcado como inactivo. Hay que marcarlo como activo.
+				await desarchivarProyecto(estadoActual.idGitlab);
+				await ProyectosGitlabModel.setStatus(uuid, camposCambiados.activo);
+			}
+		}
+		if (camposCambiados.activo === null || camposCambiados.activo) {
+			const resPatch = await ProyectosGitlabModel.patchProyecto(
+				uuid,
+				camposCambiados,
+			);
+			if (resPatch == 2) {
+				return res.status(404).json({ error: "Proyecto gitlab no encontrado" });
+			}
 		}
 		return res
 			.status(204)

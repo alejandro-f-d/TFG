@@ -14,11 +14,13 @@ import {
 
 // --- INTERFACES ---
 interface Participante {
-	idusuario: number;
+	idUsuario?: number;
+	idusuario?: number;
 	nombre: string;
-	apellido1: string;
-	gitlab: string;
-	fotoperfil: any;
+	apellidos?: string;
+	apellido1?: string;
+	gitlab?: string;
+	fotoperfil?: any;
 }
 
 interface ProyectoDetalle {
@@ -147,21 +149,27 @@ export default function DetalleProyectoGitLab() {
 			activo: proyecto.info.activo,
 		});
 
-		// Filtramos los participantes actuales por si vienen con IDs nulos de base de datos
+		// Corregido: Mapear idUsuario (Mayúscula según tu JSON)
 		const idsExistentes = proyecto.info.participantes
-			.map((p) => p.idusuario)
-			.filter((id) => id !== null && id !== undefined);
+			.map((p) => Number(p.idUsuario || p.idusuario))
+			.filter((id) => !isNaN(id));
 
 		setSeleccionados(idsExistentes);
 		setIsEditing(true);
+
+		// Forzamos carga inicial de usuarios para que los checks se pinten al abrir
+		buscarUsuarios("");
 	};
 
 	const handleSave = async () => {
 		try {
 			const token = localStorage.getItem("token");
 
-			// Si no hay seleccionados, enviamos null en lugar de un array vacío
-			const participantesData = seleccionados.length > 0 ? seleccionados : null;
+			// Si el array está vacío después de filtrar nulos, enviamos null
+			const idsLimpios = seleccionados.filter(
+				(id) => id !== null && id !== undefined,
+			);
+			const participantesData = idsLimpios.length > 0 ? idsLimpios : null;
 
 			const body = {
 				...editForm,
@@ -211,7 +219,6 @@ export default function DetalleProyectoGitLab() {
 	return (
 		<div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 lg:p-12 overflow-x-hidden">
 			<div className="max-w-7xl mx-auto">
-				{/* NAVIGATION */}
 				<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12">
 					<button
 						onClick={() => router.back()}
@@ -385,7 +392,7 @@ export default function DetalleProyectoGitLab() {
 									const avatar = formatAvatarUrl(p.fotoperfil);
 									return (
 										<div
-											key={p.idusuario}
+											key={p.idUsuario || p.idusuario}
 											className="flex items-center gap-5 group"
 										>
 											<div className="w-14 h-14 rounded-full bg-slate-50 overflow-hidden flex items-center justify-center border-2 border-white shadow-sm transition-transform group-hover:scale-105">
@@ -406,7 +413,7 @@ export default function DetalleProyectoGitLab() {
 													{p.nombre}
 												</p>
 												<p className="text-[13px] font-black uppercase text-slate-900 truncate leading-tight tracking-tight">
-													{p.apellido1}
+													{p.apellidos || p.apellido1}
 												</p>
 											</div>
 										</div>
@@ -496,16 +503,18 @@ export default function DetalleProyectoGitLab() {
 								/>
 								<div className="flex-1 overflow-y-auto space-y-4 pr-3 custom-scrollbar">
 									{usuariosSugeridos.map((u) => {
-										const isSelected = seleccionados.includes(u.idusuario);
+										// Normalizamos IDs para la comparación
+										const currentId = Number(u.idUsuario || u.idusuario);
+										const isSelected = seleccionados.includes(currentId);
 										const sugAvatar = formatAvatarUrl(u.fotoperfil);
 										return (
 											<div
-												key={u.idusuario}
+												key={currentId}
 												onClick={() =>
 													setSeleccionados((prev) =>
 														isSelected
-															? prev.filter((id) => id !== u.idusuario)
-															: [...prev, u.idusuario],
+															? prev.filter((id) => id !== currentId)
+															: [...prev, currentId],
 													)
 												}
 												className={`flex items-center justify-between p-6 rounded-[2.5rem] cursor-pointer transition-all border-2 ${isSelected ? "bg-white border-orange-500 shadow-xl" : "bg-white border-transparent shadow-sm"}`}
@@ -523,7 +532,7 @@ export default function DetalleProyectoGitLab() {
 													</div>
 													<div>
 														<p className="text-[12px] font-black uppercase text-slate-900 leading-tight">
-															{u.nombre} {u.apellido1}
+															{u.nombre} {u.apellidos || u.apellido1}
 														</p>
 													</div>
 												</div>
