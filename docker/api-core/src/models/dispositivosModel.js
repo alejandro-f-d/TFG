@@ -102,6 +102,20 @@ class DispositivosModel {
 			throw error;
 		}
 	}
+	static async getTipos() {
+		try {
+			const resGet = await pool.query(DISPOSITIVOS_QUERY.GET_TIPOS, []);
+			if (resGet.rowCount === 0) {
+				return 2;
+			}
+			return resGet.rows[0].tipos_dispositivo;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener los tipos de los dispositivos.",
+			);
+			throw error;
+		}
+	}
 }
 
 export default DispositivosModel;

@@ -25,4 +25,14 @@ export const DISPOSITIVOS_QUERY = {
 			.join(", ");
 		return `UPDATE medal.dispositivos SET ${setClause} WHERE uuiddispositivo = $${columns.length + 1};`;
 	},
+	GET_TIPOS: `SELECT COALESCE(
+        json_agg(
+            json_build_object(
+                'nombre', nombre,
+                'descripcion', descripcion
+            )
+        ), 
+        '[]'
+    ) AS tipos_dispositivo
+    FROM medal.tipodispositivo;`,
 };

@@ -7,6 +7,7 @@ import {
 	getDispositivoByUuid,
 	deleteDispositivoByUuid,
 	patchDispositivo,
+	getTiposDispositivos,
 } from "../controller/dispositivosController.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
 import { dispositivoSchema, dispositivoPatchSchema } from "../schemas/index.js";
@@ -323,6 +324,121 @@ router.get(
 	"/",
 	[verificarToken, tienePermiso("dispositivo:getDispositivo")],
 	getAllDispositivos,
+);
+
+/**
+ * @swagger
+ * /api/dispositivos/tipos:
+ *   get:
+ *     summary: Obtiene los tipos de dispositivos disponibles
+ *     description: |
+ *       Retorna un listado de los diferentes tipos de dispositivos que se pueden registrar en el sistema.
+ *       Cada tipo incluye un nombre y una descripción.
+ *       Requiere el permiso `dispositivo:postDispositivo` (o `admin:total`).
+ *     tags: [Dispositivos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Listado de tipos obtenido correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 info:
+ *                   type: string
+ *                   example: "Información encontrada"
+ *                 tipos:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       nombre:
+ *                         type: string
+ *                         description: Nombre del tipo de dispositivo
+ *                         example: "SSD"
+ *                       descripcion:
+ *                         type: string
+ *                         description: Descripción del tipo de dispositivo
+ *                         example: "Disco de estado sólido (SATA/NVMe)"
+ *             examples:
+ *               ejemploBasico:
+ *                 summary: Listado completo de tipos
+ *                 value:
+ *                   info: "Información encontrada"
+ *                   tipos: [
+ *                     {
+ *                       "nombre": "SSD",
+ *                       "descripcion": "Disco de estado sólido (SATA/NVMe)"
+ *                     },
+ *                     {
+ *                       "nombre": "HDD",
+ *                       "descripcion": "Disco duro mecánico tradicional"
+ *                     },
+ *                     {
+ *                       "nombre": "Cinta Magnética",
+ *                       "descripcion": "Unidad de respaldo LTO o similares"
+ *                     },
+ *                     {
+ *                       "nombre": "NAS",
+ *                       "descripcion": "Almacenamiento conectado en red"
+ *                     }
+ *                   ]
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       403:
+ *         description: Prohibido - No tiene el permiso "dispositivo:postDispositivo"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No tiene permisos para realizar esta acción"
+ *       404:
+ *         description: No se encontraron tipos de dispositivos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Tipos no encontrados."
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Se ha producido un error al obtener los posibles tipos de dispositivos."
+ */
+
+router.get(
+	"/tipos",
+	[verificarToken, tienePermiso("dispositivo:postDispositivo")],
+	getTiposDispositivos,
 );
 
 /**

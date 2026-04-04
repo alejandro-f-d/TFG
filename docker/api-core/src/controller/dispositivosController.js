@@ -143,3 +143,24 @@ export const patchDispositivo = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
+
+export const getTiposDispositivos = async (req, res) => {
+	try {
+		const resultadoTipos = await DispositivosModel.getTipos();
+		if (resultadoTipos === 2) {
+			return res.status(404).json({ error: "Tipos no encontrados." });
+		}
+		return res
+			.status(200)
+			.json({ info: "Información encontrada", tipos: resultadoTipos });
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al obtener los diferentes tipos de dispositivos.",
+			error,
+		);
+		return res.status(500).json({
+			error:
+				"Se ha producido un error al obtener los posibles tipos de dispositivos.",
+		});
+	}
+};

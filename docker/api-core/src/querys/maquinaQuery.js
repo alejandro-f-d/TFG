@@ -26,7 +26,21 @@ export const MAQUINA_QUERIES = {
 
 		return query;
 	},
-	GET_MAQUINA_UUID: `SELECT * FROM medal.maquina WHERE uuidmaquina = $1;`,
+	GET_MAQUINA_UUID: `SELECT 
+        m.*,
+        COALESCE(
+            (SELECT json_agg(
+                json_build_object(
+                    'uuiddispositivo', d.uuiddispositivo,
+                    'nombre', d.nombre,
+                    'capacidad', d.capacidad
+                )
+            ) 
+            FROM medal.dispositivos d 
+            WHERE d.idmaquina = m.idmaquina), 
+        '[]') as dispositivos
+    FROM medal.maquina m
+    WHERE m.uuidmaquina = $1;`,
 	DELETE_PERMS: `DELETE FROM medal.permisos WHERE alias ILIKE $1`,
 	DELETE_MAQ: `DELETE FROM medal.maquina WHERE uuidmaquina = $1`,
 	VERIFICAR_EXISTE: `

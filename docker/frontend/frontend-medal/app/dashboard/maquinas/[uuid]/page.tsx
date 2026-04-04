@@ -36,7 +36,7 @@ interface MaquinaFull {
 	direccionipprivadav6: string | null;
 	direccionippublicav6: string | null;
 	puertaenlacev6: string | null;
-	certificadosslactivo: boolean;
+	certificadosslactivo: boolean | null;
 	caducidadssl: string | null;
 	emisorssl: string | null;
 	dispositivos: Dispositivo[];
@@ -64,10 +64,9 @@ export default function MachineDetailPage() {
 		if (stored) {
 			const parsed = JSON.parse(stored);
 			setUserPerms(parsed);
-			const canView =
-				parsed.includes("admin:total") ||
-				parsed.includes("maq:getAll") ||
-				parsed.includes("maq:getServer");
+			const canView = parsed.some((p: string) =>
+				["admin:total", "maq:getAll", "maq:getServer"].includes(p),
+			);
 			if (!canView) router.push("/dashboard");
 		} else {
 			logout();
@@ -83,40 +82,36 @@ export default function MachineDetailPage() {
 		setLoading(true);
 		const token = localStorage.getItem("token");
 		const headers = { Authorization: `Bearer ${token}` };
+		const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 		try {
-			const resMaq = await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/api/maquina/${uuid}`,
-				{ headers },
-			);
-			const dataMaq = await resMaq.json();
-			if (resMaq.ok && dataMaq.info) {
+			const [resMaq, resRes, resServ] = await Promise.all([
+				fetch(`${apiUrl}/api/maquina/${uuid}`, { headers }),
+				fetch(`${apiUrl}/api/maquina/${uuid}/reserva`, { headers }),
+				fetch(`${apiUrl}/api/maquina/${uuid}/servicios?limit=10`, { headers }),
+			]);
+
+			if (resMaq.ok) {
+				const dataMaq = await resMaq.json();
+				const info = dataMaq.info;
 				setMaquina({
-					...dataMaq.info,
-					dispositivos: dataMaq.info.dispositivos || [],
+					...info,
+					dispositivos: info.dispositivos || [],
 				});
-				setMachineForm(dataMaq.info);
+				setMachineForm(info);
 			}
 
-			const resRes = await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/api/maquina/${uuid}/reserva`,
-				{ headers },
-			);
 			if (resRes.ok) {
 				const dataRes = await resRes.json();
 				setReservas(dataRes.info || []);
 			}
 
-			const resServ = await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/api/maquina/${uuid}/servicios?limit=10`,
-				{ headers },
-			);
 			if (resServ.ok) {
 				const dataServ = await resServ.json();
-				setServicios(dataServ.info.data || []);
+				setServicios(dataServ.info?.data || []);
 			}
 		} catch (e) {
-			console.error(e);
+			console.error("Fetch error:", e);
 		} finally {
 			setLoading(false);
 		}
@@ -129,6 +124,10 @@ export default function MachineDetailPage() {
 	const handleUpdateMachine = async () => {
 		try {
 			const token = localStorage.getItem("token");
+			// Limpiamos el objeto para no mandar campos extra como 'dispositivos' en el PATCH si no es necesario
+			const { dispositivos, uuidmaquina, idmaquina, ...updatePayload } =
+				machineForm as any;
+
 			const res = await fetch(
 				`${process.env.NEXT_PUBLIC_API_URL}/api/maquina/${uuid}`,
 				{
@@ -137,15 +136,16 @@ export default function MachineDetailPage() {
 						Authorization: `Bearer ${token}`,
 						"Content-Type": "application/json",
 					},
-					body: JSON.stringify(machineForm),
+					body: JSON.stringify(updatePayload),
 				},
 			);
+
 			if (res.ok) {
 				setIsEditingMachine(false);
 				fetchData();
 			}
 		} catch (e) {
-			console.error(e);
+			console.error("Update error:", e);
 		}
 	};
 
@@ -161,11 +161,9 @@ export default function MachineDetailPage() {
 				},
 			);
 			if (res.ok) router.push("/dashboard/maquinas");
-			else {
-				setIsDeleting(false);
-				setShowDeleteAlert(false);
-			}
 		} catch (e) {
+			console.error(e);
+		} finally {
 			setIsDeleting(false);
 			setShowDeleteAlert(false);
 		}
@@ -177,6 +175,7 @@ export default function MachineDetailPage() {
 				Sincronizando Activo...
 			</div>
 		);
+
 	if (!maquina) return null;
 
 	return (
@@ -228,86 +227,68 @@ export default function MachineDetailPage() {
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-					{/* COL 1: RED (v4/v6) Y SEGURIDAD SSL */}
+					{/* COL 1: REDES */}
 					<div className="lg:col-span-4 space-y-10">
-						{/* IPv4 */}
 						<div className="bg-slate-900 p-8 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
-							{/* MARCA DE AGUA UNIFICADA */}
-							<div className="absolute top-0 right-0 p-6 opacity-[0.07] text-[80px] font-black italic leading-none pointer-events-none select-none text-white">
+							<div className="absolute top-0 right-0 p-6 opacity-[0.07] text-[80px] font-black italic leading-none pointer-events-none text-white">
 								v4
 							</div>
-
 							<h2 className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em] mb-8 italic relative z-10">
 								Network IPv4
 							</h2>
-
 							<div className="space-y-4 relative z-10">
-								<div>
-									<p className="text-[7px] text-slate-500 uppercase font-black mb-1">
-										Privada
-									</p>
-									<p className="font-mono text-[11px] text-white">
-										{maquina.direccionipprivadav4 || "---"}
-									</p>
-								</div>
-								<div>
-									<p className="text-[7px] text-slate-500 uppercase font-black mb-1">
-										Pública
-									</p>
-									<p className="font-mono text-[11px] text-blue-200">
-										{maquina.direccionippublicav4 || "---"}
-									</p>
-								</div>
-								<div>
-									<p className="text-[7px] text-slate-500 uppercase font-black mb-1">
-										Gateway
-									</p>
-									<p className="font-mono text-[10px] text-slate-400">
-										{maquina.puertaenlacev4 || "---"}
-									</p>
-								</div>
+								{["privada", "pública", "gateway"].map((type, i) => {
+									const keys = [
+										"direccionipprivadav4",
+										"direccionippublicav4",
+										"puertaenlacev4",
+									];
+									return (
+										<div key={type}>
+											<p className="text-[7px] text-slate-500 uppercase font-black mb-1">
+												{type}
+											</p>
+											<p
+												className={`font-mono text-[11px] ${i === 1 ? "text-blue-200" : "text-white"}`}
+											>
+												{(maquina as any)[keys[i]] || "---"}
+											</p>
+										</div>
+									);
+								})}
 							</div>
 						</div>
 
 						{/* IPv6 */}
 						<div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl relative overflow-hidden">
-							{/* MARCA DE AGUA UNIFICADA */}
-							<div className="absolute top-0 right-0 p-6 opacity-[0.03] text-[80px] font-black italic leading-none pointer-events-none select-none text-slate-900">
+							<div className="absolute top-0 right-0 p-6 opacity-[0.03] text-[80px] font-black italic leading-none pointer-events-none text-slate-900">
 								v6
 							</div>
-
 							<h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 italic relative z-10">
 								Network IPv6
 							</h2>
-
 							<div className="space-y-4 relative z-10">
-								<div>
-									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
-										Privada
-									</p>
-									<p className="font-mono text-[11px] text-slate-900 break-all">
-										{maquina.direccionipprivadav6 || "---"}
-									</p>
-								</div>
-								<div>
-									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
-										Pública
-									</p>
-									<p className="font-mono text-[11px] text-blue-600 break-all">
-										{maquina.direccionippublicav6 || "---"}
-									</p>
-								</div>
-								<div>
-									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
-										Gateway v6
-									</p>
-									<p className="font-mono text-[10px] text-slate-300 break-all">
-										{maquina.puertaenlacev6 || "---"}
-									</p>
-								</div>
+								{[
+									"direccionipprivadav6",
+									"direccionippublicav6",
+									"puertaenlacev6",
+								].map((key) => (
+									<div key={key}>
+										<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
+											{key
+												.replace("direcci", "")
+												.replace("v6", "")
+												.toUpperCase()}
+										</p>
+										<p className="font-mono text-[11px] text-slate-900 break-all">
+											{(maquina as any)[key] || "---"}
+										</p>
+									</div>
+								))}
 							</div>
 						</div>
-						{/* SEGURIDAD SSL */}
+
+						{/* SSL */}
 						<div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl relative overflow-hidden">
 							<div
 								className={`absolute top-0 right-0 w-2 h-full ${maquina.certificadosslactivo ? "bg-emerald-500" : "bg-red-500"}`}
@@ -352,96 +333,116 @@ export default function MachineDetailPage() {
 					<div className="lg:col-span-4 space-y-10">
 						<div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl">
 							<h2 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-8 italic">
-								Hardware
+								Hardware Vinculado
 							</h2>
-							{maquina.dispositivos.map((d) => (
-								<div
-									key={d.uuiddispositivo}
-									className="flex justify-between items-center py-4 border-b border-slate-50 last:border-0"
-								>
-									<span className="text-[10px] font-black uppercase text-slate-900">
-										{d.nombre}
-									</span>
-									<span className="text-[10px] font-mono text-slate-400">
-										{d.capacidad}GB
-									</span>
-								</div>
-							))}
+							{maquina.dispositivos.length > 0 ? (
+								maquina.dispositivos.map((d) => (
+									<div
+										key={d.uuiddispositivo}
+										className="flex justify-between items-center py-4 border-b border-slate-50 last:border-0"
+									>
+										<span className="text-[10px] font-black uppercase text-slate-900">
+											{d.nombre}
+										</span>
+										<span className="text-[10px] font-mono text-blue-600 bg-blue-50 px-3 py-1 rounded-full font-bold">
+											{d.capacidad}GB
+										</span>
+									</div>
+								))
+							) : (
+								<p className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center py-10 border-2 border-dashed border-slate-50 rounded-3xl">
+									Sin dispositivos
+								</p>
+							)}
 						</div>
+
 						<div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl">
 							<h2 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-10">
-								Servicios
+								Servicios Activos
 							</h2>
-							{servicios.map((s) => (
-								<button
-									key={s.uuidservicio}
-									onClick={() =>
-										router.push(`/dashboard/servicios/${s.uuidservicio}`)
-									}
-									className="w-full text-left p-6 rounded-[2.5rem] bg-slate-50 hover:bg-white border-2 border-transparent hover:border-blue-600 transition-all mb-4 last:mb-0 shadow-sm"
-								>
-									<h3 className="text-[11px] font-black uppercase text-slate-900">
-										{s.nombreservicio}
-									</h3>
-									<p className="text-[8px] text-slate-400 font-bold uppercase">
-										{s.softwarebase}
-									</p>
-								</button>
-							))}
+							{servicios.length > 0 ? (
+								servicios.map((s) => (
+									<button
+										key={s.uuidservicio}
+										onClick={() =>
+											router.push(`/dashboard/servicios/${s.uuidservicio}`)
+										}
+										className="w-full text-left p-6 rounded-[2.5rem] bg-slate-50 hover:bg-white border-2 border-transparent hover:border-blue-600 transition-all mb-4 last:mb-0 shadow-sm group"
+									>
+										<h3 className="text-[11px] font-black uppercase text-slate-900 group-hover:text-blue-600 transition-colors">
+											{s.nombreservicio}
+										</h3>
+										<p className="text-[8px] text-slate-400 font-bold uppercase">
+											{s.softwarebase}
+										</p>
+									</button>
+								))
+							) : (
+								<p className="text-[9px] font-black text-slate-300 uppercase text-center">
+									No se detectan servicios
+								</p>
+							)}
 						</div>
 					</div>
 
-					{/* COL 3: CALENDARIO */}
+					{/* COL 3: RESERVAS */}
 					<div className="lg:col-span-4">
-						<div className="bg-blue-600 p-10 rounded-[3.5rem] text-white shadow-2xl">
+						<div className="bg-blue-600 p-10 rounded-[3.5rem] text-white shadow-2xl min-h-[400px]">
 							<h2 className="text-[10px] font-black text-blue-100 uppercase tracking-[0.3em] mb-10 italic">
-								Próximas Reservas
+								Timeline de Reservas
 							</h2>
-							{reservas.map((r) => (
-								<button
-									key={r.uuidcalendario}
-									onClick={() =>
-										router.push(
-											`/dashboard/reserva/${uuid}/${r.uuidcalendario}`,
-										)
-									}
-									className="w-full text-left p-7 rounded-[2rem] bg-blue-700/20 hover:bg-blue-500 transition-all mb-4 relative overflow-hidden group"
-								>
-									<h4 className="text-[13px] font-black uppercase mb-2">
-										{r.nombre_reserva}
-									</h4>
-									<p className="text-[8px] font-bold text-blue-100/60 uppercase">
-										RESP: {r.nombre_completo_responsable}
+							{reservas.length > 0 ? (
+								reservas.map((r) => (
+									<button
+										key={r.uuidcalendario}
+										onClick={() =>
+											router.push(
+												`/dashboard/reserva/${uuid}/${r.uuidcalendario}`,
+											)
+										}
+										className="w-full text-left p-7 rounded-[2rem] bg-blue-700/30 hover:bg-white hover:text-blue-600 transition-all mb-4 relative overflow-hidden group"
+									>
+										<h4 className="text-[13px] font-black uppercase mb-2">
+											{r.nombre_reserva}
+										</h4>
+										<p className="text-[8px] font-bold opacity-60 uppercase">
+											Responsable: {r.nombre_completo_responsable}
+										</p>
+									</button>
+								))
+							) : (
+								<div className="h-full flex flex-col items-center justify-center text-center opacity-40">
+									<p className="text-[10px] font-black uppercase tracking-widest">
+										Sin reservas activas
 									</p>
-								</button>
-							))}
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
 			</div>
 
-			{/* MODAL AVISO BORRADO */}
+			{/* MODAL BORRADO */}
 			{showDeleteAlert && (
 				<div className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[100] flex items-center justify-center p-6">
 					<div className="bg-white w-full max-w-md rounded-[3rem] p-12 shadow-2xl text-center">
-						<div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8">
-							<span className="text-red-600 text-3xl font-black">!</span>
+						<div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8 text-red-600 text-3xl font-black">
+							!
 						</div>
 						<h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900 mb-4">
 							¿Eliminar Activo?
 						</h3>
 						<p className="text-slate-400 text-[11px] font-bold uppercase mb-10 tracking-widest leading-relaxed">
-							Esta acción purgará el servidor{" "}
-							<span className="text-red-500">{maquina.nombre}</span> de forma
-							irreversible.
+							Purgar <span className="text-red-500">{maquina.nombre}</span> de
+							forma irreversible.
 						</p>
 						<div className="flex flex-col gap-4">
 							<button
 								onClick={handleDeleteMachine}
 								disabled={isDeleting}
-								className={`w-full py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all ${isDeleting ? "bg-slate-100 text-slate-400 animate-pulse" : "bg-red-600 text-white hover:bg-red-700 shadow-xl shadow-red-200"}`}
+								className={`w-full py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all ${isDeleting ? "bg-slate-100 text-slate-400" : "bg-red-600 text-white hover:bg-red-700 shadow-xl"}`}
 							>
-								{isDeleting ? "Eliminando..." : "Confirmar Eliminación"}
+								{isDeleting ? "Eliminando..." : "Confirmar"}
 							</button>
 							<button
 								onClick={() => setShowDeleteAlert(false)}
@@ -454,7 +455,7 @@ export default function MachineDetailPage() {
 				</div>
 			)}
 
-			{/* MODAL EDICIÓN COMPLETO (v4, v6 y SSL) */}
+			{/* MODAL EDICIÓN */}
 			{isEditingMachine && (
 				<div className="fixed inset-0 bg-slate-900/95 backdrop-blur-2xl z-50 flex items-center justify-center p-4 md:p-10">
 					<div className="bg-white w-full max-w-6xl rounded-[4rem] shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
@@ -464,7 +465,7 @@ export default function MachineDetailPage() {
 							</h2>
 							<button
 								onClick={() => setIsEditingMachine(false)}
-								className="text-[10px] font-black uppercase text-slate-400 bg-slate-50 px-6 py-3 rounded-full italic"
+								className="text-[10px] font-black uppercase text-slate-400 bg-slate-50 px-6 py-3 rounded-full italic hover:bg-slate-100 transition-colors"
 							>
 								[ Cerrar ]
 							</button>
@@ -474,141 +475,96 @@ export default function MachineDetailPage() {
 							<div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 								{/* INFO BASE */}
 								<div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-10 rounded-[3rem] mb-4">
-									<div className="flex flex-col gap-2">
-										<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
-											Hostname
-										</label>
-										<input
-											className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600"
-											defaultValue={maquina.nombre}
-											onChange={(e) =>
-												setMachineForm({
-													...machineForm,
-													nombre: e.target.value,
-												})
-											}
-										/>
-									</div>
-									<div className="flex flex-col gap-2">
-										<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
-											S.O.
-										</label>
-										<input
-											className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600"
-											defaultValue={maquina.sistemaoperativo}
-											onChange={(e) =>
-												setMachineForm({
-													...machineForm,
-													sistemaoperativo: e.target.value,
-												})
-											}
-										/>
-									</div>
-									<div className="flex flex-col gap-2">
-										<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
-											RAM (GB)
-										</label>
-										<input
-											type="number"
-											className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600"
-											defaultValue={maquina.ram}
-											onChange={(e) =>
-												setMachineForm({
-													...machineForm,
-													ram: Number(e.target.value),
-												})
-											}
-										/>
-									</div>
+									{[
+										{ label: "Hostname", key: "nombre", type: "text" },
+										{ label: "S.O.", key: "sistemaoperativo", type: "text" },
+										{ label: "RAM (GB)", key: "ram", type: "number" },
+									].map((f) => (
+										<div key={f.key} className="flex flex-col gap-2">
+											<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
+												{f.label}
+											</label>
+											<input
+												type={f.type}
+												className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm"
+												defaultValue={(maquina as any)[f.key]}
+												onChange={(e) =>
+													setMachineForm({
+														...machineForm,
+														[f.key]:
+															f.type === "number"
+																? Number(e.target.value)
+																: e.target.value,
+													})
+												}
+											/>
+										</div>
+									))}
 								</div>
 
 								{/* IPv4 Stack */}
-								<div className="space-y-4">
-									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-blue-600 pl-4 italic">
+								<div className="space-y-4 bg-slate-50/50 p-8 rounded-[2.5rem]">
+									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-blue-600 pl-4 italic mb-6">
 										IPv4 Stack
 									</h3>
-									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs"
-										placeholder="Privada"
-										defaultValue={maquina.direccionipprivadav4 || ""}
-										onChange={(e) =>
-											setMachineForm({
-												...machineForm,
-												direccionipprivadav4: e.target.value,
-											})
-										}
-									/>
-									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs"
-										placeholder="Pública"
-										defaultValue={maquina.direccionippublicav4 || ""}
-										onChange={(e) =>
-											setMachineForm({
-												...machineForm,
-												direccionippublicav4: e.target.value,
-											})
-										}
-									/>
-									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-xs"
-										placeholder="Gateway"
-										defaultValue={maquina.puertaenlacev4 || ""}
-										onChange={(e) =>
-											setMachineForm({
-												...machineForm,
-												puertaenlacev4: e.target.value,
-											})
-										}
-									/>
+									{[
+										"direccionipprivadav4",
+										"direccionippublicav4",
+										"puertaenlacev4",
+									].map((key) => (
+										<input
+											key={key}
+											className="w-full bg-white border border-slate-100 rounded-xl p-4 font-mono text-xs focus:ring-2 focus:ring-blue-600 outline-none"
+											placeholder={key
+												.replace("direccionip", "")
+												.replace("v4", "")
+												.toUpperCase()}
+											defaultValue={(maquina as any)[key] || ""}
+											onChange={(e) =>
+												setMachineForm({
+													...machineForm,
+													[key]: e.target.value,
+												})
+											}
+										/>
+									))}
 								</div>
 
 								{/* IPv6 Stack */}
-								<div className="space-y-4">
-									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-slate-400 pl-4 italic">
+								<div className="space-y-4 bg-slate-50/50 p-8 rounded-[2.5rem]">
+									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-slate-400 pl-4 italic mb-6">
 										IPv6 Stack
 									</h3>
-									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px]"
-										placeholder="Privada v6"
-										defaultValue={maquina.direccionipprivadav6 || ""}
-										onChange={(e) =>
-											setMachineForm({
-												...machineForm,
-												direccionipprivadav6: e.target.value,
-											})
-										}
-									/>
-									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px]"
-										placeholder="Pública v6"
-										defaultValue={maquina.direccionippublicav6 || ""}
-										onChange={(e) =>
-											setMachineForm({
-												...machineForm,
-												direccionippublicav6: e.target.value,
-											})
-										}
-									/>
-									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-mono text-[10px]"
-										placeholder="Gateway v6"
-										defaultValue={maquina.puertaenlacev6 || ""}
-										onChange={(e) =>
-											setMachineForm({
-												...machineForm,
-												puertaenlacev6: e.target.value,
-											})
-										}
-									/>
+									{[
+										"direccionipprivadav6",
+										"direccionippublicav6",
+										"puertaenlacev6",
+									].map((key) => (
+										<input
+											key={key}
+											className="w-full bg-white border border-slate-100 rounded-xl p-4 font-mono text-[10px] focus:ring-2 focus:ring-slate-900 outline-none"
+											placeholder={key
+												.replace("direccionip", "")
+												.replace("v6", "")
+												.toUpperCase()}
+											defaultValue={(maquina as any)[key] || ""}
+											onChange={(e) =>
+												setMachineForm({
+													...machineForm,
+													[key]: e.target.value,
+												})
+											}
+										/>
+									))}
 								</div>
 
-								{/* Seguridad y SSL */}
-								<div className="space-y-4">
-									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-emerald-500 pl-4 italic">
-										Seguridad / TLS
+								{/* Seguridad */}
+								<div className="space-y-4 bg-slate-50/50 p-8 rounded-[2.5rem]">
+									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-emerald-500 pl-4 italic mb-6">
+										TLS / Server
 									</h3>
 									<input
-										className="w-full bg-slate-50 rounded-xl p-4 font-bold text-xs"
+										className="w-full bg-white border border-slate-100 rounded-xl p-4 font-bold text-xs"
 										placeholder="Emisor SSL"
 										defaultValue={maquina.emisorssl || ""}
 										onChange={(e) =>
@@ -620,12 +576,8 @@ export default function MachineDetailPage() {
 									/>
 									<input
 										type="date"
-										className="w-full bg-slate-50 rounded-xl p-4 font-bold text-xs"
-										defaultValue={
-											maquina.caducidadssl
-												? maquina.caducidadssl.split("T")[0]
-												: ""
-										}
+										className="w-full bg-white border border-slate-100 rounded-xl p-4 font-bold text-xs"
+										defaultValue={maquina.caducidadssl?.split("T")[0] || ""}
 										onChange={(e) =>
 											setMachineForm({
 												...machineForm,
@@ -634,11 +586,11 @@ export default function MachineDetailPage() {
 										}
 									/>
 									<div className="grid grid-cols-2 gap-4">
-										<label className="flex items-center justify-center gap-2 bg-slate-50 p-4 rounded-xl cursor-pointer">
+										<label className="flex items-center justify-center gap-2 bg-white border border-slate-100 p-4 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors">
 											<input
 												type="checkbox"
 												className="accent-blue-600"
-												defaultChecked={maquina.certificadosslactivo}
+												defaultChecked={maquina.certificadosslactivo || false}
 												onChange={(e) =>
 													setMachineForm({
 														...machineForm,
@@ -650,7 +602,7 @@ export default function MachineDetailPage() {
 												SSL
 											</span>
 										</label>
-										<label className="flex items-center justify-center gap-2 bg-slate-900 text-white p-4 rounded-xl cursor-pointer">
+										<label className="flex items-center justify-center gap-2 bg-slate-900 text-white p-4 rounded-xl cursor-pointer hover:bg-blue-600 transition-colors">
 											<input
 												type="checkbox"
 												className="accent-white"
@@ -673,7 +625,7 @@ export default function MachineDetailPage() {
 						<div className="p-10 bg-white border-t border-slate-50">
 							<button
 								onClick={handleUpdateMachine}
-								className="w-full bg-slate-900 text-white py-10 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.6em] hover:bg-blue-600 transition-all shadow-2xl"
+								className="w-full bg-slate-900 text-white py-10 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.6em] hover:bg-blue-600 transition-all shadow-2xl active:scale-[0.99]"
 							>
 								Confirmar cambios en activo
 							</button>
