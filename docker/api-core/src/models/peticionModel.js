@@ -526,5 +526,14 @@ class PeticionModel {
 			throw error;
 		}
 	}
+	static async getMomentosEjecucion() {
+		try {
+			const resMomentum = await pool.query(PETICION_QUERY.GET_MOMENTUM_EXEC);
+			return resMomentum.rows[0] || { momentos: [], prioridades: [] };
+		} catch (error) {
+			console.error("Error al obtener momentos y prioridades (MODEL):", error);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;

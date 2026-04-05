@@ -163,4 +163,9 @@ export const PETICION_QUERY = {
         LEFT JOIN medal.usuario u_s ON u_c.responsable = u_s.idusuario 
         WHERE pa.nombreproyectoasociado ILIKE $1 AND p.estado ILIKE $2 AND p.usuariopeticion = $5
         ORDER BY p.idpeticion ASC LIMIT $3 OFFSET $4;`,
+	GET_MOMENTUM_EXEC: `
+    SELECT 
+        (SELECT json_agg(m.*) FROM medal.momentoejecucion m) AS momentos,
+        (SELECT json_agg(p.*) FROM medal.prioridadtarea p) AS prioridades;
+`,
 };

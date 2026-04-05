@@ -8,6 +8,7 @@ import {
 	procesarFirmaPorRol,
 	denegarPeticion,
 	peticionRealizada,
+	getMomentoEjecucion,
 } from "../controller/peticionController.js";
 import { validarTipos } from "../middlewares/validador.middleware.js";
 import {
@@ -257,6 +258,127 @@ const upload = multer({
  */
 
 router.post("/", [verificarToken], postPeticion);
+
+/**
+ * @swagger
+ * /api/peticion/momentoEjecucion:
+ *   get:
+ *     summary: Obtiene los momentos de ejecución y prioridades disponibles
+ *     description: |
+ *       Retorna un listado de los diferentes momentos de ejecución y prioridades
+ *       que se pueden seleccionar al crear una petición.
+ *       Este endpoint es público para usuarios autenticados.
+ *     tags: [Peticiones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token JWT con formato "Bearer <token>"
+ *         example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Información obtenida correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Información de ejecución obtenida con éxito"
+ *                 momentos:
+ *                   type: array
+ *                   description: Lista de momentos de ejecución disponibles
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       idmomentoejecucion:
+ *                         type: integer
+ *                         description: ID del momento de ejecución
+ *                         example: 1
+ *                       nombre:
+ *                         type: string
+ *                         description: Nombre descriptivo del momento
+ *                         example: "mañanas"
+ *                       descripcion:
+ *                         type: string
+ *                         nullable: true
+ *                         description: Descripción adicional
+ *                         example: null
+ *                 prioridades:
+ *                   type: array
+ *                   description: Lista de prioridades disponibles
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       idprioridad:
+ *                         type: integer
+ *                         description: ID de la prioridad
+ *                         example: 1
+ *                       nombre:
+ *                         type: string
+ *                         description: Nombre de la prioridad
+ *                         example: "INMEDIATO"
+ *                       descripcion:
+ *                         type: string
+ *                         description: Descripción de la prioridad
+ *                         example: "Ejecución inmediata"
+ *             examples:
+ *               ejemploBasico:
+ *                 summary: Listado completo de momentos y prioridades
+ *                 value:
+ *                   message: "Información de ejecución obtenida con éxito"
+ *                   momentos: [
+ *                     {
+ *                       "idmomentoejecucion": 1,
+ *                       "nombre": "mañanas",
+ *                       "descripcion": null
+ *                     },
+ *                     {
+ *                       "idmomentoejecucion": 2,
+ *                       "nombre": "tardes",
+ *                       "descripcion": "horario a partir de las 16:00"
+ *                     }
+ *                   ]
+ *                   prioridades: [
+ *                     {
+ *                       "idprioridad": 1,
+ *                       "nombre": "INMEDIATO",
+ *                       "descripcion": "Ejecución inmediata"
+ *                     },
+ *                     {
+ *                       "idprioridad": 2,
+ *                       "nombre": "INDIFERENTE",
+ *                       "descripcion": "Cuando sea posible."
+ *                     }
+ *                   ]
+ *       401:
+ *         description: No autorizado - Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No autorizado"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
+
+router.get("/momentoEjecucion", [verificarToken], getMomentoEjecucion);
 
 /**
  * @swagger

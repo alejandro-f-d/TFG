@@ -142,8 +142,10 @@ VALUES
 
 INSERT INTO medal.prioridadTarea(nombre,descripcion)
 VALUES
-('INMEDIATO','Ejecución inmediata');
+('INMEDIATO','Ejecución inmediata'),
+('INDIFERENTE', 'Cuando sea posible.');
 INSERT INTO medal.momentoEjecucion(nombre) VALUES('mañanas');
+INSERT INTO medal.momentoEjecucion(nombre, descripcion) VALUES('tardes', 'horario a partir de las 16:00');
 
 INSERT INTO medal.detallePeticionAcceso
 (cpuSolicitada,gpuSolicitada,nombreProyectoAsociado,nombreServicioAsociado,

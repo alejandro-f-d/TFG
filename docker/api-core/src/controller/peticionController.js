@@ -660,3 +660,17 @@ export const peticionRealizada = async (req, res) => {
 		return res.status(500).json({ error: `Error interno del servidor.` });
 	}
 };
+export const getMomentoEjecucion = async (req, res) => {
+	try {
+		const data = await PeticionModel.getMomentosEjecucion();
+
+		return res.status(200).json({
+			message: "Información de ejecución obtenida con éxito",
+			momentos: data.momentos || [],
+			prioridades: data.prioridades || [],
+		});
+	} catch (error) {
+		console.error("Error en el controlador de momentos de ejecución:", error);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
