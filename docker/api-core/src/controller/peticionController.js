@@ -342,9 +342,19 @@ export const getAllPeticiones = async (req, res) => {
 				req.user.idUsuario,
 			);
 		} else {
-			return res
-				.status(403)
-				.json({ error: "No tienes los permisos necesarios." });
+			// Obtener las peticiones del usuario en cuestión.
+			resultado = await PeticionModel.getPeticionesPropias(
+				page,
+				limit,
+				filtroNombre,
+				status,
+				req.user.idUsuario,
+			);
+			if (resultado === 2) {
+				return res
+					.status(404)
+					.json({ error: "No se ha encontrado ninguna petición." });
+			}
 		}
 		if (resultado === 2) {
 			return res.status(400).json({

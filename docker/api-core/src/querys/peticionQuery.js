@@ -150,4 +150,17 @@ export const PETICION_QUERY = {
 	`,
 	ANADIR_METADATA_SUPERVISOR: `UPDATE medal.documento SET  firmanteusuariosupervisor = $1, fechafirmausuariosupervisor = $2, niveldescripcionusuariosupervisor = $3 where idpeticion =$4;`,
 	ANADIR_METADATA_JEFE_LAB: `UPDATE medal.documento SET firmantejefelaboratorio = $1, fechafirmajefelaboratorio = $2, niveldescripcionjefelaboratorio = $3 where idpeticion =$4;`,
+
+	OBTENER_PETICIONES_PAGINACION_ALL_PROPIAS: `
+        SELECT p.*, pa.*, t.nombre AS prioridad_nombre, x.nombre AS momento_ejecucion_nombre,
+        CONCAT(u_c.nombre, ' ', u_c.apellido1, ' ', COALESCE(u_c.apellido2, '')) AS nombre_creador,
+        CONCAT(u_s.nombre, ' ', u_s.apellido1, ' ', COALESCE(u_s.apellido2, '')) AS nombre_supervisor
+        FROM medal.peticion p
+        INNER JOIN medal.detallepeticionacceso pa ON p.idpeticion = pa.idPeticionReferencia
+        INNER JOIN medal.prioridadtarea t ON pa.prioridadtarea = t.idprioridad
+        INNER JOIN medal.momentoejecucion x ON pa.idmomentoejecucion = x.idmomentoejecucion
+        INNER JOIN medal.usuario u_c ON p.usuariopeticion = u_c.idusuario
+        LEFT JOIN medal.usuario u_s ON u_c.responsable = u_s.idusuario 
+        WHERE pa.nombreproyectoasociado ILIKE $1 AND p.estado ILIKE $2 AND p.usuariopeticion = $5
+        ORDER BY p.idpeticion ASC LIMIT $3 OFFSET $4;`,
 };

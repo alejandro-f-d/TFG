@@ -488,5 +488,43 @@ class PeticionModel {
 			client.release();
 		}
 	}
+	static async getPeticionesPropias(
+		page,
+		limit,
+		filtroNombre,
+		status,
+		idUsuario,
+	) {
+		try {
+			const offset = (page - 1) * limit;
+			const busqueda = `%${filtroNombre}%`;
+			const busquedaStatus = status ? `%${status}%` : "%%";
+			const resGetAll = await pool.query(
+				PETICION_QUERY.OBTENER_PETICIONES_PAGINACION_ALL_PROPIAS,
+				[busqueda, busquedaStatus, limit, offset, idUsuario],
+			);
+			const totalItems = parseInt(resGetAll.rowCount);
+			if (totalItems === 0) {
+				return 2;
+			}
+
+			return {
+				status: "OK",
+				rows: resGetAll.rows,
+				pagination: {
+					totalItems,
+					totalPages: Math.ceil(totalItems / limit),
+					currentPage: page,
+					limit: limit,
+				},
+			};
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener las peticiones de un usuario específico.",
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default PeticionModel;
