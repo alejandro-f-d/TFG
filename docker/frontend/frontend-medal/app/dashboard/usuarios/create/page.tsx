@@ -68,7 +68,7 @@ function CreateUserForm() {
 					fetch(`${apiUrl}/api/puertas`, {
 						headers: { Authorization: `Bearer ${token}` },
 					}),
-					fetch(`${apiUrl}/api/user?limit=1000`, {
+					fetch(`${apiUrl}/api/user?filtroRevisores=true&limit=10000`, {
 						headers: { Authorization: `Bearer ${token}` },
 					}),
 				]);

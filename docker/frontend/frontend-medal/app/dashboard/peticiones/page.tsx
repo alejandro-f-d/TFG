@@ -82,8 +82,8 @@ export default function PeticionesPage() {
 		try {
 			const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 			let apiStatus = statusTab;
-			if (statusTab === "DENEGADA") apiStatus = "RECHAZADA";
-			if (statusTab === "REALIZADA") apiStatus = "COMPLETADA";
+			// if (statusTab === "DENEGADA") apiStatus = "RECHAZADA";
+			// if (statusTab === "REALIZADA") apiStatus = "COMPLETADA";
 
 			const res = await fetch(
 				`${baseUrl}/api/peticion?page=${page}&limit=8&status=${apiStatus}`,

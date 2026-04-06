@@ -6,6 +6,23 @@ import { XMLParser } from "fast-xml-parser";
 import FormData from "form-data";
 import { addEmailToQueue } from "../eda/queue.js";
 
+async function procesarNotificaciones(uuid, userId, nivelFirma) {
+	try {
+		if (nivelFirma === 3) {
+			const tos = await PeticionModel.obtenerCorreoUsuarioSupervisor(uuid);
+			await addEmailToQueue({ template: "PET_APROBADA", to: tos });
+		} else if (nivelFirma === 2) {
+			const tos = await PeticionModel.obtenerListaJefesLaboratorio();
+			await addEmailToQueue({ template: "PET_AVISO", to: tos });
+		} else if (nivelFirma === 1) {
+			const to = await PeticionModel.obtenerCorreoSupervisor(userId);
+			await addEmailToQueue({ template: "PET_AVISO", to });
+		}
+	} catch (err) {
+		console.error("Error enviando notificaciones:", err.message);
+	}
+}
+
 export const validarFirmaDSS = async (file, name) => {
 	// 1. Verificación de archivo recibido
 	if (!file) {
@@ -45,10 +62,7 @@ export const validarFirmaDSS = async (file, name) => {
 	);
 
 	if (soloFirmasSimple.length === 0) {
-		return res.status(422).json({
-			error: "El documento no contiene ninguna firma electrónica reconocida.",
-			detalles: "Asegúrese de que el PDF esté firmado digitalmente (PAdES).",
-		});
+		return 422;
 	}
 	// Validación de que la primera firma es la del servidor. Con el serial y con el nombre.
 	const firmaServidorSimple = soloFirmasSimple[0].Signature;
@@ -262,9 +276,13 @@ export const getPeticion = async (req, res) => {
 
 export const getDocumentoPeticion = async (req, res) => {
 	const { uuid } = req.params;
+
 	if (!uuid) {
-		return res.status(400).json({ error: "Solicitud mal formada." });
+		return res
+			.status(400)
+			.json({ error: "Solicitud mal formada: falta el UUID." });
 	}
+
 	try {
 		const codigoPermiso = await tienePermisoVisualizacion(
 			req.user.idUsuario,
@@ -272,40 +290,54 @@ export const getDocumentoPeticion = async (req, res) => {
 			req.user.permisos,
 		);
 
-		if (codigoPermiso === 1)
-			return res.status(403).json({ error: "No tienes permiso" });
-		if (codigoPermiso === 2)
-			return res.status(404).json({ error: "Petición no encontrada" });
-
-		const resGetUuidDoc = await PeticionModel.getUuidDoc(uuid);
-		if (resGetUuidDoc === 2) {
-			return res.status(404).json({ error: `Documento no encontrado.` });
+		if (codigoPermiso === 1) {
+			return res
+				.status(403)
+				.json({ error: "No tienes permisos para visualizar este documento." });
 		}
-		// console.log("El uuid del documento es:", resGetUuidDoc.uuidDocumento);
-		const respuestaStorage = await axios.get(
-			`${process.env.STORAGE_URL}/download/${resGetUuidDoc.uuidDocumento}`,
-			{
-				responseType: "arraybuffer",
-			},
-		);
-		// Establecemos que el tipo que se devuelve es un documento pdf.
-		res.setHeader("Content-Type", "application/pdf");
-		res.setHeader(
-			"Content-Disposition",
-			`inline; filename="${resGetUuidDoc.nombre}.pdf"`,
-		);
-		res.send(respuestaStorage.data);
-	} catch (error) {
-		console.error(
-			"Se ha producido un error al intentar realizar un get de la documentación.",
-			error,
-		);
-		if (error.response?.status === 404) {
+		if (codigoPermiso === 2) {
+			return res.status(404).json({ error: "Petición no encontrada." });
+		}
+
+		const documento = await PeticionModel.getUuidDoc(uuid);
+
+		if (documento === 2 || !documento?.uuidDocumento) {
 			return res
 				.status(404)
-				.json({ message: "El archivo no existe en Storage" });
+				.json({ error: "Documento no registrado en la petición." });
 		}
-		return res.status(500).json({ error: "Error interno del servidor." });
+
+		try {
+			const respuestaStorage = await axios.get(
+				`${process.env.STORAGE_URL}/download/${documento.uuidDocumento}`,
+				{ responseType: "arraybuffer" },
+			);
+
+			res.setHeader("Content-Type", "application/pdf");
+			res.setHeader(
+				"Content-Disposition",
+				`inline; filename="${documento.nombre || "documento"}.pdf"`,
+			);
+
+			return res.send(respuestaStorage.data);
+		} catch (storageError) {
+			if (storageError.response?.status === 404) {
+				return res
+					.status(404)
+					.json({ error: "El archivo físico no existe en el almacenamiento." });
+			}
+			throw storageError; // Re-lanzar para que lo capture el catch principal
+		}
+	} catch (error) {
+		console.error("Error en getDocumentoPeticion:", {
+			uuid,
+			userId: req.user?.idUsuario,
+			msg: error.message,
+		});
+
+		return res
+			.status(500)
+			.json({ error: "Error interno al recuperar el documento." });
 	}
 };
 
@@ -377,178 +409,122 @@ export const getAllPeticiones = async (req, res) => {
 
 export const procesarFirmaPorRol = async (req, res) => {
 	const { uuid } = req.params;
+	const { file, user } = req;
 
-	if (!uuid) {
-		return res.status(400).json({ error: "Petición mal formada." });
-	}
+	// 1. Validaciones de entrada
+	if (!uuid) return res.status(400).json({ error: "Petición mal formada." });
 
 	const uuidRegex =
 		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-	if (!uuidRegex.test(uuid)) {
-		return res
-			.status(400)
-			.json({ error: "UUID de la petición en formato inválido." });
-	}
+	if (!uuidRegex.test(uuid))
+		return res.status(400).json({ error: "UUID en formato inválido." });
 
-	if (!req.file) {
-		return res
-			.status(400)
-			.json({ error: "No se ha recibido el PDF en 'documentoPdf'." });
-	}
+	if (!file)
+		return res.status(400).json({ error: "No se ha recibido el PDF." });
 
 	try {
-		const estadoActualPeticion = await PeticionModel.getEstadoPeticion(uuid);
-		if (estadoActualPeticion === 2) {
+		// 2. Comprobación de estado de la petición
+		const estado = await PeticionModel.getEstadoPeticion(uuid);
+		if (estado === 2)
 			return res.status(404).json({ error: "Petición no encontrada." });
-		}
-		if (estadoActualPeticion === "DENEGADA") {
-			return res
-				.status(304)
-				.json({ message: "La petición ya se encuentra denegada." });
-		} else if (estadoActualPeticion === "REALIZADA") {
-			return res
-				.status(304)
-				.json({ message: "La petición ya está marcada como realizada" });
-		}
-		//  Antes de atacar al servidor y verificar integridad de las firmas, documento, ...
-		// Lo que hacemos es verificar si para ese determinado usuario ha realizado el envío del documento firmado.
-		const permisos = req.user?.permisos; //req.user?.permisos
-		const userId = req.user.idUsuario;
-		if (
-			!permisos.includes("peticion:revisor") &&
-			!permisos.includes("admin:total") &&
-			!permisos.includes("peticion:firma_administrador")
-		) {
-			// Se trata del usuario base, este usuario solo puede hacerlo si se trata del userId creador de la petición.
-			const esCreadorPeticion = await PeticionModel.esUserCreador(uuid, userId);
-			if (esCreadorPeticion == 2) {
+
+		const estadosInvalidos = {
+			DENEGADA: "La petición ya se encuentra denegada.",
+			REALIZADA: "La petición ya está marcada como realizada.",
+		};
+		if (estadosInvalidos[estado])
+			return res.status(304).json({ message: estadosInvalidos[estado] });
+
+		// 3. Lógica de Niveles de Firma y Autorización
+		const permisos = user?.permisos || [];
+		const userId = user.idUsuario;
+		let nivelFirma = 0;
+
+		const isAdmin =
+			permisos.includes("admin:total") ||
+			permisos.includes("peticion:firma_administrador");
+		const isRevisor = permisos.includes("peticion:revisor");
+
+		if (isAdmin) {
+			nivelFirma = 3;
+		} else if (isRevisor) {
+			const esEncargado = await PeticionModel.esEncargado(uuid, userId);
+			if (esEncargado === 2)
 				return res.status(404).json({ error: "Petición no encontrada." });
-			}
-			if (!esCreadorPeticion) {
-				return res.status(403).json({
-					error:
-						"No tienes los permisos necesarios o ya has realizado la firma.",
-				});
-			}
-		} else if (
-			permisos.includes("peticion:revisor") &&
-			!permisos.includes("admin:total")
-		) {
-			// console.log("Entro aqui 2.");
-			// En este caso debemos validar de que sea revisor de dicha solicitud.
-			const esSupervisorPeticion = await PeticionModel.esEncargado(
-				uuid,
-				userId,
-			);
-			if (esSupervisorPeticion === 2) {
+			if (!esEncargado)
+				return res
+					.status(403)
+					.json({ error: "No eres el revisor asignado o ya has firmado." });
+			nivelFirma = 2;
+		} else {
+			const esCreador = await PeticionModel.esUserCreador(uuid, userId);
+			if (esCreador === 2)
 				return res.status(404).json({ error: "Petición no encontrada." });
-			}
-			if (!esSupervisorPeticion) {
-				return res.status(403).json({
-					error:
-						"No tienes los permisos necesarios o ya has realizado la firma.",
-				});
-			}
-		} // En cualquiera de los otros dos casos puede ver todas las peticiones o modificarlas al gusto.
-		const metadatos = await validarFirmaDSS(req.file, req.file.originalname);
-		if (metadatos === 3) {
+			if (!esCreador)
+				return res
+					.status(403)
+					.json({ error: "No tienes permisos o ya has firmado." });
+			nivelFirma = 1;
+		}
+
+		// 4. Validación de Firma Electrónica (DSS)
+		const metadatos = await validarFirmaDSS(file, file.originalname);
+
+		if (metadatos === 3)
 			return res.status(422).json({ error: "CN no es válido." });
-		}
-		if (metadatos === 4) {
+		if (metadatos === 4)
 			return res
 				.status(422)
 				.json({ error: "Error de integridad del documento." });
-		}
 
-		if (metadatos.indicacion === "TOTAL_PASSED") {
-			console.log(metadatos);
-			const infoDoc = await PeticionModel.getUuidDoc(uuid);
-			const form = new FormData();
-
-			form.append("pdf", req.file.buffer, {
-				filename: req.file.originalname,
-				contentType: "application/pdf",
-			});
-			const response = await axios.patch(
-				`${process.env.STORAGE_URL}/${infoDoc.uuidDocumento}`,
-				form,
-				{
-					headers: {
-						...form.getHeaders(), // Generamos los headers correspondientes para el envio con el form.
-					},
-					maxContentLength: Infinity,
-					maxBodyLength: Infinity,
-				},
-			);
-
-			let nivelFirma = 0;
-			// PET_AVISO => Template de correo electronico.
-
-			if (
-				permisos.includes("admin:total") ||
-				permisos.includes("peticion:firma_administrador")
-			) {
-				nivelFirma = 3; // Firma de Administración / Jefe
-				// Correo electrónico al usuario y supervisorCorrespondiente. Se saca en base del uuidPeticion.
-				const correosImplicados =
-					await PeticionModel.obtenerCorreoUsuarioSupervisor(uuid);
-				await addEmailToQueue({
-					template: "PET_APROBADA",
-					to: correosImplicados,
-				});
-			}
-
-			if (permisos.includes("peticion:revisor")) {
-				nivelFirma = 2; // Firma Técnica / Revisor
-				const correosJefes = await PeticionModel.obtenerListaJefesLaboratorio();
-				await addEmailToQueue({
-					template: "PET_AVISO",
-					to: correosJefes,
-				});
-			} else if (
-				!permisos.includes("admin:total") ||
-				!permisos.includes("peticion:firma_administrador")
-			) {
-				// Esta estructura tan extraña se sigue para que en caso de que un usuario sea jefe y responsable se le validen automáticamente las dos revisiones.
-				nivelFirma = 1; // Firma de Solicitante
-				const correoSupervisor =
-					await PeticionModel.obtenerCorreoSupervisor(userId);
-				// console.log("El correo del supervisor es:", correoSupervisor);
-				await addEmailToQueue({
-					template: "PET_AVISO",
-					to: correoSupervisor,
-				});
-			}
-			await PeticionModel.setFirmado(uuid, nivelFirma);
-			await PeticionModel.addMetadata(metadatos, uuid, nivelFirma);
-
-			return res.status(201).json({
-				success: true,
-				message: "Documento íntegro y firma válida",
-				metadatos,
-			});
-		} else {
-			// Si es INDETERMINATE o TOTAL_FAILED
+		if (metadatos.indicacion !== "TOTAL_PASSED") {
 			return res.status(422).json({
 				success: false,
-				error:
-					"La validación de la firma no ha podido completarse satisfactoriamente.",
-				motivo: metadatos.sub_indicacion || "Desconocido",
+				error: "Validación de firma fallida.",
+				motivo: metadatos.sub_indicacion || "Firma no válida",
 				metadatos,
 			});
 		}
-	} catch (error) {
-		console.error("ERROR EN PROCESAR_FIRMA_POR_ROL:", error);
-		if (error.response) {
-			console.error("Detalle error DSS:", JSON.stringify(error.response.data));
-		} else {
-			console.error(error.message);
-		}
 
-		return res.status(500).json({
-			error: "Error interno al procesar la firma electrónica.",
-			detalle: error.message,
+		const infoDoc = await PeticionModel.getUuidDoc(uuid);
+		const form = new FormData();
+		form.append("pdf", file.buffer, {
+			filename: file.originalname,
+			contentType: "application/pdf",
 		});
+
+		await axios.patch(
+			`${process.env.STORAGE_URL}/${infoDoc.uuidDocumento}`,
+			form,
+			{
+				headers: form.getHeaders(),
+				maxContentLength: Infinity,
+				maxBodyLength: Infinity,
+			},
+		);
+
+		await PeticionModel.setFirmado(uuid, nivelFirma);
+		await PeticionModel.addMetadata(metadatos, uuid, nivelFirma);
+
+		await procesarNotificaciones(uuid, userId, nivelFirma);
+
+		if (nivelFirma === 3) {
+			// Marcamos la solicitud como completada.
+			await PeticionModel.establecerRealizada(uuid);
+		}
+		return res.status(201).json({
+			success: true,
+			message: "Documento actualizado y firma registrada correctamente.",
+			metadatos,
+		});
+	} catch (error) {
+		console.error(
+			"ERROR EN PROCESAR_FIRMA_POR_ROL:",
+			error.response?.data || error.message,
+		);
+		return res
+			.status(500)
+			.json({ error: "Error interno al procesar la firma." });
 	}
 };
 

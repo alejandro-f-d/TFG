@@ -217,7 +217,7 @@ export default function NuevaPeticionPage() {
 									name="nombreServicioAsociado"
 									value={formData.nombreServicioAsociado}
 									onChange={handleInputChange}
-									placeholder="SERVICIO ASOCIADO"
+									placeholder="SERVICIO ASOCIADO *"
 									className="bg-slate-50 rounded-2xl p-5 text-sm font-bold outline-none"
 								/>
 								<input

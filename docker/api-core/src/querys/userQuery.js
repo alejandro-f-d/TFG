@@ -270,4 +270,81 @@ export const USER_QUERIES = {
 	GET_GITLAB_ID: `SELECT gitlab from medal.usuario WHERE uuidusuario = $1;`,
 	GET_STATUS_USER: `select activo, gitlab from medal.usuario where uuidusuario = $1;`,
 	ACTIVAR: `UPDATE medal.usuario SET activo = true WHERE uuidusuario =$1;`,
+	GET_ALL_PAGINADO_REVISORES: `
+    SELECT 
+        u.*,
+        -- Roles asociados al usuario
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', r.idrole,
+                'nombre', r.nombre
+            ))
+            FROM medal.rolestiene rt
+            JOIN medal.roles r ON rt.idrole = r.idrole
+            WHERE rt.idusuario = u.idusuario
+            ), '[]'
+        ) AS roles,
+        -- Peticiones asociadas
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', p.idpeticion,
+                'uuid', p.uuidpeticion,
+                'proyecto', dp.nombreproyectoasociado,
+                'estado', p.estado
+            ))
+            FROM medal.peticion p
+            LEFT JOIN medal.detallepeticionacceso dp ON p.idpeticion = dp.idpetacceso
+            WHERE p.usuariopeticion = u.idusuario
+            ), '[]'
+        ) AS peticiones,
+        -- Acceso a Puertas
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', pu.idpuerta,
+                'nombre', pu.nombre
+            ))
+            FROM medal.accede a
+            JOIN medal.puertas pu ON a.idpuerta = pu.idpuerta
+            WHERE a.idusuario = u.idusuario
+            ), '[]'
+        ) AS puertas,
+        -- Máquinas en propiedad
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', m.idmaquina,
+                'nombre', m.nombre
+            ))
+            FROM medal.propietario prop
+            JOIN medal.maquina m ON prop.idmaquina = m.idmaquina
+            WHERE prop.idusuario = u.idusuario
+            ), '[]'
+        ) AS maquinas_propiedad,
+        -- Participación en Proyectos GitLab
+        COALESCE(
+            (SELECT json_agg(json_build_object(
+                'id', pg.idproyecto,
+                'nombre', pg.nombre,
+                'uuid', pg.uuidproyecto,
+                'activo', pg.activo
+            ))
+            FROM medal.participa part
+            JOIN medal.proyectosgitlab pg ON part.idproyecto = pg.idproyecto
+            WHERE part.idusuario = u.idusuario
+            ), '[]'
+        ) AS proyectos_gitlab
+    FROM medal.usuario u
+    WHERE u.nombre ILIKE $3 
+      AND u.activo = $4 
+      AND u.esresponsable = true -- Cambio clave: Filtro de Revisores
+    ORDER BY u.idusuario ASC
+    LIMIT $1 OFFSET $2;`,
+	COUNT_BY_NOMBRE_REVISORES: `
+    SELECT COUNT(*) FROM medal.usuario 
+    WHERE nombre ILIKE $1 AND activo = $2 AND esresponsable = true;
+    `,
+
+	COUNT_BY_NOMBRE_GITLAB: `
+    SELECT COUNT(*) FROM medal.usuario 
+    WHERE nombre ILIKE $1 AND activo = $2 AND gitlab IS NOT NULL;
+    `,
 };

@@ -154,6 +154,6 @@ export const allMenuItems: MenuItem[] = [
 		title: "Usuarios",
 		description: "Gestión de los usuarios en el sistema.",
 		path: "/dashboard/usuarios",
-		requiredPermissions: ["usr:crearUsuario", "usr:editUsuario", "admin:total"],
+		requiredPermissions: ["usr:getUsuario", "admin:total"],
 	},
 ];

@@ -121,32 +121,46 @@ class UserModel {
 		filtroNombre,
 		filtroStatus,
 		filtroGitlab,
+		filtroRevisores,
 	) {
 		try {
-			console.log("");
 			const offset = (page - 1) * limit;
 			const busqueda = `%${filtroNombre}%`;
-			const status = filtroStatus === "activo";
-			const query = filtroGitlab
-				? USER_QUERIES.GET_ALL_PAGINADO_GITLAB
-				: USER_QUERIES.GET_ALL_PAGINADO;
-			const res = await pool.query(query, [limit, offset, busqueda, status]);
-			const countRes = await pool.query(USER_QUERIES.COUNT_BY_NOMBRE, [
-				busqueda,
-				status,
+			const esActivo = filtroStatus === "activo";
+
+			let queryData;
+			let queryCount;
+
+			if (filtroRevisores) {
+				queryData = USER_QUERIES.GET_ALL_PAGINADO_REVISORES;
+				queryCount = USER_QUERIES.COUNT_BY_NOMBRE_REVISORES;
+			} else if (filtroGitlab) {
+				queryData = USER_QUERIES.GET_ALL_PAGINADO_GITLAB;
+				queryCount = USER_QUERIES.COUNT_BY_NOMBRE_GITLAB;
+			} else {
+				queryData = USER_QUERIES.GET_ALL_PAGINADO;
+				queryCount = USER_QUERIES.COUNT_BY_NOMBRE;
+			}
+
+			const [res, countRes] = await Promise.all([
+				pool.query(queryData, [limit, offset, busqueda, esActivo]),
+				pool.query(queryCount, [busqueda, esActivo]),
 			]);
 
-			const totalItems = parseInt(countRes.rows[0].count);
+			const totalItems = parseInt(countRes.rows[0].count, 10);
+
 			return {
 				status: "OK",
 				rows: res.rows,
 				pagination: {
 					totalItems,
 					totalPages: Math.ceil(totalItems / limit),
-					currentPage: page,
+					currentPage: Number(page),
+					limit: Number(limit),
 				},
 			};
 		} catch (error) {
+			console.error("Error en getAllUsers (Model):", error.message);
 			throw error;
 		}
 	}
