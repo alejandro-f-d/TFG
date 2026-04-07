@@ -1,0 +1,43 @@
+\chapter{Incremento IV:}
+\section{Especificación y modelado:}
+
+Se presenta a continuación el flujo de trabajo empleado en el desarrollo de las integraciones de sistemas. Para garantizar la alineación con la infraestructura existente, se consultó al coordinador de informática del centro, permitiendo así catalogar los servicios externos activos en el laboratorio MEDAL y definir el alcance de cada integración planteada.
+
+\begin{itemize}
+    \item \textbf{Servidores Linux:} Gestión de altas, bajas y modificación de credenciales en la infraestructura de computación (\textit{Cesvima1, Cesvima2, Ares, Gea, Zeus, Apolo, Atenea y Cvat}).
+    \item \textbf{GitLab:} Administración de cuentas y accesos en la plataforma de control de versiones (\url{https://medal.ctb.upm.es/internal/gitlab/}).
+    \item \textbf{LDAP:} Gestión centralizada de identidades y directorios a través de la interfaz de administración (\url{https://medal.ctb.upm.es/internal/ldapadmin/}).
+    \item \textbf{VPN (Router TP-Link):} Configuración de usuarios y credenciales en el \textit{gateway} Omada AX3000 ER706W para el acceso remoto.
+    \item \textbf{Control de Accesos (Nuki):} Gestión de permisos de apertura y usuarios para las cerraduras inteligentes de las puertas P0 y P-1.
+    \item \textbf{Almacenamiento NAS:} Administración de cuotas y usuarios en el servidor de almacenamiento centralizado (\url{http://138.4.130.159:8080}).
+\end{itemize}
+
+\section{Integración de terceros: Gitlab}:
+
+\subsection{Descripción del servicio instalado:}
+
+La arquitectura actual del sistema se basa en un microservicio desplegado mediante \texttt{Docker}. Tras analizar las diversas metodologías de integración con servicios externos, se ha determinado que el mejor diseño consiste en establecer una comunicación vía \textbf{API}, empleando la autenticación mediante \textbf{tokens de usuario} para garantizar la seguridad y eficiencia en el intercambio de información.
+
+\subsection{Operaciones permitidas con este servicio de terceros en la página web:}
+El sistema permite las siguientes operaciones con este servicio de terceros:
+\begin{itemize}
+  \item \texttt{Creación de nuevos usuarios.}
+  \item \texttt{Modificación de nombres de usuarios de cuentas ya existente.}
+  \item \texttt{Creación de nuevos repositorios de código.}
+  \item \texttt{Obtención de información general asociada a un proyecto e historial de commits.}
+  \item \texttt{Archivar y Desarchivar proyectos en Gitlab.}
+  \item \texttt{Bloqueo de usuarios.}
+  \item \texttt{Modificación de los integrantes colaboradores en un repositorio.}
+\end{itemize}
+Todo esto se realiza mediante la integración a través de la cuenta de \textbf{root}.
+
+En la figura \ref{fig:detalle_gitlab} se puede ver la pantalla de información específica de un repositorio. Concretamente es un mock del repositorio de gitlab de este proyecto.
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{incremento-iv/gitlab-menu.png}
+ \caption{Pantalla de muestra de un proyecto de gitlab.}
+ \label{fig:detalle_gitlab}
+\end{figure}
+
+

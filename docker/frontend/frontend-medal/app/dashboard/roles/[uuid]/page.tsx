@@ -11,6 +11,12 @@ interface PermisoGlobal {
 	modulo: string;
 }
 
+interface Maquina {
+	idmaquina: number;
+	nombre: string;
+	uuidmaquina: string;
+}
+
 interface RoleDetail {
 	idrole: number;
 	uuidrole: string;
@@ -26,14 +32,31 @@ export default function RoleDetailPage() {
 
 	const [role, setRole] = useState<RoleDetail | null>(null);
 	const [allPerms, setAllPerms] = useState<PermisoGlobal[]>([]);
+	const [maquinas, setMaquinas] = useState<Maquina[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isManagingMatrix, setIsManagingMatrix] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [selectedPerms, setSelectedPerms] = useState<number[]>([]);
 
 	const [searchTermMatrix, setSearchTermMatrix] = useState("");
-
 	const [userPerms, setUserPerms] = useState<string[]>([]);
+
+	// --- TRADUCTOR DE ALIAS ---
+	const formatAlias = useCallback(
+		(alias: string) => {
+			// Detectamos si el alias sigue el patrón maquina:accion:uuid
+			const parts = alias.split(":");
+			if (parts.length === 3 && parts[0] === "maquina") {
+				const uuidMaquina = parts[2];
+				const encontrada = maquinas.find((m) => m.uuidmaquina === uuidMaquina);
+				if (encontrada) {
+					return `${parts[0]}:${parts[1]}:${encontrada.nombre.toLowerCase()}`;
+				}
+			}
+			return alias;
+		},
+		[maquinas],
+	);
 
 	useEffect(() => {
 		const stored = localStorage.getItem("permisos");
@@ -97,14 +120,37 @@ export default function RoleDetailPage() {
 		}
 	}, [isAdmin]);
 
+	const fetchMaquinas = useCallback(async () => {
+		try {
+			const token = localStorage.getItem("token");
+			const res = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/api/maquina`,
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				},
+			);
+			const data = await res.json();
+			if (res.ok) {
+				setMaquinas(Array.isArray(data) ? data : []);
+			}
+		} catch (e) {
+			console.error("Error cargando máquinas para traducción:", e);
+		}
+	}, []);
+
 	useEffect(() => {
 		const loadInitialData = async () => {
 			setLoading(true);
-			await Promise.all([fetchRoleDetail(), fetchAllPermissions()]);
+			// Cargamos máquinas primero para que la traducción esté lista al mostrar los permisos
+			await Promise.all([
+				fetchRoleDetail(),
+				fetchAllPermissions(),
+				fetchMaquinas(),
+			]);
 			setLoading(false);
 		};
 		loadInitialData();
-	}, [fetchRoleDetail, fetchAllPermissions]);
+	}, [fetchRoleDetail, fetchAllPermissions, fetchMaquinas]);
 
 	const filteredPerms = useMemo(() => {
 		return allPerms.filter(
@@ -247,16 +293,16 @@ export default function RoleDetailPage() {
 									key={p.idPermiso}
 									className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 flex items-center justify-between group hover:bg-white hover:border-blue-100 transition-all"
 								>
-									<div className="flex items-center gap-4">
-										<div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[10px] font-black border border-slate-200 shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+									<div className="flex items-center gap-4 overflow-hidden">
+										<div className="flex-shrink-0 w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[10px] font-black border border-slate-200 shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
 											#
 										</div>
-										<span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">
-											{p.alias}
+										<span className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">
+											{formatAlias(p.alias)}
 										</span>
 									</div>
 									{p.alias === "null:null" && (
-										<span className="text-[7px] font-black bg-blue-100 text-blue-600 px-3 py-1 rounded-full uppercase">
+										<span className="text-[7px] font-black bg-blue-100 text-blue-600 px-3 py-1 rounded-full uppercase ml-2 flex-shrink-0">
 											Vital
 										</span>
 									)}
@@ -282,7 +328,6 @@ export default function RoleDetailPage() {
 									</p>
 								</div>
 
-								{/* BUSCADOR DENTRO DE LA MATRIZ */}
 								<div className="flex items-center gap-4 w-full md:w-auto">
 									<div className="relative flex-1 md:w-64">
 										<input
@@ -292,22 +337,6 @@ export default function RoleDetailPage() {
 											onChange={(e) => setSearchTermMatrix(e.target.value)}
 											className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-5 pr-12 text-[10px] font-black text-slate-900 placeholder:text-slate-300 focus:ring-2 focus:ring-blue-600 transition-all outline-none uppercase tracking-widest"
 										/>
-										<div className="absolute right-4 inset-y-0 flex items-center text-slate-300">
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												className="h-4 w-4"
-												fill="none"
-												viewBox="0 0 24 24"
-												stroke="currentColor"
-											>
-												<path
-													strokeLinecap="round"
-													strokeLinejoin="round"
-													strokeWidth={3}
-													d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-												/>
-											</svg>
-										</div>
 									</div>
 									<div className="text-right hidden md:block">
 										<p className="text-2xl font-black text-blue-600 leading-none">
@@ -338,9 +367,9 @@ export default function RoleDetailPage() {
 												</div>
 												<div className="flex flex-col overflow-hidden">
 													<span
-														className={`text-[10px] font-black uppercase tracking-tight ${isSelected && !isRequired ? "text-white" : "text-slate-900"}`}
+														className={`text-[10px] font-black uppercase tracking-tight truncate ${isSelected && !isRequired ? "text-white" : "text-slate-900"}`}
 													>
-														{p.alias}
+														{formatAlias(p.alias)}
 													</span>
 													<span
 														className={`text-[8px] font-bold uppercase ${isSelected && !isRequired ? "text-blue-100" : "text-slate-400"}`}
@@ -354,7 +383,7 @@ export default function RoleDetailPage() {
 								) : (
 									<div className="col-span-full py-20 text-center">
 										<p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
-											No hay capacidades que coincidan con la búsqueda
+											No hay capacidades coincidentes
 										</p>
 									</div>
 								)}

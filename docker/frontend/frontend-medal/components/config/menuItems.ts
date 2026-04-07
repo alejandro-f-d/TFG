@@ -139,7 +139,7 @@ export const allMenuItems: MenuItem[] = [
 		title: "Servicios TI",
 		description: "Gestión de la monitorización de servicios web",
 		path: "/dashboard/servicios",
-		requiredPermissions: ["servicios:getAll", "servicios:get", "admin:total"],
+		requiredPermissions: ["null:null"],
 	},
 	{
 		icon: "🪪",
