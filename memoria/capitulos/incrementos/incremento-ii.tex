@@ -348,26 +348,6 @@ Para cada uno de los roles se les puede asignar diferentes permisos asociados, e
 
 \section{Diseño de la solución:}
 
-\subsection{Sistema de identificación de usuarios:}
-
-En este punto, nos encontramos en la situación de que el sistema debe permitir al usuario identificarse de manera segura. Podemos encontrar principalmente dos tipos de usuarios.
-
- \begin{itemize}
-   \item \texttt{Usuarios con vinculación a la UPM}. En este grupo encontramos a los estudiantes y el personal docente e investigador entre otros.
-   \item \texttt{Usuarios sin vinculación a la UPM}. Este grupo de usuarios, no tienen ninguna asociación con la universidad, serían un grupo muy pequeño y acotado. Se encontrarían principalmente estudiantes (ajenos a la universidad) e investigadores (ajenos a la universidad) con vinculación en el laboratorio MEDAL.
- \end{itemize} 
-
-\notaseguridad{Se debe destacar que el sistema de identificación única, en adelante SIU, se trata de un sistema más seguro que un sistema implementado propio para este trabajo fin de grado. Esto se debe a que se trata de un sistema probado y mantenido por personal experto.}
-
-En primera instancia, lo que se va a hacer es utilizar el SIU para el personal asociado a la UPM al cual de manera interna en el servicio se le aplicará una access control list (ACL) para filtrar los usuarios que tienen permitido el acceso. Para los usuarios sin vinculación a la UPM, se crearía un sistema parecido al ofrecido por la UPM pero interno al laboratorio. En la figura \ref{fig:diagrama_identificacion} se puede ver el diagrama de flujo de operación. 
-
-\begin{figure}[H] 
- \centering 
- \includegraphics[width=0.5\textwidth]{incremento-ii/diagrama_identificacion.png}
- \caption{Flujo de identificación de los usuarios en el sistema.}
- \label{fig:diagrama_identificacion}
-\end{figure}
-
 \subsection{Proceso de firma de documentos:}
 
 Para el proceso de firma de documentos por parte de los diferentes usuarios del sistema se va a hacer uso del sistema de @Firma estatal vinculado con la sede electrónica del Ministerio para la Transformación Digital y de la función pública. 

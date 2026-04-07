@@ -1,0 +1,30 @@
+\chapter{Incremento III:}
+
+\section{Especificación y modelado:}
+En este incremento se valoran las opciones posibles para eliminar en todo lo posible el acceso nativo a las máquinas y la generación de entornos seguros para los usuarios en cada uno de los servidores donde sea necesario. Para ello, se plantea la siguiente estructura.
+
+\section{Diseño de la solución:}
+\subsection{Estructura dockerizada de CodeServer:}
+Los CodeServer son docker especializados con un formato de uso similar a Visual Studio Code. \href{https://github.com/coder/code-server?tab=readme-ov-file}{Proyecto Code Server.}
+
+En la figura \ref{fig:code_server} se detalla el proceso de comunicación entre el cliente y el servicio \texttt{code-server}. En primer lugar, el cliente establece una conexión a través de un servidor \textbf{Nginx}, que actúa como intermediario gestionando la autenticación por usuario y contraseña. Tras la validación, el tráfico se redirige a la instancia específica de cada cliente, quien opera en un entorno aislado y controlado, garantizando una gestión segura y virtualizada de los recursos del servidor.
+
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{incremento-iii/code-server-infraestructura.png}
+ \caption{Diagrama de la infraestructura con Code Server.}
+ \label{fig:code_server}
+\end{figure}
+
+De manera adicional, los administradores de cada máquina pueden dejar diverso material en carpetas compartidas de tal manera que un usuario puede recuperar información del disco duro de la máquina teniendo así la posibilidad de persistir sus datos. 
+
+\section{Implementación y Codificación:}
+
+
+
+
+
+\section{Validación y Cierre:}
+
+Con el objetivo de validar la estabilidad del sistema, se sometió a la infraestructura a un conjunto de pruebas de estrés, evaluando el rendimiento térmico y de cómputo tanto de la CPU como de las GPU. Asimismo, se realizaron despliegues de diversos paquetes y dependencias para verificar la integridad del sistema de gestión de software y garantizar un entorno operativo libre de conflictos. El objetivo es que los usuarios no técnicos investigadores sean capaces de familiarizarse con este sistema y crear sus propios notebooks de ejecución. 
