@@ -1,0 +1,144 @@
+
+\chapter{Estimación del plan de trabajo:}
+
+\section{Lista de tareas}
+El desarrollo se ha dividido en los siguientes bloques funcionales:
+
+\begin{enumerate}[label=\textbf{T\arabic*.}]
+    \item \textbf{Análisis de requisitos y diseño de BD:} Definición del esquema \textit{medal} en PostgreSQL, relaciones, constraints y lógica de integridad.
+    \item \textbf{Desarrollo del Core Backend:} Implementación de la API REST con Node.js, gestión de conexiones.
+    \item \textbf{Módulo de Seguridad:} Configuración de JWT, middleware de autenticación, hashing y validación de esquemas de datos.
+    \item \textbf{Módulo de Infraestructura:} Desarrollo de endpoints para la gestión de máquinas, servicios asociados y puertos.
+    \item \textbf{Interfaz de Usuario (Frontend):} Diseño de un Dashboard web para la visualización de datos en tiempo real y administración de recursos.
+    \item \textbf{Migración de usuarios:} Migración de los distintos usuarios a entornos aislados para evitar conflictos en el uso del servidor por parte de diferentes usuarios. 
+    \item \textbf{Integración de diferentes aplicaciones:} Integración de los servicios externos del laboratorio a la página web.
+    \item \textbf{Pruebas y Documentación:} Testeo de carga, validación de seguridad y redacción de la memoria final.
+\end{enumerate}
+
+
+\section{Distribución de horas (270 horas totales)}
+
+Basado en la propuesta de trabajo del tutor, las 270 horas totales del proyecto se distribuyen de la siguiente manera entre las tareas definidas:
+
+\begin{itemize}
+    \item \textbf{Formación:} 7\% (~19 horas)
+    \item \textbf{Especificación de requisitos:} 10\% (~27 horas)
+    \item \textbf{Análisis y diseño:} 23\% (~62 horas)
+    \item \textbf{Implementación:} 45\% (~122 horas)
+    \item \textbf{Elaboración de la documentación:} 8\% (~22 horas)
+    \item \textbf{Elaboración de la memoria:} 5\% (~13 horas)
+    \item \textbf{Elaboración de la presentación:} 2\% (~5 horas)
+\end{itemize}
+
+Aplicando estos porcentajes a tu lista de tareas (T1-T8), el desglose horario quedaría así:
+
+\subsection*{T1. Análisis de requisitos y diseño de BD (62 horas)}
+\begin{itemize}
+    \item \textbf{Especificación de requisitos (27h):} Reuniones con el tutor, análisis de necesidades del grupo de investigación, definición de casos de uso, especificación de requisitos funcionales y no funcionales.
+    \item \textbf{Análisis y diseño (35h):} Diseño del esquema de base de datos en PostgreSQL, definición de relaciones, constraints, lógica de integridad y preparación del modelo de datos.
+\end{itemize}
+
+\subsection*{T2. Desarrollo del Core Backend (30 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (30h):} Configuración inicial del proyecto con Node.js, creación de la estructura base de la API REST, gestión de conexiones a la base de datos, implementación de los primeros endpoints y lógica de negocio fundamental.
+\end{itemize}
+
+\subsection*{T3. Módulo de Seguridad (30 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (25h):} Configuración de autenticación mediante JWT, desarrollo de middleware para la protección de rutas, implementación de hashing de contraseñas y validación de esquemas de datos de entrada/salida.
+    \item \textbf{Formación (5h):} Estudio de buenas prácticas de seguridad en aplicaciones web y manejo de librerías específicas.
+\end{itemize}
+
+\subsection*{T4. Módulo de Infraestructura (30 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (30h):} Desarrollo de los endpoints específicos para la gestión de máquinas (físicas y virtuales), servicios asociados y puertos. Integración con la lógica de negocio para el inventariado.
+\end{itemize}
+
+\subsection*{T5. Interfaz de Usuario (Frontend) (32 horas)}
+\begin{itemize}
+    \item \textbf{Análisis y diseño (15h):} Diseño de la interfaz de usuario (wireframes, mockups), definición de la experiencia de usuario (UX) para el dashboard, selección del framework frontend.
+    \item \textbf{Implementación (17h):} Desarrollo del dashboard web, creación de componentes, conexión con la API backend para la visualización de datos en tiempo real y administración de recursos.
+\end{itemize}
+
+\subsection*{T6. Migración de usuarios (12 horas)}
+\begin{itemize}
+    \item \textbf{Análisis y diseño (5h):} Análisis de los sistemas actuales, diseño de la estrategia de migración a entornos aislados para evitar conflictos.
+    \item \textbf{Implementación (7h):} Ejecución de la migración de usuarios, configuración de los entornos aislados y verificación del proceso.
+\end{itemize}
+
+\subsection*{T7. Integración de diferentes aplicaciones (20 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (20h):} Integración de los servicios externos del laboratorio (VPN, GitLab, etc.) con el dashboard. Desarrollo de la lógica para dar de alta/baja automáticamente los accesos a estos servicios.
+\end{itemize}
+
+\subsection*{T8. Pruebas y Documentación (39 horas)}
+\begin{itemize}
+    \item \textbf{Pruebas (10h):} Testeo de carga, validación de seguridad, pruebas de integración y de sistema para asegurar el correcto funcionamiento.
+    \item \textbf{Documentación (22h):} Redacción de la memoria final del proyecto (incluyendo introducción, objetivos, decisiones técnicas, manuales de usuario, etc.).
+    \item \textbf{Presentación (5h):} Preparación de la presentación y defensa del trabajo ante el tribunal.
+    \item \textbf{Formación (2h):} Formación continua a lo largo del proyecto para resolver dudas técnicas específicas.
+\end{itemize}
+
+
+
+\begin{figure}[p]
+    \centering
+    
+    \rotatebox{90}{
+        \begin{ganttchart}[
+            hgrid,
+            vgrid,
+            x unit=0.65cm,                 
+            y unit title=0.8cm,
+            y unit chart=0.9cm,
+            title label font=\footnotesize,
+            bar label font=\small,
+            bar label node/.style={
+                text width=6.2cm,
+                align=right,
+                anchor=east
+            },
+            canvas/.style={
+                draw=black!40,
+                fill=white
+            },
+            bar/.style={
+                fill=blue!55
+            },
+            bar height=0.55,
+            group periods=false
+        ]{1}{24}
+        
+        \gantttitle{Semanas del Semestre}{24} \\
+        \gantttitlelist{1,...,24}{1} \\
+
+        \ganttbar{Análisis de los requisitos (Inc. 1 y 2)}{1}{3} \\
+        \ganttbar{Base de datos Incremento 1}{3}{7} \\
+        \ganttbar{Implementación BD y estudio de JWT}{7}{8} \\
+        \ganttbar{API y Swagger: implementación y pruebas}{9}{13} \\
+        \ganttbar{Certificados web: aprendizaje e integración}{12}{13} \\
+        \ganttbar{Diseño de la aplicación web (Figma)}{13}{13} \\
+        \ganttbar{Programación de la página web}{14}{17} \\
+        \ganttbar{Migración de usuarios y servicios en code-server}{17}{19} \\
+        \ganttbar{Integración de servicios externos}{20}{23} \\
+        \ganttbar{Revisión general y correcciones}{24}{24} \\
+
+        \ganttbar{Documentación}{1}{24}
+
+        \end{ganttchart}
+    }
+
+    \vspace{0.8cm} % Espacio adicional para evitar colisión con el caption
+    % \caption{Cronograma del proyecto representado mediante un diagrama de Gantt.}
+    \label{fig:gantt_rotated}
+\end{figure}
+
+\chapter{Ejecución del plan de trabajo.}
+
+\begin{sidewaysfigure}[p]
+    \centering
+    \includegraphics[width=\textheight, keepaspectratio]{incremento-ii/gannt.png}
+    \caption{Cronograma del desarrollo.}
+    \label{fig:gantt_mermaid}
+\end{sidewaysfigure}
+
