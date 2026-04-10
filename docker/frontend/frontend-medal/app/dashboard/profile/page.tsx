@@ -182,7 +182,7 @@ export default function ProfilePage() {
 		}
 	};
 
-	const handlePasswordSubmit = (e: React.FormEvent) => {
+	const handlePasswordSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (
 			!isPasswordValid ||
@@ -190,26 +190,47 @@ export default function ProfilePage() {
 		)
 			return;
 
-		const token = localStorage.getItem("token");
-		fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/updatePassword`, {
-			method: "PATCH",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${token}`,
-			},
-			body: JSON.stringify({
-				passwordAnterior: passwordData.currentPassword,
-				passwordNueva: passwordData.newPassword,
-			}),
-		}).catch((err) => console.error("Error enviando contraseña:", err));
+		setSaving(true);
+		setError("");
+		setSuccess("");
 
-		setSuccess("Petición de seguridad enviada con éxito");
-		setShowPasswordForm(false);
-		setPasswordData({
-			currentPassword: "",
-			newPassword: "",
-			confirmPassword: "",
-		});
+		try {
+			const token = localStorage.getItem("token");
+			const res = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/api/user/updatePassword`,
+				{
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+					body: JSON.stringify({
+						passwordAnterior: passwordData.currentPassword,
+						passwordNueva: passwordData.newPassword,
+					}),
+				},
+			);
+
+			if (res.ok) {
+				setSuccess("Credenciales actualizadas con éxito");
+				setShowPasswordForm(false);
+				setPasswordData({
+					currentPassword: "",
+					newPassword: "",
+					confirmPassword: "",
+				});
+			} else if (res.status === 422) {
+				// Manejo específico para contraseña actual incorrecta
+				throw new Error("La contraseña actual no es válida");
+			} else {
+				const errorData = await res.json().catch(() => ({}));
+				throw new Error(errorData.error || "Error al actualizar la contraseña");
+			}
+		} catch (err: any) {
+			setError(err.message || "Error de comunicación con el servidor");
+		} finally {
+			setSaving(false);
+		}
 	};
 
 	if (loading)

@@ -115,7 +115,7 @@ services:
     container_name: signValidatorMedal
     image: dss_demo:latest
     ports:
-      - "${DSS_IP}:${DSS_PORT}:8080" # Si quieres que sea accesible desde otra ip quitar el 127.0.0.1. Habría que mirar certificados para tener seguridad en este acceso.
+      - "${DSS_PORT}:8080" # Si quieres que sea accesible desde otra ip quitar el 127.0.0.1. Habría que mirar certificados para tener seguridad en este acceso.
     restart: always
     networks:
       - medalnetwork

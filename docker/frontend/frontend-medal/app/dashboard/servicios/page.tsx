@@ -41,6 +41,7 @@ export default function MaquinaServiciosPage() {
 	const [pagination, setPagination] = useState<Pagination | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [page, setPage] = useState(1);
+	const [searchTerm, setSearchTerm] = useState<string>(""); // Nuevo estado de búsqueda
 
 	const permisos = useMemo(() => {
 		if (typeof window === "undefined") return [];
@@ -77,12 +78,16 @@ export default function MaquinaServiciosPage() {
 
 		setLoading(true);
 		const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+		// Codificamos el término de búsqueda
+		const filterQuery = searchTerm
+			? `&filtroNombre=${encodeURIComponent(searchTerm)}`
+			: "";
 
 		try {
 			if (esAdminGlobal) {
 				const url = uuidMaquinaPath
-					? `${baseUrl}/api/maquina/${uuidMaquinaPath}/servicios?page=${page}&limit=10`
-					: `${baseUrl}/api/servicios?page=${page}&limit=10`;
+					? `${baseUrl}/api/maquina/${uuidMaquinaPath}/servicios?page=${page}&limit=10${filterQuery}`
+					: `${baseUrl}/api/servicios?page=${page}&limit=10${filterQuery}`;
 
 				const res = await fetch(url, {
 					headers: { Authorization: `Bearer ${token}` },
@@ -97,27 +102,21 @@ export default function MaquinaServiciosPage() {
 					? [uuidMaquinaPath]
 					: listaUuidsPermitidos;
 
-				// FIX: Tipado explícito (uuid: string) para evitar error de compilación
 				const promesas = targets.map((uuid: string) =>
 					fetch(
-						`${baseUrl}/api/maquina/${uuid}/servicios?page=${page}&limit=5`,
+						`${baseUrl}/api/maquina/${uuid}/servicios?page=${page}&limit=5${filterQuery}`,
 						{
 							headers: { Authorization: `Bearer ${token}` },
 						},
-					).then(async (r) => {
-						if (!r.ok) return null;
-						return r.json();
-					}),
+					).then(async (r) => (r.ok ? r.json() : null)),
 				);
 
 				const resultados = await Promise.all(promesas);
-
 				const allServices = resultados
 					.filter((r) => r !== null && r.info?.data)
 					.flatMap((r) => r.info.data);
 
 				setServicios(allServices);
-
 				setPagination({
 					totalItems: allServices.length,
 					totalPages: 1,
@@ -130,25 +129,21 @@ export default function MaquinaServiciosPage() {
 		} finally {
 			setLoading(false);
 		}
-	}, [uuidMaquinaPath, page, esAdminGlobal, listaUuidsPermitidos]);
+	}, [uuidMaquinaPath, page, esAdminGlobal, listaUuidsPermitidos, searchTerm]);
 
 	useEffect(() => {
-		fetchServicios();
+		const delayDebounce = setTimeout(() => {
+			fetchServicios();
+		}, 300);
+		return () => clearTimeout(delayDebounce);
 	}, [fetchServicios]);
-
-	if (loading && page === 1)
-		return (
-			<div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-black text-slate-300 uppercase tracking-[0.5em] animate-pulse italic">
-				Sincronizando Clusters...
-			</div>
-		);
 
 	return (
 		<div className="min-h-screen bg-[#F8FAFC] py-12 px-8 font-sans">
 			<div className="max-w-[1400px] mx-auto">
 				{/* HEADER */}
 				<div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 border-b-2 border-slate-100 pb-12">
-					<div>
+					<div className="flex-1">
 						<button
 							onClick={() => router.back()}
 							className="text-[10px] font-black text-slate-400 uppercase mb-4 block hover:text-blue-600 transition-colors tracking-widest"
@@ -161,24 +156,60 @@ export default function MaquinaServiciosPage() {
 						</h1>
 						{!esAdminGlobal && (
 							<p className="text-[10px] font-bold text-slate-400 uppercase mt-4 tracking-widest italic">
-								Basado en privilegios de infraestructura
+								Infraestructura autorizada
 							</p>
 						)}
 					</div>
 
-					{puedeCrear && (
-						<button
-							onClick={() => router.push(`/dashboard/servicios/nuevo`)}
-							className="bg-blue-600 text-white px-12 py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-xl shadow-blue-100"
-						>
-							+ Registrar Servicio
-						</button>
-					)}
+					<div className="flex flex-col md:flex-row gap-6 items-center w-full md:w-auto">
+						{/* BUSCADOR */}
+						<div className="relative w-full md:w-80">
+							<input
+								type="text"
+								placeholder="BUSCAR SERVICIO..."
+								value={searchTerm}
+								onChange={(e) => {
+									setSearchTerm(e.target.value);
+									setPage(1);
+								}}
+								className="w-full bg-white border border-slate-100 rounded-2xl py-5 pl-12 pr-6 text-[10px] font-black text-slate-900 placeholder:text-slate-300 focus:ring-2 focus:ring-blue-600 transition-all outline-none uppercase tracking-widest shadow-sm"
+							/>
+							<div className="absolute left-5 inset-y-0 flex items-center text-slate-300">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									className="h-4 w-4"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={3}
+										d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+									/>
+								</svg>
+							</div>
+						</div>
+
+						{puedeCrear && (
+							<button
+								onClick={() => router.push(`/dashboard/servicios/nuevo`)}
+								className="bg-blue-600 text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-xl shadow-blue-100 whitespace-nowrap"
+							>
+								+ Registrar
+							</button>
+						)}
+					</div>
 				</div>
 
 				{/* GRID */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-					{servicios.length > 0 ? (
+					{loading && page === 1 ? (
+						<div className="col-span-full py-32 text-center font-black text-slate-200 uppercase tracking-[0.5em] animate-pulse">
+							Escaneando red...
+						</div>
+					) : servicios.length > 0 ? (
 						servicios.map((s) => (
 							<div
 								key={s.uuidservicio}
@@ -255,7 +286,9 @@ export default function MaquinaServiciosPage() {
 					) : (
 						<div className="col-span-full py-20 text-center">
 							<p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">
-								Sin servicios detectados
+								{searchTerm
+									? `No se hallaron servicios para "${searchTerm}"`
+									: "Sin servicios detectados"}
 							</p>
 						</div>
 					)}

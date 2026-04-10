@@ -276,7 +276,7 @@ export default function MachineDetailPage() {
 									<div key={key}>
 										<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
 											{key
-												.replace("direcci", "")
+												.replace("direccion", "")
 												.replace("v6", "")
 												.toUpperCase()}
 										</p>
