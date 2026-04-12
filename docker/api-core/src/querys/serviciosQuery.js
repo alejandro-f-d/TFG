@@ -48,20 +48,37 @@ export const SERVICIOS_QUERIES = {
         VALUES($1, $2, $3, $4, $5);`,
 
 	GET_BY_UUID_COMPLETO: `
-        SELECT s.*, p.uuidpeticion, maq.uuidmaquina, COALESCE(puertos_agg.lista_puertos, '[]'::json) AS lista_puertos
+        SELECT 
+                s.*, 
+                p.uuidpeticion, 
+                maquinas_agg.lista_maquinas,
+                COALESCE(puertos_agg.lista_puertos, '[]'::json) AS lista_puertos
         FROM medal.servicio s
-        INNER JOIN medal.peticion p ON s.idpeticion = p.idpeticion
-        INNER JOIN medal.corre c ON c.idservicio = s.idservicio
-        INNER JOIN medal.maquina maq ON c.idmaquina = maq.idmaquina
+        JOIN medal.peticion p ON s.idpeticion = p.idpeticion
+        -- Agrupamos las máquinas relacionadas con el servicio
+        JOIN (
+                SELECT 
+                c.idservicio, 
+                json_agg(maq.uuidmaquina) AS lista_maquinas
+                FROM medal.corre c
+                JOIN medal.maquina maq ON c.idmaquina = maq.idmaquina
+                GROUP BY c.idservicio
+        ) AS maquinas_agg ON s.idservicio = maquinas_agg.idservicio
+        -- Agrupamos los puertos y su correspondencia
         LEFT JOIN (
-            SELECT idservicio, json_agg(json_build_object(
-                'id', idpuerto, 'puerto', numeropuertomaquina, 
-                'protocolo', protocolo, 'nombre', nombreservicio
-            )) AS lista_puertos
-            FROM medal.puertosabiertos
-            GROUP BY idservicio
+                SELECT 
+                idservicio, 
+                json_agg(json_build_object(
+                        'id', idpuerto, 
+                        'puerto', numeropuertomaquina, 
+                        'protocolo', protocolo, 
+                        'nombre', nombreservicio,
+                        'puertoVirtual', puertovirtual
+                )) AS lista_puertos
+                FROM medal.puertosabiertos
+                GROUP BY idservicio
         ) AS puertos_agg ON s.idservicio = puertos_agg.idservicio
-        WHERE s.uuidservicio = $1 AND maq.idmaquina = $2;`,
+        WHERE s.uuidservicio = $1;`,
 
 	VERIFICAR_RELACION: `
         SELECT s.idservicio, maq.idmaquina 

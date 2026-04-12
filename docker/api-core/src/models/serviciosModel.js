@@ -89,6 +89,13 @@ class ServiciosModel {
 			}
 
 			for (const puerto of puertosAbiertos) {
+				console.log(
+					"El log del servicio a crear con respecto a los puertos es:",
+					puerto.numeroPuertoMaquina,
+					puerto.protocolo,
+					puerto.nombreServicio,
+					puerto.puertoVirtual,
+				);
 				await client.query(SERVICIOS_QUERIES.INSERT_PUERTO, [
 					puerto.numeroPuertoMaquina,
 					puerto.protocolo,
@@ -118,9 +125,15 @@ class ServiciosModel {
 
 			const resDevolver = await client.query(
 				SERVICIOS_QUERIES.GET_BY_UUID_COMPLETO,
-				[uuidServicio, resIdMaq.rows[0].idmaquina],
+				[uuidServicio],
 			);
 			return resDevolver.rows.length === 0 ? 3 : resDevolver.rows[0];
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al intentar obtener la información de un servicio por uuid.",
+				error,
+			);
+			throw error;
 		} finally {
 			client.release();
 		}

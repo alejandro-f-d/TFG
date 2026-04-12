@@ -23,6 +23,7 @@ interface Servicio {
 	nivelseveridad: string;
 	lista_maquinas: string[];
 	lista_puertos: Puerto[];
+	uuidmaquina?: string;
 }
 
 interface Pagination {
@@ -43,10 +44,12 @@ export default function MaquinaServiciosPage() {
 	const [page, setPage] = useState(1);
 	const [searchTerm, setSearchTerm] = useState<string>("");
 
+	// --- GESTIÓN DE PERMISOS ---
 	const permisos = useMemo(() => {
 		if (typeof window === "undefined") return [];
 		try {
-			return JSON.parse(localStorage.getItem("permisos") || "[]");
+			const stored = localStorage.getItem("permisos");
+			return JSON.parse(stored || "[]");
 		} catch {
 			return [];
 		}
@@ -58,12 +61,24 @@ export default function MaquinaServiciosPage() {
 		[permisos],
 	);
 
-	const listaUuidsPermitidos = useMemo(() => {
+	// Extraer UUIDs de máquinas con permiso "verServicios"
+	const maquinasPermitidas = useMemo(() => {
 		if (esAdminGlobal) return [];
 		return permisos
-			.filter((p: string) => p.startsWith("maquina:servicios:get:"))
-			.map((p: string) => p.split(":")[3]);
+			.filter((p: string) => p.startsWith("maquina:verServicios:"))
+			.map((p: string) => p.split(":")[2]);
 	}, [permisos, esAdminGlobal]);
+
+	// Lógica para el botón de creación
+	const puedeCrearServicios = useMemo(() => {
+		if (esAdminGlobal) return true;
+		if (uuidMaquinaPath) {
+			return permisos.includes(`maquina:crearServicios:${uuidMaquinaPath}`);
+		}
+		return permisos.some((p: string) =>
+			p.startsWith("maquina:crearServicios:"),
+		);
+	}, [esAdminGlobal, permisos, uuidMaquinaPath]);
 
 	const fetchServicios = useCallback(async () => {
 		const token = localStorage.getItem("token");
@@ -71,31 +86,58 @@ export default function MaquinaServiciosPage() {
 
 		setLoading(true);
 		const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-		const filterQuery = searchTerm
-			? `&filtroNombre=${encodeURIComponent(searchTerm)}`
-			: "";
+		const filterQuery = `page=${page}&limit=10${searchTerm ? `&filtroNombre=${encodeURIComponent(searchTerm)}` : ""}`;
 
 		try {
-			// Decidimos la URL según si estamos en una máquina concreta o vista global
-			const url = uuidMaquinaPath
-				? `${baseUrl}/api/maquina/${uuidMaquinaPath}/servicios?page=${page}&limit=10${filterQuery}`
-				: `${baseUrl}/api/servicios?page=${page}&limit=10${filterQuery}`;
+			let serviciosConsolidados: Servicio[] = [];
+			let infoPagination: Pagination | null = null;
 
-			const res = await fetch(url, {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			if (esAdminGlobal || uuidMaquinaPath) {
+				// CASO A: Admin o vista de máquina única
+				const url = uuidMaquinaPath
+					? `${baseUrl}/api/maquina/${uuidMaquinaPath}/servicios?${filterQuery}`
+					: `${baseUrl}/api/servicios?${filterQuery}`;
 
-			if (res.ok) {
-				const response = await res.json();
-				setServicios(response.info.data);
-				setPagination(response.info.pagination);
+				const res = await fetch(url, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				if (res.ok) {
+					const response = await res.json();
+					serviciosConsolidados = response.info.data;
+					infoPagination = response.info.pagination;
+				}
+			} else {
+				// CASO B: Usuario limitado (Multi-fetch por UUID de permisos)
+				// Se añade tipado explícito (uuid: string) para evitar el error de compilación
+				const promesas = maquinasPermitidas.map((uuid: string) =>
+					fetch(`${baseUrl}/api/maquina/${uuid}/servicios?${filterQuery}`, {
+						headers: { Authorization: `Bearer ${token}` },
+					}).then((r) => r.json()),
+				);
+
+				const resultados = await Promise.all(promesas);
+
+				resultados.forEach((res) => {
+					if (res.info?.data) {
+						serviciosConsolidados = [
+							...serviciosConsolidados,
+							...res.info.data,
+						];
+					}
+				});
+
+				// Tomamos la paginación del primer resultado como referencia
+				infoPagination = resultados[0]?.info?.pagination || null;
 			}
+
+			setServicios(serviciosConsolidados);
+			setPagination(infoPagination);
 		} catch (e) {
-			console.error("Error fetching services:", e);
+			console.error("Error en la sincronización:", e);
 		} finally {
 			setLoading(false);
 		}
-	}, [uuidMaquinaPath, page, searchTerm]);
+	}, [uuidMaquinaPath, page, searchTerm, esAdminGlobal, maquinasPermitidas]);
 
 	useEffect(() => {
 		const delayDebounce = setTimeout(() => {
@@ -123,6 +165,15 @@ export default function MaquinaServiciosPage() {
 					</div>
 
 					<div className="flex flex-col md:flex-row gap-6 items-center w-full md:w-auto">
+						{puedeCrearServicios && (
+							<button
+								onClick={() => router.push("/dashboard/servicios/nuevo")}
+								className="bg-blue-600 text-white px-8 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-xl flex items-center gap-3 active:scale-95"
+							>
+								<span className="text-xl">+</span> Desplegar Servicio
+							</button>
+						)}
+
 						<div className="relative w-full md:w-80">
 							<input
 								type="text"
@@ -142,22 +193,20 @@ export default function MaquinaServiciosPage() {
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
 					{loading && page === 1 ? (
 						<div className="col-span-full py-32 text-center font-black text-slate-200 uppercase tracking-[0.5em] animate-pulse">
-							Sincronizando con el cluster...
+							Sincronizando Cluster...
 						</div>
 					) : servicios.length > 0 ? (
 						servicios.map((s) => {
-							// OBTENEMOS EL UUID DE LA MÁQUINA (El primero de la lista)
-							const uuidDeSuMaquina =
+							const hostUUID =
 								s.lista_maquinas && s.lista_maquinas.length > 0
 									? s.lista_maquinas[0]
-									: uuidMaquinaPath;
+									: s.uuidmaquina || uuidMaquinaPath;
 
 							return (
 								<div
 									key={s.uuidservicio}
 									className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 hover:shadow-2xl transition-all group relative"
 								>
-									{/* BADGE DE ESTADO */}
 									<div className="absolute top-8 right-8">
 										<div
 											className={`flex items-center gap-2 px-4 py-2 rounded-full font-black text-[8px] uppercase tracking-widest ${s.status === "working" ? "bg-emerald-50 text-emerald-500" : "bg-red-50 text-red-500"}`}
@@ -176,57 +225,47 @@ export default function MaquinaServiciosPage() {
 										<h3 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none group-hover:text-blue-600 transition-colors">
 											{s.nombreservicio}
 										</h3>
-										<p className="text-slate-400 text-[11px] font-medium mt-4 leading-relaxed max-w-sm">
+										<p className="text-slate-400 text-[11px] font-medium mt-4 leading-relaxed max-w-sm line-clamp-2">
 											{s.descripciontecnica}
 										</p>
 									</div>
 
-									{/* PUERTOS */}
-									<div className="mb-10 flex flex-wrap gap-3">
-										{s.lista_puertos.map((p) => (
+									<div className="mb-10 flex flex-wrap gap-2">
+										{s.lista_puertos?.map((p, idx) => (
 											<div
-												key={p.id}
-												className="bg-slate-50 border border-slate-100 p-3 rounded-xl min-w-[70px]"
+												key={p.id || idx}
+												className="bg-slate-50 border border-slate-100 p-3 rounded-xl min-w-[60px] text-center"
 											>
 												<span className="text-[7px] font-black opacity-40 uppercase block">
 													{p.protocolo}
 												</span>
-												<p className="text-lg font-black italic">{p.puerto}</p>
+												<p className="text-sm font-black italic">{p.puerto}</p>
 											</div>
 										))}
-										<div className="bg-blue-50 border border-blue-100 p-3 rounded-xl flex items-center">
-											<p className="text-[8px] font-black text-blue-600 uppercase italic px-2">
-												{s.softwarebase}
-											</p>
-										</div>
 									</div>
 
-									{/* FOOTER CARD */}
 									<div className="flex items-center justify-between pt-8 border-t border-slate-50">
 										<div className="flex flex-col">
 											<p className="text-[7px] font-black text-slate-300 uppercase tracking-widest">
-												Host UUID
+												Node ID
 											</p>
 											<p className="text-[9px] font-mono text-slate-400 uppercase">
-												{uuidDeSuMaquina
-													? `${uuidDeSuMaquina.slice(0, 18)}...`
-													: "NO HOST"}
+												{hostUUID ? `${hostUUID.slice(0, 18)}...` : "GLOBAL"}
 											</p>
 										</div>
 
 										<button
 											onClick={() => {
-												if (uuidDeSuMaquina) {
+												if (hostUUID)
 													router.push(
-														`/dashboard/maquinas/${uuidDeSuMaquina}/servicios/${s.uuidservicio}`,
+														`/dashboard/maquinas/${hostUUID}/servicios/${s.uuidservicio}`,
 													);
-												} else {
+												else
 													alert(
-														"Error: No se puede localizar la máquina anfitriona.",
+														"Error: No se pudo identificar el nodo de origen.",
 													);
-												}
 											}}
-											className="bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-[9px] uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95"
+											className="bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-[9px] uppercase hover:bg-blue-600 transition-all active:scale-95 shadow-lg"
 										>
 											Panel de Control
 										</button>
@@ -235,8 +274,8 @@ export default function MaquinaServiciosPage() {
 							);
 						})
 					) : (
-						<div className="col-span-full py-20 text-center font-black text-slate-300 uppercase tracking-widest">
-							No se han detectado servicios en este sector.
+						<div className="col-span-full py-20 text-center font-black text-slate-300 uppercase tracking-widest italic border-2 border-dashed border-slate-100 rounded-[3rem]">
+							No se han detectado servicios en este sector
 						</div>
 					)}
 				</div>

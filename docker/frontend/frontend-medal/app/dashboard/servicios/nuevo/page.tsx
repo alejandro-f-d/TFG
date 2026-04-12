@@ -28,12 +28,13 @@ interface PuertoForm {
 export default function CrearServicioPage() {
 	const router = useRouter();
 
-	// Estados de carga y catálogos
 	const [maquinas, setMaquinas] = useState<Maquina[]>([]);
 	const [peticiones, setPeticiones] = useState<Peticion[]>([]);
 	const [loading, setLoading] = useState(true);
 
-	// Estado del Formulario
+	const [busquedaPeticion, setBusquedaPeticion] = useState("");
+	const [buscandoPeticiones, setBuscandoPeticiones] = useState(false);
+
 	const [formData, setFormData] = useState({
 		nombreServicio: "",
 		descripcionTecnica: "",
@@ -42,13 +43,12 @@ export default function CrearServicioPage() {
 		softwareBase: "",
 		nivelSeveridad: "alto",
 		idPeticion: 0,
-		servidoresIds: [] as number[], // IDs numéricos para manejo interno y API
+		servidoresIds: [] as number[],
 	});
 
 	const [puertos, setPuertos] = useState<PuertoForm[]>([]);
 
-	// --- GESTIÓN DE PERMISOS ---
-	const permisos: string[] = useMemo(() => {
+	const permisos = useMemo(() => {
 		if (typeof window === "undefined") return [];
 		try {
 			return JSON.parse(localStorage.getItem("permisos") || "[]");
@@ -59,12 +59,11 @@ export default function CrearServicioPage() {
 
 	const esAdminTotal = permisos.includes("admin:total");
 
-	// --- CARGA DE DATOS ---
+	// FETCH INICIAL DE MÁQUINAS
 	useEffect(() => {
-		const fetchData = async () => {
+		const fetchMaquinas = async () => {
 			const token = localStorage.getItem("token");
 			const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-
 			try {
 				const resMaq = await fetch(
 					`${baseUrl}/api/maquina?soloServidores=true`,
@@ -74,9 +73,31 @@ export default function CrearServicioPage() {
 				);
 				const dataMaq = await resMaq.json();
 				setMaquinas(Array.isArray(dataMaq) ? dataMaq : []);
+			} catch (e) {
+				console.error("Error cargando máquinas:", e);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchMaquinas();
+	}, []);
+
+	// FETCH DE PETICIONES
+	useEffect(() => {
+		const fetchPeticiones = async () => {
+			setBuscandoPeticiones(true);
+			const token = localStorage.getItem("token");
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+
+			try {
+				const query = new URLSearchParams({
+					status: "APROBADA",
+					limit: "50",
+					filtroNombre: busquedaPeticion,
+				});
 
 				const resPet = await fetch(
-					`${baseUrl}/api/peticion?status=APROBADA&limit=50`,
+					`${baseUrl}/api/peticion?${query.toString()}`,
 					{
 						headers: { Authorization: `Bearer ${token}` },
 					},
@@ -84,15 +105,16 @@ export default function CrearServicioPage() {
 				const dataPet = await resPet.json();
 				setPeticiones(dataPet.info?.rows || []);
 			} catch (e) {
-				console.error("Error de sincronización:", e);
+				console.error("Error buscando peticiones:", e);
 			} finally {
-				setLoading(false);
+				setBuscandoPeticiones(false);
 			}
 		};
-		fetchData();
-	}, []);
 
-	// --- HANDLERS ---
+		const timeoutId = setTimeout(fetchPeticiones, 300);
+		return () => clearTimeout(timeoutId);
+	}, [busquedaPeticion]);
+
 	const handleMaquinaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const selectedIds = Array.from(e.target.selectedOptions, (opt) =>
 			parseInt(opt.value),
@@ -104,7 +126,9 @@ export default function CrearServicioPage() {
 				return !permisos.includes(`maquina:crearServicios:${m?.uuidmaquina}`);
 			});
 			if (maquinasSinPermiso.length > 0) {
-				alert("Acceso denegado para uno de los nodos seleccionados.");
+				alert(
+					"No tienes permisos de creación en uno de los nodos seleccionados.",
+				);
 				return;
 			}
 		}
@@ -122,14 +146,18 @@ export default function CrearServicioPage() {
 			return;
 		}
 
-		// Lógica de Identificadores:
-		// 1. El UUID de la primera máquina va en la URL.
-		const idPrincipal = formData.servidoresIds[0];
-		const uuidPrincipal = maquinas.find(
-			(m) => m.idmaquina === idPrincipal,
-		)?.uuidmaquina;
+		if (formData.idPeticion === 0) {
+			alert("Debe vincular una petición aprobada.");
+			return;
+		}
 
-		// 2. Los IDs del RESTO de máquinas van en el array 'servidores' del body.
+		// Identificamos la máquina principal (la primera seleccionada)
+		const idPrincipal = formData.servidoresIds[0];
+		const maqPrincipal = maquinas.find((m) => m.idmaquina === idPrincipal);
+
+		if (!maqPrincipal) return;
+
+		// El backend suele esperar en el array 'servidores' el resto de IDs (excluyendo el principal del path)
 		const servidoresSecundariosIds = formData.servidoresIds.slice(1);
 
 		const payload = {
@@ -138,17 +166,22 @@ export default function CrearServicioPage() {
 			entorno: formData.entorno,
 			publico: formData.publico,
 			softwareBase: formData.softwareBase,
-			activo: true,
 			nivelSeveridad: formData.nivelSeveridad,
+			idPeticion: Number(formData.idPeticion),
 			idUsuario: userId ? parseInt(userId) : 1,
-			idPeticion: formData.idPeticion,
-			servidores: servidoresSecundariosIds, // IDs numéricos [3, 5, etc]
-			puertosAbiertos: puertos,
+			servidores: servidoresSecundariosIds, // Array de IDs numéricos
+			puertosAbiertos: puertos.map((p) => ({
+				numeroPuertoMaquina: Number(p.numeroPuertoMaquina),
+				protocolo: p.protocolo,
+				nombreServicio: p.nombreServicio,
+				puertoVirtual: Number(p.puertoVirtual),
+			})),
+			activo: true,
 		};
 
 		try {
 			const res = await fetch(
-				`${baseUrl}/api/maquina/${uuidPrincipal}/servicios`,
+				`${baseUrl}/api/maquina/${maqPrincipal.uuidmaquina}/servicios`,
 				{
 					method: "POST",
 					headers: {
@@ -163,10 +196,10 @@ export default function CrearServicioPage() {
 				router.push("/dashboard/servicios");
 			} else {
 				const err = await res.json();
-				alert(err.error || "Error en el despliegue.");
+				alert(err.message || err.error || "Error en el despliegue.");
 			}
 		} catch {
-			alert("Error crítico de comunicación.");
+			alert("Error crítico de comunicación con el servidor.");
 		}
 	};
 
@@ -198,13 +231,12 @@ export default function CrearServicioPage() {
 					onSubmit={handleSubmit}
 					className="grid grid-cols-1 lg:grid-cols-12 gap-10"
 				>
-					{/* LÓGICA TÉCNICA */}
 					<div className="lg:col-span-7 space-y-8">
 						<div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100">
 							<div className="space-y-6">
 								<div>
 									<label className="text-[10px] font-black text-slate-400 uppercase ml-2 italic tracking-widest">
-										Nombre
+										Nombre del Servicio
 									</label>
 									<input
 										type="text"
@@ -219,11 +251,10 @@ export default function CrearServicioPage() {
 										className="w-full bg-slate-50 border-none rounded-2xl p-6 mt-2 font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 text-2xl uppercase"
 									/>
 								</div>
-
 								<div className="grid grid-cols-2 gap-6">
 									<div className="space-y-2">
 										<label className="text-[10px] font-black text-slate-400 uppercase ml-2 italic">
-											Entorno (Texto Libre)
+											Entorno
 										</label>
 										<input
 											type="text"
@@ -232,7 +263,7 @@ export default function CrearServicioPage() {
 											onChange={(e) =>
 												setFormData({ ...formData, entorno: e.target.value })
 											}
-											className="w-full bg-slate-50 border-none rounded-2xl p-5 mt-2 font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 uppercase appearance-none-all"
+											className="w-full bg-slate-50 border-none rounded-2xl p-5 mt-2 font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 uppercase"
 										/>
 										<datalist id="entornos-list">
 											<option value="PROD" />
@@ -240,7 +271,6 @@ export default function CrearServicioPage() {
 											<option value="DEV" />
 										</datalist>
 									</div>
-
 									<div className="space-y-2">
 										<label className="text-[10px] font-black text-slate-400 uppercase ml-2 italic">
 											Severidad
@@ -262,9 +292,8 @@ export default function CrearServicioPage() {
 										</select>
 									</div>
 								</div>
-
 								<textarea
-									placeholder="Descripción técnica..."
+									placeholder="Descripción técnica y objetivos del servicio..."
 									value={formData.descripcionTecnica}
 									onChange={(e) =>
 										setFormData({
@@ -277,12 +306,17 @@ export default function CrearServicioPage() {
 							</div>
 						</div>
 
-						{/* PUERTOS */}
+						{/* NETWORK BINDING */}
 						<div className="bg-slate-900 rounded-[3rem] p-10 shadow-2xl text-white">
 							<div className="flex justify-between items-center mb-8">
-								<h2 className="text-xl font-black uppercase italic text-blue-400">
-									Networking
-								</h2>
+								<div>
+									<h2 className="text-xl font-black uppercase italic text-blue-400">
+										Network Binding
+									</h2>
+									<p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">
+										Host Port → Virtual Port Mappings
+									</p>
+								</div>
 								<button
 									type="button"
 									onClick={() =>
@@ -292,82 +326,114 @@ export default function CrearServicioPage() {
 												numeroPuertoMaquina: 80,
 												protocolo: "TCP",
 												nombreServicio: "",
-												puertoVirtual: 80,
+												puertoVirtual: 8080,
 											},
 										])
 									}
-									className="bg-blue-600 text-[10px] px-6 py-3 rounded-xl font-black uppercase"
+									className="bg-blue-600 hover:bg-white hover:text-blue-600 transition-all text-[10px] px-6 py-3 rounded-xl font-black uppercase"
 								>
-									+ Add Port
+									+ Add Binding
 								</button>
 							</div>
+
 							<div className="space-y-4">
 								{puertos.map((p, i) => (
 									<div
 										key={i}
-										className="flex gap-4 items-center bg-white/5 p-5 rounded-2xl"
+										className="bg-white/5 border border-white/10 p-6 rounded-[2rem]"
 									>
-										<input
-											type="number"
-											value={p.numeroPuertoMaquina}
-											onChange={(e) => {
-												const n = [...puertos];
-												n[i].numeroPuertoMaquina = parseInt(e.target.value);
-												n[i].puertoVirtual = parseInt(e.target.value);
-												setPuertos(n);
-											}}
-											className="w-24 bg-slate-800 border-none rounded-lg p-3 text-xs font-bold"
-										/>
-										<select
-											value={p.protocolo}
-											onChange={(e) => {
-												const n = [...puertos];
-												n[i].protocolo = e.target.value;
-												setPuertos(n);
-											}}
-											className="bg-slate-800 border-none rounded-lg p-3 text-xs font-bold"
-										>
-											<option value="TCP">TCP</option>
-											<option value="UDP">UDP</option>
-										</select>
-										<input
-											type="text"
-											placeholder="Alias"
-											value={p.nombreServicio}
-											onChange={(e) => {
-												const n = [...puertos];
-												n[i].nombreServicio = e.target.value;
-												setPuertos(n);
-											}}
-											className="flex-1 bg-slate-800 border-none rounded-lg p-3 text-xs font-bold"
-										/>
-										<button
-											type="button"
-											onClick={() =>
-												setPuertos(puertos.filter((_, idx) => idx !== i))
-											}
-											className="text-red-500 font-black"
-										>
-											✕
-										</button>
+										<div className="grid grid-cols-12 gap-4 items-end">
+											<div className="col-span-3">
+												<label className="text-[7px] font-black text-blue-400 uppercase block mb-2 tracking-widest text-center">
+													Puerto Host
+												</label>
+												<input
+													type="number"
+													value={p.numeroPuertoMaquina}
+													onChange={(e) => {
+														const n = [...puertos];
+														n[i].numeroPuertoMaquina =
+															parseInt(e.target.value) || 0;
+														setPuertos(n);
+													}}
+													className="w-full bg-slate-800 border-none rounded-xl p-4 text-center text-sm font-black"
+												/>
+											</div>
+											<div className="col-span-1 flex items-center justify-center pb-4">
+												<span className="text-blue-600 font-black">→</span>
+											</div>
+											<div className="col-span-3">
+												<label className="text-[7px] font-black text-emerald-400 uppercase block mb-2 tracking-widest text-center">
+													Puerto Virtual
+												</label>
+												<input
+													type="number"
+													value={p.puertoVirtual}
+													onChange={(e) => {
+														const n = [...puertos];
+														n[i].puertoVirtual = parseInt(e.target.value) || 0;
+														setPuertos(n);
+													}}
+													className="w-full bg-slate-800 border-none rounded-xl p-4 text-center text-sm font-black text-emerald-400"
+												/>
+											</div>
+											<div className="col-span-4">
+												<label className="text-[7px] font-black text-slate-500 uppercase block mb-2 tracking-widest">
+													Protocolo & Alias
+												</label>
+												<div className="flex gap-2">
+													<select
+														value={p.protocolo}
+														onChange={(e) => {
+															const n = [...puertos];
+															n[i].protocolo = e.target.value;
+															setPuertos(n);
+														}}
+														className="bg-slate-800 border-none rounded-xl p-4 text-[9px] font-black uppercase"
+													>
+														<option value="TCP">TCP</option>
+														<option value="UDP">UDP</option>
+													</select>
+													<input
+														type="text"
+														placeholder="HTTP..."
+														value={p.nombreServicio}
+														onChange={(e) => {
+															const n = [...puertos];
+															n[i].nombreServicio = e.target.value;
+															setPuertos(n);
+														}}
+														className="flex-1 bg-slate-800 border-none rounded-xl p-4 text-[10px] font-bold"
+													/>
+												</div>
+											</div>
+											<button
+												type="button"
+												onClick={() =>
+													setPuertos(puertos.filter((_, idx) => idx !== i))
+												}
+												className="col-span-1 h-12 flex items-center justify-center text-red-500 hover:text-red-400 text-xl"
+											>
+												✕
+											</button>
+										</div>
 									</div>
 								))}
 							</div>
 						</div>
 					</div>
 
-					{/* INFRAESTRUCTURA */}
 					<div className="lg:col-span-5 space-y-8">
 						<div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100">
 							<label className="text-[10px] font-black text-slate-400 uppercase italic tracking-widest">
-								Nodos (1º = Principal)
+								Infraestructura de Destino
 							</label>
 							<select
 								multiple
 								required
 								value={formData.servidoresIds.map(String)}
 								onChange={handleMaquinaChange}
-								className="w-full bg-slate-50 border-none rounded-[2rem] p-6 mt-4 font-bold text-slate-900 min-h-[300px] appearance-none"
+								className="w-full bg-slate-50 border-none rounded-[2rem] p-6 mt-4 font-bold text-slate-900 min-h-[200px] appearance-none scrollbar-hide"
 							>
 								{maquinas.map((m) => (
 									<option
@@ -380,10 +446,22 @@ export default function CrearServicioPage() {
 								))}
 							</select>
 
-							<div className="mt-8">
+							<div className="mt-12 space-y-4">
 								<label className="text-[10px] font-black text-slate-400 uppercase italic tracking-widest">
-									Petición
+									Vincular Proyecto/Petición
 								</label>
+								<div className="relative">
+									<input
+										type="text"
+										placeholder="Filtrar peticiones..."
+										value={busquedaPeticion}
+										onChange={(e) => setBusquedaPeticion(e.target.value)}
+										className="w-full bg-slate-100 border-none rounded-xl p-4 text-xs font-bold text-slate-700"
+									/>
+									{buscandoPeticiones && (
+										<div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+									)}
+								</div>
 								<select
 									required
 									value={formData.idPeticion}
@@ -393,27 +471,30 @@ export default function CrearServicioPage() {
 											idPeticion: parseInt(e.target.value),
 										})
 									}
-									className="w-full bg-slate-50 border-none rounded-2xl p-6 mt-2 font-bold text-slate-900"
+									className="w-full bg-slate-50 border-none rounded-2xl p-6 font-bold text-slate-900 focus:ring-2 focus:ring-blue-600"
 								>
-									<option value="">-- Seleccionar --</option>
+									<option value="0">-- Seleccionar Petición --</option>
 									{peticiones.map((p) => (
 										<option key={p.idpeticion} value={p.idpeticion}>
-											{p.nombreproyectoasociado}
+											{p.nombreproyectoasociado.toUpperCase()}
 										</option>
 									))}
 								</select>
 							</div>
 						</div>
 
-						<div className="bg-blue-600 rounded-[3rem] p-10 text-white">
+						<div className="bg-blue-600 rounded-[3rem] p-10 text-white shadow-xl shadow-blue-100">
+							<label className="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-2 block">
+								Stack Tecnológico
+							</label>
 							<input
 								type="text"
 								value={formData.softwareBase}
 								onChange={(e) =>
 									setFormData({ ...formData, softwareBase: e.target.value })
 								}
-								className="w-full bg-blue-700 border-none rounded-xl p-5 mb-4 font-bold placeholder:text-blue-300"
-								placeholder="Software Base"
+								className="w-full bg-blue-700 border-none rounded-xl p-5 mb-4 font-bold placeholder:text-blue-300 outline-none"
+								placeholder="e.g. Docker / Nginx / Node.js"
 							/>
 							<div className="flex items-center gap-4 bg-blue-800 p-6 rounded-2xl">
 								<input
@@ -422,10 +503,10 @@ export default function CrearServicioPage() {
 									onChange={(e) =>
 										setFormData({ ...formData, publico: e.target.checked })
 									}
-									className="w-6 h-6 rounded-lg text-blue-500 border-none"
+									className="w-6 h-6 rounded-lg text-blue-500 border-none cursor-pointer"
 								/>
 								<span className="text-[10px] font-black uppercase italic">
-									Public Endpoint
+									Public Endpoint Access
 								</span>
 							</div>
 						</div>
@@ -439,14 +520,6 @@ export default function CrearServicioPage() {
 					</div>
 				</form>
 			</div>
-
-			<style jsx global>{`
-        .appearance-none-all::-webkit-calendar-picker-indicator { display: none !important; }
-        .appearance-none-all { -webkit-appearance: none; appearance: none; }
-        select::-webkit-scrollbar { width: 4px; }
-        select::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-        select option { margin-bottom: 5px; padding: 12px; border-radius: 12px; font-size: 11px; }
-      `}</style>
 		</div>
 	);
 }
