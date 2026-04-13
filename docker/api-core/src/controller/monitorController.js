@@ -35,9 +35,6 @@ export const getMonitorByUuid = async (req, res) => {
 	if (!uuid) {
 		return res.status(400).json({ error: "Petición mal formada." });
 	}
-	if (!uuid) {
-		return res.status(400).json({ error: "Petición mal formada." });
-	}
 	const uuidRegex =
 		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 	if (!uuidRegex.test(uuid)) {
@@ -217,5 +214,38 @@ export const getHistorico = async (req, res) => {
 			error,
 		);
 		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};
+
+export const suscribeMonitor = async (req, res) => {
+	const { uuid } = req.params;
+
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(uuid)) {
+		return res.status(400).json({
+			error: "Formato de identificador de reserva inválido.",
+		});
+	}
+	try {
+		const resSuscripcion = await MonitorModel.suscribirseUuid(
+			uuid,
+			req.user.idUsuario,
+		);
+		if (resSuscripcion === 2) {
+			return res.status(404).json({ error: "Monitor no encontrado" });
+		}
+		return res
+			.status(200)
+			.json({ message: "Suscripción realizada de manera satisfactoria." });
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al suscribirse a un monitor",
+			error,
+		);
+		return res.status(500).json({ error: "Se ha producido un error interno" });
 	}
 };

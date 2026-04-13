@@ -34,9 +34,15 @@ export default function DashboardPage() {
 
 		console.log("Permisos del usuario:", userPermissions);
 
-		const filtered = allMenuItems.filter((item) =>
-			item.requiredPermissions.some((perm) => userPermissions.includes(perm)),
-		);
+		const filtered = allMenuItems.filter((item) => {
+			if (userPermissions.includes("admin:total")) return true;
+
+			if (item.requiredPermissions.includes("null:null")) return true;
+
+			return item.requiredPermissions.some((perm) =>
+				userPermissions.includes(perm),
+			);
+		});
 
 		setMenuItems(filtered);
 

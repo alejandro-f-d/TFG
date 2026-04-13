@@ -7,6 +7,7 @@ import {
 	deleteMonitor,
 	getMonitor,
 	getHistorico,
+	suscribeMonitor,
 } from "../controller/monitorController.js";
 import { monitorSchema } from "../schemas/index.js";
 const router = express.Router();
@@ -801,4 +802,11 @@ router.delete("/:uuid", [verificarToken], deleteMonitor);
  */
 
 router.get("/:uuid/historico", [verificarToken], getHistorico);
+
+router.post(
+	"/:uuid/suscribirse",
+	[verificarToken, tienePermiso("monitor:listar")],
+	suscribeMonitor,
+);
+
 export default router;

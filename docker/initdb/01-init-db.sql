@@ -214,6 +214,21 @@ CREATE TABLE IF NOT EXISTS medal.historicoMonitoreo (
     ON DELETE CASCADE
 );
 
+-- 15.1. Suscriptores al histórico.
+CREATE TABLE IF NOT EXISTS medal.suscripcionHistorico(
+  idSuscripcion SERIAL PRIMARY KEY,
+  idMonitor INTEGER NOT NULL, 
+  idUsuario INTEGER NOT NULL,
+  CONSTRAINT fk_monitor_web_suscripcion 
+    FOREIGN KEY(idMonitor)
+    REFERENCES medal.monitoreoWeb(idMonitor)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_usuario_suscriptior_monitoreo 
+    FOREIGN KEY(idUsuario)
+    REFERENCES medal.usuario(idUsuario)
+    ON DELETE CASCADE
+);
+
 -- 16. NOTIFICACIÓN 
 CREATE TABLE IF NOT EXISTS medal.notificacion(
   idNotificacion SERIAL PRIMARY KEY,

@@ -18,15 +18,22 @@ class HealthModel {
 		return res.rows[0];
 	}
 
-	static async getCorreo(idMonitor) {
+	static async getCorreosSuscriptores(idMonitor) {
 		await pool.query(HEALTH_QUERYES.SET_CAIDO, [idMonitor]);
-		const res = await pool.query(HEALTH_QUERYES.GET_CORREO, [idMonitor]);
-		return res.rows.length > 0 ? res.rows[0].correoinstitucional : null;
+
+		const res = await pool.query(HEALTH_QUERYES.GET_CORREOS_SUSCRITOS, [
+			idMonitor,
+		]);
+		return res.rows.map((row) => row.correoinstitucional);
 	}
-	static async getCorreoSetOk(idMonitor) {
+
+	static async getCorreosSuscriptoresSetOk(idMonitor) {
 		await pool.query(HEALTH_QUERYES.SET_OK, [idMonitor]);
-		const res = await pool.query(HEALTH_QUERYES.GET_CORREO, [idMonitor]);
-		return res.rows.length > 0 ? res.rows[0].correoinstitucional : null;
+
+		const res = await pool.query(HEALTH_QUERYES.GET_CORREOS_SUSCRITOS, [
+			idMonitor,
+		]);
+		return res.rows.map((row) => row.correoinstitucional);
 	}
 }
 

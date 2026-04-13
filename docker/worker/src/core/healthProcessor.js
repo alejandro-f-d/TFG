@@ -37,36 +37,53 @@ export const healthProcessor = async (job) => {
 					statusactual,
 				} = monitorActualizado;
 
-				if (contadorfallos === umbralreintentos) {
-					const correoCreador = await HealthModel.getCorreo(idMonitor);
+				console.log(
+					`[JOB] Monitor ${idMonitor} (${direccion}) -> Contador: ${contadorfallos}/${umbralreintentos} | Status DB: ${statusactual}`,
+				);
 
-					if (correoCreador) {
-						await addEmailToQueue({
-							template: "SERVICIO_CAIDO",
-							to: correoCreador,
-							detectedAt: new Date(),
-							description: `Fallo detectado mediante ${type}. Código/Estado: ${status.resultado}`,
-							dashboardUrl: process.env.WEB_URL,
-							serviceName: nombreobjetivo,
-						});
+				if (contadorfallos >= umbralreintentos && statusactual !== "caido") {
+					console.log(
+						`[ALERTA] Umbral alcanzado para ${nombreobjetivo}. Notificando suscriptores...`,
+					);
+
+					const correos = await HealthModel.getCorreosSuscriptores(idMonitor);
+
+					if (correos.length > 0) {
+						for (const email of correos) {
+							await addEmailToQueue({
+								template: "SERVICIO_CAIDO",
+								to: email,
+								detectedAt: new Date(),
+								description: `Fallo detectado mediante ${type}. Resultado: ${status.resultado}`,
+								dashboardUrl: process.env.WEB_URL,
+								serviceName: nombreobjetivo,
+							});
+						}
 						console.log(
-							`[ALERTA] Correo enviado a ${correoCreador} por caída de ${nombreobjetivo}`,
+							`[ALERTA] Notificaciones de caída enviadas a: ${correos.join(", ")}`,
 						);
 					}
 				} else if (contadorfallos === 0 && statusactual === "caido") {
-					const correoCreador = await HealthModel.getCorreoSetOk(idMonitor);
+					console.log(
+						`[ALERTA] Servicio ${nombreobjetivo} recuperado. Notificando suscriptores...`,
+					);
 
-					if (correoCreador) {
-						await addEmailToQueue({
-							template: "SERVICIO_RECUPERADO",
-							to: correoCreador,
-							serviceName: nombreobjetivo,
-							recoveredAt: new Date(),
-							currentStatus: "Funcionando.",
-							dashboardUrl: process.env.WEB_URL,
-						});
+					const correos =
+						await HealthModel.getCorreosSuscriptoresSetOk(idMonitor);
+
+					if (correos.length > 0) {
+						for (const email of correos) {
+							await addEmailToQueue({
+								template: "SERVICIO_RECUPERADO",
+								to: email,
+								serviceName: nombreobjetivo,
+								recoveredAt: new Date(),
+								currentStatus: "Funcionando correctamente",
+								dashboardUrl: process.env.WEB_URL,
+							});
+						}
 						console.log(
-							`[ALERTA] Correo enviado a ${correoCreador} por caída de ${nombreobjetivo}`,
+							`[ALERTA] Notificaciones de recuperación enviadas a: ${correos.join(", ")}`,
 						);
 					}
 				}

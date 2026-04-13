@@ -144,4 +144,6 @@ WHERE m.uuidmonitoreo = $1;`,
          FROM medal.monitoreoWeb mw
          INNER JOIN medal.metodoMonitoreoWeb mm ON mw.idMetodo = mm.idMetodo
          WHERE mw.uuidmonitoreo = $1;`,
+	SUSCRIBIR_PERSONA: `INSERT INTO medal.suscripcionhistorico(idmonitor, idusuario) VALUES ($1, $2);`,
+	GET_ID_BY_UUID: `SELECT idmonitor from medal.monitoreoweb where uuidmonitoreo = $1; `,
 };

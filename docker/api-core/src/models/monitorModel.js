@@ -3,6 +3,28 @@ import { MONITOR_QUERY } from "../querys/monitorQuery.js";
 import { v4 as uuidv4 } from "uuid";
 
 class MonitorModel {
+	static async suscribirseUuid(uuid, idUsuario) {
+		try {
+			const resIdMonitor = await pool.query(MONITOR_QUERY.GET_ID_BY_UUID, [
+				uuid,
+			]);
+			if (resIdMonitor.rowCount === 0) {
+				return 2; //404 Not Found.
+			}
+			const idMonitor = resIdMonitor.rows[0].idmonitor;
+			await pool.query(MONITOR_QUERY.SUSCRIBIR_PERSONA, [idMonitor, idUsuario]);
+			return 0;
+		} catch (error) {
+			console.error(
+				"Se ha producido un erro al intentar suscribirse a un monitor en específico.",
+				error,
+				uuid,
+				idUsuario,
+			);
+			throw error;
+		}
+	}
+
 	static async postMonitor(userId, data) {
 		try {
 			const uuidMonitor = uuidv4();
@@ -18,6 +40,9 @@ class MonitorModel {
 				data.idMetodo,
 				data.cadaCuantoSegundos || 86400,
 			]);
+
+			// Metemos en la lista de suscriptores el usuario que ha creado el propio monitor.
+			await MonitorModel.suscribirseUuid(uuidMonitor, userId);
 
 			return res.rows[0];
 		} catch (error) {

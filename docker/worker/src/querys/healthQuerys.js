@@ -8,17 +8,20 @@ export const HEALTH_QUERYES = {
         UPDATE medal.monitoreoWeb 
         SET valorUltimaRespuesta = $1, 
             fechaVerificacion = NOW(),
+            -- Si disponible ($2) es true, reseteamos a 0. Si es false, sumamos 1.
             contadorFallos = CASE WHEN $2 = TRUE THEN 0 ELSE contadorFallos + 1 END
         WHERE idMonitor = $3 
-        RETURNING *
+        RETURNING *;
     `,
 
-	GET_CORREO: `
+	GET_CORREOS_SUSCRITOS: `
         SELECT u.correoinstitucional 
         FROM medal.usuario u 
-        INNER JOIN medal.monitoreoweb mw ON u.idusuario = mw.idusuario 
-        WHERE mw.idmonitor = $1
+        INNER JOIN medal.suscripcionHistorico sh ON u.idusuario = sh.idusuario 
+        WHERE sh.idmonitor = $1
     `,
+
 	SET_CAIDO: `UPDATE medal.monitoreoweb SET statusactual = 'caido' WHERE idmonitor = $1;`,
+
 	SET_OK: `UPDATE medal.monitoreoweb SET statusactual = 'ok' WHERE idmonitor = $1;`,
 };
