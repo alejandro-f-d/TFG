@@ -213,5 +213,17 @@ class MonitorModel {
 			throw error;
 		}
 	}
+	static async getMetodosMonitor() {
+		try {
+			const res = await pool.query(MONITOR_QUERY.OBTENER_METODOS_MONITOREO, []);
+			return res.rows;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener los métodos disponibles de monitorización.",
+				error,
+			);
+			throw error;
+		}
+	}
 }
 export default MonitorModel;

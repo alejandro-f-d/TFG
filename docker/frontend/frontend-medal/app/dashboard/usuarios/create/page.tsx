@@ -183,7 +183,7 @@ function CreateUserForm() {
 
 					<div className="grid grid-cols-1 gap-6">
 						<div className="flex flex-col space-y-2">
-							<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+							<label className="text-slate-950 text-[10px] font-black uppercase tracking-widest ml-2">
 								Nombre *
 							</label>
 							<input
@@ -193,12 +193,12 @@ function CreateUserForm() {
 								onChange={(e) =>
 									setFormData({ ...formData, nombre: e.target.value })
 								}
-								className="w-full p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/50 focus:bg-white focus:border-blue-400 outline-none transition-all font-bold text-sm"
+								className="w-full p-4 border-2 border-slate-300 rounded-2xl bg-white focus:border-blue-700 outline-none transition-all font-black text-base text-slate-950 shadow-sm"
 							/>
 						</div>
 						<div className="grid grid-cols-2 gap-4">
 							<div className="flex flex-col space-y-2">
-								<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+								<label className="text-slate-950 text-[10px] font-black uppercase tracking-widest ml-2">
 									1º Apellido *
 								</label>
 								<input
@@ -212,7 +212,7 @@ function CreateUserForm() {
 								/>
 							</div>
 							<div className="flex flex-col space-y-2">
-								<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+								<label className="text-slate-950 text-[10px] font-black uppercase tracking-widest ml-2">
 									2º Apellido
 								</label>
 								<input
@@ -226,7 +226,7 @@ function CreateUserForm() {
 							</div>
 						</div>
 						<div className="flex flex-col space-y-2">
-							<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+							<label className="text-slate-950 text-[10px] font-black uppercase tracking-widest ml-2">
 								Correo Institucional *
 							</label>
 							<input
@@ -257,12 +257,12 @@ function CreateUserForm() {
 								onChange={(e) =>
 									setFormData({ ...formData, contrasena: e.target.value })
 								}
-								className="w-full p-4 pr-12 border-2 border-white rounded-2xl bg-white shadow-sm font-bold text-sm outline-none focus:border-blue-500"
+								className="w-full p-4 pr-12 border-2 border-slate-400 rounded-2xl bg-white shadow-md font-black text-base text-slate-950 outline-none focus:border-blue-700"
 							/>
 							<button
 								type="button"
 								onClick={() => setShowPassword(!showPassword)}
-								className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
+								className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-700 hover:text-blue-600"
 							>
 								{showPassword ? "👁️" : "👁️‍🗨️"}
 							</button>
@@ -273,7 +273,7 @@ function CreateUserForm() {
 									className={`w-1.5 h-1.5 rounded-full ${passwordChecks.length ? "bg-green-500" : "bg-slate-300"}`}
 								></div>
 								<span
-									className={`text-[9px] font-bold ${passwordChecks.length ? "text-green-600" : "text-slate-400"}`}
+									className={`text-[9px] font-bold ${passwordChecks.length ? "text-green-600" : "text-slate-700"}`}
 								>
 									8-30 Caracteres
 								</span>
@@ -283,7 +283,7 @@ function CreateUserForm() {
 									className={`w-1.5 h-1.5 rounded-full ${passwordChecks.hasUpper && passwordChecks.hasLower ? "bg-green-500" : "bg-slate-300"}`}
 								></div>
 								<span
-									className={`text-[9px] font-bold ${passwordChecks.hasUpper && passwordChecks.hasLower ? "text-green-600" : "text-slate-400"}`}
+									className={`text-[9px] font-bold ${passwordChecks.hasUpper && passwordChecks.hasLower ? "text-green-600" : "text-slate-700"}`}
 								>
 									Mayúsculas y Minúsculas
 								</span>
@@ -293,7 +293,7 @@ function CreateUserForm() {
 									className={`w-1.5 h-1.5 rounded-full ${passwordChecks.hasNumber ? "bg-green-500" : "bg-slate-300"}`}
 								></div>
 								<span
-									className={`text-[9px] font-bold ${passwordChecks.hasNumber ? "text-green-600" : "text-slate-400"}`}
+									className={`text-[9px] font-bold ${passwordChecks.hasNumber ? "text-green-600" : "text-slate-700"}`}
 								>
 									Número
 								</span>
@@ -303,7 +303,7 @@ function CreateUserForm() {
 									className={`w-1.5 h-1.5 rounded-full ${passwordChecks.hasSymbol ? "bg-green-500" : "bg-slate-300"}`}
 								></div>
 								<span
-									className={`text-[9px] font-bold ${passwordChecks.hasSymbol ? "text-green-600" : "text-slate-400"}`}
+									className={`text-[9px] font-bold ${passwordChecks.hasSymbol ? "text-green-600" : "text-slate-700"}`}
 								>
 									Símbolo (!@#$%^&*)
 								</span>
@@ -320,7 +320,7 @@ function CreateUserForm() {
 
 					<div className="grid grid-cols-2 gap-4">
 						<div className="flex flex-col space-y-2">
-							<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+							<label className="text-slate-950 text-[10px] font-black uppercase tracking-widest ml-2">
 								Usuario VPN
 							</label>
 							<input
@@ -333,7 +333,7 @@ function CreateUserForm() {
 							/>
 						</div>
 						<div className="flex flex-col space-y-2">
-							<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+							<label className="text-slate-950 text-[10px] font-black uppercase tracking-widest ml-2">
 								GitLab User
 							</label>
 							<input
@@ -348,7 +348,7 @@ function CreateUserForm() {
 					</div>
 
 					<div className="flex flex-col space-y-2">
-						<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+						<label className="text-slate-950 text-[10px] font-black uppercase tracking-widest ml-2">
 							Nº Tarjeta Acceso
 						</label>
 						<input
@@ -363,7 +363,7 @@ function CreateUserForm() {
 
 					<div className="grid grid-cols-2 gap-4">
 						<div className="flex flex-col space-y-2">
-							<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+							<label className="text-slate-950 text-[10px] font-black uppercase tracking-widest ml-2">
 								Alta *
 							</label>
 							<input
@@ -380,7 +380,7 @@ function CreateUserForm() {
 							/>
 						</div>
 						<div className="flex flex-col space-y-2">
-							<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+							<label className="text-slate-950 text-[10px] font-black uppercase tracking-widest ml-2">
 								Fin Contrato
 							</label>
 							<input
@@ -395,7 +395,7 @@ function CreateUserForm() {
 					</div>
 
 					<div className="flex flex-col space-y-2">
-						<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest ml-2">
+						<label className="text-slate-950 text-[10px] font-black uppercase tracking-widest ml-2">
 							Profesor Responsable
 						</label>
 						<select
@@ -406,7 +406,7 @@ function CreateUserForm() {
 									profesorResponsable: e.target.value,
 								})
 							}
-							className="w-full p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/50 font-bold text-sm outline-none"
+							className="w-full p-4 border-2 border-slate-300 rounded-2xl bg-white font-black text-base text-slate-950 focus:border-blue-700 outline-none"
 						>
 							<option value="">Selecciona responsable</option>
 							{responsablesList.map((r: any) => (
@@ -427,7 +427,7 @@ function CreateUserForm() {
 								}
 								className="w-5 h-5 rounded-lg text-blue-600"
 							/>
-							<span className="text-[10px] font-black uppercase text-slate-500">
+							<span className="text-[11px] font-black uppercase text-slate-950">
 								WiFi
 							</span>
 						</label>
@@ -440,7 +440,7 @@ function CreateUserForm() {
 								}
 								className="w-5 h-5 rounded-lg text-blue-600"
 							/>
-							<span className="text-[10px] font-black uppercase text-slate-500">
+							<span className="text-[11px] font-black uppercase text-slate-950">
 								Activo
 							</span>
 						</label>
@@ -453,7 +453,7 @@ function CreateUserForm() {
 								}
 								className="w-5 h-5 rounded-lg text-blue-600"
 							/>
-							<span className="text-[10px] font-black uppercase text-slate-500">
+							<span className="text-[11px] font-black uppercase text-slate-950">
 								Es Responsable
 							</span>
 						</label>
@@ -466,7 +466,7 @@ function CreateUserForm() {
 								}
 								className="w-5 h-5 rounded-lg text-blue-600"
 							/>
-							<span className="text-[10px] font-black uppercase text-slate-500">
+							<span className="text-[11px] font-black uppercase text-slate-950">
 								Teams
 							</span>
 						</label>
@@ -589,7 +589,7 @@ function CreateUserForm() {
 				<button
 					type="submit"
 					disabled={loading || !isPasswordValid}
-					className={`w-full py-8 rounded-[2.5rem] font-black text-xs tracking-[0.4em] shadow-2xl transition-all border-b-8 ${isPasswordValid ? "bg-slate-900 text-white hover:bg-black border-black" : "bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed"}`}
+					className={`w-full py-8 rounded-[2.5rem] font-black text-xs tracking-[0.4em] shadow-2xl transition-all border-b-8 ${isPasswordValid ? "bg-slate-900 text-white hover:bg-black border-black" : "bg-slate-200 text-slate-700 border-slate-300 cursor-not-allowed"}`}
 				>
 					{loading ? "CREANDO..." : "REGISTRAR USUARIO"}
 				</button>

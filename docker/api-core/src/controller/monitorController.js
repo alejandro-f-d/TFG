@@ -309,3 +309,18 @@ export const unsuscribeMonitor = async (req, res) => {
 		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
+
+export const getMetodosMonitoreo = async (req, res) => {
+	try {
+		const metodos = await MonitorModel.getMetodosMonitor();
+		return res
+			.status(200)
+			.json({ message: "Información obtenida con éxito.", metodos });
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al obtener el la información de los métodos de monitreo.",
+			error,
+		);
+		return res.status(500).json({ error: "Error interno del servidor." });
+	}
+};

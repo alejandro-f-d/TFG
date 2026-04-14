@@ -9,6 +9,7 @@ import {
 	getHistorico,
 	suscribeMonitor,
 	unsuscribeMonitor,
+	getMetodosMonitoreo,
 } from "../controller/monitorController.js";
 import { monitorSchema } from "../schemas/index.js";
 const router = express.Router();
@@ -182,6 +183,12 @@ router.post(
 		validarTipos(monitorSchema),
 	],
 	postMonitor,
+);
+
+router.get(
+	"/metodosMonitorizar",
+	[verificarToken, tienePermiso("monitor:postMonitor")],
+	getMetodosMonitoreo,
 );
 
 /**

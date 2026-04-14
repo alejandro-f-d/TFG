@@ -156,4 +156,11 @@ WHERE m.uuidmonitoreo = $1;`,
     WHERE w.uuidmonitoreo = $1;`,
 	OBTENER_NOMBRE: `select nombreobjetivo from medal.monitoreoweb WHERE uuidmonitoreo = $1;`,
 	DELETE_HISTORICO: `delete from medal.historicomonitoreo WHERE idmonitor =$1;`,
+	OBTENER_METODOS_MONITOREO: `SELECT 
+        idmetodo, 
+        nombre, 
+        alias, 
+        descripcion 
+    FROM medal.metodomonitoreoweb
+    ORDER BY idmetodo ASC`,
 };
