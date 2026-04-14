@@ -95,6 +95,14 @@ class MonitorModel {
 			if (idMonitor.rowCount === 0) {
 				return 2;
 			}
+			// Borrado de los suscriptores de un monitor específico
+			await pool.query(MONITOR_QUERY.DELETE_ALL_SUSC, [
+				idMonitor.rows[0].idmonitor,
+			]);
+			// Borrado de los logs de la base de datos para liberar espacio.
+			await pool.query(MONITOR_QUERY.DELETE_HISTORICO, [
+				idMonitor.rows[0].idmonitor,
+			]);
 			return 0;
 		} catch (error) {
 			console.error("Se ha producido un error al borrar el monitor.", error);
@@ -137,6 +145,69 @@ class MonitorModel {
 			console.error(
 				"Se ha producido un error al obtener el histórico de un servicio de monitorización.",
 				uuid,
+				error,
+			);
+			throw error;
+		}
+	}
+
+	static async unsuscribeMonitor(uuid, idUsuario) {
+		try {
+			const idCreador = await pool.query(MONITOR_QUERY.GET_ID_CRE_UUID, [uuid]);
+			if (idCreador.rowCount === 0) {
+				return 2; // Not Found.
+			} else if (idCreador.rows[0].idusuario === idUsuario) {
+				return 3;
+			}
+			// Modificamos en la base de datos los suscriptores.
+			const resUnsuscribe = await pool.query(MONITOR_QUERY.UNSUSCRIBE_PERSONA, [
+				idUsuario,
+			]);
+
+			if (resUnsuscribe.rowCount > 0) {
+				return 0;
+			} else {
+				return 4;
+			}
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al intentar obtener realizar el unsuscribe de un usuario a un monitor.",
+				uuid,
+				idUsuario,
+			);
+			throw error;
+		}
+	}
+
+	static async getCorreosPorUuidMonitor(uuidMonitoreo) {
+		try {
+			const res = await pool.query(MONITOR_QUERY.AVISAR_BORRADO, [
+				uuidMonitoreo,
+			]);
+			if (res.rowCount === 0) {
+				return [];
+			}
+			return res.rows.map((row) => row.correoinstitucional);
+		} catch (error) {
+			console.error(
+				"Error al obtener correos de suscriptores por UUID:",
+				error,
+			);
+			throw error;
+		}
+	}
+	static async obtenerNombre(uuidMonitoreo) {
+		try {
+			const resNombre = await pool.query(MONITOR_QUERY.OBTENER_NOMBRE, [
+				uuidMonitoreo,
+			]);
+			if (resNombre.rowCount === 0) {
+				return 2;
+			}
+			return resNombre.rows[0].nombreobjetivo;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al intentar obtener el nombre del proyecto de monitor.",
 				error,
 			);
 			throw error;

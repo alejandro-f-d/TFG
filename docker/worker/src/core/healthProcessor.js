@@ -91,6 +91,23 @@ export const healthProcessor = async (job) => {
 			return status;
 		}
 	} catch (error) {
+		if (error.code === "23503") {
+			// Auto eliminación de los servicios que no están presentes por eliminación.
+			console.warn(
+				`[WORKER] Monitor ${idMonitor} no existe en DB. Eliminando trabajo de Redis...`,
+			);
+
+			const repeatableJobs = await job.queue.getRepeatableJobs();
+			const jobKey = repeatableJobs.find(
+				(j) => j.id === job.name || j.id === uuid,
+			)?.key;
+
+			if (jobKey) {
+				await job.queue.removeRepeatableByKey(jobKey);
+			}
+			return;
+		}
+
 		console.error(`Error procesando monitoreo para el ID ${idMonitor}:`, error);
 		throw error;
 	}

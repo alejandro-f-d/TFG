@@ -186,7 +186,7 @@ router.post(
 
 /**
  * @swagger
- * /api/monitoreo/{uuid}:
+ * /api/monitor/{uuid}:
  *   get:
  *     summary: Obtiene los detalles de un monitor por su UUID
  *     description: |

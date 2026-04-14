@@ -146,4 +146,14 @@ WHERE m.uuidmonitoreo = $1;`,
          WHERE mw.uuidmonitoreo = $1;`,
 	SUSCRIBIR_PERSONA: `INSERT INTO medal.suscripcionhistorico(idmonitor, idusuario) VALUES ($1, $2);`,
 	GET_ID_BY_UUID: `SELECT idmonitor from medal.monitoreoweb where uuidmonitoreo = $1; `,
+	GET_ID_CRE_UUID: `SELECT idusuario from medal.monitoreoweb WHERE uuidmonitoreo = $1;`,
+	UNSUSCRIBE_PERSONA: `delete from medal.suscripcionhistorico where idusuario = $1;`,
+	DELETE_ALL_SUSC: `delete from medal.suscripcionhistorico where idmonitor = $1;`,
+	AVISAR_BORRADO: `SELECT u.correoinstitucional 
+    FROM medal.usuario u
+    INNER JOIN medal.suscripcionhistorico h ON u.idusuario = h.idusuario
+    INNER JOIN medal.monitoreoweb w ON h.idmonitor = w.idmonitor
+    WHERE w.uuidmonitoreo = $1;`,
+	OBTENER_NOMBRE: `select nombreobjetivo from medal.monitoreoweb WHERE uuidmonitoreo = $1;`,
+	DELETE_HISTORICO: `delete from medal.historicomonitoreo WHERE idmonitor =$1;`,
 };

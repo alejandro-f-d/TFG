@@ -357,4 +357,42 @@ Ver estado del servicio
 ${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
 `,
 	}),
+
+	SYSTEM_DELETED: (data) => ({
+		subject: `🗑️ Sistema eliminado - ${data.serviceName}`,
+		text: `
+El sistema monitorizado ${data.serviceName} ha sido eliminado de la plataforma.
+
+Fecha de eliminación:
+${data.deletedAt}
+
+
+
+A partir de este momento, el servicio dejará de ser monitorizado y no se generarán más alertas asociadas. Recibes este correo porque eres el dueño del monitor o estabas suscrito.
+
+--
+Sistema de Monitorización
+	`,
+		html: `
+<h2 style="color:#5f6368;">🗑️ Sistema eliminado</h2>
+
+<p>
+El sistema monitorizado <b>${data.serviceName}</b> ha sido eliminado de la plataforma.
+</p>
+
+<p>
+<b>Fecha de eliminación:</b><br/>
+${data.deletedAt}
+</p>
+
+
+<p style="margin-top:16px;">
+A partir de este momento, el servicio <b>dejará de ser monitorizado</b> y no se generarán más alertas asociadas. Recibes este correo porque eres el dueño del monitor o estabas suscrito.
+</p>
+
+<p>Un saludo,<br/>Sistema de Monitorización</p>
+
+${DISCLAIMER(data.supportEmail || "medal@ctb.upm.es")}
+`,
+	}),
 };

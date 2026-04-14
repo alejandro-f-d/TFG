@@ -1,5 +1,6 @@
 import MonitorModel from "../models/monitorModel.js";
 import { addMonitorToQueue } from "../eda/queue.js";
+import { addEmailToQueue } from "../eda/queue.js";
 
 export const postMonitor = async (req, res) => {
 	const { nombreObjetivo, direccion } = req.body;
@@ -102,6 +103,24 @@ export const deleteMonitor = async (req, res) => {
 					.status(403)
 					.json({ error: "No tienes acceso a ese monitor." });
 			}
+		}
+
+		const nombreProyecto = await MonitorModel.obtenerNombre(uuid);
+		if (nombreProyecto === 2) {
+			return res.status(404).json({ error: "Monitor no encontrado." });
+		}
+		// Antes del borrado enviamos un correo electrónico a todos los suscriptores por si quisieran crear su monitor.
+		const correos = await MonitorModel.getCorreosPorUuidMonitor(uuid);
+		if (correos && correos.length > 0) {
+			for (const email of correos) {
+				await addEmailToQueue({
+					template: "SYSTEM_DELETED",
+					to: email,
+					serviceName: nombreProyecto,
+					deletedAt: new Date(),
+				});
+			}
+			console.log(`[BORRADO] Encolados ${correos.length} correos de aviso.`);
 		}
 
 		const resBorrado = await MonitorModel.deleteMonitorByUuid(uuid);
@@ -247,5 +266,46 @@ export const suscribeMonitor = async (req, res) => {
 			error,
 		);
 		return res.status(500).json({ error: "Se ha producido un error interno" });
+	}
+};
+
+export const unsuscribeMonitor = async (req, res) => {
+	const { uuid } = req.params;
+
+	if (!uuid) {
+		return res.status(400).json({ error: "Petición mal formada." });
+	}
+	const uuidRegex =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+	if (!uuidRegex.test(uuid)) {
+		return res.status(400).json({
+			error: "Formato de identificador de reserva inválido.",
+		});
+	}
+
+	try {
+		const resultadoUnsuscribe = await MonitorModel.unsuscribeMonitor(
+			uuid,
+			req.user.idUsuario,
+		);
+		if (resultadoUnsuscribe === 2) {
+			return res.status(404).json({ error: "Monitor no encontrado" });
+		} else if (resultadoUnsuscribe === 3) {
+			return res.status(403).json({
+				error:
+					"Siendo el dueño, no te puedes desuscribir, para eso debes eliminarlo.",
+			});
+		} else if (resultadoUnsuscribe === 4) {
+			return res.status(500).json({ error: "Error interno del servidor." });
+		}
+		return res
+			.status(201)
+			.json({ message: "Suscripción anulada de manera correcta." });
+	} catch (error) {
+		console.error(
+			"Se ha producido un error al desuscribirse de un monitor.",
+			error,
+		);
+		return res.status(500).json({ error: "Error interno del servidor." });
 	}
 };
