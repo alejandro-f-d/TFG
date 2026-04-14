@@ -239,7 +239,7 @@ export const suscribeMonitor = async (req, res) => {
 			return res.status(404).json({ error: "Monitor no encontrado" });
 		}
 		return res
-			.status(200)
+			.status(201)
 			.json({ message: "Suscripción realizada de manera satisfactoria." });
 	} catch (error) {
 		console.error(
