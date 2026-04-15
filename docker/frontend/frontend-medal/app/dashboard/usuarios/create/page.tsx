@@ -208,7 +208,7 @@ function CreateUserForm() {
 									onChange={(e) =>
 										setFormData({ ...formData, apellido1: e.target.value })
 									}
-									className="w-full p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/50 font-bold text-sm"
+									className="w-full p-4 border-2 border-slate-300 rounded-2xl bg-white focus:border-blue-700 outline-none transition-all font-bold text-sm text-slate-950 shadow-sm"
 								/>
 							</div>
 							<div className="flex flex-col space-y-2">
@@ -221,7 +221,7 @@ function CreateUserForm() {
 									onChange={(e) =>
 										setFormData({ ...formData, apellido2: e.target.value })
 									}
-									className="w-full p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/50 font-bold text-sm"
+									className="w-full p-4 border-2 border-slate-300 rounded-2xl bg-white focus:border-blue-700 outline-none transition-all font-bold text-sm text-slate-950 shadow-sm"
 								/>
 							</div>
 						</div>
@@ -239,7 +239,7 @@ function CreateUserForm() {
 										correoInstitucional: e.target.value,
 									})
 								}
-								className="w-full p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/50 font-bold text-sm"
+								className="w-full p-4 border-2 border-slate-300 rounded-2xl bg-white focus:border-blue-700 outline-none transition-all font-bold text-sm text-slate-950 shadow-sm"
 							/>
 						</div>
 					</div>
@@ -329,7 +329,7 @@ function CreateUserForm() {
 								onChange={(e) =>
 									setFormData({ ...formData, usuarioVpn: e.target.value })
 								}
-								className="w-full p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/50 font-bold text-sm"
+								className="w-full p-4 border-2 border-slate-300 rounded-2xl bg-white focus:border-blue-700 outline-none transition-all font-bold text-sm text-slate-950 shadow-sm"
 							/>
 						</div>
 						<div className="flex flex-col space-y-2">
@@ -342,7 +342,7 @@ function CreateUserForm() {
 								onChange={(e) =>
 									setFormData({ ...formData, gitlab: e.target.value })
 								}
-								className="w-full p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/50 font-bold text-sm"
+								className="w-full p-4 border-2 border-slate-300 rounded-2xl bg-white focus:border-blue-700 outline-none transition-all font-bold text-sm text-slate-950 shadow-sm"
 							/>
 						</div>
 					</div>
@@ -357,7 +357,7 @@ function CreateUserForm() {
 							onChange={(e) =>
 								setFormData({ ...formData, tarjetaAcceso: e.target.value })
 							}
-							className="w-full p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/50 font-bold text-sm"
+							className="w-full p-4 border-2 border-slate-300 rounded-2xl bg-white focus:border-blue-700 outline-none transition-all font-bold text-sm text-slate-950 shadow-sm"
 						/>
 					</div>
 
@@ -376,7 +376,7 @@ function CreateUserForm() {
 										fechaIncorporacion: e.target.value,
 									})
 								}
-								className="w-full p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/50 font-bold text-sm"
+								className="w-full p-4 border-2 border-slate-300 rounded-2xl bg-white focus:border-blue-700 outline-none transition-all font-bold text-sm text-slate-950 shadow-sm"
 							/>
 						</div>
 						<div className="flex flex-col space-y-2">
@@ -389,7 +389,7 @@ function CreateUserForm() {
 								onChange={(e) =>
 									setFormData({ ...formData, fechaFin: e.target.value })
 								}
-								className="w-full p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/50 font-bold text-sm"
+								className="w-full p-4 border-2 border-slate-300 rounded-2xl bg-white focus:border-blue-700 outline-none transition-all font-bold text-sm text-slate-950 shadow-sm"
 							/>
 						</div>
 					</div>
@@ -551,7 +551,7 @@ function CreateUserForm() {
 							placeholder="Buscar máquina..."
 							value={maquinaSearch}
 							onChange={(e) => setMaquinaSearch(e.target.value)}
-							className="w-full p-4 pl-12 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-400"
+							className="w-full p-4 pl-12 border-2 border-slate-300 rounded-2xl bg-white focus:border-blue-700 outline-none transition-all font-bold text-sm text-slate-950 shadow-sm"
 						/>
 						<span className="absolute left-4 top-4 opacity-30">🔍</span>
 						{searchingMaquinas && (
