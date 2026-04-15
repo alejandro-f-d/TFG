@@ -87,7 +87,7 @@ const ForgotPasswordForm = () => {
 									id="email"
 									value={email}
 									onChange={(e) => setEmail(e.target.value)}
-									className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+									className="w-full px-5 py-3 border-2 border-slate-950 rounded-xl font-black text-slate-950 bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-700 outline-none transition-all placeholder:text-slate-400"
 									placeholder="****@****.upm.es"
 									required
 									disabled={loading}

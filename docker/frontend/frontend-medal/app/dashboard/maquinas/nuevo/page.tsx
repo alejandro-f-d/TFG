@@ -9,27 +9,23 @@ export default function CreateMachinePage() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	// Estructura plana para compatibilidad directa con el backend
 	const [formData, setFormData] = useState({
 		nombre: "",
 		caducidadSsl: "",
 		certificadoSslActivo: false,
 		emisorSsl: "",
-		red: {
-			direccionIpPrivadaV4: "",
-			direccionIpPublicav4: "",
-			puertaEnlaceV4: "",
-			direccionIpPrivadav6: "",
-			direccionIpPublicav6: "",
-			puertaEnlacev6: "",
-		},
-		especificaciones: {
-			sistemaOperativo: "",
-			ram: 8,
-			esServidor: true,
-		},
+		direccionIpPrivadaV4: "",
+		direccionIpPublicaV4: "",
+		direccionIpPrivadaV6: "",
+		direccionIpPublicaV6: "",
+		puertaEnlaceV4: "",
+		puertaEnlaceV6: "",
+		ram: 8,
+		sistemaOperativo: "",
+		esServidor: true,
 	});
 
-	// --- CONTROL DE ACCESO ---
 	useEffect(() => {
 		const stored = localStorage.getItem("permisos");
 		if (stored) {
@@ -49,12 +45,28 @@ export default function CreateMachinePage() {
 
 		try {
 			const token = localStorage.getItem("token");
-			// Formateamos la fecha a ISO si existe para cumplir con el esquema Joi
+
+			// Mapeo exacto a la estructura que requiere tu backend
 			const payload = {
-				...formData,
+				nombre: formData.nombre,
 				caducidadSsl: formData.caducidadSsl
 					? new Date(formData.caducidadSsl).toISOString()
 					: null,
+				certificadoSslActivo: formData.certificadoSslActivo,
+				emisorSsl: formData.emisorSsl,
+				red: {
+					direccionIpPrivadaV4: formData.direccionIpPrivadaV4,
+					direccionIpPublicaV4: formData.direccionIpPublicaV4,
+					direccionIpPrivadaV6: formData.direccionIpPrivadaV6,
+					direccionIpPublicaV6: formData.direccionIpPublicaV6,
+					puertaEnlaceV4: formData.puertaEnlaceV4,
+					puertaEnlaceV6: formData.puertaEnlaceV6,
+				},
+				especificaciones: {
+					ram: formData.ram,
+					sistemaOperativo: formData.sistemaOperativo,
+					esServidor: formData.esServidor,
+				},
 			};
 
 			const res = await fetch(
@@ -70,9 +82,8 @@ export default function CreateMachinePage() {
 			);
 
 			const data = await res.json();
-
 			if (res.ok) {
-				router.push(`/dashboard/maquinas/${data.uuid}`);
+				router.push(`/dashboard/maquinas/${data.uuid || ""}`);
 			} else {
 				setError(data.error || "Fallo en la validación del activo.");
 			}
@@ -83,54 +94,59 @@ export default function CreateMachinePage() {
 		}
 	};
 
+	const inputClass =
+		"bg-white border-2 border-slate-300 rounded-[2rem] p-7 font-bold text-lg text-slate-950 outline-none transition-all focus:border-blue-700 focus:ring-4 focus:ring-blue-50 shadow-sm placeholder:text-slate-300";
+	const networkInputClass =
+		"bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 font-mono text-sm outline-none focus:border-blue-500 transition-all text-white placeholder:text-slate-600";
+
 	return (
-		<div className="min-h-screen bg-[#F8FAFC] py-12 px-6">
+		<div className="min-h-screen bg-[#F1F5F9] py-12 px-6">
 			<div className="max-w-6xl mx-auto">
 				{/* NAVEGACIÓN */}
 				<div className="flex justify-between items-center mb-16">
 					<button
 						onClick={() => router.back()}
-						className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors italic"
+						className="text-[11px] font-black text-slate-500 uppercase tracking-widest hover:text-red-600 transition-colors italic border-b-2 border-transparent hover:border-red-600"
 					>
 						[ Cancelar operación ]
 					</button>
-					<div className="bg-slate-900 text-white px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.3em]">
+					<div className="bg-slate-950 text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.3em] shadow-xl border-b-4 border-blue-900">
 						Provisioning Mode
 					</div>
 				</div>
 
 				<header className="mb-20">
-					<h1 className="text-9xl font-black text-slate-900 tracking-tighter uppercase leading-[0.75]">
+					<h1 className="text-9xl font-black text-slate-950 tracking-tighter uppercase leading-[0.75]">
 						Nuevo
 						<br />
-						<span className="text-blue-600">Activo.</span>
+						<span className="text-blue-700">Activo.</span>
 					</h1>
 				</header>
 
 				{error && (
-					<div className="mb-10 p-8 bg-red-600 text-white rounded-[2.5rem] shadow-2xl shadow-red-200 flex items-center gap-6 animate-bounce">
-						<span className="text-3xl font-black">!</span>
-						<p className="text-[11px] font-black uppercase tracking-widest">
+					<div className="mb-10 p-8 bg-red-600 text-white rounded-[2.5rem] shadow-2xl flex items-center gap-6 animate-pulse border-b-8 border-red-800">
+						<span className="text-4xl font-black">!</span>
+						<p className="text-xs font-black uppercase tracking-[0.2em]">
 							{error}
 						</p>
 					</div>
 				)}
 
 				<form onSubmit={handleSubmit} className="space-y-12">
-					{/* BLOQUE 01: CORE INFO */}
-					<section className="bg-white p-12 rounded-[4rem] shadow-xl shadow-slate-200/50 grid grid-cols-1 md:grid-cols-2 gap-10 border border-slate-50">
-						<div className="md:col-span-2">
-							<h2 className="text-[11px] font-black uppercase text-slate-300 tracking-[0.4em] mb-6 italic">
-								01. Identificadores de Sistema
+					{/* 01. IDENTIFICADORES */}
+					<section className="bg-white p-12 rounded-[4rem] shadow-2xl border-2 border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-10">
+						<div className="md:col-span-2 flex items-center gap-4">
+							<h2 className="text-[12px] font-black uppercase text-slate-950 tracking-[0.4em] italic">
+								01. Identificadores
 							</h2>
 						</div>
 						<div className="flex flex-col gap-3">
-							<label className="text-[9px] font-black uppercase text-slate-400 ml-6">
-								Hostname del Servidor *
+							<label className="text-[10px] font-black uppercase text-slate-600 ml-6">
+								Hostname *
 							</label>
 							<input
 								required
-								className="bg-slate-50 rounded-[2rem] p-7 font-bold text-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all border-2 border-transparent focus:border-blue-600"
+								className={inputClass}
 								value={formData.nombre}
 								onChange={(e) =>
 									setFormData({ ...formData, nombre: e.target.value })
@@ -138,167 +154,130 @@ export default function CreateMachinePage() {
 							/>
 						</div>
 						<div className="flex flex-col gap-3">
-							<label className="text-[9px] font-black uppercase text-slate-400 ml-6">
-								S.O. / Distribución *
+							<label className="text-[10px] font-black uppercase text-slate-600 ml-6">
+								S.O. *
 							</label>
 							<input
 								required
-								placeholder="p.ej. Debian 12 / Windows Server"
-								className="bg-slate-50 rounded-[2rem] p-7 font-bold text-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all border-2 border-transparent focus:border-blue-600"
-								value={formData.especificaciones.sistemaOperativo}
+								className={inputClass}
+								value={formData.sistemaOperativo}
 								onChange={(e) =>
-									setFormData({
-										...formData,
-										especificaciones: {
-											...formData.especificaciones,
-											sistemaOperativo: e.target.value,
-										},
-									})
+									setFormData({ ...formData, sistemaOperativo: e.target.value })
 								}
 							/>
 						</div>
 					</section>
 
-					{/* BLOQUE 02: RED IPv4 (DARK MODE) */}
-					<section className="bg-slate-900 p-12 rounded-[4rem] text-white shadow-2xl relative overflow-hidden">
-						<div className="absolute top-0 right-0 p-12 opacity-10 text-8xl font-black italic">
-							v4
-						</div>
-						<h2 className="text-[11px] font-black uppercase text-blue-400 tracking-[0.4em] mb-12 italic relative z-10">
-							02. Stack Network IPv4
+					{/* 02. RED IPv4 */}
+					<section className="bg-slate-950 p-12 rounded-[4rem] text-white shadow-2xl relative overflow-hidden border-b-8 border-blue-900">
+						<h2 className="text-[12px] font-black uppercase text-blue-400 tracking-[0.4em] mb-12 italic">
+							02. IPv4 Stack
 						</h2>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
 							<div className="flex flex-col gap-4">
-								<label className="text-[8px] font-black uppercase text-slate-500 ml-4 tracking-widest">
+								<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
 									IP Privada *
 								</label>
 								<input
 									required
-									placeholder="0.0.0.0"
-									className="bg-slate-800 rounded-2xl p-6 font-mono text-sm text-blue-300 outline-none focus:ring-2 focus:ring-blue-500"
-									value={formData.red.direccionIpPrivadaV4}
+									className={networkInputClass}
+									value={formData.direccionIpPrivadaV4}
 									onChange={(e) =>
 										setFormData({
 											...formData,
-											red: {
-												...formData.red,
-												direccionIpPrivadaV4: e.target.value,
-											},
+											direccionIpPrivadaV4: e.target.value,
 										})
 									}
 								/>
 							</div>
 							<div className="flex flex-col gap-4">
-								<label className="text-[8px] font-black uppercase text-slate-500 ml-4 tracking-widest">
+								<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
 									IP Pública
 								</label>
 								<input
-									placeholder="Opcional"
-									className="bg-slate-800 rounded-2xl p-6 font-mono text-sm text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500"
-									value={formData.red.direccionIpPublicav4}
+									className={networkInputClass}
+									value={formData.direccionIpPublicaV4}
 									onChange={(e) =>
 										setFormData({
 											...formData,
-											red: {
-												...formData.red,
-												direccionIpPublicav4: e.target.value,
-											},
+											direccionIpPublicaV4: e.target.value,
 										})
 									}
 								/>
 							</div>
 							<div className="flex flex-col gap-4">
-								<label className="text-[8px] font-black uppercase text-slate-500 ml-4 tracking-widest">
+								<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
 									Gateway v4 *
 								</label>
 								<input
 									required
-									placeholder="192.168.1.1"
-									className="bg-slate-800 rounded-2xl p-6 font-mono text-sm text-slate-400 outline-none focus:ring-2 focus:ring-slate-600"
-									value={formData.red.puertaEnlaceV4}
+									className={networkInputClass}
+									value={formData.puertaEnlaceV4}
 									onChange={(e) =>
-										setFormData({
-											...formData,
-											red: { ...formData.red, puertaEnlaceV4: e.target.value },
-										})
+										setFormData({ ...formData, puertaEnlaceV4: e.target.value })
 									}
 								/>
 							</div>
 						</div>
 					</section>
 
-					{/* BLOQUE 03: RED IPv6 (LIGHT MODE) */}
-					<section className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-xl relative overflow-hidden">
-						<div className="absolute top-0 right-0 p-12 opacity-5 text-8xl font-black italic">
-							v6
-						</div>
-						<h2 className="text-[11px] font-black uppercase text-slate-300 tracking-[0.4em] mb-12 italic relative z-10">
-							03. Stack Network IPv6
+					{/* 03. RED IPv6 */}
+					<section className="bg-white p-12 rounded-[4rem] border-2 border-slate-200 shadow-xl relative overflow-hidden">
+						<h2 className="text-[12px] font-black uppercase text-slate-950 tracking-[0.4em] mb-12 italic">
+							03. IPv6 Stack
 						</h2>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
 							<div className="flex flex-col gap-4">
-								<label className="text-[8px] font-black uppercase text-slate-400 ml-4 tracking-widest">
-									Dirección Privada
+								<label className="text-[9px] font-black uppercase text-slate-600 ml-4">
+									IP Privada v6
 								</label>
 								<input
-									className="bg-slate-50 rounded-2xl p-6 font-mono text-[11px] outline-none focus:ring-2 focus:ring-slate-200"
-									value={formData.red.direccionIpPrivadav6}
+									className={`${inputClass} p-6 text-sm font-mono`}
+									value={formData.direccionIpPrivadaV6}
 									onChange={(e) =>
 										setFormData({
 											...formData,
-											red: {
-												...formData.red,
-												direccionIpPrivadav6: e.target.value,
-											},
+											direccionIpPrivadaV6: e.target.value,
 										})
 									}
 								/>
 							</div>
 							<div className="flex flex-col gap-4">
-								<label className="text-[8px] font-black uppercase text-slate-400 ml-4 tracking-widest">
-									Dirección Pública
+								<label className="text-[9px] font-black uppercase text-slate-600 ml-4">
+									IP Pública v6
 								</label>
 								<input
-									className="bg-slate-50 rounded-2xl p-6 font-mono text-[11px] text-blue-600 outline-none focus:ring-2 focus:ring-blue-100"
-									value={formData.red.direccionIpPublicav6}
+									className={`${inputClass} p-6 text-sm font-mono text-blue-700`}
+									value={formData.direccionIpPublicaV6}
 									onChange={(e) =>
 										setFormData({
 											...formData,
-											red: {
-												...formData.red,
-												direccionIpPublicav6: e.target.value,
-											},
+											direccionIpPublicaV6: e.target.value,
 										})
 									}
 								/>
 							</div>
 							<div className="flex flex-col gap-4">
-								<label className="text-[8px] font-black uppercase text-slate-400 ml-4 tracking-widest">
+								<label className="text-[9px] font-black uppercase text-slate-600 ml-4">
 									Gateway v6
 								</label>
 								<input
-									className="bg-slate-50 rounded-2xl p-6 font-mono text-[11px] outline-none focus:ring-2 focus:ring-slate-200"
-									value={formData.red.puertaEnlacev6}
+									className={`${inputClass} p-6 text-sm font-mono`}
+									value={formData.puertaEnlaceV6}
 									onChange={(e) =>
-										setFormData({
-											...formData,
-											red: { ...formData.red, puertaEnlacev6: e.target.value },
-										})
+										setFormData({ ...formData, puertaEnlaceV6: e.target.value })
 									}
 								/>
 							</div>
 						</div>
 					</section>
 
-					{/* BLOQUE NUEVO: TLS / SSL SECURITY */}
-					<section className="bg-emerald-50/30 p-12 rounded-[4rem] border border-emerald-100 shadow-xl relative overflow-hidden">
-						<div className="absolute top-0 right-0 p-12 opacity-10 text-8xl font-black italic text-emerald-200">
-							SSL
-						</div>
-						<h2 className="text-[11px] font-black uppercase text-emerald-600 tracking-[0.4em] mb-12 italic relative z-10">
-							04. Security Layer (TLS/SSL)
+					{/* 04. SSL */}
+					<section className="bg-emerald-50 p-12 rounded-[4rem] border-2 border-emerald-300 shadow-xl">
+						<h2 className="text-[12px] font-black uppercase text-emerald-800 tracking-[0.4em] mb-12 italic">
+							04. SSL Security
 						</h2>
-						<div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center relative z-10">
+						<div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
 							<div className="md:col-span-3">
 								<div
 									onClick={() =>
@@ -307,27 +286,23 @@ export default function CreateMachinePage() {
 											certificadoSslActivo: !formData.certificadoSslActivo,
 										})
 									}
-									className={`p-8 rounded-[2.5rem] cursor-pointer transition-all border-4 flex flex-col items-center justify-center gap-2 ${
-										formData.certificadoSslActivo
-											? "bg-emerald-600 border-emerald-200 text-white shadow-lg"
-											: "bg-white border-slate-100 text-slate-300"
-									}`}
+									className={`p-8 rounded-[2.5rem] cursor-pointer transition-all border-4 flex flex-col items-center shadow-lg ${formData.certificadoSslActivo ? "bg-emerald-700 border-emerald-400 text-white" : "bg-white border-slate-300 text-slate-400"}`}
 								>
-									<span className="text-[9px] font-black uppercase tracking-widest">
+									<span className="text-[10px] font-black uppercase">
 										Status
 									</span>
-									<span className="text-xl font-black uppercase tracking-tighter">
-										{formData.certificadoSslActivo ? "Cert Active" : "Inactive"}
+									<span className="text-xl font-black">
+										{formData.certificadoSslActivo ? "Active" : "Inactive"}
 									</span>
 								</div>
 							</div>
 							<div className="md:col-span-4 flex flex-col gap-4">
-								<label className="text-[8px] font-black uppercase text-slate-400 ml-4 tracking-widest">
-									Fecha de Caducidad
+								<label className="text-[9px] font-black uppercase text-emerald-900 ml-4">
+									Caducidad
 								</label>
 								<input
 									type="date"
-									className="bg-white rounded-2xl p-6 font-black text-xs uppercase text-emerald-700 outline-none border border-emerald-100 focus:ring-4 focus:ring-emerald-50"
+									className="bg-white rounded-2xl p-6 font-black text-sm text-emerald-950 border-2 border-emerald-300"
 									value={formData.caducidadSsl}
 									onChange={(e) =>
 										setFormData({ ...formData, caducidadSsl: e.target.value })
@@ -335,12 +310,11 @@ export default function CreateMachinePage() {
 								/>
 							</div>
 							<div className="md:col-span-5 flex flex-col gap-4">
-								<label className="text-[8px] font-black uppercase text-slate-400 ml-4 tracking-widest">
-									Entidad Emisora
+								<label className="text-[9px] font-black uppercase text-emerald-900 ml-4">
+									Emisor
 								</label>
 								<input
-									placeholder="p.ej. Let's Encrypt / ZeroSSL"
-									className="bg-white rounded-2xl p-6 font-bold text-sm text-slate-700 outline-none border border-emerald-100 focus:ring-4 focus:ring-emerald-50"
+									className="bg-white rounded-2xl p-6 font-bold text-sm text-slate-950 border-2 border-emerald-300"
 									value={formData.emisorSsl}
 									onChange={(e) =>
 										setFormData({ ...formData, emisorSsl: e.target.value })
@@ -350,80 +324,43 @@ export default function CreateMachinePage() {
 						</div>
 					</section>
 
-					{/* BLOQUE 05: RECURSOS */}
-					<section className="bg-white p-12 rounded-[4rem] shadow-xl shadow-slate-200/50 flex flex-col md:flex-row items-center gap-12">
+					{/* 05. RECURSOS */}
+					<section className="bg-white p-12 rounded-[4rem] shadow-2xl border-2 border-slate-200 flex flex-col md:flex-row items-center gap-12">
 						<div className="flex-1 w-full">
-							<h2 className="text-[11px] font-black uppercase text-slate-300 tracking-[0.4em] mb-10 italic">
-								05. Asignación de Recursos
+							<h2 className="text-[12px] font-black uppercase text-slate-950 tracking-[0.4em] mb-10 italic">
+								05. Recursos
 							</h2>
-							<div className="flex items-end gap-4">
+							<div className="flex items-end gap-6 bg-slate-50 p-8 rounded-[3rem] border-2 border-slate-200">
 								<input
 									type="number"
-									className="bg-slate-50 rounded-[2rem] p-8 font-black text-5xl text-slate-900 outline-none focus:ring-4 focus:ring-blue-100 w-full"
-									value={formData.especificaciones.ram}
+									className="bg-transparent font-black text-7xl text-slate-950 outline-none w-full tracking-tighter"
+									value={formData.ram}
 									onChange={(e) =>
-										setFormData({
-											...formData,
-											especificaciones: {
-												...formData.especificaciones,
-												ram: Number(e.target.value),
-											},
-										})
+										setFormData({ ...formData, ram: Number(e.target.value) })
 									}
 								/>
-								<span className="text-2xl font-black text-slate-300 mb-6 uppercase tracking-tighter">
+								<span className="text-3xl font-black text-blue-700 mb-2">
 									GB RAM
 								</span>
 							</div>
 						</div>
-
 						<div
 							onClick={() =>
-								setFormData({
-									...formData,
-									especificaciones: {
-										...formData.especificaciones,
-										esServidor: !formData.especificaciones.esServidor,
-									},
-								})
+								setFormData({ ...formData, esServidor: !formData.esServidor })
 							}
-							className={`group relative p-10 rounded-[3.5rem] cursor-pointer transition-all duration-500 border-4 w-full md:w-64 text-center ${
-								formData.especificaciones.esServidor
-									? "bg-blue-600 border-blue-200 shadow-2xl shadow-blue-300"
-									: "bg-white border-slate-100 grayscale opacity-50"
-							}`}
+							className={`p-12 rounded-[3.5rem] cursor-pointer transition-all border-4 w-full md:w-72 text-center shadow-xl ${formData.esServidor ? "bg-blue-700 border-blue-400 text-white" : "bg-slate-100 border-slate-300 opacity-60"}`}
 						>
-							<span
-								className={`text-[10px] font-black uppercase tracking-[0.3em] ${formData.especificaciones.esServidor ? "text-white" : "text-slate-400"}`}
-							>
-								{formData.especificaciones.esServidor
-									? "Server Active"
-									: "Workstation"}
+							<span className="text-[11px] font-black uppercase tracking-[0.3em]">
+								{formData.esServidor ? "Server Active" : "Workstation"}
 							</span>
-							<div
-								className={`mt-4 w-full h-2 rounded-full overflow-hidden bg-white/20`}
-							>
-								<div
-									className={`h-full bg-white transition-all duration-700 ${formData.especificaciones.esServidor ? "w-full" : "w-0"}`}
-								></div>
-							</div>
 						</div>
 					</section>
 
-					{/* SUBMIT */}
 					<button
 						disabled={loading}
-						className={`w-full py-14 rounded-[3.5rem] font-black text-2xl uppercase tracking-[0.8em] transition-all relative overflow-hidden ${
-							loading
-								? "bg-slate-100 text-slate-300 cursor-wait"
-								: "bg-slate-900 text-white hover:bg-blue-600 hover:shadow-[0_20px_50px_rgba(37,99,235,0.3)] active:scale-95"
-						}`}
+						className={`w-full py-16 rounded-[3.5rem] font-black text-3xl uppercase tracking-[0.8em] transition-all border-b-[12px] ${loading ? "bg-slate-200 text-slate-400 border-slate-300" : "bg-slate-950 text-white border-blue-900 hover:bg-blue-700 active:scale-[0.97]"}`}
 					>
-						{loading ? (
-							<span className="animate-pulse">Desplegando...</span>
-						) : (
-							"Confirmar Alta"
-						)}
+						{loading ? "Desplegando..." : "Confirmar Alta"}
 					</button>
 				</form>
 			</div>

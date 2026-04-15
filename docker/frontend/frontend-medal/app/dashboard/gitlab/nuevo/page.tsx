@@ -9,7 +9,7 @@ interface UsuarioBusqueda {
 	nombre: string;
 	apellido1: string;
 	apellido2: string;
-	fotoperfil: { type: string; data: number[] } | string | null; // Tipado actualizado
+	fotoperfil: { type: string; data: number[] } | string | null;
 	uuidusuario: string;
 	gitlab: string;
 }
@@ -33,14 +33,10 @@ export default function NuevoProyectoGitLab() {
 	const [seleccionados, setSeleccionados] = useState<UsuarioBusqueda[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// --- UTILIDAD: CONVERSIÓN DE IMAGEN (Lógica idéntica a tu Header) ---
 	const formatAvatarUrl = (foto: any) => {
 		if (!foto) return null;
-
-		// Caso: string directo (URL o base64)
 		if (typeof foto === "string") {
 			if (foto.startsWith("\\x")) {
-				// Si por casualidad viene como hex string de Postgres
 				try {
 					const cleanHex = foto.slice(2);
 					const bytes = new Uint8Array(
@@ -56,27 +52,20 @@ export default function NuevoProyectoGitLab() {
 			}
 			return foto;
 		}
-
-		// Caso: Objeto Buffer { type: 'Buffer', data: [] }
 		if (foto.type === "Buffer" && Array.isArray(foto.data)) {
 			try {
 				const uint8 = new Uint8Array(foto.data);
 				let binary = "";
-				for (let i = 0; i < uint8.length; i++) {
+				for (let i = 0; i < uint8.length; i++)
 					binary += String.fromCharCode(uint8[i]);
-				}
-				const base64 = window.btoa(binary);
-				return `data:image/png;base64,${base64}`;
+				return `data:image/png;base64,${window.btoa(binary)}`;
 			} catch (err) {
-				console.error("Error al convertir imagen de usuario:", err);
 				return null;
 			}
 		}
-
 		return null;
 	};
 
-	// --- BÚSQUEDA DINÁMICA ---
 	const buscarUsuarios = useCallback(async (val: string) => {
 		try {
 			const token = localStorage.getItem("token");
@@ -109,7 +98,6 @@ export default function NuevoProyectoGitLab() {
 		);
 	};
 
-	// --- ENVÍO DEL FORMULARIO ---
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!nombre || nombre.trim().length < 3) {
@@ -151,84 +139,83 @@ export default function NuevoProyectoGitLab() {
 		}
 	};
 
+	const labelStyle =
+		"text-[11px] font-black uppercase tracking-[0.2em] text-slate-950 mb-3 block";
+	const inputStyle =
+		"w-full bg-white border-2 border-slate-950 rounded-2xl px-6 py-5 font-black text-sm text-slate-950 outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-600 transition-all uppercase placeholder:text-slate-300 shadow-sm";
+
 	return (
-		<div className="min-h-screen bg-[#F8FAFC] p-4 md:p-10 flex flex-col">
+		<div className="min-h-screen bg-[#F1F5F9] p-4 md:p-10 flex flex-col">
 			<style jsx global>{`
-				.custom-scroll::-webkit-scrollbar { width: 4px; }
+				.custom-scroll::-webkit-scrollbar { width: 6px; }
 				.custom-scroll::-webkit-scrollbar-track { background: transparent; }
-				.custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-				.custom-scroll::-webkit-scrollbar-thumb:hover { background: #f97316; }
+				.custom-scroll::-webkit-scrollbar-thumb { background: #0f172a; border-radius: 10px; }
 			`}</style>
 
-			<div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1">
+			<div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-10 flex-1">
 				{/* CONFIGURACIÓN PROYECTO */}
-				<div className="lg:col-span-7 flex flex-col space-y-8">
+				<div className="lg:col-span-7 flex flex-col space-y-10">
 					<header>
 						<button
 							onClick={() => router.back()}
-							className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-orange-500 transition-colors mb-6"
+							className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 hover:text-slate-950 transition-colors mb-8 border-b-2 border-transparent hover:border-slate-950"
 						>
-							← REGRESAR AL DASHBOARD
+							← VOLVER AL PANEL
 						</button>
-						<h1 className="text-7xl font-black text-slate-900 tracking-tighter uppercase leading-[0.85]">
+						<h1 className="text-8xl font-black text-slate-950 tracking-tighter uppercase leading-[0.8]">
 							NUEVO
 							<br />
-							<span className="text-orange-500">REPOSITORIO.</span>
+							<span className="text-orange-600">REPOSITORIO.</span>
 						</h1>
 					</header>
 
-					<div className="bg-white p-10 rounded-[3rem] shadow-2xl shadow-slate-200/50 border border-slate-50 space-y-8 relative overflow-hidden">
-						<div className="absolute -top-6 -right-6 text-[100px] font-black italic text-slate-900 opacity-[0.02] select-none pointer-events-none">
-							DATA
+					<div className="bg-white p-12 rounded-[4rem] shadow-2xl shadow-slate-300 border-2 border-white space-y-10 relative overflow-hidden">
+						<div className="absolute -top-10 -right-10 text-[140px] font-black italic text-slate-950 opacity-[0.04] select-none pointer-events-none">
+							CORE
 						</div>
-						<div className="space-y-6 relative z-10">
+
+						<div className="space-y-8 relative z-10">
 							<div>
-								<label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 block">
-									Nombre Identificador
-								</label>
+								<label className={labelStyle}>Nombre del Proyecto *</label>
 								<input
 									required
 									type="text"
 									value={nombre}
 									onChange={(e) => setNombre(e.target.value)}
-									placeholder="EJ: MEDAL WEB SERVER."
-									className="w-full bg-slate-50 border-none rounded-2xl px-6 py-5 font-mono text-sm outline-none focus:ring-4 focus:ring-orange-100 transition-all uppercase"
+									placeholder="EJ: SISTEMA CONTROL DE ACTIVOS"
+									className={inputStyle}
 								/>
 							</div>
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 								<div>
-									<label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 block">
-										Fecha Lanzamiento
-									</label>
+									<label className={labelStyle}>Fecha Inicio</label>
 									<input
 										type="date"
 										value={fechaInicio}
 										onChange={(e) => setFechaInicio(e.target.value)}
-										className="w-full bg-slate-50 border-none rounded-2xl px-6 py-5 font-black text-[11px] outline-none"
+										className={`${inputStyle} text-xs`}
 									/>
 								</div>
 								<div>
-									<label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 block">
-										Fecha Finalización
-									</label>
+									<label className={labelStyle}>Fecha Entrega</label>
 									<input
 										type="date"
 										value={fechaFin}
 										onChange={(e) => setFechaFin(e.target.value)}
-										className="w-full bg-slate-50 border-none rounded-2xl px-6 py-5 font-black text-[11px] outline-none"
+										className={`${inputStyle} text-xs`}
 									/>
 								</div>
 							</div>
+
 							<div>
-								<label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 block">
-									Documentación / Descripción
-								</label>
+								<label className={labelStyle}>Resumen Ejecutivo / Notas</label>
 								<textarea
-									rows={5}
+									rows={4}
 									value={descripcion}
 									onChange={(e) => setDescripcion(e.target.value)}
-									placeholder="DETALLES TÉCNICOS..."
-									className="w-full bg-slate-50 border-none rounded-2xl px-6 py-5 text-sm outline-none resize-none"
+									placeholder="DEFINA EL ALCANCE TÉCNICO..."
+									className={`${inputStyle} normal-case h-40 resize-none`}
 								/>
 							</div>
 						</div>
@@ -237,36 +224,36 @@ export default function NuevoProyectoGitLab() {
 					<button
 						onClick={handleSubmit}
 						disabled={isSubmitting || !nombre}
-						className="w-full bg-slate-900 text-white py-8 rounded-[2rem] font-black text-[13px] uppercase tracking-[0.4em] hover:bg-orange-600 transition-all shadow-2xl active:scale-[0.97] disabled:opacity-30"
+						className="w-full bg-slate-950 text-white py-10 rounded-[2.5rem] font-black text-base uppercase tracking-[0.5em] hover:bg-orange-600 transition-all shadow-2xl active:scale-[0.98] disabled:opacity-30 border-b-[10px] border-black"
 					>
-						{isSubmitting
-							? "SINCRONIZANDO..."
-							: "INICIALIZAR PROYECTO EN GITLAB"}
+						{isSubmitting ? "CONFIGURANDO GITLAB..." : "DESPLEGAR PROYECTO"}
 					</button>
 				</div>
 
 				{/* SELECCIÓN DE EQUIPO */}
 				<div className="lg:col-span-5 flex flex-col h-[600px] lg:h-[calc(100vh-14rem)] sticky top-10">
-					<div className="bg-white rounded-[3.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 flex flex-col h-full overflow-hidden">
-						<div className="p-8 border-b border-slate-50 bg-slate-50/30">
-							<div className="flex justify-between items-center mb-6">
-								<h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">
-									Equipo
+					<div className="bg-white rounded-[4rem] shadow-2xl shadow-slate-300 border-2 border-slate-950 flex flex-col h-full overflow-hidden">
+						<div className="p-10 border-b-4 border-slate-950 bg-slate-50">
+							<div className="flex justify-between items-center mb-8">
+								<h2 className="text-[13px] font-black uppercase tracking-[0.3em] text-slate-950 italic">
+									Personal Autorizado
 								</h2>
-								<span className="bg-orange-500 text-white text-[9px] font-black px-2 py-1 rounded-md">
-									{seleccionados.length}
+								<span className="bg-slate-950 text-white text-[10px] font-black px-4 py-2 rounded-xl">
+									{seleccionados.length} SELECCIONADOS
 								</span>
 							</div>
-							<input
-								type="text"
-								placeholder="BUSCAR..."
-								value={busqueda}
-								onChange={(e) => setBusqueda(e.target.value)}
-								className="w-full bg-white border border-slate-200 rounded-2xl px-6 py-4 font-black text-[10px] uppercase outline-none focus:border-orange-500 transition-colors"
-							/>
+							<div className="relative">
+								<input
+									type="text"
+									placeholder="BUSCAR COLABORADOR..."
+									value={busqueda}
+									onChange={(e) => setBusqueda(e.target.value)}
+									className="w-full bg-white border-[3px] border-slate-950 rounded-2xl px-6 py-5 font-black text-[12px] text-slate-950 uppercase tracking-[0.2em] outline-none focus:ring-8 focus:ring-orange-200/50 focus:border-orange-600 transition-all placeholder:text-slate-400 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+								/>
+							</div>
 						</div>
 
-						<div className="flex-1 overflow-y-auto custom-scroll p-6 space-y-3">
+						<div className="flex-1 overflow-y-auto custom-scroll p-8 space-y-4 bg-white">
 							{usuariosSugeridos.length > 0 ? (
 								usuariosSugeridos.map((u) => {
 									const isSelected = seleccionados.find(
@@ -277,11 +264,15 @@ export default function NuevoProyectoGitLab() {
 										<div
 											key={u.idusuario}
 											onClick={() => toggleUsuario(u)}
-											className={`group flex items-center justify-between p-4 rounded-[1.5rem] cursor-pointer transition-all ${isSelected ? "bg-orange-500 text-white" : "bg-white hover:bg-slate-50 border border-transparent"}`}
+											className={`group flex items-center justify-between p-5 rounded-[2rem] cursor-pointer transition-all border-2 ${
+												isSelected
+													? "bg-orange-600 border-orange-800 text-white shadow-lg scale-[1.02]"
+													: "bg-slate-50 border-slate-200 hover:border-slate-950 text-slate-950 hover:bg-white"
+											}`}
 										>
-											<div className="flex items-center gap-4">
+											<div className="flex items-center gap-5">
 												<div
-													className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${isSelected ? "border-white" : "border-slate-100"}`}
+													className={`w-14 h-14 rounded-full overflow-hidden border-2 transition-all ${isSelected ? "border-white" : "border-slate-950 shadow-md"}`}
 												>
 													{currentAvatar ? (
 														<img
@@ -291,7 +282,7 @@ export default function NuevoProyectoGitLab() {
 														/>
 													) : (
 														<div
-															className={`w-full h-full flex items-center justify-center text-[11px] font-black ${isSelected ? "bg-white text-orange-500" : "bg-slate-800 text-white"}`}
+															className={`w-full h-full flex items-center justify-center text-xs font-black ${isSelected ? "bg-white text-orange-600" : "bg-slate-950 text-white"}`}
 														>
 															{u.nombre[0]}
 															{u.apellido1[0]}
@@ -299,42 +290,42 @@ export default function NuevoProyectoGitLab() {
 													)}
 												</div>
 												<div className="truncate">
-													<p className="text-[11px] font-black uppercase truncate">
+													<p className="text-[12px] font-black uppercase truncate tracking-tight">
 														{u.nombre} {u.apellido1}
 													</p>
 													<p
-														className={`text-[9px] font-mono ${isSelected ? "text-orange-100" : "text-orange-500"}`}
+														className={`text-[10px] font-mono font-bold ${isSelected ? "text-orange-100" : "text-orange-600"}`}
 													>
 														@{u.gitlab}
 													</p>
 												</div>
 											</div>
 											<div
-												className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${isSelected ? "bg-white border-white text-orange-500" : "border-slate-100"}`}
+												className={`w-8 h-8 rounded-xl flex items-center justify-center border-2 transition-all ${isSelected ? "bg-white border-white text-orange-600 rotate-12 scale-110" : "border-slate-300 bg-white"}`}
 											>
-												{isSelected && "✓"}
+												{isSelected ? "✓" : ""}
 											</div>
 										</div>
 									);
 								})
 							) : (
-								<div className="flex flex-col items-center justify-center h-full opacity-20 text-center">
-									<p className="text-[10px] font-black uppercase">
-										Sin resultados
+								<div className="flex flex-col items-center justify-center h-full text-center py-20">
+									<p className="text-[11px] font-black uppercase text-slate-300 tracking-[0.5em]">
+										Esperando Búsqueda
 									</p>
 								</div>
 							)}
 						</div>
 
 						{seleccionados.length > 0 && (
-							<div className="p-8 bg-slate-900">
-								<div className="flex -space-x-3 overflow-hidden">
-									{seleccionados.slice(0, 10).map((s) => {
+							<div className="p-10 bg-slate-950 border-t-4 border-orange-600">
+								<div className="flex -space-x-4 overflow-hidden">
+									{seleccionados.slice(0, 8).map((s) => {
 										const favatar = formatAvatarUrl(s.fotoperfil);
 										return (
 											<div
 												key={s.idusuario}
-												className="w-10 h-10 rounded-full border-4 border-slate-900 bg-slate-800 flex items-center justify-center text-[9px] text-white font-black overflow-hidden shrink-0 shadow-2xl"
+												className="w-12 h-12 rounded-full border-4 border-slate-950 bg-slate-800 flex items-center justify-center text-[10px] text-white font-black overflow-hidden shrink-0 shadow-2xl transition-transform hover:-translate-y-2"
 											>
 												{favatar ? (
 													<img
@@ -347,6 +338,11 @@ export default function NuevoProyectoGitLab() {
 											</div>
 										);
 									})}
+									{seleccionados.length > 8 && (
+										<div className="w-12 h-12 rounded-full border-4 border-slate-950 bg-orange-600 flex items-center justify-center text-[10px] text-white font-black shrink-0">
+											+{seleccionados.length - 8}
+										</div>
+									)}
 								</div>
 							</div>
 						)}

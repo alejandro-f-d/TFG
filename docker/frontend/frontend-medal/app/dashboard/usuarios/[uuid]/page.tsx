@@ -77,12 +77,12 @@ const getAvatarUrl = (fotoperfil: any): string | null => {
 };
 
 const getRoleStyle = (roleName: string) => {
-	if (!roleName) return "bg-gray-50 text-gray-700 border-gray-200";
+	if (!roleName) return "bg-slate-100 text-slate-700 border-slate-300";
 	const name = roleName.toLowerCase();
-	if (name.includes("admin")) return "bg-red-50 text-red-700 border-red-200";
+	if (name.includes("admin")) return "bg-red-100 text-red-900 border-red-300";
 	if (name.includes("responsable"))
-		return "bg-purple-50 text-purple-700 border-purple-200";
-	return "bg-blue-50 text-blue-700 border-blue-200";
+		return "bg-purple-100 text-purple-900 border-purple-300";
+	return "bg-blue-100 text-blue-900 border-blue-300";
 };
 
 export default function UserDetailPage() {
@@ -243,12 +243,9 @@ export default function UserDetailPage() {
 			const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
 			const formData = new FormData();
 
-			// --- LÓGICA DE BAJA ESPECIAL ---
-			// Detectamos si el usuario estaba activo y se ha cambiado a inactivo en el formulario
 			const isSetToInactive =
 				user?.activo === true && editForm.activo === false;
 			const queryParam = isSetToInactive ? "?darBaja=true" : "";
-			console.log("El queryparam es:", queryParam);
 
 			editableFields.forEach((field) => {
 				if (field === "fotoPerfil") return;
@@ -316,13 +313,15 @@ export default function UserDetailPage() {
 
 	const renderField = (field: string, value: any) => {
 		const config = getFieldConfig(field);
+		const inputBaseClass =
+			"w-full p-3 border-2 border-slate-300 rounded-2xl bg-white text-sm font-bold text-slate-950 shadow-sm outline-none focus:border-blue-700 transition-all";
 
 		if (isEditing && editableFields.includes(field)) {
 			if (field === "gitlab" && !user?.gitlab) {
 				return (
 					<div className="space-y-4 w-full animate-in slide-in-from-top-2 duration-300">
-						<div className="bg-orange-50/50 p-6 rounded-[2rem] border-2 border-orange-100/50">
-							<p className="text-[9px] font-black text-orange-600 uppercase mb-4 tracking-widest">
+						<div className="bg-orange-50 p-6 rounded-[2rem] border-2 border-orange-300">
+							<p className="text-[9px] font-black text-orange-700 uppercase mb-4 tracking-widest">
 								Crear Cuenta GitLab
 							</p>
 							<div className="space-y-4">
@@ -333,7 +332,7 @@ export default function UserDetailPage() {
 									onChange={(e) =>
 										setEditForm({ ...editForm, gitlab: e.target.value })
 									}
-									className="w-full p-3 border-2 border-orange-200 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-orange-500 transition-all placeholder:text-orange-200"
+									className="w-full p-3 border-2 border-orange-400 rounded-2xl bg-white text-sm font-bold text-slate-950 shadow-sm outline-none focus:border-orange-600 transition-all placeholder:text-orange-200"
 								/>
 								{editForm.gitlab && (
 									<input
@@ -341,7 +340,7 @@ export default function UserDetailPage() {
 										placeholder="CONTRASEÑA_GITLAB"
 										value={gitlabPassword}
 										onChange={(e) => setGitlabPassword(e.target.value)}
-										className="w-full p-3 border-2 border-orange-200 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-orange-500 transition-all animate-in fade-in"
+										className="w-full p-3 border-2 border-orange-400 rounded-2xl bg-white text-sm font-bold text-slate-950 shadow-sm outline-none focus:border-orange-600 transition-all animate-in fade-in"
 									/>
 								)}
 							</div>
@@ -352,16 +351,16 @@ export default function UserDetailPage() {
 
 			if (field === "wifi") {
 				return (
-					<label className="flex items-center space-x-3 bg-white p-3 rounded-2xl border-2 border-slate-50 shadow-sm cursor-pointer hover:bg-slate-50 transition-all">
+					<label className="flex items-center space-x-3 bg-white p-3 rounded-2xl border-2 border-slate-300 shadow-sm cursor-pointer hover:bg-slate-50 transition-all">
 						<input
 							type="checkbox"
 							checked={!!value}
 							onChange={(e) =>
 								setEditForm({ ...editForm, [field]: e.target.checked })
 							}
-							className="w-6 h-6 rounded-lg text-blue-600 focus:ring-blue-500 border-slate-300"
+							className="w-6 h-6 rounded-lg text-blue-700 focus:ring-blue-600 border-slate-400"
 						/>
-						<span className="text-xs font-black text-slate-700 uppercase tracking-widest">
+						<span className="text-xs font-black text-slate-950 uppercase tracking-widest">
 							Acceso Permitido
 						</span>
 					</label>
@@ -388,25 +387,25 @@ export default function UserDetailPage() {
 									placeholder="Escribe el nombre de la máquina..."
 									value={maquinaSearch}
 									onChange={(e) => setMaquinaSearch(e.target.value)}
-									className="w-full p-3 pl-11 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm focus:border-blue-400 outline-none transition-all"
+									className="w-full p-3 pl-11 border-2 border-slate-300 rounded-2xl bg-white text-sm font-bold text-slate-950 shadow-sm focus:border-blue-700 outline-none transition-all"
 								/>
 								<div className="absolute left-4 top-3.5">
 									{searchingMaquinas ? (
-										<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+										<div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
 									) : (
-										<span className="text-slate-400">🔍</span>
+										<span className="text-slate-500 text-lg">🔍</span>
 									)}
 								</div>
 							</div>
 						)}
-						<div className="grid grid-cols-1 gap-2 p-4 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/50 max-h-60 overflow-y-auto shadow-inner">
+						<div className="grid grid-cols-1 gap-2 p-4 border-2 border-slate-200 rounded-[2.5rem] bg-slate-100/50 max-h-60 overflow-y-auto shadow-inner">
 							{options.map((opt: any) => {
 								const optId = opt.id || opt.idpuerta || opt.idmaquina;
 								const isChecked = selectedIds.includes(optId);
 								return (
 									<label
 										key={optId}
-										className={`flex items-center space-x-3 p-3 rounded-2xl transition-all cursor-pointer border-2 ${isChecked ? "bg-white shadow-md border-transparent" : "hover:bg-white/60 border-transparent"}`}
+										className={`flex items-center space-x-3 p-3 rounded-2xl transition-all cursor-pointer border-2 ${isChecked ? "bg-white shadow-md border-blue-500" : "hover:bg-white/80 border-transparent"}`}
 									>
 										<input
 											type="checkbox"
@@ -420,10 +419,10 @@ export default function UserDetailPage() {
 														);
 												setEditForm({ ...editForm, [field]: newItems });
 											}}
-											className="w-5 h-5 rounded-lg text-blue-600 focus:ring-blue-500 border-slate-300"
+											className="w-5 h-5 rounded-lg text-blue-700 focus:ring-blue-600 border-slate-400"
 										/>
 										<span
-											className={`text-sm font-black ${isChecked ? "text-blue-700" : "text-slate-500"}`}
+											className={`text-sm font-black ${isChecked ? "text-blue-900" : "text-slate-600"}`}
 										>
 											{opt.nombre}
 										</span>
@@ -442,7 +441,7 @@ export default function UserDetailPage() {
 						onChange={(e) =>
 							setEditForm({ ...editForm, [field]: e.target.value === "true" })
 						}
-						className="w-full p-3 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500 transition-all"
+						className={inputBaseClass}
 					>
 						<option value="true">ACTIVO</option>
 						<option value="false">INACTIVO</option>
@@ -457,7 +456,7 @@ export default function UserDetailPage() {
 						onChange={(e) =>
 							setEditForm({ ...editForm, [field]: e.target.value })
 						}
-						className="w-full p-3 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500 transition-all"
+						className={inputBaseClass}
 					>
 						<option value="">Sin responsable</option>
 						{responsablesList.map((r) => (
@@ -480,7 +479,7 @@ export default function UserDetailPage() {
 					onChange={(e) =>
 						setEditForm({ ...editForm, [field]: e.target.value })
 					}
-					className="w-full p-3 border-2 border-slate-100 rounded-2xl bg-white text-sm font-bold shadow-sm outline-none focus:border-blue-500 transition-all"
+					className={inputBaseClass}
 				/>
 			);
 		}
@@ -488,11 +487,11 @@ export default function UserDetailPage() {
 		// --- Lectura ---
 		if (field === "gitlab") {
 			return value ? (
-				<span className="bg-orange-50 text-orange-700 px-4 py-1.5 rounded-xl text-[10px] font-black border border-orange-100 uppercase tracking-widest shadow-sm">
+				<span className="bg-orange-100 text-orange-900 px-4 py-1.5 rounded-xl text-[10px] font-black border-2 border-orange-200 uppercase tracking-widest shadow-sm">
 					🦊 {value}
 				</span>
 			) : (
-				<span className="text-slate-300 text-[10px] font-black uppercase tracking-widest italic">
+				<span className="text-slate-400 text-[10px] font-black uppercase tracking-widest italic">
 					Sin cuenta vinculada
 				</span>
 			);
@@ -500,7 +499,7 @@ export default function UserDetailPage() {
 		if (field === "wifi") {
 			return (
 				<span
-					className={`px-4 py-1.5 rounded-xl text-[10px] font-black border uppercase tracking-widest shadow-sm ${value ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-slate-50 text-slate-400 border-slate-100"}`}
+					className={`px-4 py-1.5 rounded-xl text-[10px] font-black border-2 uppercase tracking-widest shadow-sm ${value ? "bg-blue-100 text-blue-900 border-blue-300" : "bg-slate-100 text-slate-500 border-slate-300"}`}
 				>
 					{value ? "📶 WiFi Activo" : "🚫 WiFi Inactivo"}
 				</span>
@@ -513,7 +512,7 @@ export default function UserDetailPage() {
 						value.map((v: any) => (
 							<span
 								key={v.id || v.idpuerta || v.idmaquina}
-								className={`px-4 py-1.5 rounded-xl text-[10px] font-black border uppercase tracking-widest shadow-sm ${field === "roles" ? getRoleStyle(v.nombre) : "bg-white text-slate-600 border-slate-200"}`}
+								className={`px-4 py-1.5 rounded-xl text-[10px] font-black border-2 uppercase tracking-widest shadow-sm ${field === "roles" ? getRoleStyle(v.nombre) : "bg-white text-slate-900 border-slate-300"}`}
 							>
 								{v.nombre}
 							</span>
@@ -527,13 +526,13 @@ export default function UserDetailPage() {
 		if (typeof value === "boolean") {
 			return (
 				<span
-					className={`px-4 py-1.5 rounded-full text-[10px] font-black ${value ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+					className={`px-4 py-1.5 rounded-full text-[10px] font-black border-2 ${value ? "bg-green-100 text-green-900 border-green-300" : "bg-red-100 text-red-900 border-red-300"}`}
 				>
 					{value ? "ACTIVO" : "INACTIVO"}
 				</span>
 			);
 		}
-		return <span className="text-slate-800 font-bold">{value || "-"}</span>;
+		return <span className="text-slate-950 font-black">{value || "-"}</span>;
 	};
 
 	const sections = [
@@ -576,26 +575,26 @@ export default function UserDetailPage() {
 
 	if (loading)
 		return (
-			<div className="h-screen flex items-center justify-center font-black text-slate-400 animate-pulse uppercase text-xs tracking-widest">
+			<div className="h-screen flex items-center justify-center font-black text-slate-900 animate-pulse uppercase text-sm tracking-[0.5em]">
 				Cargando perfil...
 			</div>
 		);
 
 	return (
-		<div className="min-h-screen bg-[#F8FAFC] py-12 px-6">
+		<div className="min-h-screen bg-[#F1F5F9] py-12 px-6">
 			<div className="max-w-5xl mx-auto">
 				<div className="flex justify-between items-center mb-10">
 					<button
 						onClick={() => router.back()}
-						className="text-xs font-black tracking-widest text-slate-400 hover:text-blue-600 transition-colors uppercase"
+						className="text-xs font-black tracking-[0.2em] text-slate-500 hover:text-blue-700 transition-colors uppercase border-b-2 border-transparent hover:border-blue-700"
 					>
 						← Volver
 					</button>
 				</div>
 
-				<div className="bg-white rounded-[3.5rem] shadow-2xl shadow-slate-200 overflow-hidden border border-white">
-					<div className="relative bg-slate-900 pt-24 pb-20 px-14 flex flex-col md:flex-row items-center md:items-end gap-12">
-						<div className="relative group w-52 h-52 rounded-[3.5rem] border-[10px] border-white overflow-hidden bg-slate-100 shadow-2xl shrink-0 -mb-32 z-10">
+				<div className="bg-white rounded-[3.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden border-2 border-slate-200">
+					<div className="relative bg-slate-950 pt-24 pb-20 px-14 flex flex-col md:flex-row items-center md:items-end gap-12">
+						<div className="relative group w-52 h-52 rounded-[3.5rem] border-[10px] border-white overflow-hidden bg-slate-200 shadow-2xl shrink-0 -mb-32 z-10">
 							{avatarPreview ? (
 								<img
 									src={avatarPreview}
@@ -603,12 +602,12 @@ export default function UserDetailPage() {
 									className="w-full h-full object-cover"
 								/>
 							) : (
-								<div className="flex h-full items-center justify-center text-6xl font-black text-slate-300">
+								<div className="flex h-full items-center justify-center text-7xl font-black text-slate-400">
 									{user?.nombre?.[0]}
 								</div>
 							)}
 							{isEditing && (
-								<label className="absolute inset-0 bg-blue-600/60 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer backdrop-blur-sm transition-all">
+								<label className="absolute inset-0 bg-blue-700/80 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer backdrop-blur-md transition-all">
 									<input
 										type="file"
 										className="hidden"
@@ -623,7 +622,7 @@ export default function UserDetailPage() {
 											}
 										}}
 									/>
-									<span className="text-white text-[10px] font-black tracking-widest text-center px-4">
+									<span className="text-white text-[11px] font-black tracking-[0.2em] text-center px-4">
 										CAMBIAR FOTO
 									</span>
 								</label>
@@ -631,19 +630,19 @@ export default function UserDetailPage() {
 						</div>
 						<div className="flex-1 flex flex-col md:flex-row items-center md:items-end justify-between gap-6 mb-2 w-full text-center md:text-left">
 							<div>
-								<h1 className="text-5xl font-black text-white tracking-tighter drop-shadow-xl leading-[1.1] mb-6">
+								<h1 className="text-5xl font-black text-white tracking-tighter drop-shadow-2xl leading-[1.1] mb-6">
 									{user?.nombre} {user?.apellido1}
 								</h1>
-								<div className="inline-flex items-center gap-4 bg-white/10 border border-white/10 px-5 py-2.5 rounded-2xl backdrop-blur-md shadow-sm">
-									<div className="relative flex h-3 w-3">
+								<div className="inline-flex items-center gap-4 bg-white/20 border-2 border-white/20 px-5 py-2.5 rounded-2xl backdrop-blur-xl shadow-lg">
+									<div className="relative flex h-4 w-4">
 										{user?.activo && (
 											<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
 										)}
 										<span
-											className={`relative inline-flex rounded-full h-3 w-3 ${user?.activo ? "bg-green-500" : "bg-red-500"}`}
+											className={`relative inline-flex rounded-full h-4 w-4 ${user?.activo ? "bg-green-500" : "bg-red-500"}`}
 										></span>
 									</div>
-									<p className="text-blue-100 font-bold text-sm tracking-wide">
+									<p className="text-white font-black text-sm tracking-wide">
 										{user?.correoinstitucional}
 									</p>
 								</div>
@@ -651,7 +650,7 @@ export default function UserDetailPage() {
 							{!isEditing && (
 								<button
 									onClick={() => setIsEditing(true)}
-									className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-3xl font-black text-[10px] tracking-widest shadow-xl hover:bg-white/10 active:scale-95 transition-all backdrop-blur-sm shrink-0 self-center md:self-end border-b-4 border-white/5"
+									className="bg-white text-slate-950 px-10 py-5 rounded-3xl font-black text-[11px] tracking-[0.2em] shadow-2xl hover:bg-blue-50 active:scale-95 transition-all shrink-0 self-center md:self-end border-b-4 border-slate-200"
 								>
 									✏️ EDITAR PERFIL
 								</button>
@@ -663,13 +662,13 @@ export default function UserDetailPage() {
 
 					<div className="px-20 pb-20">
 						{error && (
-							<div className="bg-red-50 border-2 border-red-100 text-red-600 p-5 rounded-3xl mb-10 font-black text-[10px] uppercase tracking-widest animate-pulse">
-								⚠️ {error}
+							<div className="bg-red-100 border-4 border-red-300 text-red-900 p-6 rounded-3xl mb-10 font-black text-xs uppercase tracking-widest flex items-center gap-4">
+								<span className="text-2xl">⚠️</span> {error}
 							</div>
 						)}
 						{success && (
-							<div className="bg-emerald-50 border-2 border-emerald-100 text-emerald-600 p-5 rounded-3xl mb-10 font-black text-[10px] uppercase tracking-widest">
-								✅ {success}
+							<div className="bg-emerald-100 border-4 border-emerald-300 text-emerald-900 p-6 rounded-3xl mb-10 font-black text-xs uppercase tracking-widest flex items-center gap-4">
+								<span className="text-2xl">✅</span> {success}
 							</div>
 						)}
 
@@ -677,20 +676,20 @@ export default function UserDetailPage() {
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-x-24 gap-y-20">
 								{sections.map((section) => (
 									<div key={section.title}>
-										<h3 className="text-blue-600 font-black text-[10px] uppercase tracking-[0.4em] mb-12 flex items-center gap-4">
-											<span className="w-12 h-[2px] bg-blue-600"></span>
+										<h3 className="text-blue-800 font-black text-[11px] uppercase tracking-[0.5em] mb-12 flex items-center gap-4">
+											<span className="w-16 h-[3px] bg-blue-700"></span>
 											{section.title}
 										</h3>
 										<div className="space-y-12">
 											{section.fields.map((f) => (
 												<div
 													key={f.field}
-													className="flex flex-col space-y-4 pl-8 border-l-2 border-slate-50 hover:border-blue-100 transition-colors group"
+													className="flex flex-col space-y-4 pl-8 border-l-4 border-slate-100 hover:border-blue-600 transition-all group"
 												>
-													<label className="text-slate-400 text-[9px] font-black uppercase tracking-widest group-hover:text-blue-400">
+													<label className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-blue-700">
 														{f.label}
 													</label>
-													<div className="min-h-[28px]">
+													<div className="min-h-[32px]">
 														{renderField(f.field, editForm[f.field])}
 													</div>
 												</div>
@@ -699,8 +698,8 @@ export default function UserDetailPage() {
 									</div>
 								))}
 								<div className="md:col-span-2 pt-10">
-									<h3 className="text-slate-900 font-black text-[10px] uppercase tracking-[0.4em] mb-12 flex items-center gap-4">
-										<span className="w-12 h-[2px] bg-slate-900"></span>Proyectos
+									<h3 className="text-slate-950 font-black text-[11px] uppercase tracking-[0.5em] mb-12 flex items-center gap-4">
+										<span className="w-16 h-[3px] bg-slate-950"></span>Proyectos
 										GitLab
 									</h3>
 									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -711,25 +710,25 @@ export default function UserDetailPage() {
 													onClick={() =>
 														router.push(`/dashboard/gitlab/${proy.uuid}`)
 													}
-													className="bg-slate-50 border border-slate-100 p-8 rounded-[2.5rem] hover:bg-white hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer group active:scale-95 border-b-4 hover:border-blue-500"
+													className="bg-white border-2 border-slate-200 p-8 rounded-[3rem] hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer group active:scale-95 border-b-8 hover:border-blue-600"
 												>
 													<div className="flex justify-between items-start mb-6">
-														<span className="text-xs font-black text-slate-800 uppercase line-clamp-2 group-hover:text-blue-600">
+														<span className="text-sm font-black text-slate-950 uppercase line-clamp-2 group-hover:text-blue-700">
 															{proy.nombre}
 														</span>
 														<div
-															className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase ${proy.activo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+															className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase border-2 ${proy.activo ? "bg-green-100 text-green-900 border-green-300" : "bg-red-100 text-red-900 border-red-300"}`}
 														>
 															{proy.activo ? "Activo" : "Inactivo"}
 														</div>
 													</div>
-													<div className="text-[9px] font-bold text-slate-400 font-mono truncate">
-														ID: {proy.uuid.substring(0, 16)}...
+													<div className="text-[10px] font-black text-slate-500 font-mono bg-slate-50 p-2 rounded-lg truncate">
+														ID: {proy.uuid}
 													</div>
 												</div>
 											))
 										) : (
-											<p className="text-slate-400 font-black text-[10px] uppercase p-12 bg-slate-50 rounded-[2.5rem] text-center border-2 border-dashed border-slate-200">
+											<p className="text-slate-500 font-black text-xs uppercase p-16 bg-slate-100 rounded-[3rem] text-center border-4 border-dashed border-slate-300">
 												Sin proyectos asignados
 											</p>
 										)}
@@ -738,11 +737,11 @@ export default function UserDetailPage() {
 							</div>
 
 							{isEditing && (
-								<div className="flex gap-8 pt-16 border-t border-slate-100">
+								<div className="flex flex-col sm:flex-row gap-8 pt-16 border-t-4 border-slate-100">
 									<button
 										type="submit"
 										disabled={saving}
-										className="flex-[2] bg-slate-900 text-white py-7 rounded-[2.5rem] font-black text-xs tracking-[0.3em] shadow-2xl hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50 border-b-4 border-black"
+										className="flex-[2] bg-slate-950 text-white py-8 rounded-[2.5rem] font-black text-sm tracking-[0.4em] shadow-2xl hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-50 border-b-8 border-black"
 									>
 										{saving ? "PROCESANDO..." : "CONFIRMAR CAMBIOS"}
 									</button>
@@ -754,7 +753,7 @@ export default function UserDetailPage() {
 											setGitlabPassword("");
 											setAvatarPreview(getAvatarUrl(user?.fotoperfil));
 										}}
-										className="flex-1 bg-slate-100 text-slate-500 py-7 rounded-[2.5rem] font-black text-xs tracking-[0.3em] hover:bg-slate-200 transition-all border-b-4 border-slate-200"
+										className="flex-1 bg-slate-200 text-slate-700 py-8 rounded-[2.5rem] font-black text-sm tracking-[0.4em] hover:bg-slate-300 transition-all border-b-8 border-slate-400"
 									>
 										CANCELAR
 									</button>

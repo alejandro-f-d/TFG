@@ -164,7 +164,7 @@ export default function GitLabProjectsPage() {
 								setSearchTerm(e.target.value);
 								setPage(1);
 							}}
-							className="w-full bg-white border border-slate-100 rounded-[2rem] px-8 py-6 font-black text-[11px] uppercase tracking-widest shadow-sm focus:ring-4 focus:ring-orange-50 focus:border-orange-500 transition-all outline-none"
+							className="w-full bg-white border-2 border-slate-950 rounded-[2rem] px-8 py-6 font-black text-[12px] text-slate-950 uppercase tracking-[0.3em] shadow-xl focus:ring-8 focus:ring-orange-100/50 focus:border-orange-600 transition-all outline-none placeholder:text-slate-300"
 						/>
 						<span className="absolute right-8 top-1/2 -translate-y-1/2 opacity-20 font-black text-xs italic uppercase">
 							Search_Engine

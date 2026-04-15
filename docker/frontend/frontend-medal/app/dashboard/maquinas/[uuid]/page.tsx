@@ -124,7 +124,6 @@ export default function MachineDetailPage() {
 	const handleUpdateMachine = async () => {
 		try {
 			const token = localStorage.getItem("token");
-			// Limpiamos el objeto para no mandar campos extra como 'dispositivos' en el PATCH si no es necesario
 			const { dispositivos, uuidmaquina, idmaquina, ...updatePayload } =
 				machineForm as any;
 
@@ -171,19 +170,23 @@ export default function MachineDetailPage() {
 
 	if (loading)
 		return (
-			<div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-black uppercase text-slate-300 text-[10px] tracking-[0.5em] animate-pulse">
+			<div className="min-h-screen bg-[#F1F5F9] flex items-center justify-center font-black uppercase text-slate-900 text-xs tracking-[0.5em] animate-pulse">
 				Sincronizando Activo...
 			</div>
 		);
 
 	if (!maquina) return null;
 
+	const labelClass =
+		"text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1";
+	const valueClass = "text-sm font-black text-slate-950 uppercase";
+
 	return (
-		<div className="min-h-screen bg-[#F8FAFC] py-12 px-6">
+		<div className="min-h-screen bg-[#F1F5F9] py-12 px-6">
 			<style jsx global>{`
-				.custom-scrollbar::-webkit-scrollbar { width: 6px; }
-				.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-				.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+				.custom-scrollbar::-webkit-scrollbar { width: 8px; }
+				.custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+				.custom-scrollbar::-webkit-scrollbar-thumb { background: #0f172a; border-radius: 10px; }
 			`}</style>
 
 			<div className="max-w-7xl mx-auto">
@@ -191,25 +194,25 @@ export default function MachineDetailPage() {
 				<div className="flex justify-between items-center mb-12">
 					<button
 						onClick={() => router.push("/dashboard/maquinas")}
-						className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors"
+						className="text-[11px] font-black text-slate-500 uppercase tracking-widest hover:text-blue-700 transition-colors border-b-2 border-transparent hover:border-blue-700"
 					>
-						← Inventario
+						← Volver al Inventario
 					</button>
 					<div className="flex items-center gap-4">
 						{canDelete && (
 							<button
 								onClick={() => setShowDeleteAlert(true)}
-								className="bg-white border border-red-100 text-red-500 hover:bg-red-50 px-6 py-4 rounded-[2rem] font-black text-[9px] uppercase tracking-widest transition-all"
+								className="bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 px-8 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest transition-all shadow-sm active:scale-95"
 							>
-								Borrar
+								Eliminar
 							</button>
 						)}
 						{canEdit && (
 							<button
 								onClick={() => setIsEditingMachine(true)}
-								className="bg-slate-900 text-white px-8 py-4 rounded-[2rem] font-black text-[9px] uppercase tracking-widest hover:bg-blue-600 shadow-lg shadow-slate-200 transition-all"
+								className="bg-slate-950 text-white px-10 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 shadow-xl transition-all active:scale-95 border-b-4 border-black"
 							>
-								Editar
+								Editar Activo
 							</button>
 						)}
 					</div>
@@ -217,71 +220,89 @@ export default function MachineDetailPage() {
 
 				{/* HEADER PRINCIPAL */}
 				<div className="mb-16">
-					<h1 className="text-8xl font-black text-slate-900 tracking-tighter uppercase leading-none break-all">
+					<h1 className="text-8xl font-black text-slate-950 tracking-tighter uppercase leading-[0.85] break-all drop-shadow-sm">
 						{maquina.nombre}
 					</h1>
-					<p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] italic mt-4">
-						{maquina.sistemaoperativo} • {maquina.ram}GB RAM •{" "}
-						{maquina.esservidor ? "SERVER MODE" : "WORKSTATION"}
-					</p>
+					<div className="inline-flex items-center gap-4 bg-white border-2 border-slate-200 px-6 py-3 rounded-2xl mt-6 shadow-sm">
+						<span
+							className={`w-3 h-3 rounded-full ${maquina.esservidor ? "bg-blue-600" : "bg-emerald-500"} animate-pulse`}
+						></span>
+						<p className="text-[11px] font-black text-slate-950 uppercase tracking-[0.2em]">
+							{maquina.sistemaoperativo}{" "}
+							<span className="mx-2 text-slate-300">|</span> {maquina.ram}GB RAM{" "}
+							<span className="mx-2 text-slate-300">|</span>{" "}
+							{maquina.esservidor ? "SERVER MODE" : "WORKSTATION"}
+						</p>
+					</div>
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-					{/* COL 1: REDES */}
+					{/* COL 1: STACK DE RED */}
 					<div className="lg:col-span-4 space-y-10">
-						<div className="bg-slate-900 p-8 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
-							<div className="absolute top-0 right-0 p-6 opacity-[0.07] text-[80px] font-black italic leading-none pointer-events-none text-white">
+						{/* IPv4 */}
+						<div className="bg-slate-950 p-10 rounded-[3.5rem] text-white shadow-2xl relative overflow-hidden border-b-8 border-blue-900">
+							<div className="absolute top-0 right-0 p-6 opacity-10 text-9xl font-black italic pointer-events-none text-blue-500">
 								v4
 							</div>
-							<h2 className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em] mb-8 italic relative z-10">
-								Network IPv4
+							<h2 className="text-[11px] font-black text-blue-400 uppercase tracking-[0.4em] mb-10 italic relative z-10">
+								IPv4 Stack Configuration
 							</h2>
-							<div className="space-y-4 relative z-10">
-								{["privada", "pública", "gateway"].map((type, i) => {
-									const keys = [
-										"direccionipprivadav4",
-										"direccionippublicav4",
-										"puertaenlacev4",
-									];
-									return (
-										<div key={type}>
-											<p className="text-[7px] text-slate-500 uppercase font-black mb-1">
-												{type}
-											</p>
-											<p
-												className={`font-mono text-[11px] ${i === 1 ? "text-blue-200" : "text-white"}`}
-											>
-												{(maquina as any)[keys[i]] || "---"}
-											</p>
-										</div>
-									);
-								})}
+							<div className="space-y-8 relative z-10">
+								{[
+									{
+										label: "IP Privada Principal",
+										key: "direccionipprivadav4",
+										color: "text-white",
+									},
+									{
+										label: "Dirección IP Pública",
+										key: "direccionippublicav4",
+										color: "text-emerald-400",
+									},
+									{
+										label: "Gateway v4",
+										key: "puertaenlacev4",
+										color: "text-blue-300",
+									},
+								].map((item) => (
+									<div
+										key={item.key}
+										className="border-l-2 border-slate-800 pl-6"
+									>
+										<p className="text-[9px] text-slate-500 uppercase font-black mb-2 tracking-widest">
+											{item.label}
+										</p>
+										<p
+											className={`font-mono text-base font-bold ${item.color}`}
+										>
+											{(maquina as any)[item.key] || "NON_CONFIGURED"}
+										</p>
+									</div>
+								))}
 							</div>
 						</div>
 
 						{/* IPv6 */}
-						<div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl relative overflow-hidden">
-							<div className="absolute top-0 right-0 p-6 opacity-[0.03] text-[80px] font-black italic leading-none pointer-events-none text-slate-900">
+						<div className="bg-white p-10 rounded-[3.5rem] border-2 border-slate-200 shadow-xl relative overflow-hidden">
+							<div className="absolute top-0 right-0 p-6 opacity-5 text-9xl font-black italic pointer-events-none text-slate-900">
 								v6
 							</div>
-							<h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 italic relative z-10">
-								Network IPv6
+							<h2 className="text-[11px] font-black text-slate-950 uppercase tracking-[0.4em] mb-10 italic">
+								IPv6 Stack Configuration
 							</h2>
-							<div className="space-y-4 relative z-10">
+							<div className="space-y-8 relative z-10">
 								{[
-									"direccionipprivadav6",
-									"direccionippublicav6",
-									"puertaenlacev6",
-								].map((key) => (
-									<div key={key}>
-										<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
-											{key
-												.replace("direccion", "")
-												.replace("v6", "")
-												.toUpperCase()}
-										</p>
-										<p className="font-mono text-[11px] text-slate-900 break-all">
-											{(maquina as any)[key] || "---"}
+									{ label: "Private v6", key: "direccionipprivadav6" },
+									{ label: "Public v6", key: "direccionippublicav6" },
+									{ label: "Gateway v6", key: "puertaenlacev6" },
+								].map((item) => (
+									<div
+										key={item.key}
+										className="border-l-2 border-slate-100 pl-6"
+									>
+										<p className={labelClass}>{item.label}</p>
+										<p className="font-mono text-xs font-black text-slate-900 break-all leading-relaxed">
+											{(maquina as any)[item.key] || "UNSET"}
 										</p>
 									</div>
 								))}
@@ -289,41 +310,39 @@ export default function MachineDetailPage() {
 						</div>
 
 						{/* SSL */}
-						<div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl relative overflow-hidden">
+						<div className="bg-white p-10 rounded-[3.5rem] border-2 border-slate-200 shadow-xl relative overflow-hidden">
 							<div
-								className={`absolute top-0 right-0 w-2 h-full ${maquina.certificadosslactivo ? "bg-emerald-500" : "bg-red-500"}`}
+								className={`absolute top-0 right-0 w-3 h-full ${maquina.certificadosslactivo ? "bg-emerald-500" : "bg-red-500"}`}
 							></div>
-							<h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 italic">
-								Seguridad SSL
+							<h2 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] mb-10 italic">
+								Seguridad TLS/SSL
 							</h2>
-							<div className="space-y-5">
-								<div className="flex items-center gap-3">
+							<div className="space-y-8">
+								<div
+									className={`inline-flex items-center gap-3 px-5 py-2 rounded-full border-2 ${maquina.certificadosslactivo ? "bg-emerald-50 border-emerald-200 text-emerald-900" : "bg-red-50 border-red-200 text-red-900"}`}
+								>
 									<div
-										className={`w-2 h-2 rounded-full ${maquina.certificadosslactivo ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}
+										className={`w-2 h-2 rounded-full ${maquina.certificadosslactivo ? "bg-emerald-600 animate-pulse" : "bg-red-600"}`}
 									></div>
-									<p className="text-[10px] font-black uppercase text-slate-900">
+									<span className="text-[10px] font-black uppercase tracking-widest">
 										{maquina.certificadosslactivo
-											? "Certificado Activo"
-											: "Sin Protección TLS"}
-									</p>
+											? "Encriptación Activa"
+											: "Vulnerable / Sin SSL"}
+									</span>
 								</div>
-								<div>
-									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
-										Emisor
-									</p>
-									<p className="text-[10px] font-black text-slate-700 uppercase">
-										{maquina.emisorssl || "N/A"}
-									</p>
-								</div>
-								<div>
-									<p className="text-[7px] text-slate-400 uppercase font-black mb-1">
-										Caducidad
-									</p>
-									<p className="text-[10px] font-mono text-blue-600 font-bold">
-										{maquina.caducidadssl
-											? new Date(maquina.caducidadssl).toLocaleDateString()
-											: "SIN FECHA"}
-									</p>
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<p className={labelClass}>Emisor</p>
+										<p className={valueClass}>{maquina.emisorssl || "N/A"}</p>
+									</div>
+									<div>
+										<p className={labelClass}>Caducidad</p>
+										<p className="text-sm font-mono text-blue-700 font-black">
+											{maquina.caducidadssl
+												? new Date(maquina.caducidadssl).toLocaleDateString()
+												: "EXPIRED"}
+										</p>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -331,89 +350,99 @@ export default function MachineDetailPage() {
 
 					{/* COL 2: HARDWARE Y SERVICIOS */}
 					<div className="lg:col-span-4 space-y-10">
-						<div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl">
-							<h2 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-8 italic">
-								Hardware Vinculado
+						<div className="bg-white p-10 rounded-[3.5rem] border-2 border-slate-200 shadow-xl">
+							<h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-10 italic">
+								Unidades de Almacenamiento
 							</h2>
 							{maquina.dispositivos.length > 0 ? (
-								maquina.dispositivos.map((d) => (
-									<div
-										key={d.uuiddispositivo}
-										className="flex justify-between items-center py-4 border-b border-slate-50 last:border-0"
-									>
-										<span className="text-[10px] font-black uppercase text-slate-900">
-											{d.nombre}
-										</span>
-										<span className="text-[10px] font-mono text-blue-600 bg-blue-50 px-3 py-1 rounded-full font-bold">
-											{d.capacidad}GB
-										</span>
-									</div>
-								))
+								<div className="space-y-4">
+									{maquina.dispositivos.map((d) => (
+										<div
+											key={d.uuiddispositivo}
+											className="flex justify-between items-center p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 group hover:border-blue-600 transition-all"
+										>
+											<span className="text-[11px] font-black uppercase text-slate-950">
+												{d.nombre}
+											</span>
+											<span className="text-[11px] font-mono text-white bg-slate-950 px-4 py-1.5 rounded-xl font-bold border-b-4 border-blue-700">
+												{d.capacidad}GB
+											</span>
+										</div>
+									))}
+								</div>
 							) : (
-								<p className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center py-10 border-2 border-dashed border-slate-50 rounded-3xl">
-									Sin dispositivos
-								</p>
+								<div className="py-12 border-4 border-dashed border-slate-100 rounded-[2.5rem] text-center">
+									<p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
+										No Hardware detected
+									</p>
+								</div>
 							)}
 						</div>
 
-						<div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl">
-							<h2 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-10">
-								Servicios Activos
+						<div className="bg-white p-10 rounded-[3.5rem] border-2 border-slate-200 shadow-xl">
+							<h2 className="text-[11px] font-black text-slate-950 uppercase tracking-[0.4em] mb-10 italic">
+								Servicios en Ejecución
 							</h2>
 							{servicios.length > 0 ? (
-								servicios.map((s) => (
-									<button
-										key={s.uuidservicio}
-										onClick={() =>
-											router.push(`/dashboard/servicios/${s.uuidservicio}`)
-										}
-										className="w-full text-left p-6 rounded-[2.5rem] bg-slate-50 hover:bg-white border-2 border-transparent hover:border-blue-600 transition-all mb-4 last:mb-0 shadow-sm group"
-									>
-										<h3 className="text-[11px] font-black uppercase text-slate-900 group-hover:text-blue-600 transition-colors">
-											{s.nombreservicio}
-										</h3>
-										<p className="text-[8px] text-slate-400 font-bold uppercase">
-											{s.softwarebase}
-										</p>
-									</button>
-								))
+								<div className="space-y-4">
+									{servicios.map((s) => (
+										<button
+											key={s.uuidservicio}
+											onClick={() =>
+												router.push(`/dashboard/servicios/${s.uuidservicio}`)
+											}
+											className="w-full text-left p-6 rounded-[2.5rem] bg-white border-2 border-slate-200 hover:border-blue-700 hover:shadow-lg transition-all group active:scale-95 border-b-4"
+										>
+											<h3 className="text-[12px] font-black uppercase text-slate-950 group-hover:text-blue-700 mb-1">
+												{s.nombreservicio}
+											</h3>
+											<p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">
+												{s.softwarebase}
+											</p>
+										</button>
+									))}
+								</div>
 							) : (
-								<p className="text-[9px] font-black text-slate-300 uppercase text-center">
-									No se detectan servicios
+								<p className="text-[10px] font-black text-slate-400 uppercase text-center py-6">
+									0 Procesos activos
 								</p>
 							)}
 						</div>
 					</div>
 
-					{/* COL 3: RESERVAS */}
+					{/* COL 3: RESERVAS (COLOR) */}
 					<div className="lg:col-span-4">
-						<div className="bg-blue-600 p-10 rounded-[3.5rem] text-white shadow-2xl min-h-[400px]">
-							<h2 className="text-[10px] font-black text-blue-100 uppercase tracking-[0.3em] mb-10 italic">
+						<div className="bg-blue-700 p-10 rounded-[3.5rem] text-white shadow-2xl min-h-[500px] border-b-[12px] border-blue-900 relative">
+							<h2 className="text-[11px] font-black text-blue-200 uppercase tracking-[0.4em] mb-10 italic">
 								Timeline de Reservas
 							</h2>
 							{reservas.length > 0 ? (
-								reservas.map((r) => (
-									<button
-										key={r.uuidcalendario}
-										onClick={() =>
-											router.push(
-												`/dashboard/reserva/${uuid}/${r.uuidcalendario}`,
-											)
-										}
-										className="w-full text-left p-7 rounded-[2rem] bg-blue-700/30 hover:bg-white hover:text-blue-600 transition-all mb-4 relative overflow-hidden group"
-									>
-										<h4 className="text-[13px] font-black uppercase mb-2">
-											{r.nombre_reserva}
-										</h4>
-										<p className="text-[8px] font-bold opacity-60 uppercase">
-											Responsable: {r.nombre_completo_responsable}
-										</p>
-									</button>
-								))
+								<div className="space-y-5">
+									{reservas.map((r) => (
+										<button
+											key={r.uuidcalendario}
+											onClick={() =>
+												router.push(
+													`/dashboard/reserva/${uuid}/${r.uuidcalendario}`,
+												)
+											}
+											className="w-full text-left p-8 rounded-[2.5rem] bg-blue-800/50 hover:bg-white hover:text-blue-800 transition-all relative overflow-hidden group shadow-lg"
+										>
+											<h4 className="text-sm font-black uppercase mb-2 leading-tight">
+												{r.nombre_reserva}
+											</h4>
+											<div className="h-[2px] w-8 bg-blue-400 group-hover:bg-blue-800 mb-3 transition-colors"></div>
+											<p className="text-[9px] font-black uppercase tracking-widest opacity-70">
+												RESP: {r.nombre_completo_responsable}
+											</p>
+										</button>
+									))}
+								</div>
 							) : (
-								<div className="h-full flex flex-col items-center justify-center text-center opacity-40">
-									<p className="text-[10px] font-black uppercase tracking-widest">
-										Sin reservas activas
+								<div className="absolute inset-0 flex flex-col items-center justify-center opacity-30 text-center px-10">
+									<div className="text-6xl mb-4">📅</div>
+									<p className="text-[11px] font-black uppercase tracking-[0.5em]">
+										System available
 									</p>
 								</div>
 							)}
@@ -424,31 +453,32 @@ export default function MachineDetailPage() {
 
 			{/* MODAL BORRADO */}
 			{showDeleteAlert && (
-				<div className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[100] flex items-center justify-center p-6">
-					<div className="bg-white w-full max-w-md rounded-[3rem] p-12 shadow-2xl text-center">
-						<div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8 text-red-600 text-3xl font-black">
+				<div className="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-[100] flex items-center justify-center p-6">
+					<div className="bg-white w-full max-w-md rounded-[4rem] p-12 shadow-2xl text-center border-2 border-red-500">
+						<div className="w-24 h-24 bg-red-100 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 text-red-600 text-5xl font-black shadow-inner">
 							!
 						</div>
-						<h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900 mb-4">
-							¿Eliminar Activo?
+						<h3 className="text-3xl font-black uppercase tracking-tighter text-slate-950 mb-4">
+							Eliminar Activo
 						</h3>
-						<p className="text-slate-400 text-[11px] font-bold uppercase mb-10 tracking-widest leading-relaxed">
-							Purgar <span className="text-red-500">{maquina.nombre}</span> de
-							forma irreversible.
+						<p className="text-slate-500 text-[11px] font-black uppercase mb-10 tracking-widest leading-relaxed">
+							Esta operación purgará{" "}
+							<span className="text-red-600 underline">{maquina.nombre}</span>{" "}
+							del nodo central de forma irreversible.
 						</p>
 						<div className="flex flex-col gap-4">
 							<button
 								onClick={handleDeleteMachine}
 								disabled={isDeleting}
-								className={`w-full py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all ${isDeleting ? "bg-slate-100 text-slate-400" : "bg-red-600 text-white hover:bg-red-700 shadow-xl"}`}
+								className={`w-full py-7 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.4em] transition-all border-b-8 ${isDeleting ? "bg-slate-200 text-slate-400 border-slate-300" : "bg-red-600 text-white border-red-800 hover:bg-red-700 shadow-xl"}`}
 							>
-								{isDeleting ? "Eliminando..." : "Confirmar"}
+								{isDeleting ? "BORRANDO..." : "CONFIRMAR PURGA"}
 							</button>
 							<button
 								onClick={() => setShowDeleteAlert(false)}
-								className="w-full py-6 rounded-2xl font-black text-[10px] uppercase text-slate-400 hover:text-slate-900 transition-colors"
+								className="w-full py-4 rounded-2xl font-black text-[11px] uppercase text-slate-400 hover:text-slate-950 transition-colors"
 							>
-								Cancelar
+								Abortar operación
 							</button>
 						</div>
 					</div>
@@ -457,36 +487,44 @@ export default function MachineDetailPage() {
 
 			{/* MODAL EDICIÓN */}
 			{isEditingMachine && (
-				<div className="fixed inset-0 bg-slate-900/95 backdrop-blur-2xl z-50 flex items-center justify-center p-4 md:p-10">
-					<div className="bg-white w-full max-w-6xl rounded-[4rem] shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
-						<div className="px-12 lg:px-16 pt-12 pb-8 flex justify-between items-center border-b border-slate-50">
-							<h2 className="text-4xl font-black uppercase tracking-tighter">
-								Sincronizar <span className="text-blue-600">Activo</span>
+				<div className="fixed inset-0 bg-slate-950/95 backdrop-blur-2xl z-50 flex items-center justify-center p-4 md:p-10">
+					<div className="bg-[#F1F5F9] w-full max-w-6xl rounded-[4rem] shadow-2xl flex flex-col max-h-[95vh] overflow-hidden border-2 border-slate-300">
+						<div className="bg-white px-12 lg:px-16 pt-12 pb-10 flex justify-between items-center border-b-4 border-slate-200">
+							<h2 className="text-5xl font-black uppercase tracking-tighter text-slate-950">
+								Sincronizar <span className="text-blue-700">Activo</span>
 							</h2>
 							<button
 								onClick={() => setIsEditingMachine(false)}
-								className="text-[10px] font-black uppercase text-slate-400 bg-slate-50 px-6 py-3 rounded-full italic hover:bg-slate-100 transition-colors"
+								className="text-[11px] font-black uppercase text-slate-500 bg-slate-100 px-8 py-4 rounded-full italic hover:bg-red-50 hover:text-red-600 transition-all border-2 border-transparent hover:border-red-200"
 							>
-								[ Cerrar ]
+								[ CANCELAR ]
 							</button>
 						</div>
 
-						<div className="flex-1 overflow-y-auto px-12 lg:px-16 py-10 custom-scrollbar">
-							<div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+						<div className="flex-1 overflow-y-auto px-12 lg:px-16 py-12 custom-scrollbar">
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-12">
 								{/* INFO BASE */}
-								<div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-10 rounded-[3rem] mb-4">
+								<div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8 bg-white p-12 rounded-[3.5rem] border-2 border-slate-200 shadow-sm">
 									{[
-										{ label: "Hostname", key: "nombre", type: "text" },
-										{ label: "S.O.", key: "sistemaoperativo", type: "text" },
-										{ label: "RAM (GB)", key: "ram", type: "number" },
+										{
+											label: "Hostname / Identificador",
+											key: "nombre",
+											type: "text",
+										},
+										{
+											label: "Sistema Operativo",
+											key: "sistemaoperativo",
+											type: "text",
+										},
+										{ label: "RAM Asignada (GB)", key: "ram", type: "number" },
 									].map((f) => (
-										<div key={f.key} className="flex flex-col gap-2">
-											<label className="text-[9px] font-black uppercase text-slate-400 ml-4">
+										<div key={f.key} className="flex flex-col gap-3">
+											<label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">
 												{f.label}
 											</label>
 											<input
 												type={f.type}
-												className="bg-white rounded-2xl p-5 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm"
+												className="bg-slate-50 border-2 border-slate-200 rounded-[1.5rem] p-6 font-black text-slate-950 text-base outline-none focus:border-blue-700 focus:ring-4 focus:ring-blue-50 transition-all"
 												defaultValue={(maquina as any)[f.key]}
 												onChange={(e) =>
 													setMachineForm({
@@ -503,69 +541,78 @@ export default function MachineDetailPage() {
 								</div>
 
 								{/* IPv4 Stack */}
-								<div className="space-y-4 bg-slate-50/50 p-8 rounded-[2.5rem]">
-									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-blue-600 pl-4 italic mb-6">
-										IPv4 Stack
+								<div className="space-y-6 bg-white p-10 rounded-[3.5rem] border-2 border-slate-200">
+									<h3 className="text-[12px] font-black uppercase text-slate-950 border-l-8 border-blue-700 pl-4 italic mb-8">
+										IPv4 Configuration
 									</h3>
 									{[
 										"direccionipprivadav4",
 										"direccionippublicav4",
 										"puertaenlacev4",
 									].map((key) => (
-										<input
-											key={key}
-											className="w-full bg-white border border-slate-100 rounded-xl p-4 font-mono text-xs focus:ring-2 focus:ring-blue-600 outline-none"
-											placeholder={key
-												.replace("direccionip", "")
-												.replace("v4", "")
-												.toUpperCase()}
-											defaultValue={(maquina as any)[key] || ""}
-											onChange={(e) =>
-												setMachineForm({
-													...machineForm,
-													[key]: e.target.value,
-												})
-											}
-										/>
+										<div key={key}>
+											<label className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-2 block">
+												{key.includes("privada")
+													? "IP PRIVADA"
+													: key.includes("publica")
+														? "IP PÚBLICA"
+														: "GATEWAY"}
+											</label>
+											<input
+												className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-mono text-sm font-bold text-slate-950 focus:border-blue-700 outline-none transition-all"
+												defaultValue={(maquina as any)[key] || ""}
+												onChange={(e) =>
+													setMachineForm({
+														...machineForm,
+														[key]: e.target.value,
+													})
+												}
+											/>
+										</div>
 									))}
 								</div>
 
 								{/* IPv6 Stack */}
-								<div className="space-y-4 bg-slate-50/50 p-8 rounded-[2.5rem]">
-									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-slate-400 pl-4 italic mb-6">
-										IPv6 Stack
+								<div className="space-y-6 bg-white p-10 rounded-[3.5rem] border-2 border-slate-200">
+									<h3 className="text-[12px] font-black uppercase text-slate-950 border-l-8 border-slate-400 pl-4 italic mb-8">
+										IPv6 Configuration
 									</h3>
 									{[
 										"direccionipprivadav6",
 										"direccionippublicav6",
 										"puertaenlacev6",
 									].map((key) => (
-										<input
-											key={key}
-											className="w-full bg-white border border-slate-100 rounded-xl p-4 font-mono text-[10px] focus:ring-2 focus:ring-slate-900 outline-none"
-											placeholder={key
-												.replace("direccionip", "")
-												.replace("v6", "")
-												.toUpperCase()}
-											defaultValue={(maquina as any)[key] || ""}
-											onChange={(e) =>
-												setMachineForm({
-													...machineForm,
-													[key]: e.target.value,
-												})
-											}
-										/>
+										<div key={key}>
+											<label className="text-[9px] font-black text-slate-400 uppercase ml-4 mb-2 block">
+												v6{" "}
+												{key.includes("privada")
+													? "PRIV"
+													: key.includes("publica")
+														? "PUB"
+														: "GW"}
+											</label>
+											<input
+												className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-mono text-[11px] font-bold text-slate-950 focus:border-slate-950 outline-none transition-all"
+												defaultValue={(maquina as any)[key] || ""}
+												onChange={(e) =>
+													setMachineForm({
+														...machineForm,
+														[key]: e.target.value,
+													})
+												}
+											/>
+										</div>
 									))}
 								</div>
 
 								{/* Seguridad */}
-								<div className="space-y-4 bg-slate-50/50 p-8 rounded-[2.5rem]">
-									<h3 className="text-[11px] font-black uppercase text-slate-900 border-l-4 border-emerald-500 pl-4 italic mb-6">
-										TLS / Server
+								<div className="space-y-6 bg-white p-10 rounded-[3.5rem] border-2 border-slate-200">
+									<h3 className="text-[12px] font-black uppercase text-slate-950 border-l-8 border-emerald-500 pl-4 italic mb-8">
+										Security & Role
 									</h3>
 									<input
-										className="w-full bg-white border border-slate-100 rounded-xl p-4 font-bold text-xs"
-										placeholder="Emisor SSL"
+										className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-black text-xs text-slate-950 focus:border-emerald-500 outline-none"
+										placeholder="EMISOR SSL"
 										defaultValue={maquina.emisorssl || ""}
 										onChange={(e) =>
 											setMachineForm({
@@ -576,7 +623,7 @@ export default function MachineDetailPage() {
 									/>
 									<input
 										type="date"
-										className="w-full bg-white border border-slate-100 rounded-xl p-4 font-bold text-xs"
+										className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-black text-xs text-slate-950 focus:border-emerald-500 outline-none"
 										defaultValue={maquina.caducidadssl?.split("T")[0] || ""}
 										onChange={(e) =>
 											setMachineForm({
@@ -586,10 +633,12 @@ export default function MachineDetailPage() {
 										}
 									/>
 									<div className="grid grid-cols-2 gap-4">
-										<label className="flex items-center justify-center gap-2 bg-white border border-slate-100 p-4 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors">
+										<label
+											className={`flex items-center justify-center gap-3 p-5 rounded-2xl cursor-pointer transition-all border-4 ${(machineForm.certificadosslactivo ?? maquina.certificadosslactivo) ? "bg-emerald-50 border-emerald-400 text-emerald-900" : "bg-slate-50 border-slate-200 text-slate-400"}`}
+										>
 											<input
 												type="checkbox"
-												className="accent-blue-600"
+												className="w-5 h-5 accent-emerald-600"
 												defaultChecked={maquina.certificadosslactivo || false}
 												onChange={(e) =>
 													setMachineForm({
@@ -598,14 +647,16 @@ export default function MachineDetailPage() {
 													})
 												}
 											/>
-											<span className="text-[9px] font-black uppercase">
+											<span className="text-[11px] font-black uppercase">
 												SSL
 											</span>
 										</label>
-										<label className="flex items-center justify-center gap-2 bg-slate-900 text-white p-4 rounded-xl cursor-pointer hover:bg-blue-600 transition-colors">
+										<label
+											className={`flex items-center justify-center gap-3 p-5 rounded-2xl cursor-pointer transition-all border-4 ${(machineForm.esservidor ?? maquina.esservidor) ? "bg-blue-600 border-blue-400 text-white" : "bg-slate-50 border-slate-200 text-slate-400"}`}
+										>
 											<input
 												type="checkbox"
-												className="accent-white"
+												className="w-5 h-5 accent-white"
 												defaultChecked={maquina.esservidor}
 												onChange={(e) =>
 													setMachineForm({
@@ -614,20 +665,20 @@ export default function MachineDetailPage() {
 													})
 												}
 											/>
-											<span className="text-[9px] font-black uppercase">
-												Server
+											<span className="text-[11px] font-black uppercase">
+												SERVER
 											</span>
 										</label>
 									</div>
 								</div>
 							</div>
 						</div>
-						<div className="p-10 bg-white border-t border-slate-50">
+						<div className="p-12 bg-white border-t-4 border-slate-200 shadow-inner">
 							<button
 								onClick={handleUpdateMachine}
-								className="w-full bg-slate-900 text-white py-10 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.6em] hover:bg-blue-600 transition-all shadow-2xl active:scale-[0.99]"
+								className="w-full bg-slate-950 text-white py-12 rounded-[3rem] font-black text-2xl uppercase tracking-[0.8em] hover:bg-blue-700 transition-all shadow-2xl active:scale-[0.98] border-b-[12px] border-black"
 							>
-								Confirmar cambios en activo
+								Confirmar Sincronización
 							</button>
 						</div>
 					</div>

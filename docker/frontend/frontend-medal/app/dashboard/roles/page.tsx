@@ -101,7 +101,7 @@ export default function RolesPage() {
 							setSearchTerm(e.target.value);
 							setPage(1);
 						}}
-						className="flex-1 bg-transparent border-none focus:ring-0 px-4 font-bold text-xs tracking-widest uppercase outline-none"
+						className="flex-1 bg-transparent border-none focus:ring-0 px-4 font-black text-[13px] text-slate-950 tracking-[0.2em] uppercase outline-none placeholder:text-slate-400"
 					/>
 				</div>
 

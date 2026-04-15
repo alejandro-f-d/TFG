@@ -108,7 +108,7 @@ export default function DispositivosPage() {
 								placeholder="BUSCAR DISPOSITIVO..."
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
-								className="w-full bg-white border-2 border-slate-100 p-4 pl-12 rounded-3xl text-xs font-black tracking-widest outline-none focus:border-blue-500 transition-all shadow-sm"
+								className="w-full bg-white border-2 border-slate-950 p-5 pl-14 rounded-3xl text-xs font-black text-slate-950 tracking-[0.2em] outline-none focus:border-blue-700 focus:ring-4 focus:ring-blue-50 transition-all shadow-md placeholder:text-slate-400"
 							/>
 							<span className="absolute left-5 top-4 text-slate-300">🔍</span>
 						</div>
