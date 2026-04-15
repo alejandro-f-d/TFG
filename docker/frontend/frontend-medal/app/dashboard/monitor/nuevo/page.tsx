@@ -143,7 +143,7 @@ export default function NuevoMonitorPage() {
 								minLength={3}
 								maxLength={50}
 								type="text"
-								placeholder="Ej: API de Pagos"
+								placeholder="Ej: API Servicio de Ollama."
 								className="w-full bg-white border border-slate-300 p-3 rounded-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
 								value={formData.nombreObjetivo}
 								onChange={(e) =>

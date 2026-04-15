@@ -14,6 +14,7 @@ export const MONITOR_QUERY = {
 
     CONCAT(u.nombre, ' ', u.apellido1, ' ', COALESCE(u.apellido2, '')) AS responsable_nombre,
     u.correoinstitucional AS responsable_email,
+    u.uuidusuario,
 
     met.nombre AS metodo_http,
 
@@ -126,24 +127,30 @@ WHERE m.uuidmonitoreo = $1;`,
         ORDER BY m.fechaCreacion DESC
         
         LIMIT $1 OFFSET $2;`,
-	OBTENER_HISTORICO: ` SELECT 
-             mw.idMonitor,
-             mw.nombreObjetivo,
-             mw.direccion,
-             mw.statusActual,
-             mm.nombre AS metodo,
-             (
-                 SELECT JSON_AGG(json_build_object(
-                     'fecha', h.fecha_registro, 
-                     'disponible', h.disponible,
-                     'resultado', h.resultado
-                 ) ORDER BY h.fecha_registro DESC)
-                 FROM medal.historicoMonitoreo h
-                 WHERE h.idMonitor = mw.idMonitor
-             ) as historico
-         FROM medal.monitoreoWeb mw
-         INNER JOIN medal.metodoMonitoreoWeb mm ON mw.idMetodo = mm.idMetodo
-         WHERE mw.uuidmonitoreo = $1;`,
+	OBTENER_HISTORICO: `
+    SELECT 
+        mw.idMonitor,
+        mw.nombreObjetivo,
+        mw.direccion,
+        mw.statusActual,
+        mm.nombre AS metodo,
+        (
+            SELECT JSON_AGG(t)
+            FROM (
+                SELECT 
+                    h.fecha_registro AS fecha, 
+                    h.disponible, 
+                    h.resultado
+                FROM medal.historicoMonitoreo h
+                WHERE h.idMonitor = mw.idMonitor
+                ORDER BY h.fecha_registro DESC
+                LIMIT 500
+            ) t
+        ) as historico
+    FROM medal.monitoreoWeb mw
+    INNER JOIN medal.metodoMonitoreoWeb mm ON mw.idMetodo = mm.idMetodo
+    WHERE mw.uuidmonitoreo = $1;
+    `,
 	SUSCRIBIR_PERSONA: `INSERT INTO medal.suscripcionhistorico(idmonitor, idusuario) VALUES ($1, $2);`,
 	GET_ID_BY_UUID: `SELECT idmonitor from medal.monitoreoweb where uuidmonitoreo = $1; `,
 	GET_ID_CRE_UUID: `SELECT idusuario from medal.monitoreoweb WHERE uuidmonitoreo = $1;`,
@@ -163,4 +170,13 @@ WHERE m.uuidmonitoreo = $1;`,
         descripcion 
     FROM medal.metodomonitoreoweb
     ORDER BY idmetodo ASC`,
+	OBTENER_ESTADO_SUS: `
+    SELECT EXISTS (
+        SELECT 1 
+        FROM medal.suscripcionhistorico sh
+        INNER JOIN medal.monitoreoweb mw ON sh.idmonitor = mw.idmonitor
+        WHERE mw.uuidmonitoreo = $1 
+          AND sh.idusuario = $2
+    ) AS "estaSuscrito";
+    `,
 };

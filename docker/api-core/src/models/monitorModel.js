@@ -225,5 +225,17 @@ class MonitorModel {
 			throw error;
 		}
 	}
+	static async esSuscriptor(uuidMonitoreo, idUsuario) {
+		try {
+			const res = await pool.query(MONITOR_QUERY.OBTENER_ESTADO_SUS, [
+				uuidMonitoreo,
+				idUsuario,
+			]);
+			return res.rows[0].estaSuscrito;
+		} catch (error) {
+			console.error("Error al verificar suscripción:", error);
+			throw error;
+		}
+	}
 }
 export default MonitorModel;

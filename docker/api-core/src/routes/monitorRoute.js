@@ -10,6 +10,7 @@ import {
 	suscribeMonitor,
 	unsuscribeMonitor,
 	getMetodosMonitoreo,
+	getSuscripcion,
 } from "../controller/monitorController.js";
 import { monitorSchema } from "../schemas/index.js";
 const router = express.Router();
@@ -822,4 +823,6 @@ router.post(
 	[verificarToken, tienePermiso("monitor:listar")],
 	unsuscribeMonitor,
 );
+
+router.get("/:uuid/estadoSuscripcion", [verificarToken], getSuscripcion);
 export default router;
