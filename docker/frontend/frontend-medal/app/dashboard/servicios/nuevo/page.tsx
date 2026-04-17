@@ -38,7 +38,7 @@ export default function CrearServicioPage() {
 	const [formData, setFormData] = useState({
 		nombreServicio: "",
 		descripcionTecnica: "",
-		entorno: "",
+		entorno: "En producción",
 		publico: false,
 		softwareBase: "",
 		nivelSeveridad: "alto",
@@ -151,13 +151,10 @@ export default function CrearServicioPage() {
 			return;
 		}
 
-		// Identificamos la máquina principal (la primera seleccionada)
 		const idPrincipal = formData.servidoresIds[0];
 		const maqPrincipal = maquinas.find((m) => m.idmaquina === idPrincipal);
-
 		if (!maqPrincipal) return;
 
-		// El backend suele esperar en el array 'servidores' el resto de IDs (excluyendo el principal del path)
 		const servidoresSecundariosIds = formData.servidoresIds.slice(1);
 
 		const payload = {
@@ -169,7 +166,7 @@ export default function CrearServicioPage() {
 			nivelSeveridad: formData.nivelSeveridad,
 			idPeticion: Number(formData.idPeticion),
 			idUsuario: userId ? parseInt(userId) : 1,
-			servidores: servidoresSecundariosIds, // Array de IDs numéricos
+			servidores: servidoresSecundariosIds,
 			puertosAbiertos: puertos.map((p) => ({
 				numeroPuertoMaquina: Number(p.numeroPuertoMaquina),
 				protocolo: p.protocolo,
@@ -256,20 +253,21 @@ export default function CrearServicioPage() {
 										<label className="text-[10px] font-black text-slate-400 uppercase ml-2 italic">
 											Entorno
 										</label>
-										<input
-											type="text"
-											list="entornos-list"
+										{/* DESPLEGABLE DE ENTORNO ACTUALIZADO */}
+										<select
+											required
 											value={formData.entorno}
 											onChange={(e) =>
 												setFormData({ ...formData, entorno: e.target.value })
 											}
-											className="w-full bg-slate-50 border-none rounded-2xl p-5 mt-2 font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 uppercase"
-										/>
-										<datalist id="entornos-list">
-											<option value="PROD" />
-											<option value="STAGING" />
-											<option value="DEV" />
-										</datalist>
+											className="w-full bg-slate-50 border-none rounded-2xl p-5 mt-2 font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 uppercase appearance-none"
+										>
+											<option value="Activo">Activo</option>
+											<option value="Desactivado">Desactivado</option>
+											<option value="Eliminado">Eliminado</option>
+											<option value="En producción">En producción</option>
+											<option value="Error">Error</option>
+										</select>
 									</div>
 									<div className="space-y-2">
 										<label className="text-[10px] font-black text-slate-400 uppercase ml-2 italic">

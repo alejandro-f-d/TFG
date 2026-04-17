@@ -9,7 +9,7 @@ interface Puerto {
 	puerto: number;
 	protocolo: string;
 	nombre: string;
-	puertoVirtual: number; // Unificado con el JSON del backend
+	puertoVirtual: number;
 }
 
 interface MaquinaInfo {
@@ -43,7 +43,7 @@ export default function DetalleServicioEspecifico() {
 
 	const [servicio, setServicio] = useState<ServicioInfo | null>(null);
 	const [maquinasInfo, setMaquinasInfo] = useState<MaquinaInfo[]>([]);
-	const [puertosEdit, setPuertosEdit] = useState<Puerto[]>([]); // Usamos la misma interfaz
+	const [puertosEdit, setPuertosEdit] = useState<Puerto[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isEditing, setIsEditing] = useState(false);
 	const [saving, setSaving] = useState(false);
@@ -84,7 +84,6 @@ export default function DetalleServicioEspecifico() {
 				const s = dataServ.info as ServicioInfo;
 				setServicio(s);
 
-				// Sincronizamos maquinas
 				const promesasMaquinas = s.lista_maquinas.map((uuid: string) =>
 					fetch(`${baseUrl}/api/maquina/${uuid}`, {
 						headers: { Authorization: `Bearer ${token}` },
@@ -94,7 +93,6 @@ export default function DetalleServicioEspecifico() {
 				const resultados = await Promise.all(promesasMaquinas);
 				setMaquinasInfo(resultados.filter((r) => r.info).map((r) => r.info));
 
-				// Sincronizamos puertosEdit usando 'puertoVirtual'
 				setPuertosEdit(
 					s.lista_puertos.map((p) => ({
 						id: p.id,
@@ -161,7 +159,6 @@ export default function DetalleServicioEspecifico() {
 		}
 	};
 
-	// ... (executeDelete se mantiene igual)
 	const executeDelete = async () => {
 		setDeleting(true);
 		try {
@@ -189,7 +186,6 @@ export default function DetalleServicioEspecifico() {
 
 	return (
 		<div className="min-h-screen bg-[#F8FAFC] py-12 px-8 font-sans relative">
-			{/* MODAL DE BORRADO - se mantiene igual */}
 			{showDeleteModal && (
 				<div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-6">
 					<div className="bg-white p-12 rounded-[3.5rem] shadow-2xl max-w-lg w-full text-center border border-slate-100">
@@ -226,7 +222,6 @@ export default function DetalleServicioEspecifico() {
 			)}
 
 			<div className="max-w-6xl mx-auto">
-				{/* HEADER - se mantiene igual */}
 				<div className="flex flex-col md:flex-row justify-between items-end mb-16 border-b-2 border-slate-100 pb-12 gap-6">
 					<div>
 						<button
@@ -260,7 +255,6 @@ export default function DetalleServicioEspecifico() {
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-					{/* ASIDE - se mantiene igual */}
 					<div className="space-y-6">
 						<div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-2xl">
 							<p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-4 italic">
@@ -304,7 +298,6 @@ export default function DetalleServicioEspecifico() {
 							onSubmit={handleSave}
 							className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm space-y-10"
 						>
-							{/* ... CAMPOS DE TEXTO se mantienen igual ... */}
 							<div className="space-y-8">
 								<div className="grid grid-cols-2 gap-8">
 									<div className="space-y-2">
@@ -312,16 +305,19 @@ export default function DetalleServicioEspecifico() {
 											Entorno
 										</label>
 										{isEditing ? (
+											/* DESPLEGABLE ACTUALIZADO */
 											<select
 												value={servicio.entorno}
 												onChange={(e) =>
 													setServicio({ ...servicio, entorno: e.target.value })
 												}
-												className="w-full p-5 bg-slate-50 rounded-2xl font-black text-[10px] uppercase outline-none border-2 border-transparent focus:border-blue-500 appearance-none"
+												className="w-full p-5 bg-slate-50 rounded-2xl font-black text-[10px] uppercase outline-none border-2 border-transparent focus:border-blue-500 appearance-none cursor-pointer"
 											>
-												<option value="PROD">PRODUCCIÓN</option>
-												<option value="DEV">DESARROLLO</option>
-												<option value="STAGING">STAGING</option>
+												<option value="Activo">Activo</option>
+												<option value="Desactivado">Desactivado</option>
+												<option value="Eliminado">Eliminado</option>
+												<option value="En producción">En producción</option>
+												<option value="Error">Error</option>
 											</select>
 										) : (
 											<div className="p-5 bg-slate-50 rounded-2xl font-black text-slate-900 text-xs tracking-widest uppercase">
@@ -356,7 +352,7 @@ export default function DetalleServicioEspecifico() {
 										/>
 									) : (
 										<div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
-											<p className="text-slate-600 font-medium leading-relaxed italic text-lg italic text-lg">
+											<p className="text-slate-600 font-medium leading-relaxed italic text-lg">
 												"{servicio.descripciontecnica}"
 											</p>
 										</div>
@@ -364,7 +360,6 @@ export default function DetalleServicioEspecifico() {
 								</div>
 							</div>
 
-							{/* SECCIÓN PUERTOS ACTUALIZADA */}
 							<div className="pt-10 border-t border-slate-100 space-y-6">
 								<div className="flex justify-between items-center">
 									<h4 className="text-[10px] font-black uppercase text-blue-600 tracking-widest italic">
