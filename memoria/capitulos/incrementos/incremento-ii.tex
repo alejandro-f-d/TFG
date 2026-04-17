@@ -163,6 +163,8 @@ En la figura \ref{fig:entidad-relacion} se encuentra el diagrama entidad relaci�
 
 A la hora de generación de los campos de la base de datos nos apoyamos al sistema previo existente de un formulario que recoge esta información. Este documento se puede encontrar en la bibliografía.
 
+La información del entidad relación se puede encontrar en: \href{https://dbdocs.io/alejandro.fisac.contact/tfg}{DB DOCS.io}.
+
 \clearpage
 
 \begin{sidewaysfigure}[p]
@@ -376,7 +378,7 @@ La infraestructura se va a basar en microservicios apoyados en docker. El sistem
   \item \texttt{Apache Tomcat}: Gestor de servicios Apache para @firma. Este servicio aprovecha los certificados del nginx para su comunicación segura. Este servicio se podría utilizar para algún caso de uso adicional en caso de ser necesario en un futuro.  
 \end{itemize}
 
-Se selecciona una arquitectura modular ya que estos sistemas permiten aislamiento y portabilidad con respecto a las características de la máquina. En un sistema de mayor cantidad de usuarios que en el caso de este laboratorio permitiría una mayor resilencia con el uso de herramientas como un loadbalancer que opere con diferentes instancias de la API levantando instancias según sea necesario. En la parte del almacenado de datos, este sistema permitiría la redundancia de datos del sistema en varias bases de datos si fuera necesario.
+Se selecciona una arquitectura modular basada en docker ya que estos sistemas permiten aislamiento y portabilidad con respecto a las características de la máquina. En un sistema de mayor cantidad de usuarios que en el caso de este laboratorio permitiría una mayor resilencia con el uso de herramientas como un loadbalancer que opere con diferentes instancias de la API levantando instancias según sea necesario con orquestadores como Kubernetes. En la parte del almacenado de datos, este sistema permitiría la redundancia de datos del sistema en varias bases de datos si fuera necesario.
 
 En la siguiente figura \ref{fig:infraestructura_inc_ii} encontramos un diagrama del diseño de la arquitectura del sistema, la carga de trabajo de interactuar con la página web es asumida por la API. En cambio, determinadas tareas como el envío de correos electrónicos, monitorización de páginas web, ejecución del CRON es realizado por el WORKER mediante la delegación de tareas de la API por paso de mensajes al worker permitiendo menores tiempo de respuesta de los usuarios por parte de la API.
 
@@ -433,7 +435,7 @@ Para las actividades con una perioricidad determinada se hace uso del servicio d
 
 \subsection{Diseño lógico del proceso de firma:}
 
-El proceso de la firma se puede encontrar en el siguiente diagrama \ref{fig:detalle_firmas}. 
+El proceso de firma se puede ver en la figura\ref{fig:detalle_firmas} a través de un flujo dividido en dos etapas. En la primera de ellas, tras la solicitud del servicio por parte del usuario, la API gestiona la creación de un PDF mediante el worker del sistema. En este documento se le añade una firma única del servidor autofirmada, que aunque carece de validez legal cumple con los requisitos de la trazabilidad y verifica que no se le envía otro pdf distinto. Seguidamente, se inicia la fase de firmas propiamente dicha: una vez que el usuario firma y envía el archivo desde la web, el revisor recibe un aviso para validarlo, permitiendo que el documento avance hacia la autorización final del jefe de laboratorio. Además, en cada una de estas entregas, el sistema realiza una validación interna con el DSS para verificar la autenticidad de la firmas electrónicas y que se encuentra presente y validada la original del servidor.
 
 \begin{figure}[H] 
  \centering 

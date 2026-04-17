@@ -198,7 +198,12 @@ Para el cálculo de los puntos función se utiliza la técnica de Puntos de Func
 % Para la entrega intermedia se han desarrollado diferentes elementos. Se ha realizado el modelo teórico completo de la arquitectura con los respectivos módulos. Se ha realizado la estructura de datos relacional que soporta la infraestructura de servicios de la página web e inventariaje de elementos presentes en el laboratorio. Se ha implementado en gran medida el backend relativo a la página web excluyendo la parte de las integraciones que queda pendiente para el desarrollo en el resto del trabajo. 
 
 
-Durante la primera parte del proyecto previo a la entrega intermedia, se ha implementado la parte principal del proyecto, el core, alcanzando una serie de objetivos importantes en el desarrollo. En primer lugar, se ha diseñado la parte arquitectónica del proyecto la que se ha diseñado en módulos apoyados en tres tipos de base de datos. Una primera de ámbito relacional encargada de soportar el almacenamiento persistente del usuario y una segunda no relacional usada para la comunicación de paso de mensajes entre los módulos y por último, una base de datos de objetos para el almacenamiento de documentos. En segundo lugar, se ha empezado con la implementación del lado servidor con una API REST encargada de crear y gestionar los diferentes recursos del sistema. En tercer lugar, se ha creado un prototipo de alta fidelidad del sistema que está sirviendo como guía en el desarrollo del frontend del sistema. Por último, en el ámbito de las integraciones de los servicios de terceros en el sistema se ha empezado a explorar para su posterior implementación y viabilidad en el sistema.
+Durante la primera parte del proyecto previo a la entrega intermedia, se ha implementado la parte principal del proyecto, el core, alcanzando una serie de objetivos importantes en el desarrollo. En primer lugar, se ha diseñado la parte arquitectónica del proyecto la que se ha diseñado en módulos apoyados en tres tipos de base de datos. Una primera de ámbito relacional encargada de soportar el almacenamiento persistente del usuario y una segunda no relacional usada para la comunicación de paso de mensajes entre los módulos y por último, una base de datos de objetos para el almacenamiento de documentos. En segundo lugar, se ha empezado con la implementación del lado servidor con una API REST encargada de crear y gestionar los diferentes recursos de la aplicación. En tercer lugar, se ha creado un prototipo de alta fidelidad de la plataforma que está sirviendo como guía en el desarrollo del frontend y organización de elementos. Por último, en el ámbito de las integraciones de los servicios de terceros se ha empezado a explorar para su posterior implementación y viabilidad en el sistema.
+
+En el ámbito de funcionalidades, se han completado diferentes tareas de la lógica de negocio. Se ha completado el sistema de control de acceso basado en roles y de la gestión de identidad dotando a la aplicación web la creación de usuarios y roles con sus permisos correspondientes. Además el sistema permite el inventariaje de dispositivos, máquinas y servicios facilitando tener un control claro de ejecuciones y sistemas en ejecución. Los sistemas pueden ser solicitados mediante un sistema de peticiones ya presente en el sistema para crear servicios vinculados. Además, la plataforma permite el monitoreo de páginas webs proporcionando visibilidad en tiempo real el estado e histórico de una página web. 
+
+Durante el desarrollo de la página web se puede destacar el siguiente uso de estándares y principios como el nivel 2 del Richardson Madurity Model con el uso de verbos HTTP. La infraestructura de red se ha securizado siguiendo los estándares de la IETF para TLS 1.3, garantizando el cifrado de extremo a extremo. Además se siguen las recomendaciones de seguridad de las APIS del INCIBE. 
+
 
 
 En la figura \ref{fig:RESUMEN} se puede observar el estado actual de desarrollo del proyecto.
@@ -231,14 +236,33 @@ El proyecto cuenta con dos estimaciones de esfuerzo: una derivada del cronograma
 \end{figure}
 
 
-En base a los ratios de productividad y la cantidad de puntos función que quedan por hacer, se estima que hace falta una cantidad de $92$ horas para terminar el proyecto.
+% En base a los ratios de productividad y la cantidad de puntos función que quedan por hacer, se estima que hace falta una cantidad de $92$ horas para terminar el proyecto.
+%
+% A pesar de tener un ratio de productividad rápido, en las gráfica \ref{fig:graficoAnalisisPlan} se puede ver el error de estimación presente en el sistema en todos los elementos, ya que han sido necesarias más horas de las previstas para realizar las tareas. 
 
-A pesar de tener un ratio de productividad rápido, en las gráfica \ref{fig:graficoAnalisisPlan} se puede ver el error de estimación presente en el sistema en todos los elementos, ya que han sido necesarias más horas de las previstas para realizar las tareas. 
 
-\begin{sidewaysfigure}[p]
+\begin{sidewaysfigure}[pH]
     \centering
     \includegraphics[width=\textheight, keepaspectratio]{incremento-ii/gannt.png}
     \caption{Cronograma del desarrollo.}
     \label{fig:gantt_mermaid}
 \end{sidewaysfigure}
 
+
+Basándome en los ratios de productividad y los puntos función pendientes por hacer se estima que hacen falta $166$ horas para la realización del proyecto en completo. Debido a este número tan alto de horas, se necesita una reestructuración de las tareas a realizar en el proyecto priorizando las partes más importantes para el objetivo del proyecto. Tras analizar la complejidad de las tareas restantes, su importancia y viabilidad para el desarrollo del proyecto se ha decido no implementar la vinculación con los servicios de externos de la UPM y de Teams. Esto se debe a que para la integración de la herramiento del Sistema de Identificación Única de la UPM el servicio debe estar corriendo ya en un servidor y desplegado, esto no es factible para el proyecto en este punto, el teams en cambio carezco de los permisos necesarios en la organización para intentar el desarrollo de esta integración con mi cuento de @alumnos.upm.es. También se elimina el incremento V y los requisitos asociados al mismo junto a la integración del sistema de autofirma de manera nativa.
+
+Se establecen como objetivos para la memoria final la implementación de las partes faltantes del fronted, tales como el calendario, mejora de las pantallas desarrolladas, la integración de servicios de terceros de las puertas NUKI y la creación de un sistema funcional en base al codeserver como entorno de desarrollo para el personal investigador.
+
+
+Lista de tareas actualizadas: 
+
+\begin{itemize}
+    \item Integración de las puertas NUKI.
+    \item Pantalla de calendario, monitor y health.
+    \item Gestión de la infraestructura y la migración de usuarios. 
+    \item Implantación del code server.
+    \item Marco teórico del resto de integraciones que se implementaran como las que no serán implementadas.
+    \item Integración de gitlab. 
+    \item Montaje del servicio en los servidores del laboratorio. 
+    \item Pruebas de usuario sobre la usabilidad del sistema. 
+\end{itemize}

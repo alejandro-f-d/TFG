@@ -1,7 +1,11 @@
 \chapter{Incremento IV:}
 \section{Especificación y modelado:}
 
-Se presenta a continuación el flujo de trabajo empleado en el desarrollo de las integraciones de sistemas. Para garantizar la alineación con la infraestructura existente, se consultó al coordinador de informática del centro, permitiendo así catalogar los servicios externos activos en el laboratorio MEDAL y definir el alcance de cada integración planteada.
+% Se presenta a continuación el flujo de trabajo empleado en el desarrollo de las integraciones de sistemas. Para garantizar la alineación con la infraestructura existente, se consultó al coordinador de informática del centro, permitiendo así catalogar los servicios externos activos en el laboratorio MEDAL y definir el alcance de cada integración planteada.
+
+En este incremento se presenta la integración con servicios externos realizadas y planteados para este sistema. Para permitir que el sistema se encuentre alineado con la infraestructura y servicios ya existentes en el laboratorio se consulta con el coordinador de informática del centro el catálogo de servicios activos en el laboratorio para plantear el alcance de las integraciones con este servicio web. 
+
+La lista de servicios presentes en el laboratorio son los siguientes: 
 
 \begin{itemize}
     \item \textbf{Servidores Linux:} Gestión de altas, bajas y modificación de credenciales en la infraestructura de computación (\textit{Cesvima1, Cesvima2, Ares, Gea, Zeus, Apolo, Atenea y Cvat}).
@@ -87,7 +91,7 @@ En este punto, nos encontramos en la situación de que el sistema debe permitir 
 
 \notaseguridad{Se debe destacar que el sistema de identificación única, en adelante SIU, se trata de un sistema más seguro que un sistema implementado propio para este trabajo fin de grado. Esto se debe a que se trata de un sistema probado y mantenido por personal experto.}
 
-En primera instancia, lo que se va a hacer es utilizar el SIU para el personal asociado a la UPM al cual de manera interna en el servicio se le aplicará una access control list (ACL) para filtrar los usuarios que tienen permitido el acceso. Para los usuarios sin vinculación a la UPM, se crearía un sistema parecido al ofrecido por la UPM pero interno al laboratorio. En la figura \ref{fig:diagrama_identificacion} se puede ver el diagrama de flujo de operación. 
+En primera instancia, el objetivo es utilizar el SIU para el personal asociado a la UPM al cual de manera interna en el servicio se le aplicará una access control list (ACL) para filtrar los usuarios que tienen permitido el acceso. Para los usuarios sin vinculación a la UPM, se crearía un sistema parecido al ofrecido por la UPM pero interno al laboratorio. En la figura \ref{fig:diagrama_identificacion} se puede ver el diagrama de flujo de operación. 
 
 \begin{figure}[H] 
  \centering 

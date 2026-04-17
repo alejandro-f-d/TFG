@@ -2,7 +2,7 @@
 
 \section{Requisitos:}
 
-En las siguientes tablas podemos ver los requisitos funcionales y no funcionales de la aplicación. En la tabla \ref{tab:rf_simple} se encuentran organizados los requisitos funcionales para el dashboard. Mientras que en la tabla \ref{tab:rnf_simple} podemos encontrar los requisitos no funcionales de la aplciación.
+En las siguientes tablas podemos ver los requisitos funcionales y no funcionales de la aplicación. En la tabla \ref{tab:rf_simple} se encuentran organizados los requisitos funcionales para el dashboard. Mientras que en la tabla \ref{tab:rnf_simple} podemos encontrar los requisitos no funcionales de la aplicación.
 
 
 \subsection{Requisitos funcionales:}
@@ -87,12 +87,15 @@ RF14  & Registro de auditoría bajo un estándar NIST. & Incremento 5 \\
 \textbf{Capa} & \textbf{Tecnología / Herramienta} \\ \midrule
 \textbf{Frontend} & React.js con Tailwind CSS para la interfaz de usuario. \\
 \textbf{Backend} & Node.js y Express para la lógica de API RESTful. \\
-\textbf{Base de Datos} & PostgreSQL para el SSOT. \\
+\textbf{Base de Datos} & PostgreSQL para el SSOT, Redis para el paso de mensajes, Objetos para los pdf. \\
 \textbf{Seguridad} & JSON Web Tokens (JWT) y cifrado con funciones hash que no permiten vuelta al valor original. \\
 \textbf{Diseño} & Figma para el prototipado de interfaces (UI/UX). \\
 \textbf{Swagger} & Para la documentación de los métodos de la API se va a utilizar herramientas como swagger para documentar los métodos y opciones de retorno de las APIs. \\
 \textbf{Digital Signature Service (DSS)} & Servicio para la validación de firmas electrónicas en PDF. \\
-\textbf{Bull Dashboard} & Servicio de administración de las colas de mensaje. \\ \bottomrule
+\textbf{Bull Dashboard} & Servicio de administración de las colas de mensaje. \\
+\textbf{DB Diagram.io} & Documentación de la base de datos y entidad relación. \\
+\textbf{Fossflow} & Diagramas asimétricos de la arquitectura. \\
+\bottomrule
 \end{tabularx}
 \end{table}
 
