@@ -39,6 +39,14 @@ RF17 & Gestión de usuarios en el NAS del laboratorio. & Incremento 4 \\
 \end{longtable}
 \end{center}
 \normalsize
+
+\section{Integración de terceros: SMTP Google}
+
+Para el sistema de notificaciones, se ha integrado el servicio de mensajería de Google (Gmail), aprovechando la infraestructura preexistente en el laboratorio y sabiendo que el volumen de envíos se mantenga dentro de los umbrales de seguridad permitidos por el proveedor. La integración técnica se realiza mediante contraseñas de aplicación. El sistema de correo electrónico trabaja con un modelo editor suscriptor donde hay presentes diferentes tipos de editores. Entre los editores se puede encontrar a la API que delega la tarea de envío de correos electrónicos al Worker y el sistema de monitorización y el cron con su servicio de notificaciones. Este sistema permite el desacople de latencias sobre los endpoints presentes en la API dando una experiencia fluida al usuario. 
+ 
+% Siguiendo la filosofía de diseño modular del proyecto, este servicio se ha implementado mediante una arquitectura dirigida por eventos (Event-Driven Architecture). Bajo este enfoque, la API actúa como el editor, emitiendo eventos de dominio ante acciones relevantes, mientras que el módulo de correo funciona como el Suscriptor. Esta estructura permite un procesamiento asíncrono donde el módulo de notificaciones gestiona la carga de manera independiente al flujo principal de la API, desacoplando la latencia del protocolo SMTP de los tiempos de respuesta de los endpoints.
+
+
 \section{Integración de terceros: Gitlab}
 
 \subsection{Descripción del servicio instalado:}
