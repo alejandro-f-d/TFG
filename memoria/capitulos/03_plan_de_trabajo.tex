@@ -200,9 +200,9 @@ Para el cálculo de los puntos función se utiliza la técnica de Puntos de Func
 
 Durante la primera parte del proyecto previo a la entrega intermedia, se ha implementado la parte principal del proyecto, el core, alcanzando una serie de objetivos importantes en el desarrollo. En primer lugar, se ha diseñado la parte arquitectónica del proyecto la que se ha diseñado en módulos apoyados en tres tipos de base de datos. Una primera de ámbito relacional encargada de soportar el almacenamiento persistente del usuario y una segunda no relacional usada para la comunicación de paso de mensajes entre los módulos y por último, una base de datos de objetos para el almacenamiento de documentos. En segundo lugar, se ha empezado con la implementación del lado servidor con una API REST encargada de crear y gestionar los diferentes recursos de la aplicación. En tercer lugar, se ha creado un prototipo de alta fidelidad de la plataforma que está sirviendo como guía en el desarrollo del frontend y organización de elementos. Por último, en el ámbito de las integraciones de los servicios de terceros se ha empezado a explorar para su posterior implementación y viabilidad en el sistema.
 
-En el ámbito de funcionalidades, se han completado diferentes tareas de la lógica de negocio. Se ha completado el sistema de control de acceso basado en roles y de la gestión de identidad dotando a la aplicación web la creación de usuarios y roles con sus permisos correspondientes. Además el sistema permite el inventariaje de dispositivos, máquinas y servicios facilitando tener un control claro de ejecuciones y sistemas en ejecución. Los sistemas pueden ser solicitados mediante un sistema de peticiones ya presente en el sistema para crear servicios vinculados. Además, la plataforma permite el monitoreo de páginas webs proporcionando visibilidad en tiempo real el estado e histórico de una página web. 
+En el ámbito de funcionalidades, se han completado diferentes tareas de la lógica de negocio. Se ha completado el sistema de control de acceso basado en roles y de la gestión de identidad dotando a la aplicación web la creación de usuarios y roles con sus permisos correspondientes. Además el sistema permite el inventariaje de dispositivos, máquinas y servicios facilitando tener un control claro de ejecuciones y sistemas en ejecución. Los sistemas pueden ser solicitados mediante un sistema de peticiones ya presente en el sistema para crear servicios vinculados. Además, la plataforma permite el monitoreo de páginas webs proporcionando visibilidad en tiempo real, el estado e histórico de una página web. 
 
-Durante el desarrollo de la página web se puede destacar el siguiente uso de estándares y principios como el nivel 2 del Richardson Madurity Model con el uso de verbos HTTP. La infraestructura de red se ha securizado siguiendo los estándares de la IETF para TLS 1.3, garantizando el cifrado de extremo a extremo. Además se siguen las recomendaciones de seguridad de las APIS del INCIBE. 
+Durante el desarrollo de la página web se puede destacar la aplicación y uso de estándares y principios como el nivel 2 del Richardson Madurity Model con el uso de verbos HTTP. La infraestructura de red se ha securizado siguiendo los estándares de la IETF para TLS 1.3, garantizando el cifrado de extremo a extremo. Además se siguen las recomendaciones de seguridad de las APIS del INCIBE. 
 
 
 
@@ -216,7 +216,7 @@ En la figura \ref{fig:RESUMEN} se puede observar el estado actual de desarrollo 
   \label{fig:RESUMEN}
 \end{figure}
 
-El proyecto cuenta con dos estimaciones de esfuerzo: una derivada del cronograma de trabajo y otra basada en Puntos Función. La figuras \ref{fig:AnalisisPlan} y \ref{fig:graficoAnalisisPlan} resume la comparativa entre la planificación inicial y el esfuerzo real, validando la precisión de las estimaciones realizadas.
+El proyecto cuenta con dos estimaciones de esfuerzo: una derivada del cronograma de trabajo y otra basada en Puntos Función. La figuras \ref{fig:AnalisisPlan} y \ref{fig:graficoAnalisisPlan} resumen la comparativa entre la planificación inicial y el esfuerzo real, validando la precisión de las estimaciones realizadas.
 
 \begin{figure}[H]
   \begin{center}
@@ -248,12 +248,15 @@ El proyecto cuenta con dos estimaciones de esfuerzo: una derivada del cronograma
     \label{fig:gantt_mermaid}
 \end{sidewaysfigure}
 
+\newpage
+\section{Modificaciones del plan de trabajo:}
 
-Basándome en los ratios de productividad y los puntos función pendientes por hacer se estima que hacen falta $166$ horas para la realización del proyecto en completo. Debido a este número tan alto de horas, se necesita una reestructuración de las tareas a realizar en el proyecto priorizando las partes más importantes para el objetivo del proyecto. Tras analizar la complejidad de las tareas restantes, su importancia y viabilidad para el desarrollo del proyecto se ha decido no implementar la vinculación con los servicios de externos de la UPM y de Teams. Esto se debe a que para la integración de la herramiento del Sistema de Identificación Única de la UPM el servicio debe estar corriendo ya en un servidor y desplegado, esto no es factible para el proyecto en este punto, el teams en cambio carezco de los permisos necesarios en la organización para intentar el desarrollo de esta integración con mi cuento de @alumnos.upm.es. También se elimina el incremento V y los requisitos asociados al mismo junto a la integración del sistema de autofirma de manera nativa.
+Basándome en los ratios de productividad y los puntos función pendientes por hacer se estima que hacen falta $166$ horas para la realización del proyecto en completo. Debido a este número tan alto de horas, se necesita una reestructuración de las tareas a realizar en el proyecto priorizando las partes más importantes para el objetivo del proyecto. Tras analizar la complejidad de las tareas restantes, su importancia y viabilidad para el desarrollo del proyecto se ha decido no implementar la vinculación con los servicios de externos de la UPM y de Teams. Esto se debe a que para la integración de la herramienta del Sistema de Identificación Única de la UPM, el servicio debe estar corriendo ya en un servidor y desplegado, esto no es factible para el proyecto en este punto. Por parte de la integración de Microsoft Teams carezco de los permisos necesarios en la organización para intentar el desarrollo de esta integración con mi cuenta de @alumnos.upm.es. Adicionalmente, se elimina el incremento V y los requisitos asociados al mismo junto a la integración del sistema de autofirma de manera nativa.
 
 Se establecen como objetivos para la memoria final la implementación de las partes faltantes del fronted, tales como el calendario, mejora de las pantallas desarrolladas, la integración de servicios de terceros de las puertas NUKI y la creación de un sistema funcional en base al codeserver como entorno de desarrollo para el personal investigador.
 
 
+\section{Lista de tareas actualizadas a realizar para la finalización del proyecto:}
 Lista de tareas actualizadas: 
 
 \begin{itemize}
@@ -262,7 +265,67 @@ Lista de tareas actualizadas:
     \item Gestión de la infraestructura y la migración de usuarios. 
     \item Implantación del code server.
     \item Marco teórico del resto de integraciones que se implementaran como las que no serán implementadas.
-    \item Integración de gitlab. 
     \item Montaje del servicio en los servidores del laboratorio. 
     \item Pruebas de usuario sobre la usabilidad del sistema. 
+    \item Realización del resto de módulos relativos al tfg.
 \end{itemize}
+
+
+\section{Revisión del diagrama de Gannt:}
+
+% Relativo al cronograma del diagrama de gannt planteado inicialmente presente en la figura \ref{fig:gantt_rotated} y con respecto a los plazos de terminación planificados, esto, ha sido posible gracias al superávit de horas presente en \ref{fig:AnalisisPlan}. A pesar de ir cumplimiendo con los tiempos planificados en el plan de trabajo, al entrar en un periodo de tiempo con mayor carga de trabajo y de exámenes se decide reducir la carga de tareas a la especificada anteriormente.
+
+% En el plan de trabajo se hizo una estimación en formato diagrama de Gannt para la planificación de tareas (\ref{fig:gantt_rotated}). Gracias al superávit de horas invertidas (\ref{fig:AnalisisPlan}) en el proyecto se ha sido capaz de mantener en plazo el desarrollo de la aplicación. A pesar de mantener en plazo el proyecto se ha decidido realizar una reestructuración de las tareas objetivo cara a la entrega final, se han elegido las tareas que permitan la creación de un producto mínimo viable de la aplicación cumplimiendo lo máximo posible con los requisitos de la aplicación. Esta decisión se fundamenta en el aumento de la carga de trabajo de las asignaturas en las que estoy matriculado. 
+
+La planificación inicial, detallada en el diagrama de Gantt de la Figura \ref{fig:gantt_rotated}, se ha mantenido en cronograma gracias al superávit de horas invertidas en la primera parte del desarrollo (Figura \ref{fig:AnalisisPlan}). Sin embargo, ante el aumento de la carga académica en este periodo y la cantidad de horas restantes según puntos función, he optado por reestructurar los objetivos finales. Esta decisión busca asegurar la entrega de un Producto Mínimo Viable (MVP) que, aunque ajustado en alcance, cumpla con los requisitos fundamentales del proyecto sin comprometer su viabilidad. 
+
+En la figura \ref{fig:gantt_final_v2} se puede ver la planificación hasta la entrega final del proyecto fin de grado.
+
+% \section{Diagrama de Gannt hasta memoria final:}
+
+\begin{figure}[p]
+    \centering
+    
+    \rotatebox{90}{
+        \begin{ganttchart}[
+            hgrid,
+            vgrid,
+            x unit=1.2cm, 
+            y unit title=0.8cm,
+            y unit chart=0.9cm,
+            title label font=\footnotesize,
+            bar label font=\small,
+            bar label node/.style={
+                text width=7.5cm, 
+                align=right,
+                anchor=east
+            },
+            canvas/.style={
+                draw=black!40,
+                fill=white
+            },
+            bar/.style={
+                fill=blue!55
+            },
+            bar height=0.55,
+            group periods=false
+        ]{17}{24}
+        
+        \gantttitle{Semanas del Semestre}{8} \\
+        \gantttitlelist{17,...,24}{1} \\
+        \ganttbar{Integración de las puertas NUKI}{17}{19} \\
+        \ganttbar{Pantalla de calendario, monitor y health}{17}{20} \\
+        \ganttbar{Gestión de infraestructura y migración}{18}{21} \\
+        \ganttbar{Implantación del code server}{19}{22} \\
+        \ganttbar{Marco teórico de integraciones}{17}{22} \\
+        \ganttbar{Montaje en servidores del laboratorio}{22}{23} \\
+        \ganttbar{Pruebas de usabilidad}{23}{24} \\
+        \ganttbar{Realización de módulos restantes TFG}{17}{24} \\
+        \ganttbar{Documentación}{17}{24}
+        \end{ganttchart}
+    }
+
+    \vspace{0.8cm} 
+    \caption{Cronograma del tramo final del proyecto (Semanas 17-24).}
+    \label{fig:gantt_final_v2}
+\end{figure}
