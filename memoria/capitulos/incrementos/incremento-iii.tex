@@ -7,7 +7,7 @@ En este incremento se valoran las opciones posibles para eliminar en todo lo pos
 \subsection{Estructura dockerizada de CodeServer:}
 Los CodeServer son docker especializados con un formato de uso similar a Visual Studio Code. \href{https://github.com/coder/code-server?tab=readme-ov-file}{Proyecto Code Server.}
 
-En la figura \ref{fig:code_server} se detalla el proceso de comunicación entre el cliente y el servicio \texttt{code-server}. En primer lugar, el cliente establece una conexión a través de un servidor \textbf{Nginx}, que actúa como intermediario gestionando la autenticación por usuario y contraseña. Tras la validación, el tráfico se redirige a la instancia específica de cada cliente, quien opera en un entorno aislado y controlado, garantizando una gestión segura y virtualizada de los recursos del servidor.
+En la figura \ref{fig:code_server} se detalla el proceso de comunicación entre el cliente y el servicio \texttt{code-server}. En primer lugar, el cliente establece una conexión a través de un servidor \textbf{Nginx}, que actúa como intermediario gestionando la autenticación por usuario y contraseña. Tras la validación, el tráfico se redirige a la instancia específica de cada cliente, quien opera en un entorno aislado y controlado, garantizando una gestión segura y virtualizada de los recursos del servidor. \cite{github_code_server}
 
 
 \begin{figure}[H] 

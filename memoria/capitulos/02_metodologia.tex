@@ -17,7 +17,7 @@ En este incremento se va a trabajar con la parte central del proyecto, el core, 
 
 Las funcionalidades que se buscan implementar en este ciclo son la gestión de roles y el dashboard visual para el administrador. 
 
-\notaseguridad{Hay que destacar que en el sistema la base de datos que se construye va a ser el \textbf{Single Source of True}, esto se debe a que va a ser el punto centralizado donde está contenido toda la información y todos los permisos que tiene un usuario. De esta manera se puede minimizar el vector de ataque con cuentas de usuarios que ya no están o servicios que no deberían seguir funcionando.}
+\notaseguridad{Hay que destacar que en el sistema la base de datos que se construye va a ser el \textbf{Single Source of True} \cite{atlassian_ssot},esto se debe a que va a ser el punto centralizado donde está contenido toda la información y todos los permisos que tiene un usuario. De esta manera se puede minimizar el vector de ataque con cuentas de usuarios que ya no están o servicios que no deberían seguir funcionando.}
 
 
 \subsubsection{Incremento III: Infraestructura}
@@ -43,7 +43,7 @@ En este incremento se busca trabajar con APIs de terceros para poder gestionar s
 \subsubsection{Incremento V: Auditoría y Cumplimiento}
 En este incremento se busca la implementación de un módulo de trazabilidad para medir la robustez. Debido a la estimación en la memoria intermedia de este incremento se debe rescindir. 
 
-Para ello, se tomarán como referencia las directrices del \textbf{NIST Cybersecurity Framework (CSF)}, específicamente en las funciones de \textit{Protect} (Protección) y \textit{Detect} (Detección). Se implementará un sistema de \textit{logging} exhaustivo que garantice la trazabilidad de todas las operaciones de provisión de servicios, cumpliendo con las recomendaciones del estándar \textbf{NIST SP} sobre gestión de registros de log.
+Para ello, se tomarán como referencia las directrices del \textbf{NIST Cybersecurity Framework (CSF)}, específicamente en las funciones de \textit{Protect} (Protección) y \textit{Detect} (Detección). Se implementará un sistema de \textit{logging} exhaustivo que garantice la trazabilidad de todas las operaciones de provisión de servicios, cumpliendo con las recomendaciones del estándar \textbf{NIST SP} sobre gestión de registros de log. \cite{nist_csf}
 
 
 \subsection{Estructura de los incrementos:}

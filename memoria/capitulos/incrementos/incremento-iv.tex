@@ -46,7 +46,7 @@ RF17 & Gestión de usuarios en el NAS del laboratorio. & Incremento 4 \\
 
 \section{Integración de terceros: SMTP Google}
 
-Para el sistema de notificaciones, se ha integrado el servicio de mensajería de Google (Gmail), aprovechando la infraestructura preexistente en el laboratorio y sabiendo que el volumen de envíos se mantenga dentro de los umbrales de seguridad permitidos por el proveedor. La integración técnica se realiza mediante contraseñas de aplicación. El sistema de correo electrónico trabaja con un modelo editor suscriptor donde hay presentes diferentes tipos de editores. Entre los editores se puede encontrar a la API que delega la tarea de envío de correos electrónicos al Worker y el sistema de monitorización y el cron con su servicio de notificaciones. Este sistema permite el desacople de latencias sobre los endpoints presentes en la API dando una experiencia fluida al usuario. 
+Para el sistema de notificaciones, se ha integrado el servicio de mensajería de Google (Gmail), aprovechando la infraestructura preexistente en el laboratorio y sabiendo que el volumen de envíos se mantenga dentro de los umbrales de seguridad permitidos por el proveedor. La integración técnica se realiza mediante contraseñas de aplicación. El sistema de correo electrónico trabaja con un modelo editor suscriptor donde hay presentes diferentes tipos de editores. Entre los editores se puede encontrar a la API que delega la tarea de envío de correos electrónicos al Worker y el sistema de monitorización y el cron con su servicio de notificaciones. Este sistema permite el desacople de latencias sobre los endpoints presentes en la API dando una experiencia fluida al usuario. \cite{npm_nodemailer_usage, npm_nodemailer} 
  
 % Siguiendo la filosofía de diseño modular del proyecto, este servicio se ha implementado mediante una arquitectura dirigida por eventos (Event-Driven Architecture). Bajo este enfoque, la API actúa como el editor, emitiendo eventos de dominio ante acciones relevantes, mientras que el módulo de correo funciona como el Suscriptor. Esta estructura permite un procesamiento asíncrono donde el módulo de notificaciones gestiona la carga de manera independiente al flujo principal de la API, desacoplando la latencia del protocolo SMTP de los tiempos de respuesta de los endpoints.
 
@@ -55,7 +55,7 @@ Para el sistema de notificaciones, se ha integrado el servicio de mensajería de
 
 \subsection{Descripción del servicio instalado:}
 
-La arquitectura actual del sistema se basa en un microservicio desplegado mediante \texttt{Docker}. Tras analizar las diversas metodologías de integración con servicios externos, se ha determinado que el mejor diseño consiste en establecer una comunicación vía \textbf{API}, empleando la autenticación mediante \textbf{tokens de usuario} para garantizar la seguridad y eficiencia en el intercambio de información.
+La arquitectura actual del sistema se basa en un microservicio desplegado mediante \texttt{Docker}. Tras analizar las diversas metodologías de integración con servicios externos, se ha determinado que el mejor diseño consiste en establecer una comunicación vía \textbf{API}, empleando la autenticación mediante \textbf{tokens de usuario} para garantizar la seguridad y eficiencia en el intercambio de información. \cite{GITLAB_TOKEN}
 
 \subsection{Operaciones permitidas con este servicio de terceros en la página web:}
 El sistema permite las siguientes operaciones con este servicio de terceros:
@@ -85,7 +85,7 @@ En la figura \ref{fig:detalle_gitlab} se puede ver la pantalla de información e
 En este punto, nos encontramos en la situación de que el sistema debe permitir al usuario identificarse de manera segura. Podemos encontrar principalmente dos tipos de usuarios.
 
  \begin{itemize}
-   \item \texttt{Usuarios con vinculación a la UPM}. En este grupo encontramos a los estudiantes y el personal docente e investigador entre otros.
+   \item \texttt{Usuarios con vinculación a la UPM}. En este grupo encontramos a los estudiantes y el personal docente e investigador entre otros. \cite{siu_upm}
    \item \texttt{Usuarios sin vinculación a la UPM}. Este grupo de usuarios, no tienen ninguna asociación con la universidad, serían un grupo muy pequeño y acotado. Se encontrarían principalmente estudiantes (ajenos a la universidad) e investigadores (ajenos a la universidad) con vinculación en el laboratorio MEDAL.
  \end{itemize} 
 
