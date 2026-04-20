@@ -7,6 +7,7 @@ import {
 	getDetalleReserva,
 	deleteReserva,
 	patchReserva,
+	getListadoMaquinaVerReserva,
 } from "../controller/calendarioController.js";
 
 import { patchReservaBodySchema } from "../schemas/index.js";
@@ -354,6 +355,12 @@ router.get(
  *                   type: string
  *                   example: "Se ha producido un error interno al consultar la reserva."
  */
+
+router.get(
+	"/maquinasVerReserva",
+	[verificarToken],
+	getListadoMaquinaVerReserva,
+);
 
 router.get("/:uuid", [verificarToken], getDetalleReserva);
 

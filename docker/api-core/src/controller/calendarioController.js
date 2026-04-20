@@ -204,3 +204,19 @@ export const patchReserva = async (req, res) => {
 			.json({ error: "Error interno del servidor al actualizar la reserva." });
 	}
 };
+
+export const getListadoMaquinaVerReserva = async (req, res) => {
+	try {
+		const uuidsCalendario = req.user.permisos
+			.filter((p) => p.includes("maquina:calendario"))
+			.map((p) => p.split(":").pop());
+
+		return res.status(200).json({
+			message: "success",
+			uuidMaquinas: uuidsCalendario,
+		});
+	} catch (error) {
+		console.error("Se ha producido un error interno del servidor", error);
+		return res.status(500).json({ error: "Error interno del servido.r" });
+	}
+};
