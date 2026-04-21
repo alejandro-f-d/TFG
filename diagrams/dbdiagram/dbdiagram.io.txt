@@ -1,4 +1,4 @@
-// Esquema: medal
+// Esquema: medal (Adaptado al DDL de PostgreSQL)
 // Generado para dbdiagram.io
 
 Table medal.usuario {
@@ -9,7 +9,7 @@ Table medal.usuario {
   teams BOOLEAN [default: false]
   esResponsable BOOLEAN [default: false]
   usuarioVPN VARCHAR(50) [unique]
-  correoInstitucional VARCHAR(100) [unique, not null]
+  correoInstitucional VARCHAR(100) [unique, not null, note: 'CHECK: @']
   activo BOOLEAN [default: true]
   fechaIncorporacion DATE [not null, default: `now()`]
   fechaFin DATE
@@ -19,12 +19,13 @@ Table medal.usuario {
   fotoPerfil BYTEA
   uuidUsuario UUID [unique, not null, default: `gen_random_uuid()`]
   contrasena VARCHAR(1000)
-  gitlab VARCHAR(50) [unique]
-  responsable INTEGER
+  gitlab INTEGER [unique]
+  responsable INTEGER [note: 'FK a idUsuario']
+
+  Note: 'Check: responsable <> idUsuario, fechaFin >= fechaIncorporacion'
 }
 
-// Relación recursiva de usuario (Responsable)
-Ref: medal.usuario.responsable > medal.usuario.idUsuario
+Ref: medal.usuario.responsable > medal.usuario.idUsuario [delete: set null]
 
 Table medal.maquina {
   idMaquina SERIAL [pk, increment]
@@ -62,8 +63,8 @@ Table medal.dispositivos {
   idTipoDispositivo INTEGER [not null]
 }
 
-Ref: medal.dispositivos.idMaquina > medal.maquina.idMaquina
-Ref: medal.dispositivos.idTipoDispositivo > medal.tipoDispositivo.idTipoDispositivo
+Ref: medal.dispositivos.idMaquina > medal.maquina.idMaquina [delete: set null]
+Ref: medal.dispositivos.idTipoDispositivo > medal.tipoDispositivo.idTipoDispositivo [delete: cascade]
 
 Table medal.proyectosGitlab {
   idProyecto SERIAL [pk, increment]
@@ -73,20 +74,20 @@ Table medal.proyectosGitlab {
   fechaInicio DATE [not null, default: `now()`]
   fechaFin DATE
   activo BOOLEAN [default: true]
+  idGitlab INTEGER [unique]
 }
 
 Table medal.participa {
   idUsuario INTEGER [not null]
   idProyecto INTEGER [not null]
-  Note: 'PK: idUsuario, idProyecto'
   
   Indexes {
     (idUsuario, idProyecto) [pk]
   }
 }
 
-Ref: medal.participa.idUsuario > medal.usuario.idUsuario
-Ref: medal.participa.idProyecto > medal.proyectosGitlab.idProyecto
+Ref: medal.participa.idUsuario > medal.usuario.idUsuario [delete: cascade]
+Ref: medal.participa.idProyecto > medal.proyectosGitlab.idProyecto [delete: cascade]
 
 Table medal.roles {
   idRole SERIAL [pk, increment]
@@ -108,8 +109,8 @@ Table medal.rolesTiene {
   }
 }
 
-Ref: medal.rolesTiene.idRole > medal.roles.idRole
-Ref: medal.rolesTiene.idUsuario > medal.usuario.idUsuario
+Ref: medal.rolesTiene.idRole > medal.roles.idRole [delete: cascade]
+Ref: medal.rolesTiene.idUsuario > medal.usuario.idUsuario [delete: cascade]
 
 Table medal.permisos {
   idPermiso SERIAL [pk, increment]
@@ -128,8 +129,8 @@ Table medal.operaCon {
   }
 }
 
-Ref: medal.operaCon.idRole > medal.roles.idRole
-Ref: medal.operaCon.idPermiso > medal.permisos.idPermiso
+Ref: medal.operaCon.idRole > medal.roles.idRole [delete: cascade]
+Ref: medal.operaCon.idPermiso > medal.permisos.idPermiso [delete: cascade]
 
 Table medal.metodoMonitoreoWeb {
   idMetodo SERIAL [pk, increment]
@@ -157,7 +158,7 @@ Table medal.monitoreoWeb {
   proxima_ejecucion TIMESTAMPTZ [default: `now()`]
 }
 
-Ref: medal.monitoreoWeb.idUsuario > medal.usuario.idUsuario
+Ref: medal.monitoreoWeb.idUsuario > medal.usuario.idUsuario [delete: cascade]
 Ref: medal.monitoreoWeb.idMetodo > medal.metodoMonitoreoWeb.idMetodo
 
 Table medal.historicoMonitoreo {
@@ -168,7 +169,16 @@ Table medal.historicoMonitoreo {
   idMonitor INTEGER [not null]
 }
 
-Ref: medal.historicoMonitoreo.idMonitor > medal.monitoreoWeb.idMonitor
+Ref: medal.historicoMonitoreo.idMonitor > medal.monitoreoWeb.idMonitor [delete: cascade]
+
+Table medal.suscripcionHistorico {
+  idSuscripcion SERIAL [pk, increment]
+  idMonitor INTEGER [not null]
+  idUsuario INTEGER [not null]
+}
+
+Ref: medal.suscripcionHistorico.idMonitor > medal.monitoreoWeb.idMonitor [delete: cascade]
+Ref: medal.suscripcionHistorico.idUsuario > medal.usuario.idUsuario [delete: cascade]
 
 Table medal.notificacion {
   idNotificacion SERIAL [pk, increment]
@@ -179,7 +189,7 @@ Table medal.notificacion {
   idUsuario INTEGER [not null]
 }
 
-Ref: medal.notificacion.idUsuario > medal.usuario.idUsuario
+Ref: medal.notificacion.idUsuario > medal.usuario.idUsuario [delete: cascade]
 
 Table medal.recuperacionPassword {
   idRecuperacion SERIAL [pk, increment]
@@ -191,7 +201,7 @@ Table medal.recuperacionPassword {
   idUsuario INTEGER [not null]
 }
 
-Ref: medal.recuperacionPassword.idUsuario > medal.usuario.idUsuario
+Ref: medal.recuperacionPassword.idUsuario > medal.usuario.idUsuario [delete: cascade]
 
 Table medal.intentosLogin {
   idIntentoLogin SERIAL [pk, increment]
@@ -211,7 +221,7 @@ Table medal.auditoria {
   idUsuario INTEGER [not null]
 }
 
-Ref: medal.auditoria.idUsuario > medal.usuario.idUsuario
+Ref: medal.auditoria.idUsuario > medal.usuario.idUsuario [delete: cascade]
 
 Table medal.reservaCalendario {
   idCalendario SERIAL [pk, increment]
@@ -224,8 +234,8 @@ Table medal.reservaCalendario {
   idMaquina INTEGER [not null]
 }
 
-Ref: medal.reservaCalendario.idUsuario > medal.usuario.idUsuario
-Ref: medal.reservaCalendario.idMaquina > medal.maquina.idMaquina
+Ref: medal.reservaCalendario.idUsuario > medal.usuario.idUsuario [delete: cascade]
+Ref: medal.reservaCalendario.idMaquina > medal.maquina.idMaquina [delete: cascade]
 
 Table medal.peticion {
   idPeticion SERIAL [pk, increment]
@@ -242,8 +252,8 @@ Table medal.peticion {
   usuarioSupervisor INTEGER [not null]
 }
 
-Ref: medal.peticion.usuarioPeticion > medal.usuario.idUsuario
-Ref: medal.peticion.usuarioSupervisor > medal.usuario.idUsuario
+Ref: medal.peticion.usuarioPeticion > medal.usuario.idUsuario [delete: cascade]
+Ref: medal.peticion.usuarioSupervisor > medal.usuario.idUsuario [delete: cascade]
 
 Table medal.momentoEjecucion {
   idMomentoEjecucion SERIAL [pk, increment]
@@ -277,9 +287,9 @@ Table medal.detallePeticionAcceso {
   idMomentoEjecucion INTEGER [not null]
 }
 
-Ref: medal.detallePeticionAcceso.idPeticionReferencia > medal.peticion.idPeticion
-Ref: medal.detallePeticionAcceso.idMomentoEjecucion > medal.momentoEjecucion.idMomentoEjecucion
-Ref: medal.detallePeticionAcceso.prioridadTarea > medal.prioridadTarea.idPrioridad
+Ref: medal.detallePeticionAcceso.idPeticionReferencia > medal.peticion.idPeticion [delete: cascade]
+Ref: medal.detallePeticionAcceso.idMomentoEjecucion > medal.momentoEjecucion.idMomentoEjecucion [delete: cascade]
+Ref: medal.detallePeticionAcceso.prioridadTarea > medal.prioridadTarea.idPrioridad [delete: cascade]
 
 Table medal.documento {
   idDocumento SERIAL [pk, increment]
@@ -295,7 +305,7 @@ Table medal.documento {
   nivelDescripcionJefeLaboratorio VARCHAR(500)
 }
 
-Ref: medal.documento.idPeticion > medal.peticion.idPeticion
+Ref: medal.documento.idPeticion > medal.peticion.idPeticion [delete: no action]
 
 Table medal.tareasRealizar {
   idTarea SERIAL [pk, increment]
@@ -312,8 +322,8 @@ Table medal.realiza {
   }
 }
 
-Ref: medal.realiza.idTarea > medal.tareasRealizar.idTarea
-Ref: medal.realiza.idPetAcceso > medal.detallePeticionAcceso.idPetAcceso
+Ref: medal.realiza.idTarea > medal.tareasRealizar.idTarea [delete: cascade]
+Ref: medal.realiza.idPetAcceso > medal.detallePeticionAcceso.idPetAcceso [delete: cascade]
 
 Table medal.alojado {
   idPetAcceso INTEGER [not null]
@@ -325,8 +335,8 @@ Table medal.alojado {
   }
 }
 
-Ref: medal.alojado.idPetAcceso > medal.detallePeticionAcceso.idPetAcceso
-Ref: medal.alojado.idMaquina > medal.maquina.idMaquina
+Ref: medal.alojado.idPetAcceso > medal.detallePeticionAcceso.idPetAcceso [delete: cascade]
+Ref: medal.alojado.idMaquina > medal.maquina.idMaquina [delete: cascade]
 
 Table medal.propietario {
   idUsuario INTEGER [not null]
@@ -337,8 +347,8 @@ Table medal.propietario {
   }
 }
 
-Ref: medal.propietario.idUsuario > medal.usuario.idUsuario
-Ref: medal.propietario.idMaquina > medal.maquina.idMaquina
+Ref: medal.propietario.idUsuario > medal.usuario.idUsuario [delete: cascade]
+Ref: medal.propietario.idMaquina > medal.maquina.idMaquina [delete: cascade]
 
 Table medal.servicio {
   idServicio SERIAL [pk, increment]
@@ -348,7 +358,7 @@ Table medal.servicio {
   entorno VARCHAR(1000)
   publico BOOLEAN [default: false]
   softwareBase VARCHAR(500)
-  status VARCHAR(50) [default: 'working']
+  status VARCHAR(50) [not null, default: 'working']
   nivelSeveridad VARCHAR(50)
   idUsuario INTEGER [not null]
   idPeticion INTEGER [not null]
@@ -366,8 +376,8 @@ Table medal.corre {
   }
 }
 
-Ref: medal.corre.idServicio > medal.servicio.idServicio
-Ref: medal.corre.idMaquina > medal.maquina.idMaquina
+Ref: medal.corre.idServicio > medal.servicio.idServicio [delete: cascade]
+Ref: medal.corre.idMaquina > medal.maquina.idMaquina [delete: cascade]
 
 Table medal.puertosAbiertos {
   idPuerto SERIAL [pk, increment]
@@ -382,7 +392,7 @@ Table medal.puertosAbiertos {
   }
 }
 
-Ref: medal.puertosAbiertos.idServicio > medal.servicio.idServicio
+Ref: medal.puertosAbiertos.idServicio > medal.servicio.idServicio [delete: cascade]
 
 Table medal.puertas {
   idPuerta SERIAL [pk, increment]
@@ -400,5 +410,5 @@ Table medal.accede {
   }
 }
 
-Ref: medal.accede.idUsuario > medal.usuario.idUsuario
-Ref: medal.accede.idPuerta > medal.puertas.idPuerta
+Ref: medal.accede.idUsuario > medal.usuario.idUsuario [delete: cascade]
+Ref: medal.accede.idPuerta > medal.puertas.idPuerta [delete: cascade]
