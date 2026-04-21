@@ -128,7 +128,9 @@ INSERT INTO medal.tipodispositivo (idtipodispositivo, nombre, descripcion) VALUE
 (20, 'Raspberry Pi', 'Microordenador de placa única'),
 (21, 'Dongle Licencia', 'Llave USB física para software (HASP)'),
 (22, 'Docking Station', 'Base de expansión para ordenadores portátiles'),
-(23, 'Bridge', 'Puente de conexión entre protocolos de red');
+(23, 'Bridge', 'Puente de conexión entre protocolos de red'),
+
+(24, 'Gráfica', 'Graphics Processing Unit');
 
 
 INSERT INTO medal.metodoMonitoreoWeb (nombre, alias, descripcion) VALUES 
