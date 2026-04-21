@@ -137,7 +137,7 @@ export default function SeleccionCalendarioPage() {
 							<button
 								key={maq.uuidmaquina}
 								onClick={() =>
-									router.push(`/dashboard/calendario/${maq.uuidmaquina}`)
+									router.push(`/dashboard/reserva/${maq.uuidmaquina}`)
 								}
 								className="group bg-white border border-slate-100 p-10 rounded-[3rem] text-left hover:bg-slate-900 transition-all duration-500 shadow-xl shadow-slate-200/40 hover:shadow-blue-900/30 relative overflow-hidden"
 							>

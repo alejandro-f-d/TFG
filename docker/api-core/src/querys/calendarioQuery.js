@@ -94,8 +94,8 @@ export const CALENDAR_QUERY = {
         rc.descripcion,
         rc.fechainicio,
         rc.fechafin,
-        m.nombre AS nombre_maquina,
         m.uuidmaquina,
+        m.nombre AS nombre_maquina, 
         u.uuidusuario AS uuid_responsable,
         u.idusuario AS id_responsable,
         TRIM(CONCAT(u.nombre, ' ', u.apellido1, ' ', u.apellido2)) AS nombre_completo_responsable
@@ -104,10 +104,9 @@ export const CALENDAR_QUERY = {
     LEFT JOIN medal.usuario u ON u.idusuario = rc.idusuario
     WHERE m.uuidmaquina = $1
     -- FILTRO DE FECHAS: Trae eventos que se solapen con el rango solicitado
-    AND rc.fechainicio <= $4 -- La reserva empieza antes de que acabe el rango
-    AND rc.fechafin >= $3    -- La reserva termina después de que empiece el rango
+    AND rc.fechainicio <= $4 
+    AND rc.fechafin >= $3    
     AND (
-        -- SEGURIDAD
         rc.idusuario = $2 
         OR 
         EXISTS (
@@ -125,9 +124,11 @@ export const CALENDAR_QUERY = {
     )
     ORDER BY rc.fechainicio ASC;
     `,
+	GET_NOMBRE_MAQUINA: `select nombre from medal.maquina where uuidmaquina = $1;`,
 	VERIFICAR_EXISTE_RESERVA: `
         SELECT 1 FROM medal.reservacalendario WHERE uuidcalendario = $1
     `,
+	OBTENER_ID_CREADOR: `select idusuario from medal.reservacalendario where uuidcalendario = $1;`,
 
 	UPDATE_RESERVA_DYNAMIC: (keys) => {
 		// Mapea los campos: nombre = $3, descripcion = $4, etc.

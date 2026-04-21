@@ -287,11 +287,11 @@ CREATE TABLE IF NOT EXISTS medal.auditoria(
 -- 20. reservaCalendario
 CREATE TABLE IF NOT EXISTS medal.reservaCalendario(
   idCalendario SERIAL PRIMARY KEY,
-  fechaInicio DATE NOT NULL,
+  fechaInicio TIMESTAMP NOT NULL,
   uuidCalendario UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
   descripcion VARCHAR(500),
   nombre VARCHAR(50) NOT NULL,
-  fechaFin DATE NOT NULL,
+  fechaFin TIMESTAMP NOT NULL,
   idUsuario INTEGER NOT NULL,
   CONSTRAINT fk_usuario_reservaCalendario 
     FOREIGN KEY (idUsuario) 

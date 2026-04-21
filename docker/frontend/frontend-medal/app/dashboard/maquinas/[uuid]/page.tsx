@@ -43,7 +43,8 @@ interface MaquinaFull {
 }
 
 export default function MachineDetailPage() {
-	const { uuid } = useParams();
+	const params = useParams();
+	const uuid = params?.uuid as string;
 	const router = useRouter();
 
 	const [maquina, setMaquina] = useState<MaquinaFull | null>(null);
@@ -79,6 +80,7 @@ export default function MachineDetailPage() {
 
 	// --- FETCH DATA ---
 	const fetchData = useCallback(async () => {
+		if (!uuid) return;
 		setLoading(true);
 		const token = localStorage.getItem("token");
 		const headers = { Authorization: `Bearer ${token}` };
@@ -103,12 +105,13 @@ export default function MachineDetailPage() {
 
 			if (resRes.ok) {
 				const dataRes = await resRes.json();
-				setReservas(dataRes.info || []);
+				// Manejar si info es string (sin reservas) o array
+				setReservas(Array.isArray(dataRes.info) ? dataRes.info : []);
 			}
 
 			if (resServ.ok) {
 				const dataServ = await resServ.json();
-				setServicios(dataServ.info?.data || []);
+				setServicios(dataServ.info?.data || dataServ.info || []);
 			}
 		} catch (e) {
 			console.error("Fetch error:", e);
@@ -124,6 +127,7 @@ export default function MachineDetailPage() {
 	const handleUpdateMachine = async () => {
 		try {
 			const token = localStorage.getItem("token");
+			// Filtramos campos que no deben ir en el PATCH
 			const { dispositivos, uuidmaquina, idmaquina, ...updatePayload } =
 				machineForm as any;
 
@@ -175,7 +179,12 @@ export default function MachineDetailPage() {
 			</div>
 		);
 
-	if (!maquina) return null;
+	if (!maquina)
+		return (
+			<div className="min-h-screen bg-[#F1F5F9] flex items-center justify-center font-black uppercase text-red-600">
+				Activo no encontrado
+			</div>
+		);
 
 	const labelClass =
 		"text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1";
@@ -239,7 +248,6 @@ export default function MachineDetailPage() {
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
 					{/* COL 1: STACK DE RED */}
 					<div className="lg:col-span-4 space-y-10">
-						{/* IPv4 */}
 						<div className="bg-slate-950 p-10 rounded-[3.5rem] text-white shadow-2xl relative overflow-hidden border-b-8 border-blue-900">
 							<div className="absolute top-0 right-0 p-6 opacity-10 text-9xl font-black italic pointer-events-none text-blue-500">
 								v4
@@ -282,7 +290,6 @@ export default function MachineDetailPage() {
 							</div>
 						</div>
 
-						{/* IPv6 */}
 						<div className="bg-white p-10 rounded-[3.5rem] border-2 border-slate-200 shadow-xl relative overflow-hidden">
 							<div className="absolute top-0 right-0 p-6 opacity-5 text-9xl font-black italic pointer-events-none text-slate-900">
 								v6
@@ -309,7 +316,6 @@ export default function MachineDetailPage() {
 							</div>
 						</div>
 
-						{/* SSL */}
 						<div className="bg-white p-10 rounded-[3.5rem] border-2 border-slate-200 shadow-xl relative overflow-hidden">
 							<div
 								className={`absolute top-0 right-0 w-3 h-full ${maquina.certificadosslactivo ? "bg-emerald-500" : "bg-red-500"}`}
@@ -410,7 +416,7 @@ export default function MachineDetailPage() {
 						</div>
 					</div>
 
-					{/* COL 3: RESERVAS (COLOR) */}
+					{/* COL 3: RESERVAS (Timeline) */}
 					<div className="lg:col-span-4">
 						<div className="bg-blue-700 p-10 rounded-[3.5rem] text-white shadow-2xl min-h-[500px] border-b-[12px] border-blue-900 relative">
 							<h2 className="text-[11px] font-black text-blue-200 uppercase tracking-[0.4em] mb-10 italic">
@@ -421,11 +427,7 @@ export default function MachineDetailPage() {
 									{reservas.map((r) => (
 										<button
 											key={r.uuidcalendario}
-											onClick={() =>
-												router.push(
-													`/dashboard/reserva/${uuid}/${r.uuidcalendario}`,
-												)
-											}
+											onClick={() => router.push(`/dashboard/reserva/${uuid}`)}
 											className="w-full text-left p-8 rounded-[2.5rem] bg-blue-800/50 hover:bg-white hover:text-blue-800 transition-all relative overflow-hidden group shadow-lg"
 										>
 											<h4 className="text-sm font-black uppercase mb-2 leading-tight">
@@ -525,7 +527,7 @@ export default function MachineDetailPage() {
 											<input
 												type={f.type}
 												className="bg-slate-50 border-2 border-slate-200 rounded-[1.5rem] p-6 font-black text-slate-950 text-base outline-none focus:border-blue-700 focus:ring-4 focus:ring-blue-50 transition-all"
-												defaultValue={(maquina as any)[f.key]}
+												value={(machineForm as any)[f.key] ?? ""}
 												onChange={(e) =>
 													setMachineForm({
 														...machineForm,
@@ -560,7 +562,7 @@ export default function MachineDetailPage() {
 											</label>
 											<input
 												className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-mono text-sm font-bold text-slate-950 focus:border-blue-700 outline-none transition-all"
-												defaultValue={(maquina as any)[key] || ""}
+												value={(machineForm as any)[key] ?? ""}
 												onChange={(e) =>
 													setMachineForm({
 														...machineForm,
@@ -593,7 +595,7 @@ export default function MachineDetailPage() {
 											</label>
 											<input
 												className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-mono text-[11px] font-bold text-slate-950 focus:border-slate-950 outline-none transition-all"
-												defaultValue={(maquina as any)[key] || ""}
+												value={(machineForm as any)[key] ?? ""}
 												onChange={(e) =>
 													setMachineForm({
 														...machineForm,
@@ -613,7 +615,7 @@ export default function MachineDetailPage() {
 									<input
 										className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-black text-xs text-slate-950 focus:border-emerald-500 outline-none"
 										placeholder="EMISOR SSL"
-										defaultValue={maquina.emisorssl || ""}
+										value={machineForm.emisorssl ?? ""}
 										onChange={(e) =>
 											setMachineForm({
 												...machineForm,
@@ -624,7 +626,7 @@ export default function MachineDetailPage() {
 									<input
 										type="date"
 										className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-black text-xs text-slate-950 focus:border-emerald-500 outline-none"
-										defaultValue={maquina.caducidadssl?.split("T")[0] || ""}
+										value={machineForm.caducidadssl?.split("T")[0] ?? ""}
 										onChange={(e) =>
 											setMachineForm({
 												...machineForm,
@@ -634,12 +636,12 @@ export default function MachineDetailPage() {
 									/>
 									<div className="grid grid-cols-2 gap-4">
 										<label
-											className={`flex items-center justify-center gap-3 p-5 rounded-2xl cursor-pointer transition-all border-4 ${(machineForm.certificadosslactivo ?? maquina.certificadosslactivo) ? "bg-emerald-50 border-emerald-400 text-emerald-900" : "bg-slate-50 border-slate-200 text-slate-400"}`}
+											className={`flex items-center justify-center gap-3 p-5 rounded-2xl cursor-pointer transition-all border-4 ${machineForm.certificadosslactivo ? "bg-emerald-50 border-emerald-400 text-emerald-900" : "bg-slate-50 border-slate-200 text-slate-400"}`}
 										>
 											<input
 												type="checkbox"
 												className="w-5 h-5 accent-emerald-600"
-												defaultChecked={maquina.certificadosslactivo || false}
+												checked={machineForm.certificadosslactivo || false}
 												onChange={(e) =>
 													setMachineForm({
 														...machineForm,
@@ -652,12 +654,12 @@ export default function MachineDetailPage() {
 											</span>
 										</label>
 										<label
-											className={`flex items-center justify-center gap-3 p-5 rounded-2xl cursor-pointer transition-all border-4 ${(machineForm.esservidor ?? maquina.esservidor) ? "bg-blue-600 border-blue-400 text-white" : "bg-slate-50 border-slate-200 text-slate-400"}`}
+											className={`flex items-center justify-center gap-3 p-5 rounded-2xl cursor-pointer transition-all border-4 ${machineForm.esservidor ? "bg-blue-600 border-blue-400 text-white" : "bg-slate-50 border-slate-200 text-slate-400"}`}
 										>
 											<input
 												type="checkbox"
 												className="w-5 h-5 accent-white"
-												defaultChecked={maquina.esservidor}
+												checked={machineForm.esservidor || false}
 												onChange={(e) =>
 													setMachineForm({
 														...machineForm,

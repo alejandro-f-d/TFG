@@ -635,7 +635,7 @@ router.patch(
 	"/:uuid",
 	[
 		verificarToken,
-		tienePermiso("maquina:calendario", true),
+		// tienePermiso("maquina:calendario", true), <- Este permiso no tiene sentido porque lo que editas no es el uuid de la maquina es el uuid de la reserva.
 		validarTipos(patchReservaBodySchema),
 	],
 	patchReserva,

@@ -130,6 +130,13 @@ class CalendarioModel {
 				fechaInicio,
 				fechaFin,
 			]);
+			if (res.rowCount === 0) {
+				// Devolvemos solo el nombre en base al uuid.
+				const resNombre = await pool.query(CALENDAR_QUERY.GET_NOMBRE_MAQUINA, [
+					uuidMaquina,
+				]);
+				return resNombre.rowCount === 0 ? 2 : resNombre.rows[0].nombre;
+			}
 			return res.rows;
 		} catch (error) {
 			throw error;
@@ -186,6 +193,23 @@ class CalendarioModel {
 			throw error;
 		} finally {
 			client.release();
+		}
+	}
+	static async obtenerIdCreadorReserva(uuidReserva) {
+		try {
+			const resCreador = await pool.query(CALENDAR_QUERY.OBTENER_ID_CREADOR, [
+				uuidReserva,
+			]);
+			if (resCreador.rowCount === 0) {
+				return 2;
+			}
+			return resCreador.rows[0].idusuario;
+		} catch (error) {
+			console.error(
+				"Se ha producido un error al obtener el uuid de la reserva.",
+				uuid,
+			);
+			throw error;
 		}
 	}
 }

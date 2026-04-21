@@ -1,4 +1,5 @@
 import CalendarioModel from "../models/calendarioModel.js";
+import { tienePermiso } from "../middlewares/authMiddleware.js";
 
 export const getAllEventosCalendario = async (req, res) => {
 	const { page, limit, filtroNombre, fechaInicio, fechaFin } = req.query;
@@ -181,22 +182,25 @@ export const patchReserva = async (req, res) => {
 	const camposCambiados = req.body;
 
 	try {
-		const resultado = await CalendarioModel.patchReserva(
-			uuid,
-			idUsuario,
-			camposCambiados,
-		);
+		const idCreador = await CalendarioModel.obtenerIdCreadorReserva(uuid);
+		if (tienePermiso("admin:total") || req.user.idUsuario === idCreador) {
+			const resultado = await CalendarioModel.patchReserva(
+				uuid,
+				idUsuario,
+				camposCambiados,
+			);
 
-		if (resultado === 2) {
-			return res.status(404).json({
-				error: "Reserva no encontrada o no tienes permisos para editarla.",
+			if (resultado === 2) {
+				return res.status(404).json({
+					error: "Reserva no encontrada o no tienes permisos para editarla.",
+				});
+			}
+
+			return res.status(204).json({
+				message: "Reserva actualizada con éxito.",
+				status: "OK",
 			});
 		}
-
-		return res.status(204).json({
-			message: "Reserva actualizada con éxito.",
-			status: "OK",
-		});
 	} catch (error) {
 		console.error("Error en patchReserva (Controller):", error);
 		return res
