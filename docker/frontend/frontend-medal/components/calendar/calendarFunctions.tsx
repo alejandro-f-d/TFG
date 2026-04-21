@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -42,15 +42,29 @@ export default function CalendarFunctions({
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [loadingDetail, setLoadingDetail] = useState(false);
-	const [calendarApi, setCalendarApi] = useState<any>(null);
 
-	// Estado del formulario (Solo campos permitidos para PATCH)
+	// Referencia para la API del calendario
+	const calendarRef = useRef<FullCalendar>(null);
+
 	const [editForm, setEditForm] = useState({
 		nombre: "",
 		descripcion: "",
 		fechainicio: "",
 		fechafin: "",
 	});
+
+	// --- AUTO-REFRESH CADA 1 MINUTO ---
+	useEffect(() => {
+		const interval = setInterval(() => {
+			if (calendarRef.current) {
+				const api = calendarRef.current.getApi();
+				api.refetchEvents();
+				console.log("Sincronización automática: Reservas actualizadas.");
+			}
+		}, 60000); // 60 segundos
+
+		return () => clearInterval(interval);
+	}, []);
 
 	// --- LÓGICA DE PERMISOS ---
 	const tienePermisoGestion = (reserva: ReservaDetalle) => {
@@ -114,7 +128,6 @@ export default function CalendarFunctions({
 	};
 
 	const handleEventClick = async (info: EventClickArg) => {
-		setCalendarApi(info.view.calendar);
 		const uuidReserva = info.event.id;
 		setIsModalOpen(true);
 		setLoadingDetail(true);
@@ -135,7 +148,7 @@ export default function CalendarFunctions({
 				setEditForm({
 					nombre: data.nombre_reserva,
 					descripcion: data.descripcion,
-					fechainicio: data.fechainicio.slice(0, 16), // Formato para input datetime-local
+					fechainicio: data.fechainicio.slice(0, 16),
 					fechafin: data.fechafin.slice(0, 16),
 				});
 			} else {
@@ -161,9 +174,7 @@ export default function CalendarFunctions({
 	const handleDelete = async () => {
 		if (
 			!selectedReserva ||
-			!confirm(
-				"¿Estás seguro de que deseas eliminar esta reserva? Esta acción es irreversible.",
-			)
+			!confirm("¿Estás seguro de que deseas eliminar esta reserva?")
 		)
 			return;
 		try {
@@ -177,7 +188,7 @@ export default function CalendarFunctions({
 			);
 			if (response.ok) {
 				setIsModalOpen(false);
-				calendarApi?.refetchEvents();
+				calendarRef.current?.getApi().refetchEvents();
 			} else {
 				const err = await response.json();
 				alert(err.error || "Error al eliminar");
@@ -210,7 +221,7 @@ export default function CalendarFunctions({
 			if (response.ok) {
 				setIsEditing(false);
 				setIsModalOpen(false);
-				calendarApi?.refetchEvents();
+				calendarRef.current?.getApi().refetchEvents();
 			} else {
 				const err = await response.json();
 				alert(err.error || "Error al actualizar");
@@ -224,6 +235,7 @@ export default function CalendarFunctions({
 		<div className="relative">
 			<div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
 				<FullCalendar
+					ref={calendarRef}
 					plugins={[dayGridPlugin, interactionPlugin]}
 					initialView="dayGridMonth"
 					events={fetchEvents}
@@ -258,12 +270,11 @@ export default function CalendarFunctions({
 										{isEditing ? (
 											<div className="space-y-4">
 												<div>
-													<label className="text-[10px] font-bold uppercase text-gray-400 block mb-1 ml-1">
+													<label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">
 														Nombre
 													</label>
 													<input
-														type="text"
-														className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-all"
+														className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
 														value={editForm.nombre}
 														onChange={(e) =>
 															setEditForm({
@@ -274,11 +285,11 @@ export default function CalendarFunctions({
 													/>
 												</div>
 												<div>
-													<label className="text-[10px] font-bold uppercase text-gray-400 block mb-1 ml-1">
+													<label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">
 														Descripción
 													</label>
 													<textarea
-														className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-all min-h-[80px]"
+														className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm min-h-[80px]"
 														value={editForm.descripcion}
 														onChange={(e) =>
 															setEditForm({
@@ -289,38 +300,28 @@ export default function CalendarFunctions({
 													/>
 												</div>
 												<div className="grid grid-cols-2 gap-3">
-													<div>
-														<label className="text-[10px] font-bold uppercase text-gray-400 block mb-1 ml-1">
-															Inicio
-														</label>
-														<input
-															type="datetime-local"
-															className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500"
-															value={editForm.fechainicio}
-															onChange={(e) =>
-																setEditForm({
-																	...editForm,
-																	fechainicio: e.target.value,
-																})
-															}
-														/>
-													</div>
-													<div>
-														<label className="text-[10px] font-bold uppercase text-gray-400 block mb-1 ml-1">
-															Fin
-														</label>
-														<input
-															type="datetime-local"
-															className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500"
-															value={editForm.fechafin}
-															onChange={(e) =>
-																setEditForm({
-																	...editForm,
-																	fechafin: e.target.value,
-																})
-															}
-														/>
-													</div>
+													<input
+														type="datetime-local"
+														className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
+														value={editForm.fechainicio}
+														onChange={(e) =>
+															setEditForm({
+																...editForm,
+																fechainicio: e.target.value,
+															})
+														}
+													/>
+													<input
+														type="datetime-local"
+														className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
+														value={editForm.fechafin}
+														onChange={(e) =>
+															setEditForm({
+																...editForm,
+																fechafin: e.target.value,
+															})
+														}
+													/>
 												</div>
 											</div>
 										) : (
@@ -330,7 +331,7 @@ export default function CalendarFunctions({
 														{selectedReserva.nombre_completo_responsable[0]}
 													</div>
 													<div>
-														<p className="text-[10px] uppercase font-bold text-blue-400 leading-none">
+														<p className="text-[10px] uppercase font-bold text-blue-400">
 															Responsable
 														</p>
 														<p className="text-sm font-semibold text-blue-900">
@@ -338,12 +339,11 @@ export default function CalendarFunctions({
 														</p>
 													</div>
 												</div>
-
 												{selectedReserva.uuid_responsable !== "restringido" && (
 													<>
 														<div>
 															<p className="text-[10px] uppercase font-bold text-gray-400 mb-1">
-																Proyecto / Tarea
+																Proyecto
 															</p>
 															<p className="text-gray-800 font-medium">
 																{selectedReserva.nombre_reserva}
@@ -353,26 +353,24 @@ export default function CalendarFunctions({
 															<p className="text-[10px] uppercase font-bold text-gray-400 mb-1">
 																Descripción
 															</p>
-															<p className="text-gray-600 text-sm leading-relaxed">
+															<p className="text-gray-600 text-sm">
 																{selectedReserva.descripcion}
 															</p>
 														</div>
-														<div className="flex justify-between pt-2 border-t border-gray-50">
+														<div className="flex justify-between pt-2 border-t border-gray-50 text-xs">
 															<div>
-																<p className="text-[10px] uppercase font-bold text-gray-400">
-																	Inicio
+																<p className="font-bold text-gray-400">
+																	INICIO
 																</p>
-																<p className="text-xs text-gray-700">
+																<p>
 																	{new Date(
 																		selectedReserva.fechainicio,
 																	).toLocaleString("es-ES")}
 																</p>
 															</div>
-															<div>
-																<p className="text-[10px] uppercase font-bold text-gray-400 text-right">
-																	Fin
-																</p>
-																<p className="text-xs text-gray-700 text-right">
+															<div className="text-right">
+																<p className="font-bold text-gray-400">FIN</p>
+																<p>
 																	{new Date(
 																		selectedReserva.fechafin,
 																	).toLocaleString("es-ES")}
@@ -388,7 +386,7 @@ export default function CalendarFunctions({
 							)}
 						</div>
 
-						<div className="bg-gray-50 px-6 py-4 flex justify-between items-center gap-3">
+						<div className="bg-gray-50 px-6 py-4 flex justify-between gap-3">
 							<div className="flex gap-2">
 								{!isEditing &&
 									selectedReserva &&
@@ -396,40 +394,39 @@ export default function CalendarFunctions({
 										<>
 											<button
 												onClick={() => setIsEditing(true)}
-												className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all"
+												className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700"
 											>
 												EDITAR
 											</button>
 											<button
 												onClick={handleDelete}
-												className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 transition-all"
+												className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100"
 											>
 												BORRAR
 											</button>
 										</>
 									)}
 							</div>
-
 							<div className="flex gap-2">
 								{isEditing ? (
 									<>
 										<button
 											onClick={() => setIsEditing(false)}
-											className="px-4 py-2 text-gray-500 text-xs font-bold hover:bg-gray-200 rounded-lg transition-all"
+											className="px-4 py-2 text-gray-500 text-xs font-bold"
 										>
 											CANCELAR
 										</button>
 										<button
 											onClick={handleUpdate}
-											className="px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 shadow-md shadow-green-100"
+											className="px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-bold shadow-md"
 										>
-											GUARDAR CAMBIOS
+											GUARDAR
 										</button>
 									</>
 								) : (
 									<button
 										onClick={() => setIsModalOpen(false)}
-										className="px-6 py-2 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-black transition-all"
+										className="px-6 py-2 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-black"
 									>
 										CERRAR
 									</button>
