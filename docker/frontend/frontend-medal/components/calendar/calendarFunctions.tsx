@@ -6,6 +6,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventSourceFunc, EventClickArg } from "@fullcalendar/core";
 
+// --- INTERFACES ---
 interface ReservaDetalle {
 	uuidcalendario: string;
 	nombre_reserva: string;
@@ -23,13 +24,14 @@ interface CalendarProps {
 }
 
 const EVENT_COLORS = [
-	"#3b82f6",
-	"#10b981",
-	"#f59e0b",
-	"#ef4444",
-	"#8b5cf6",
-	"#ec4899",
-	"#06b6d4",
+	"#1e40af",
+	"#166534",
+	"#92400e",
+	"#991b1b",
+	"#6b21a8",
+	"#831843",
+	"#0e7490",
+	"#374151",
 ];
 
 export default function CalendarFunctions({
@@ -40,47 +42,41 @@ export default function CalendarFunctions({
 		null,
 	);
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isCreating, setIsCreating] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [loadingDetail, setLoadingDetail] = useState(false);
-
-	// Referencia para la API del calendario
 	const calendarRef = useRef<FullCalendar>(null);
 
-	const [editForm, setEditForm] = useState({
+	const [form, setForm] = useState({
 		nombre: "",
 		descripcion: "",
 		fechainicio: "",
 		fechafin: "",
 	});
 
-	// --- AUTO-REFRESH CADA 1 MINUTO ---
+	const getColorFromUuid = (uuid: string) => {
+		if (!uuid) return EVENT_COLORS[0];
+		let hash = 0;
+		for (let i = 0; i < uuid.length; i++) {
+			hash = uuid.charCodeAt(i) + ((hash << 5) - hash);
+		}
+		const index = Math.abs(hash) % EVENT_COLORS.length;
+		return EVENT_COLORS[index];
+	};
+
+	const formatToLocalInput = (dateStr: string) => {
+		if (!dateStr) return "";
+		const date = new Date(dateStr);
+		const offset = date.getTimezoneOffset() * 60000;
+		return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+	};
+
 	useEffect(() => {
 		const interval = setInterval(() => {
-			if (calendarRef.current) {
-				const api = calendarRef.current.getApi();
-				api.refetchEvents();
-				console.log("Sincronización automática: Reservas actualizadas.");
-			}
-		}, 60000); // 60 segundos
-
+			calendarRef.current?.getApi().refetchEvents();
+		}, 60000);
 		return () => clearInterval(interval);
 	}, []);
-
-	// --- LÓGICA DE PERMISOS ---
-	const tienePermisoGestion = (reserva: ReservaDetalle) => {
-		try {
-			const permisosStr = localStorage.getItem("permisos");
-			const uuidUser = localStorage.getItem("uuidUser");
-			const permisos: string[] = permisosStr ? JSON.parse(permisosStr) : [];
-
-			const esAdmin = permisos.includes("admin:total");
-			const esDueno = reserva.uuid_responsable === uuidUser;
-
-			return esAdmin || esDueno;
-		} catch (e) {
-			return false;
-		}
-	};
 
 	const fetchEvents: EventSourceFunc = async (
 		info,
@@ -100,98 +96,60 @@ export default function CalendarFunctions({
 			});
 			const data = await response.json();
 
-			if (response.ok) {
-				if (Array.isArray(data.info)) {
-					if (data.info.length > 0)
-						onMachineNameLoaded?.(data.info[0].nombre_maquina);
-					successCallback(
-						data.info.map((r: any) => ({
-							id: r.uuidcalendario,
-							title: r.nombre_reserva,
-							start: r.fechainicio,
-							end: r.fechafin,
-							backgroundColor:
-								EVENT_COLORS[r.id_responsable % EVENT_COLORS.length],
-							extendedProps: {
-								responsable_nombre: r.nombre_completo_responsable,
-							},
-						})),
-					);
-				} else {
-					onMachineNameLoaded?.(data.info);
-					successCallback([]);
-				}
+			if (response.ok && Array.isArray(data.info)) {
+				if (data.info.length > 0)
+					onMachineNameLoaded?.(data.info[0].nombre_maquina);
+
+				const events = data.info.map((r: any) => {
+					const userColor = getColorFromUuid(r.uuid_responsable);
+					return {
+						id: r.uuidcalendario,
+						title: r.nombre_reserva,
+						start: r.fechainicio,
+						end: r.fechafin,
+						// Forzamos el color aquí
+						backgroundColor: userColor,
+						borderColor: userColor,
+						display: "block", // Importante para que use el color de fondo en modo barra
+						extendedProps: {
+							responsable_nombre: r.nombre_completo_responsable,
+						},
+					};
+				});
+				successCallback(events);
+			} else {
+				successCallback([]);
 			}
 		} catch (error) {
 			failureCallback(error as Error);
 		}
 	};
 
-	const handleEventClick = async (info: EventClickArg) => {
-		const uuidReserva = info.event.id;
-		setIsModalOpen(true);
-		setLoadingDetail(true);
-		setIsEditing(false);
-
+	const handleCreate = async () => {
 		try {
 			const token = localStorage.getItem("token");
 			const response = await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${uuidReserva}`,
+				`${process.env.NEXT_PUBLIC_API_URL}/api/maquina/${maquinaUuid}/reserva`,
 				{
-					headers: { Authorization: `Bearer ${token}` },
-				},
-			);
-
-			if (response.ok) {
-				const data = await response.json();
-				setSelectedReserva(data);
-				setEditForm({
-					nombre: data.nombre_reserva,
-					descripcion: data.descripcion,
-					fechainicio: data.fechainicio.slice(0, 16),
-					fechafin: data.fechafin.slice(0, 16),
-				});
-			} else {
-				setSelectedReserva({
-					uuidcalendario: uuidReserva,
-					nombre_reserva: info.event.title,
-					descripcion: "Información protegida o no disponible.",
-					fechainicio: info.event.startStr,
-					fechafin: info.event.endStr,
-					nombre_maquina: "",
-					uuid_responsable: "restringido",
-					nombre_completo_responsable:
-						info.event.extendedProps.responsable_nombre,
-				});
-			}
-		} catch (error) {
-			console.error(error);
-		} finally {
-			setLoadingDetail(false);
-		}
-	};
-
-	const handleDelete = async () => {
-		if (
-			!selectedReserva ||
-			!confirm("¿Estás seguro de que deseas eliminar esta reserva?")
-		)
-			return;
-		try {
-			const token = localStorage.getItem("token");
-			const response = await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${selectedReserva.uuidcalendario}`,
-				{
-					method: "DELETE",
-					headers: { Authorization: `Bearer ${token}` },
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						nombre: form.nombre,
+						descripcion: form.descripcion,
+						fechaInicio: new Date(form.fechainicio).toISOString(),
+						fechaFin: new Date(form.fechafin).toISOString(),
+					}),
 				},
 			);
 			if (response.ok) {
-				setIsModalOpen(false);
+				setIsCreating(false);
 				calendarRef.current?.getApi().refetchEvents();
 			} else {
 				const err = await response.json();
-				alert(err.error || "Error al eliminar");
+				alert(err.error || "Error al crear");
 			}
 		} catch (error) {
 			console.error(error);
@@ -211,10 +169,10 @@ export default function CalendarFunctions({
 						"Content-Type": "application/json",
 					},
 					body: JSON.stringify({
-						nombre: editForm.nombre,
-						descripcion: editForm.descripcion,
-						fechainicio: new Date(editForm.fechainicio).toISOString(),
-						fechafin: new Date(editForm.fechafin).toISOString(),
+						nombre: form.nombre,
+						descripcion: form.descripcion,
+						fechainicio: new Date(form.fechainicio).toISOString(),
+						fechafin: new Date(form.fechafin).toISOString(),
 					}),
 				},
 			);
@@ -222,215 +180,332 @@ export default function CalendarFunctions({
 				setIsEditing(false);
 				setIsModalOpen(false);
 				calendarRef.current?.getApi().refetchEvents();
-			} else {
-				const err = await response.json();
-				alert(err.error || "Error al actualizar");
 			}
 		} catch (error) {
 			console.error(error);
 		}
 	};
 
+	const handleDelete = async () => {
+		if (!selectedReserva || !confirm("¿Eliminar reserva?")) return;
+		try {
+			const token = localStorage.getItem("token");
+			const response = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${selectedReserva.uuidcalendario}`,
+				{
+					method: "DELETE",
+					headers: { Authorization: `Bearer ${token}` },
+				},
+			);
+			if (response.ok) {
+				setIsModalOpen(false);
+				calendarRef.current?.getApi().refetchEvents();
+			}
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
+	const handleEventClick = async (info: EventClickArg) => {
+		setIsModalOpen(true);
+		setLoadingDetail(true);
+		setIsEditing(false);
+		setIsCreating(false);
+		try {
+			const token = localStorage.getItem("token");
+			const response = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${info.event.id}`,
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				},
+			);
+			if (response.ok) {
+				const data = await response.json();
+				setSelectedReserva(data);
+				setForm({
+					nombre: data.nombre_reserva,
+					descripcion: data.descripcion,
+					fechainicio: formatToLocalInput(data.fechainicio),
+					fechafin: formatToLocalInput(data.fechafin),
+				});
+			}
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setLoadingDetail(false);
+		}
+	};
+
+	const tienePermisoGestion = (reserva: ReservaDetalle) => {
+		try {
+			const permisosStr = localStorage.getItem("permisos");
+			const uuidUser = localStorage.getItem("uuidUser");
+			const permisos: string[] = permisosStr ? JSON.parse(permisosStr) : [];
+			return (
+				permisos.includes("admin:total") ||
+				reserva.uuid_responsable === uuidUser
+			);
+		} catch {
+			return false;
+		}
+	};
+
 	return (
-		<div className="relative">
-			<div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+		<div className="relative text-slate-950">
+			<style jsx global>{`
+				/* FORZAR VISIBILIDAD DE EVENTOS */
+				.fc-event {
+					opacity: 1 !important;
+					border: none !important;
+					margin: 1px 0 !important;
+				}
+
+				/* Evitar que eventos individuales se vuelvan blancos */
+				.fc-daygrid-event-dot {
+					border-color: inherit !important;
+				}
+
+				.fc-event-main {
+					color: #ffffff !important;
+					font-weight: 700 !important;
+					padding: 2px 4px !important;
+				}
+
+				.fc-event-title, .fc-event-time {
+					color: #ffffff !important;
+					text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+				}
+
+				/* Asegurar que los números de los días sean negros */
+				.fc .fc-daygrid-day-number {
+					color: #000000 !important;
+					font-weight: 800 !important;
+					text-decoration: none !important;
+				}
+
+				/* Inputs y Textareas con contraste real */
+				input, textarea {
+					color: #000000 !important;
+					background-color: #ffffff !important;
+					border: 2px solid #e2e8f0 !important;
+				}
+				input:focus { border-color: #000 !important; }
+			`}</style>
+
+			<div className="flex justify-between items-center mb-6 px-2">
+				<h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-slate-950 pl-4">
+					Calendario de Reservas
+				</h3>
+				<button
+					onClick={() => {
+						setIsCreating(true);
+						setForm({
+							nombre: "",
+							descripcion: "",
+							fechainicio: "",
+							fechafin: "",
+						});
+					}}
+					className="bg-slate-950 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl"
+				>
+					+ Nueva Reserva
+				</button>
+			</div>
+
+			<div className="bg-white p-6 rounded-[2.5rem] shadow-xl border-2 border-slate-100 overflow-hidden">
 				<FullCalendar
 					ref={calendarRef}
 					plugins={[dayGridPlugin, interactionPlugin]}
 					initialView="dayGridMonth"
 					events={fetchEvents}
 					locale="es"
+					timeZone="Europe/Madrid"
 					eventClick={handleEventClick}
+					headerToolbar={{
+						left: "prev,next today",
+						center: "title",
+						right: "dayGridMonth,dayGridWeek",
+					}}
 				/>
 			</div>
 
-			{isModalOpen && (
-				<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-					<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100">
-						<div className="p-6">
-							<div className="flex justify-between items-center mb-6">
-								<h2 className="text-xl font-bold text-gray-800">
-									{isEditing ? "Editar Reserva" : "Detalle de Reserva"}
-								</h2>
-								<button
-									onClick={() => setIsModalOpen(false)}
-									className="text-gray-400 hover:text-gray-600 transition-colors"
-								>
-									✕
-								</button>
-							</div>
+			{(isModalOpen || isCreating) && (
+				<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+					<div className="bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full overflow-hidden border-4 border-slate-950">
+						<div className="p-8">
+							<h2 className="text-3xl font-black uppercase text-slate-950 mb-8 border-b-4 border-slate-100 pb-2">
+								{isCreating
+									? "Nueva Reserva"
+									: isEditing
+										? "Modificar"
+										: "Detalle"}
+							</h2>
 
-							{loadingDetail ? (
-								<div className="py-12 text-center text-gray-500 animate-pulse font-medium">
-									Obteniendo información...
+							{isCreating || isEditing ? (
+								<div className="space-y-4">
+									<div>
+										<label className="text-[10px] font-black uppercase text-slate-500 mb-1 block">
+											Proyecto / Tarea
+										</label>
+										<input
+											className="w-full p-4 rounded-xl text-base font-bold outline-none"
+											value={form.nombre}
+											onChange={(e) =>
+												setForm({ ...form, nombre: e.target.value })
+											}
+											placeholder="Nombre del proyecto..."
+										/>
+									</div>
+									<div>
+										<label className="text-[10px] font-black uppercase text-slate-500 mb-1 block">
+											Descripción
+										</label>
+										<textarea
+											className="w-full p-4 rounded-xl text-base font-medium min-h-[100px] outline-none"
+											value={form.descripcion}
+											onChange={(e) =>
+												setForm({ ...form, descripcion: e.target.value })
+											}
+											placeholder="Notas adicionales..."
+										/>
+									</div>
+									<div className="grid grid-cols-2 gap-4">
+										<div>
+											<label className="text-[10px] font-black uppercase text-slate-500 mb-1 block">
+												Inicio
+											</label>
+											<input
+												type="datetime-local"
+												className="w-full p-4 rounded-xl text-sm font-black"
+												value={form.fechainicio}
+												onChange={(e) =>
+													setForm({ ...form, fechainicio: e.target.value })
+												}
+											/>
+										</div>
+										<div>
+											<label className="text-[10px] font-black uppercase text-slate-500 mb-1 block">
+												Fin
+											</label>
+											<input
+												type="datetime-local"
+												className="w-full p-4 rounded-xl text-sm font-black"
+												value={form.fechafin}
+												onChange={(e) =>
+													setForm({ ...form, fechafin: e.target.value })
+												}
+											/>
+										</div>
+									</div>
+								</div>
+							) : loadingDetail ? (
+								<div className="py-10 text-center font-black text-slate-400 uppercase">
+									Cargando...
 								</div>
 							) : (
 								selectedReserva && (
-									<div className="space-y-5">
-										{isEditing ? (
-											<div className="space-y-4">
-												<div>
-													<label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">
-														Nombre
-													</label>
-													<input
-														className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-														value={editForm.nombre}
-														onChange={(e) =>
-															setEditForm({
-																...editForm,
-																nombre: e.target.value,
-															})
-														}
-													/>
-												</div>
-												<div>
-													<label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">
-														Descripción
-													</label>
-													<textarea
-														className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm min-h-[80px]"
-														value={editForm.descripcion}
-														onChange={(e) =>
-															setEditForm({
-																...editForm,
-																descripcion: e.target.value,
-															})
-														}
-													/>
-												</div>
-												<div className="grid grid-cols-2 gap-3">
-													<input
-														type="datetime-local"
-														className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-														value={editForm.fechainicio}
-														onChange={(e) =>
-															setEditForm({
-																...editForm,
-																fechainicio: e.target.value,
-															})
-														}
-													/>
-													<input
-														type="datetime-local"
-														className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-														value={editForm.fechafin}
-														onChange={(e) =>
-															setEditForm({
-																...editForm,
-																fechafin: e.target.value,
-															})
-														}
-													/>
-												</div>
+									<div className="space-y-6">
+										<div className="bg-slate-950 p-4 rounded-2xl flex items-center gap-4">
+											<div
+												className="h-12 w-12 bg-white rounded-full flex items-center justify-center font-black"
+												style={{
+													color: getColorFromUuid(
+														selectedReserva.uuid_responsable,
+													),
+												}}
+											>
+												{selectedReserva.nombre_completo_responsable[0]}
 											</div>
-										) : (
-											<div className="space-y-4">
-												<div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl">
-													<div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
-														{selectedReserva.nombre_completo_responsable[0]}
-													</div>
-													<div>
-														<p className="text-[10px] uppercase font-bold text-blue-400">
-															Responsable
-														</p>
-														<p className="text-sm font-semibold text-blue-900">
-															{selectedReserva.nombre_completo_responsable}
-														</p>
-													</div>
-												</div>
-												{selectedReserva.uuid_responsable !== "restringido" && (
-													<>
-														<div>
-															<p className="text-[10px] uppercase font-bold text-gray-400 mb-1">
-																Proyecto
-															</p>
-															<p className="text-gray-800 font-medium">
-																{selectedReserva.nombre_reserva}
-															</p>
-														</div>
-														<div>
-															<p className="text-[10px] uppercase font-bold text-gray-400 mb-1">
-																Descripción
-															</p>
-															<p className="text-gray-600 text-sm">
-																{selectedReserva.descripcion}
-															</p>
-														</div>
-														<div className="flex justify-between pt-2 border-t border-gray-50 text-xs">
-															<div>
-																<p className="font-bold text-gray-400">
-																	INICIO
-																</p>
-																<p>
-																	{new Date(
-																		selectedReserva.fechainicio,
-																	).toLocaleString("es-ES")}
-																</p>
-															</div>
-															<div className="text-right">
-																<p className="font-bold text-gray-400">FIN</p>
-																<p>
-																	{new Date(
-																		selectedReserva.fechafin,
-																	).toLocaleString("es-ES")}
-																</p>
-															</div>
-														</div>
-													</>
-												)}
+											<div>
+												<p className="text-[10px] font-black text-slate-400 uppercase">
+													Responsable
+												</p>
+												<p className="text-white font-bold">
+													{selectedReserva.nombre_completo_responsable}
+												</p>
 											</div>
-										)}
+										</div>
+										<div>
+											<p className="text-3xl font-black text-slate-950 uppercase italic leading-none">
+												{selectedReserva.nombre_reserva}
+											</p>
+											<p className="text-slate-600 mt-2 font-medium">
+												{selectedReserva.descripcion || "Sin descripción."}
+											</p>
+										</div>
+										<div className="grid grid-cols-2 gap-4 pt-4 border-t-2 border-slate-100">
+											<div>
+												<p className="text-[10px] font-black text-slate-400 uppercase">
+													Desde
+												</p>
+												<p className="font-black text-sm">
+													{new Date(selectedReserva.fechainicio).toLocaleString(
+														"es-ES",
+													)}
+												</p>
+											</div>
+											<div className="text-right">
+												<p className="text-[10px] font-black text-slate-400 uppercase">
+													Hasta
+												</p>
+												<p className="font-black text-sm">
+													{new Date(selectedReserva.fechafin).toLocaleString(
+														"es-ES",
+													)}
+												</p>
+											</div>
+										</div>
 									</div>
 								)
 							)}
 						</div>
-
-						<div className="bg-gray-50 px-6 py-4 flex justify-between gap-3">
-							<div className="flex gap-2">
-								{!isEditing &&
+						<div className="bg-slate-50 p-6 flex justify-between items-center">
+							<div className="flex gap-4">
+								{!isCreating &&
+									!isEditing &&
 									selectedReserva &&
 									tienePermisoGestion(selectedReserva) && (
 										<>
 											<button
 												onClick={() => setIsEditing(true)}
-												className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700"
+												className="text-xs font-black text-blue-700 uppercase hover:underline"
 											>
-												EDITAR
+												Editar
 											</button>
 											<button
 												onClick={handleDelete}
-												className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100"
+												className="text-xs font-black text-red-600 uppercase hover:underline"
 											>
-												BORRAR
+												Borrar
 											</button>
 										</>
 									)}
 							</div>
-							<div className="flex gap-2">
-								{isEditing ? (
-									<>
-										<button
-											onClick={() => setIsEditing(false)}
-											className="px-4 py-2 text-gray-500 text-xs font-bold"
-										>
-											CANCELAR
-										</button>
-										<button
-											onClick={handleUpdate}
-											className="px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-bold shadow-md"
-										>
-											GUARDAR
-										</button>
-									</>
-								) : (
+							<div className="flex gap-4">
+								<button
+									onClick={() => {
+										setIsModalOpen(false);
+										setIsCreating(false);
+									}}
+									className="px-6 py-2 text-xs font-black uppercase text-slate-500 hover:text-slate-950"
+								>
+									Cerrar
+								</button>
+								{isCreating ? (
 									<button
-										onClick={() => setIsModalOpen(false)}
-										className="px-6 py-2 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-black"
+										onClick={handleCreate}
+										className="bg-slate-950 text-white px-6 py-2 rounded-xl text-xs font-black uppercase tracking-tighter"
 									>
-										CERRAR
+										Confirmar
 									</button>
-								)}
+								) : isEditing ? (
+									<button
+										onClick={handleUpdate}
+										className="bg-green-700 text-white px-6 py-2 rounded-xl text-xs font-black uppercase tracking-tighter"
+									>
+										Guardar
+									</button>
+								) : null}
 							</div>
 						</div>
 					</div>
