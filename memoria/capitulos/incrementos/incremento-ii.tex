@@ -395,6 +395,8 @@ En la siguiente figura \ref{fig:infraestructura_inc_ii} encontramos un diagrama 
 
 El diseño de figma se usa a modo de primer boceto para la aplicación. Tras contrastarlo con un cliente final y su aprobación se pasa a una fase de implementación del frontend teniendo como base este primer boceto. El figma se puede encontrar en el siguiente \href{https://www.figma.com/design/HO9qJUw71z6evEVby9AFfv/TFG?node-id=0-1&t=fru8MHZUuEl0OLhZ-1}{enlace}. 
 
+Para el diseño de las pantallas se ha hecho uso de los componentes de \texttt{Simple Design System}, este contiene diferentes componentes que han servido de punto de partida para el diseño. En el Anexo se pueden encontrar comparativas de las pantallas más importantes.
+
 En la figura \ref{fig:contraste_pantallas} podemos ver un contraste entre el figma y la aplicación desarrollada de la pantalla principal. 
 
 \begin{figure}[H] 
@@ -443,6 +445,25 @@ El proceso de firma se puede ver en la figura\ref{fig:detalle_firmas} a través 
  \caption{Flujo detalle firmas.}
  \label{fig:detalle_firmas}
 \end{figure}
+
+\subsection{Frontend:}
+En el frontend se desarrolla con tecnologías de \texttt{Next.js} y \texttt{React.js}. A continuación se detallan algunos de los desafíos técnicos que se han presentado.
+
+\subsubsection{Pantalla principal:}
+
+En la pantalla principal se desarrollan una serie de botones. Dependiendo de los permisos se pueden ver unos u otros, con el permiso \texttt{admin:total} se pueden encontrar todos. Con estos botones se hace la redirección entre pantallas. En este menú ha estado presente la dificultad téncnica de incorporar los servicios específicos del backend externos como el apache, el swagger y bulldashboard, para su incorporación se incrusta en una cookie el token del usuario. 
+
+\subsubsection{Gestión de los datos personales:}
+
+En este nivel se han tenido que desarrollar dos tipos de pantallas esto se hace para diferenciar en base a los permisos del usuario. Los usuarios con determinados permisos son capaces de editar los datos personales de otros usuarios mientras que los usuarios sin permisos solo pueden editar su nombre, apellidos y credencial de acceso.
+
+% En la gestión de los datos personales, los usuarios pueden modificar parte de sus datos como el nombre, los apellidos, foto de perfil y credenciales de acceso. Por otro lado, los usuarios con permisos de administración tienen otro panel donde pueden modificar datos específicos.
+
+
+\subsubsection{Calendario:}
+% La integración con el calendario ha requerido de unos cambios clave no contemplados, para su implementación se ha hecho uso del node package \href{https://www.npmjs.com/package/fullcalendar}{@fullcalendar}. En esta pantalla ha estado presente diferentes desafíos técnicos, se pueden destacar los siguientes. Se ha tenido la necesidad de diferenciar cada uno de los usuarios que establecen un evento, para ello se ha creado una estructura de colores y mediante una función hash y el módulo en base a la cantidad de colores se selecciona el que representa al usuario. Por otro lado, se ha tenido en cuenta las diferencias horarias con el UTC, se ha desarrollado una función en el frontend que realiza la conversión de horas a formato peninsular.
+
+Para la integración del calendario, hemos utilizado la librería @fullcalendar, lo que ha permitido partir de una base sólida como punto de partida para la solución. Uno de los principales retos fue lograr que cada usuario fuera fácilmente identificable de un vistazo. Para ello se ha diseñado un sistema de colores que se asignan automáticamente mediante una función hash basada en el UUID del dueño de la reserva. Otro de los desafíos ha sido el control horario en base a UTC, se ha usado una lógica en el frontend que detecta y convierte las horas al horario peninsular de forma automática. De esta manera, nos aseguramos de que, al salvar una reserva, las horas se mantengan exactamente donde el usuario las seleccionó, sin desplazamientos inesperados que ocurrían previamente.
 
 \section{Validación y cierre:}
 Para la validación de este servicio se han generado dos conjuntos de test unitarios, el primero de ellos se encarga de la validación automática de los métodos de la API no relacionado con las peticiones. El otro es específico de las peticiones y comprueba las características de seguridad asociadas a las mismas.
