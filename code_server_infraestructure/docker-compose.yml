@@ -1,0 +1,54 @@
+name: ctbcodeserver
+services:
+
+  ###########################################################
+  # Servicios iniciales.
+  ###########################################################
+
+  nginx_proxy:
+    image: nginx:latest
+    container_name: nginx_proxy_codeserver
+    ports:
+      - "8458:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./htpasswd:/etc/nginx/.htpasswd:ro
+      - ./certs:/etc/nginx/certs:ro
+    restart: unless-stopped
+    
+
+###########################################################
+# Servicios de los usuarios 
+###########################################################
+
+
+
+  code_rafael:
+    image: codercom/code-server:latest
+    container_name: code_rafael
+    environment:
+      - PASSWORD=password
+    volumes:
+      - ./data/rafael:/home/coder/project
+    # Expose permite que Nginx lo vea internamente sin abrir el puerto al mundo
+    expose:
+      - "8080"
+    # Mantenemos ports para compatibilidad, pero la pasarela usará el nombre interno
+    ports:
+      - "49153:8080"
+    depends_on:
+      code_rafael_init:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: ["gpu"]
+  code_rafael_init:
+    image: alpine
+    container_name: code_rafael_init
+    volumes:
+      - ./data/rafael:/target
+    command: sh -c "chown -R 1000:1000 /target && chmod -R 755 /target"
