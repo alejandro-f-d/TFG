@@ -52,9 +52,6 @@ anadirServicioDocker() {
     # Expose permite que Nginx lo vea internamente sin abrir el puerto al mundo
     expose:
       - "8080"
-    # Mantenemos ports para compatibilidad, pero la pasarela usará el nombre interno
-    ports:
-      - "$puerto:8080"
     depends_on:
       code_${usuario}_init:
         condition: service_completed_successfully

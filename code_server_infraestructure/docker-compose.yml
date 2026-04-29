@@ -16,39 +16,19 @@ services:
       - ./certs:/etc/nginx/certs:ro
     restart: unless-stopped
     
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    expose:
+      - "8080"
+    restart: unless-stopped
+    environment:
+      - DOZZLE_LEVEL=info
 
 ###########################################################
 # Servicios de los usuarios 
 ###########################################################
 
 
-
-  code_rafael:
-    image: codercom/code-server:latest
-    container_name: code_rafael
-    environment:
-      - PASSWORD=password
-    volumes:
-      - ./data/rafael:/home/coder/project
-    # Expose permite que Nginx lo vea internamente sin abrir el puerto al mundo
-    expose:
-      - "8080"
-    # Mantenemos ports para compatibilidad, pero la pasarela usará el nombre interno
-    ports:
-      - "49153:8080"
-    depends_on:
-      code_rafael_init:
-        condition: service_completed_successfully
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: ["gpu"]
-  code_rafael_init:
-    image: alpine
-    container_name: code_rafael_init
-    volumes:
-      - ./data/rafael:/target
-    command: sh -c "chown -R 1000:1000 /target && chmod -R 755 /target"
