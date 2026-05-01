@@ -81,6 +81,11 @@ main() {
 	local filePassword="$script_dir/../htpasswd"
 	local compose_file="$script_dir/../docker-compose.yml"
 
+	if [ -f "$compose_file" ] && grep -q "code_${persona}:" "$compose_file"; then
+		error "El usuario '$persona' ya existe en el docker-compose.yml."
+		exit 3
+	fi
+
 	[ ! -f "$filePassword" ] && touch "$filePassword"
 	info "Generando credenciales..."
 	htpasswd -b -B "$filePassword" "$persona" "$contrasena"
