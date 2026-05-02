@@ -26,6 +26,8 @@ anadirServicioDocker() {
     depends_on:
       code_${usuario}_init:
         condition: service_completed_successfully
+    restart: unless-stopped
+
 EOF
 
 	if [ "$grafica" -eq 1 ]; then
