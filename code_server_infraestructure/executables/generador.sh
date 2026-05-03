@@ -48,7 +48,7 @@ EOF
     container_name: code_${usuario}_init
     volumes:
       - ./data/$usuario:/target
-    command: sh -c "chown -R 1000:1000 /target && chmod -R 755 /target"
+  command: sh -c "chown -R 1000:1000 /target && chmod -R 755 /target"
 EOF
 }
 
@@ -70,15 +70,14 @@ main() {
 		exit 1
 	}
 
-	if [ $# -ne 4 ]; then
-		error "Uso: $0 nombrePersona Contrasena usoGrafica ip"
+	if [ $# -ne 3 ]; then
+		error "Uso: $0 nombrePersona Contrasena usoGrafica"
 		exit 2
 	fi
 
 	local persona=$1
 	local contrasena=$2
 	local grafica=$3
-	local ip=$4
 	local script_dir="$(dirname "$(realpath "$0")")"
 	local filePassword="$script_dir/../htpasswd"
 	local compose_file="$script_dir/../docker-compose.yml"
@@ -99,8 +98,11 @@ main() {
 	anadirUsuarioNginx "$script_dir" "$persona" "code_${persona}:8080"
 
 	info "Reiniciando pasarela Nginx..."
-	docker restart nginx_proxy_codeserver
-
+	if docker compose restart nginx_proxy >/dev/null 2>&1; then
+		info "NGINX reiniciado de manera correcta."
+	else
+		error "Se ha producido un error al reiniciar el nginx."
+	fi
 	info "Levantando entorno de $persona..."
 	cd "$script_dir/.."
 	docker compose up -d "code_${persona}_init"

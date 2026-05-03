@@ -1,3 +1,4 @@
+code_server_infraestructure/data/
 # Evitamos la subida de ficheros creados por el gobierno de España relativos al servicio de autofirma
 **/docker/firma/Autoscript v1-9.zip
 **/Despliegue
