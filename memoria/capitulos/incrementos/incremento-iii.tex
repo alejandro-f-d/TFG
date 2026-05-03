@@ -1,7 +1,35 @@
-\chapter{Incremento III:}
+\chapter{Incremento III}
 
-\section{Especificación y modelado:}
-En este incremento se valoran las opciones posibles para eliminar en todo lo posible el acceso nativo a las máquinas y la generación de entornos seguros para los usuarios en cada uno de los servidores donde sea necesario. Para ello, se plantea la siguiente estructura.
+En este incremento se evalúan las opciones disponibles para mitigar el acceso nativo a las máquinas y establecer entornos seguros en los servidores pertinentes. Para ello, se ha definido la siguiente estructura:
+
+\section{Especificación y modelado}
+\subsection{Requisitos}
+
+\begin{longtable}{llp{9cm}} 
+\caption{Requisitos Funcionales asociados al Incremento III} \label{tab:servicios_code} \\
+\toprule
+\textbf{ID} & & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{ID} & & \textbf{Descripción} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+RF1 & & Conexión segura al servicio. \\
+RF2 & & Ejecutables para la creación y eliminación automatizada de accesos. \\
+RF3 & & Transferencia de archivos por parte de los supervisores. \\
+RF4 & & Instalación automatizada de entornos Python basados en Conda. \\ 
+RF5 & & Interfaz en tiempo real de los recursos consumidos por los contenedores del sistema. \\
+
+\end{longtable}
+
+
+
 
 \section{Diseño de la solución:}
 \subsection{Estructura dockerizada de CodeServer:}
@@ -17,9 +45,33 @@ En la figura \ref{fig:code_server} se detalla el proceso de comunicación entre 
  \label{fig:code_server}
 \end{figure}
 
-De manera adicional, los administradores de cada máquina pueden dejar diverso material en carpetas compartidas de tal manera que un usuario puede recuperar información del disco duro de la máquina teniendo así la posibilidad de persistir sus datos. 
 
 \section{Implementación y Codificación:}
+
+Para cumplir con los requisitos de este incremento se realiza la siguiente implementación.
+
+En el ámbito de seguridad y control de acceso se ha creado una Autoridad de Certificación (CA) propia, esto se debe a los diferentes servidores presentes en el laboratorio para dar servicio al personal investigador, gracias a esta CA, solo se proporciona una raíz de confianza a los usuarios que es capaz de validar todos los servidores. 
+
+En la gestión del ciclo de vida de los contenedores de los usuarios, se han desarrollado ejecutables que automatizan la creación y eliminación de los servicios. Estos, modifican los ficheros de configuración del docker-compose y del nginx de manera automática. 
+
+Debido a esta migración a sistemas en contenedor, se proporciona una herramienta al administrador que permite la visulación en tiempo real de los recursos y de los logs de los contenedores. Mediante la herramienta \href{https://github.com/amir20/dozzle}{dozzle}, conectada al socket de Docker en modo lectura es capaz de ver esta información. 
+
+Para facilitar el cambio organizacional se proporciona un script de instalación automática de conda, python y dependencias en base a un requirements.txt. 
+
+
+% En cuanto a la gestión de accesos seguros, dado que la herramienta se desplegará en múltiples servidores, se ha optado por implementar una Autoridad de Certificación (CA) propia para centralizar la administración y emisión de certificados. Esta infraestructura permite generar certificados específicos para cada servidor, proporcionando a los usuarios una única raíz de confianza que facilita la conexión segura a los distintos nodos del laboratorio.
+%
+% Para la gestión del ciclo de vida de los servicios, se han desarrollado scripts ejecutables que automatizan la creación y eliminación de los mismos. Estas utilidades modifican dinámicamente las configuraciones de Nginx y Docker Compose, gestionando así el alta y baja de usuarios en el sistema.
+%
+% Respecto a la monitorización, el administrador dispone de una interfaz basada en Dozzle. Este servicio, desplegado mediante un contenedor de Docker con permisos de lectura sobre el socket de Docker, permite supervisar en tiempo real tanto el consumo de recursos como los registros de ejecución de cada contenedor.
+%
+% Finalmente, para garantizar la homogeneidad de los entornos, se ha desarrollado un script de automatización encargado de la instalación de Conda y la resolución de dependencias.
+
+
+% En base a los requisitos de este incremento se ha adaptado la solución de la siguiente manera. Para la parte de accesos seguros, al ser una herramienta que se va a instalar en diferentes servidores, para facilitar su administración y generación de certificados, se decide crear una entidad de certificación propia. Con esta entidad, se generan diferentes certificados según sea necesario para los servidores. De esta manera, se proporciona una única certificación de confianzaz a los usuarios y se puede conectar a los diferentes servidores en el laboratorio. Para la generación de los servicios y eliminación, se proporcionan ejecutables de creación y de eliminación de estos servicios, con estos se modifica la configuración del nginx y del docker-compose para la generación y eliminación de estos usuarios. El administrador, con sus credenciales es capaz de acceder a una interfaz \href{https://github.com/amir20/dozzle}{dozzle}, basada en docker, con permisos de lectura del socket, que le permite observar el consumo y logs de ejecución de cada uno de los contenedores. Para la instalación automática de conda y de dependencias se ha desarrollado un script encargado de realizar estas funciones. 
+
+% A la hora de la implementación, se encuentra la necesidad de que las conexiones sean cifradas y seguras mediante el uso de certificados. Para poder cumplir con este requisito para permitir conexión segura por parte de los usuarios a la máquina y del code-server hacia fuera, se decide montar una autoridad de certificación (en adelante CA). De esta manera, podemos generar diferentes certificados desde una misma entidad raíz de esta manera a los usuarios conectarse de manera segura a los diferentes servidores con una única clave de confianza. Otro de los requisitos localizados es la necesidad de una carpeta compartida con la máquina nativa, donde los supervisores puedan proporcionar documentación e información directamente a los usuarios en sus entornos de desarrollo, esto se consigue mediante volúmes de docker. 
+
 
 
 
