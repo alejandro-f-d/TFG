@@ -9,6 +9,31 @@ info() { echo -e "${BLUE}[INFO]${NC}  $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC}  $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 
+downloadPaquetesFUP() {
+	info "Instalando paquetes esenciales y herramientas de terminal..."
+	local PAQUETES=(
+		curl
+		wget
+		git
+		htop
+		btop
+		vim
+		nano
+		net-tools
+		iputils-ping
+		unzip
+		zip
+		tar
+		build-essential
+		tmux
+		zsh
+		tree
+	)
+	sudo apt update || error "No se pudieron actualizar los repositorios para la instalación de paquetes."
+	sudo apt install -y "${PAQUETES[@]}" || error "Error al instalar los paquetes esenciales."
+	info "Herramientas de terminal instaladas."
+}
+
 downloadPython() {
 	info "Iniciando proceso de descarga de Python."
 	sudo apt update || error "Se ha producido un error al actualizar las dependencias del sistema."
@@ -48,6 +73,7 @@ downloadMiniconda() {
 }
 
 main() {
+	downloadPaquetesFUP
 	downloadPython
 	downloadMiniconda
 	info "Proceso completo. Reinicia tu terminal."

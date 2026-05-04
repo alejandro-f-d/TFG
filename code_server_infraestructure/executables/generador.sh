@@ -13,7 +13,6 @@ anadirServicioDocker() {
 	local usuario="$1" password="$2" puerto="$3" grafica="$4" rutaEscritura="$5"
 
 	cat <<EOF >>"$rutaEscritura"
-
   code_$usuario:
     image: codercom/code-server:latest
     container_name: code_$usuario
@@ -27,7 +26,6 @@ anadirServicioDocker() {
       code_${usuario}_init:
         condition: service_completed_successfully
     restart: unless-stopped
-
 EOF
 
 	if [ "$grafica" -eq 1 ]; then
@@ -48,7 +46,8 @@ EOF
     container_name: code_${usuario}_init
     volumes:
       - ./data/$usuario:/target
-  command: sh -c "chown -R 1000:1000 /target && chmod -R 755 /target"
+    command: sh -c "chown -R 1000:1000 /target && chmod -R 755 /target"
+
 EOF
 }
 
