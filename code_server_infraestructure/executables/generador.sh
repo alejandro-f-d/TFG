@@ -62,6 +62,53 @@ anadirUsuarioNginx() {
 	sed -i "/map \$remote_user \$user_backend {/a $nueva_linea" "$archivo_nginx"
 }
 
+copy_user_scripts() {
+	local nombreUsuario=$1
+	local SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+	local target_dir="$SCRIPT_DIR/data/${nombreUsuario}"
+	info "Preparando la sincronización de scripts para el usuario: ${nombreUsuario}."
+	until [ -d "$target_dir" ]; do
+		warn "Directorio de destino no encontrado en: $target_dir. Reintentando."
+		sleep 2
+	done
+
+	info "Directorio detectado en: $target_dir"
+	local src_python="$SCRIPT_DIR/executables/python.sh"
+	local src_ssh="$SCRIPT_DIR/executables/ssh.sh"
+	local success=true
+	for file_path in "$src_python" "$src_ssh"; do
+		local file_name=$(basename "$file_path")
+		if [ -f "$file_path" ]; then
+			if cp "$file_path" "$target_dir/"; then
+				chown 1000:1000 "$target_dir/$file_name"
+				chmod +x "$target_dir/$file_name"
+				info "Archivo [$file_name] copiado y configurado con éxito."
+			else
+				error "Error crítico al intentar copiar $file_name a $target_dir."
+				success=false
+			fi
+		else
+			error "No se encuentra el archivo fuente: $file_path"
+			success=false
+		fi
+	done
+	[ "$success" = true ] || error "Error al hacer la copia de archivos."
+	if docker exec -it -u coder code_"${nombreUsuario}" sudo /home/coder/project/ssh.sh; then
+		info "Instalado de manera correcta el sistema ssh."
+	else
+		error "Se ha producido un error al instalar el ssh."
+	fi
+
+	if docker exec -it -u coder code_"${nombreUsuario}" sudo /home/coder/project/python.sh; then
+		info "Instalado de manera correcta el sistema python."
+	else
+		error "Se ha producido un error al instalar el ssh."
+	fi
+	docker exec -it code_"${nombreUsuario}" bash -c "/miniconda3/bin/conda init bash"
+	info "Instalación correcta."
+
+}
+
 main() {
 	info "Iniciando proceso."
 	docker version >/dev/null 2>&1 || {
@@ -106,8 +153,10 @@ main() {
 	cd "$script_dir/.."
 	docker compose up -d "code_${persona}_init"
 	docker compose up -d "code_${persona}"
-
+	info "Iniciando la copia de los ficheros."
+	copy_user_scripts "$persona"
 	info "Sistema completado. Acceso a través del nginx."
+
 }
 
 main "$@"
