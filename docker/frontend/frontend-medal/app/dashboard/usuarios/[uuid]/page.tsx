@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
 	getEditableFields,
@@ -41,7 +41,7 @@ interface User {
 	apellido2: string;
 	correoinstitucional: string;
 	activo: boolean;
-	esresponsable: boolean;
+	esresponsable: boolean; // Booleano de rango
 	teams: boolean;
 	wifi: boolean;
 	usuariovpn?: string;
@@ -50,7 +50,7 @@ interface User {
 	diriplastlogin?: string;
 	fechaincorporacion: string;
 	fechafin?: string | null;
-	responsable?: number | null;
+	responsable?: number | null; // ID del superior
 	roles: Role[];
 	puertas: Puerta[];
 	maquinas_propiedad: Maquina[];
@@ -434,7 +434,7 @@ export default function UserDetailPage() {
 				);
 			}
 
-			if (field === "activo") {
+			if (field === "activo" || field === "esresponsable") {
 				return (
 					<select
 						value={String(value)}
@@ -443,8 +443,17 @@ export default function UserDetailPage() {
 						}
 						className={inputBaseClass}
 					>
-						<option value="true">ACTIVO</option>
-						<option value="false">INACTIVO</option>
+						{field === "activo" ? (
+							<>
+								<option value="true">ACTIVO</option>
+								<option value="false">INACTIVO</option>
+							</>
+						) : (
+							<>
+								<option value="false">NO ES RESPONSABLE</option>
+								<option value="true">SÍ ES RESPONSABLE</option>
+							</>
+						)}
 					</select>
 				);
 			}
@@ -458,7 +467,7 @@ export default function UserDetailPage() {
 						}
 						className={inputBaseClass}
 					>
-						<option value="">Sin responsable</option>
+						<option value="">Sin superior directo</option>
 						{responsablesList.map((r) => (
 							<option key={r.idusuario} value={r.idusuario}>
 								{r.nombre} {r.apellido1}
@@ -485,6 +494,15 @@ export default function UserDetailPage() {
 		}
 
 		// --- Lectura ---
+		if (field === "esresponsable") {
+			return (
+				<span
+					className={`px-4 py-1.5 rounded-xl text-[10px] font-black border-2 uppercase tracking-widest shadow-sm ${value ? "bg-purple-100 text-purple-900 border-purple-300" : "bg-slate-100 text-slate-500 border-slate-300"}`}
+				>
+					{value ? "👤 Responsable" : "👥 Miembro"}
+				</span>
+			);
+		}
 		if (field === "gitlab") {
 			return value ? (
 				<span className="bg-orange-100 text-orange-900 px-4 py-1.5 rounded-xl text-[10px] font-black border-2 border-orange-200 uppercase tracking-widest shadow-sm">
@@ -559,7 +577,8 @@ export default function UserDetailPage() {
 			fields: [
 				{ field: "fechaincorporacion", label: "Fecha Alta" },
 				{ field: "fechafin", label: "Fecha Baja" },
-				{ field: "responsable", label: "Responsable" },
+				{ field: "responsable", label: "Superior Directo" },
+				{ field: "esresponsable", label: "¿Es Responsable?" },
 				{ field: "activo", label: "Estado Cuenta" },
 			],
 		},

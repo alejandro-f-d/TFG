@@ -335,7 +335,7 @@ export const USER_QUERIES = {
     FROM medal.usuario u
     WHERE u.nombre ILIKE $3 
       AND u.activo = $4 
-      AND u.esresponsable = true -- Cambio clave: Filtro de Revisores
+      AND u.esresponsable = true 
     ORDER BY u.idusuario ASC
     LIMIT $1 OFFSET $2;`,
 	COUNT_BY_NOMBRE_REVISORES: `
