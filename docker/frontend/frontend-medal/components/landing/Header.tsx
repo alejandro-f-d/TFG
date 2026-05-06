@@ -61,6 +61,12 @@ const Header = () => {
 					>
 						Medal Wiki
 					</Link>
+					<Link
+						href={`${process.env.NEXT_PUBLIC_API_URL}/health`}
+						className="text-sm md:text-base text-gray-600 hover:text-blue-600 font-medium transition"
+					>
+						Health Check
+					</Link>
 
 					<Link
 						href="/auth/signin"
