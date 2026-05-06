@@ -17,7 +17,7 @@ interface MonitorDetalle {
 	proxima_ejecucion: string;
 	responsable_nombre: string;
 	responsable_email: string;
-	uuidusuario: string; // UUID del dueño del monitor
+	uuidusuario: string;
 	metodo_http: string;
 	ultimo_estado_disponible: boolean | null;
 	ultimo_codigo_http: number | null;
@@ -27,7 +27,7 @@ interface MonitorDetalle {
 interface HistoricoPunto {
 	fecha: string;
 	disponible: boolean;
-	resultado: number; // Aquí recibimos el código HTTP (ej: 200)
+	resultado: number;
 }
 
 export default function DetalleMonitorPage() {
@@ -39,8 +39,9 @@ export default function DetalleMonitorPage() {
 	const [suscrito, setSuscrito] = useState<boolean>(false);
 	const [loading, setLoading] = useState(true);
 	const [actionLoading, setActionLoading] = useState(false);
+	const [deleteLoading, setDeleteLoading] = useState(false);
 
-	// Obtener el UUID del usuario logueado desde localStorage
+	// Obtener el UUID del usuario logueado para mostrar la etiqueta de "Propietario"
 	const currentUserUuid =
 		typeof window !== "undefined" ? localStorage.getItem("uuidUser") : null;
 
@@ -51,7 +52,7 @@ export default function DetalleMonitorPage() {
 		try {
 			const headers = { Authorization: `Bearer ${token}` };
 
-			// Peticiones paralelas para optimizar tiempos de carga
+			// Peticiones paralelas para mejorar performance
 			const [resInfo, resHist, resSusc] = await Promise.all([
 				fetch(`${baseUrl}/api/monitor/${uuid}`, { headers }),
 				fetch(`${baseUrl}/api/monitor/${uuid}/historico`, { headers }),
@@ -72,14 +73,45 @@ export default function DetalleMonitorPage() {
 		}
 	}, [uuid]);
 
-	// Configuración del refresco cada 60 segundos
 	useEffect(() => {
 		fetchData();
 		const interval = setInterval(fetchData, 60000);
 		return () => clearInterval(interval);
 	}, [fetchData]);
 
-	// Manejo de suscripciones
+	// --- MANEJO DE BORRADO ---
+	const handleDelete = async () => {
+		if (
+			!confirm(
+				`¿Estás seguro de eliminar permanentemente "${monitor?.nombreobjetivo}"?`,
+			)
+		)
+			return;
+
+		setDeleteLoading(true);
+		const token = localStorage.getItem("token");
+		const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+
+		try {
+			const res = await fetch(`${baseUrl}/api/monitor/${uuid}`, {
+				method: "DELETE",
+				headers: { Authorization: `Bearer ${token}` },
+			});
+
+			if (res.ok) {
+				router.push("/dashboard/monitor");
+			} else {
+				const data = await res.json();
+				alert(data.error || "No tienes permisos para realizar esta acción.");
+			}
+		} catch (error) {
+			alert("Error de red al intentar eliminar el servicio.");
+		} finally {
+			setDeleteLoading(false);
+		}
+	};
+
+	// --- MANEJO DE SUSCRIPCIÓN ---
 	const handleSuscripcion = async () => {
 		setActionLoading(true);
 		const token = localStorage.getItem("token");
@@ -99,7 +131,6 @@ export default function DetalleMonitorPage() {
 		}
 	};
 
-	// Cálculo de Uptime real sobre el histórico
 	const uptimeStats = useMemo(() => {
 		if (historico.length === 0) return { porcentaje: "0", total: 0 };
 		const exitos = historico.filter((p) => p.disponible).length;
@@ -109,7 +140,6 @@ export default function DetalleMonitorPage() {
 		};
 	}, [historico]);
 
-	// Validación de propiedad
 	const esDuenio = monitor?.uuidusuario === currentUserUuid;
 
 	if (loading)
@@ -121,7 +151,7 @@ export default function DetalleMonitorPage() {
 
 	if (!monitor)
 		return (
-			<div className="p-20 text-center text-slate-500">
+			<div className="p-20 text-center text-slate-500 font-bold uppercase tracking-widest">
 				Monitor no encontrado
 			</div>
 		);
@@ -129,7 +159,7 @@ export default function DetalleMonitorPage() {
 	return (
 		<div className="min-h-screen bg-slate-50/50 py-12 px-8 font-sans antialiased text-slate-900">
 			<div className="max-w-6xl mx-auto space-y-8">
-				{/* --- HEADER --- */}
+				{/* --- CABECERA / ACCIONES --- */}
 				<div className="flex flex-col md:flex-row justify-between items-start gap-6">
 					<div className="flex-1">
 						<button
@@ -148,11 +178,13 @@ export default function DetalleMonitorPage() {
 								{monitor.ultimo_estado_disponible ? "Online" : "Offline"}
 							</span>
 
-							{esDuenio ? (
+							{esDuenio && (
 								<span className="bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight">
 									Propietario
 								</span>
-							) : (
+							)}
+
+							<div className="flex gap-2">
 								<button
 									onClick={handleSuscripcion}
 									disabled={actionLoading}
@@ -168,7 +200,32 @@ export default function DetalleMonitorPage() {
 											? "Dejar de seguir"
 											: "Seguir servicio"}
 								</button>
-							)}
+
+								<button
+									onClick={handleDelete}
+									disabled={deleteLoading}
+									className="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-all disabled:opacity-50 flex items-center gap-2"
+								>
+									{deleteLoading ? (
+										<div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+									) : (
+										<svg
+											className="w-3 h-3"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth="2"
+												d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+											/>
+										</svg>
+									)}
+									Borrar
+								</button>
+							</div>
 						</div>
 						<p className="text-slate-500 font-mono text-xs mt-3 bg-white/50 inline-block px-2 py-1 rounded border border-slate-100">
 							{monitor.direccion}
@@ -201,15 +258,15 @@ export default function DetalleMonitorPage() {
 					</div>
 				</div>
 
-				{/* --- LÍNEA DE TIEMPO (90 BLOQUES) --- */}
+				{/* --- LÍNEA DE TIEMPO --- */}
 				<div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
 					<div className="flex justify-between items-center mb-6">
 						<h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight">
-							Línea de tiempo
+							Línea de tiempo (90 checks)
 						</h2>
 						<span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
 							<span className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></span>
-							Sincronización: 60s
+							Refresco automático
 						</span>
 					</div>
 					<div className="flex gap-1 h-12">
@@ -219,7 +276,7 @@ export default function DetalleMonitorPage() {
 							.map((h, i) => (
 								<div
 									key={i}
-									title={`${new Date(h.fecha).toLocaleString()} - ${h.resultado}`}
+									title={`${new Date(h.fecha).toLocaleString()} - HTTP ${h.resultado}`}
 									className={`flex-1 rounded-sm transition-all hover:scale-150 cursor-crosshair ${h.disponible ? "bg-emerald-400" : "bg-red-500"}`}
 								/>
 							))}
@@ -267,12 +324,6 @@ export default function DetalleMonitorPage() {
 							</div>
 							<div className="flex justify-between">
 								<span className="text-[9px] text-slate-400 uppercase">
-									Timeout
-								</span>
-								{monitor.timeoutsegundos}s
-							</div>
-							<div className="flex justify-between">
-								<span className="text-[9px] text-slate-400 uppercase">
 									Esperado
 								</span>
 								<span className="text-blue-600">
@@ -300,23 +351,17 @@ export default function DetalleMonitorPage() {
 									: "N/A"}
 							</p>
 						</div>
-						<p className="text-[11px] text-slate-500 italic">
-							Petición verificada el{" "}
-							{monitor.fechaverificacion
-								? new Date(monitor.fechaverificacion).toLocaleDateString()
-								: "En proceso"}
-						</p>
 					</div>
 				</div>
 
-				{/* --- TABLA DE LOGS FUNCIONAL --- */}
+				{/* --- TABLA DE LOGS --- */}
 				<div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
 					<div className="p-6 border-b flex justify-between items-center">
 						<h3 className="text-xs font-bold text-slate-800 uppercase tracking-widest">
 							Logs Recientes
 						</h3>
 						<span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded">
-							Total: {uptimeStats.total} muestras
+							Total: {uptimeStats.total}
 						</span>
 					</div>
 					<div className="overflow-x-auto">
@@ -325,7 +370,7 @@ export default function DetalleMonitorPage() {
 								<tr>
 									<th className="px-8 py-4">Fecha y Hora</th>
 									<th className="px-8 py-4">Estado</th>
-									<th className="px-8 py-4">Código Respuesta</th>
+									<th className="px-8 py-4">Respuesta</th>
 								</tr>
 							</thead>
 							<tbody className="divide-y text-xs">
@@ -345,15 +390,7 @@ export default function DetalleMonitorPage() {
 											</span>
 										</td>
 										<td className="px-8 py-4 font-mono">
-											<span
-												className={
-													h.disponible
-														? "text-slate-500"
-														: "text-red-600 font-bold"
-												}
-											>
-												{h.resultado ? `HTTP ${h.resultado}` : "TIMEOUT"}
-											</span>
+											{h.resultado ? `HTTP ${h.resultado}` : "TIMEOUT"}
 										</td>
 									</tr>
 								))}
