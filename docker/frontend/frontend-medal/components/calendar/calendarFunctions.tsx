@@ -96,31 +96,42 @@ export default function CalendarFunctions({
 			});
 			const data = await response.json();
 
-			if (response.ok && Array.isArray(data.info)) {
-				if (data.info.length > 0)
-					onMachineNameLoaded?.(data.info[0].nombre_maquina);
+			if (response.ok) {
+				if (typeof data.info === "string") {
+					onMachineNameLoaded?.(data.info);
+					successCallback([]);
+					return;
+				}
 
-				const events = data.info.map((r: any) => {
-					const userColor = getColorFromUuid(r.uuid_responsable);
-					return {
-						id: r.uuidcalendario,
-						title: r.nombre_reserva,
-						start: r.fechainicio,
-						end: r.fechafin,
-						// Forzamos el color aquí
-						backgroundColor: userColor,
-						borderColor: userColor,
-						display: "block", // Importante para que use el color de fondo en modo barra
-						extendedProps: {
-							responsable_nombre: r.nombre_completo_responsable,
-						},
-					};
-				});
-				successCallback(events);
+				if (Array.isArray(data.info)) {
+					if (data.info.length > 0) {
+						onMachineNameLoaded?.(data.info[0].nombre_maquina);
+					}
+
+					const events = data.info.map((r: any) => {
+						const userColor = getColorFromUuid(r.uuid_responsable);
+						return {
+							id: r.uuidcalendario,
+							title: r.nombre_reserva,
+							start: r.fechainicio,
+							end: r.fechafin,
+							backgroundColor: userColor,
+							borderColor: userColor,
+							display: "block",
+							extendedProps: {
+								responsable_nombre: r.nombre_completo_responsable,
+							},
+						};
+					});
+					successCallback(events);
+				} else {
+					successCallback([]);
+				}
 			} else {
 				successCallback([]);
 			}
 		} catch (error) {
+			console.error("Error fetching events:", error);
 			failureCallback(error as Error);
 		}
 	};
