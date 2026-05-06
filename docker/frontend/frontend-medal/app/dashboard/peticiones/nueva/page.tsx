@@ -28,7 +28,7 @@ export default function NuevaPeticionPage() {
 	const [prioridades, setPrioridades] = useState<Prioridad[]>([]);
 	const [searchServer, setSearchServer] = useState("");
 
-	// --- FORM DATA SEGÚN JOI SCHEMA ---
+	// --- FORM DATA ---
 	const [formData, setFormData] = useState({
 		nombreProyectoAsociado: "",
 		servidorAsociado: [] as number[],
@@ -41,7 +41,7 @@ export default function NuevaPeticionPage() {
 		prioridadTarea: 0,
 		momentoEjecucion: 0,
 		docker: "",
-		sistemaOperativo: "Ubuntu 22.04", // Valor por defecto
+		sistemaOperativo: "Ubuntu 22.04",
 		tiempoEstimadoTarea: "",
 		nombreServicioAsociado: "",
 		nombreAccesoNativo: "",
@@ -104,8 +104,6 @@ export default function NuevaPeticionPage() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
-
-		// Saneamiento para cumplir con Joi y Postgres
 		const cleanData = {
 			...formData,
 			fechaFin: formData.fechaFin === "" ? null : formData.fechaFin,
@@ -140,38 +138,42 @@ export default function NuevaPeticionPage() {
 		}
 	};
 
+	// Estilo común para inputs con alto contraste
+	const inputStyles =
+		"w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 text-sm font-bold text-slate-900 placeholder:text-slate-400 outline-none focus:border-slate-900 focus:ring-0 transition-all";
+
 	return (
-		<div className="min-h-screen bg-[#F8FAFC] py-12 px-8 font-sans">
+		<div className="min-h-screen bg-[#F1F5F9] py-12 px-8 font-sans">
 			<form onSubmit={handleSubmit} className="max-w-7xl mx-auto space-y-12">
 				{/* HEADER */}
-				<div className="flex justify-between items-end border-b-4 border-slate-900 pb-6">
+				<div className="flex justify-between items-end border-b-8 border-slate-900 pb-6">
 					<h1 className="text-7xl font-black text-slate-900 tracking-tighter uppercase">
 						NUEVA <span className="text-blue-600">PETICIÓN</span>
 					</h1>
 					<button
 						type="button"
 						onClick={() => router.back()}
-						className="text-xs font-black text-slate-400 uppercase tracking-widest hover:text-red-600 transition-all"
+						className="text-xs font-black text-slate-500 uppercase tracking-widest hover:text-red-600 transition-all mb-2"
 					>
-						[ DESCARTAR ]
+						[ CANCELAR Y VOLVER ]
 					</button>
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-					{/* COLUMNA IZQUIERDA: INFRAESTRUCTURA Y PROYECTO */}
+					{/* COLUMNA IZQUIERDA */}
 					<div className="lg:col-span-7 space-y-10">
 						{/* 01. SERVIDORES */}
-						<section className="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-100">
+						<section className="bg-white p-10 rounded-[3rem] shadow-xl border-2 border-slate-900/5">
 							<div className="flex justify-between items-center mb-8">
-								<h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">
+								<h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-900">
 									01. Selección de Nodos
 								</h3>
 								<input
 									type="text"
-									placeholder="BUSCAR..."
+									placeholder="FILTRAR..."
 									value={searchServer}
 									onChange={(e) => setSearchServer(e.target.value)}
-									className="bg-slate-100 rounded-xl px-4 py-2 text-[10px] font-black outline-none focus:ring-2 focus:ring-blue-500 w-48"
+									className="bg-white border-2 border-slate-200 rounded-xl px-4 py-2 text-[10px] font-black text-slate-900 outline-none focus:border-blue-600 w-48"
 								/>
 							</div>
 							<div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto custom-scroll pr-2">
@@ -191,7 +193,11 @@ export default function NuevaPeticionPage() {
 													: [...p.servidorAsociado, srv.idmaquina],
 											}))
 										}
-										className={`p-4 rounded-2xl border-2 text-[10px] font-black uppercase transition-all ${formData.servidorAsociado.includes(srv.idmaquina) ? "bg-blue-600 border-blue-600 text-white shadow-lg" : "bg-slate-50 border-transparent text-slate-400 hover:border-slate-200"}`}
+										className={`p-4 rounded-2xl border-2 text-[10px] font-black uppercase transition-all ${
+											formData.servidorAsociado.includes(srv.idmaquina)
+												? "bg-blue-600 border-blue-600 text-white shadow-md scale-[0.98]"
+												: "bg-white border-slate-200 text-slate-900 hover:border-slate-400"
+										}`}
 									>
 										{srv.nombre}
 									</button>
@@ -199,47 +205,62 @@ export default function NuevaPeticionPage() {
 							</div>
 						</section>
 
-						{/* 02. PROYECTO & ACCESO NATIVO */}
-						<section className="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-100 space-y-6">
-							<h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">
+						{/* 02. IDENTIFICACIÓN */}
+						<section className="bg-white p-10 rounded-[3rem] shadow-xl border-2 border-slate-900/5 space-y-6">
+							<h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-900">
 								02. Identificación & Acceso
 							</h3>
-							<input
-								required
-								name="nombreProyectoAsociado"
-								value={formData.nombreProyectoAsociado}
-								onChange={handleInputChange}
-								placeholder="NOMBRE DEL PROYECTO *"
-								className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
-							/>
+							<div className="space-y-4">
+								<label className="text-[10px] font-black text-slate-400 uppercase ml-2">
+									Nombre del Proyecto *
+								</label>
+								<input
+									required
+									name="nombreProyectoAsociado"
+									value={formData.nombreProyectoAsociado}
+									onChange={handleInputChange}
+									placeholder="EJ: DATA PIPELINE ALPHA"
+									className={inputStyles}
+								/>
+							</div>
 							<div className="grid grid-cols-2 gap-4">
-								<input
-									name="nombreServicioAsociado"
-									value={formData.nombreServicioAsociado}
-									onChange={handleInputChange}
-									placeholder="SERVICIO ASOCIADO *"
-									className="bg-slate-50 rounded-2xl p-5 text-sm font-bold outline-none"
-								/>
-								<input
-									name="nombreAccesoNativo"
-									value={formData.nombreAccesoNativo}
-									onChange={handleInputChange}
-									placeholder="NOMBRE ACCESO NATIVO"
-									className="bg-slate-50 rounded-2xl p-5 text-sm font-bold outline-none"
-								/>
+								<div className="space-y-2">
+									<label className="text-[10px] font-black text-slate-400 uppercase ml-2">
+										Servicio Asociado *
+									</label>
+									<input
+										name="nombreServicioAsociado"
+										value={formData.nombreServicioAsociado}
+										onChange={handleInputChange}
+										placeholder="WEB / API / DB"
+										className={inputStyles}
+									/>
+								</div>
+								<div className="space-y-2">
+									<label className="text-[10px] font-black text-slate-400 uppercase ml-2">
+										Acceso Nativo
+									</label>
+									<input
+										name="nombreAccesoNativo"
+										value={formData.nombreAccesoNativo}
+										onChange={handleInputChange}
+										placeholder="USUARIO SSH"
+										className={inputStyles}
+									/>
+								</div>
 							</div>
 							<textarea
 								name="justificacionAccesoNativo"
 								value={formData.justificacionAccesoNativo}
 								onChange={handleInputChange}
-								placeholder="JUSTIFICACIÓN ACCESO NATIVO (SI APLICA)"
-								className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-medium min-h-[80px] outline-none"
+								placeholder="JUSTIFICACIÓN ACCESO NATIVO..."
+								className={`${inputStyles} min-h-[100px]`}
 							/>
 						</section>
 
 						{/* 03. MEMORIA TÉCNICA */}
-						<section className="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-100 space-y-6">
-							<h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">
+						<section className="bg-white p-10 rounded-[3rem] shadow-xl border-2 border-slate-900/5 space-y-6">
+							<h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-900">
 								03. Memoria Técnica
 							</h3>
 							<textarea
@@ -247,39 +268,35 @@ export default function NuevaPeticionPage() {
 								name="necesidadServidor"
 								value={formData.necesidadServidor}
 								onChange={handleInputChange}
-								placeholder="NECESIDAD DEL SERVIDOR *"
-								className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-medium min-h-[100px] outline-none"
+								placeholder="¿POR QUÉ SE NECESITA ESTE RECURSO? *"
+								className={`${inputStyles} min-h-[120px] font-medium`}
 							/>
 							<textarea
 								required
 								name="tareasServidor"
 								value={formData.tareasServidor}
 								onChange={handleInputChange}
-								placeholder="TAREAS A REALIZAR *"
-								className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-medium min-h-[100px] outline-none"
-							/>
-							<textarea
-								name="comentariosAdicionales"
-								value={formData.comentariosAdicionales}
-								onChange={handleInputChange}
-								placeholder="COMENTARIOS ADICIONALES"
-								className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-medium min-h-[80px] outline-none"
+								placeholder="TAREAS A REALIZAR (PASO A PASO) *"
+								className={`${inputStyles} min-h-[120px] font-medium`}
 							/>
 						</section>
 					</div>
 
-					{/* COLUMNA DERECHA: RECURSOS Y SCHEDULING */}
+					{/* COLUMNA DERECHA */}
 					<div className="lg:col-span-5 space-y-10">
-						{/* 04. RECURSOS (JOI REQUERIDOS) */}
-						<section className="bg-slate-900 p-10 rounded-[3.5rem] shadow-2xl text-white">
-							<h3 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-8">
+						{/* 04. RECURSOS HARDWARE */}
+						<section className="bg-slate-900 p-10 rounded-[3.5rem] shadow-2xl text-white border-2 border-slate-800">
+							<h3 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-10">
 								CONFIGURACIÓN DE HARDWARE
 							</h3>
-							<div className="grid grid-cols-2 gap-8">
+							<div className="grid grid-cols-2 gap-x-10 gap-y-8">
 								{["cpuSolicitada", "ram", "disco", "tiempoEstimadoTarea"].map(
 									(f) => (
-										<div key={f} className="border-b border-white/10 pb-2">
-											<label className="text-[8px] font-black text-slate-500 uppercase">
+										<div
+											key={f}
+											className="border-b-2 border-white/20 pb-2 focus-within:border-blue-500 transition-all"
+										>
+											<label className="text-[9px] font-black text-slate-400 uppercase">
 												{f.replace(/([A-Z])/g, " $1")}
 											</label>
 											<input
@@ -288,41 +305,41 @@ export default function NuevaPeticionPage() {
 												value={(formData as any)[f]}
 												onChange={handleInputChange}
 												placeholder="---"
-												className="w-full bg-transparent text-xl font-black outline-none mt-1"
+												className="w-full bg-transparent text-2xl font-black outline-none mt-1 text-white placeholder:text-white/10"
 											/>
 										</div>
 									),
 								)}
-								<div className="border-b border-white/10 pb-2">
-									<label className="text-[8px] font-black text-slate-500 uppercase">
+								<div className="border-b-2 border-white/20 pb-2 focus-within:border-blue-500 transition-all">
+									<label className="text-[9px] font-black text-slate-400 uppercase">
 										GPU TIPO
 									</label>
 									<input
 										name="gpuSolicitada"
 										value={formData.gpuSolicitada}
 										onChange={handleInputChange}
-										className="w-full bg-transparent text-xl font-black outline-none mt-1"
+										className="w-full bg-transparent text-2xl font-black outline-none mt-1 text-white"
 									/>
 								</div>
-								<div className="border-b border-white/10 pb-2">
-									<label className="text-[8px] font-black text-slate-500 uppercase">
-										FECHA FIN
+								<div className="border-b-2 border-white/20 pb-2 focus-within:border-blue-500 transition-all">
+									<label className="text-[9px] font-black text-slate-400 uppercase">
+										EXPIRACIÓN
 									</label>
 									<input
 										type="date"
 										name="fechaFin"
 										value={formData.fechaFin}
 										onChange={handleInputChange}
-										className="w-full bg-transparent text-sm font-black outline-none mt-2 uppercase"
+										className="w-full bg-transparent text-sm font-black outline-none mt-2 uppercase text-white invert active:invert-0"
 									/>
 								</div>
 							</div>
 						</section>
 
-						{/* 05. ENTORNO & SCHEDULING */}
-						<section className="bg-white p-10 rounded-[3.5rem] shadow-2xl space-y-8">
+						{/* 05. ENTORNO */}
+						<section className="bg-white p-10 rounded-[3.5rem] shadow-xl border-2 border-slate-900/5 space-y-8">
 							<div className="space-y-4">
-								<h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
+								<h3 className="text-xs font-black uppercase tracking-widest text-slate-900">
 									Software & OS
 								</h3>
 								<input
@@ -330,21 +347,20 @@ export default function NuevaPeticionPage() {
 									name="sistemaOperativo"
 									value={formData.sistemaOperativo}
 									onChange={handleInputChange}
-									placeholder="SISTEMA OPERATIVO *"
-									className="w-full bg-slate-50 rounded-xl p-4 text-xs font-bold outline-none"
+									className={inputStyles}
 								/>
 								<input
 									required
 									name="docker"
 									value={formData.docker}
 									onChange={handleInputChange}
-									placeholder="IMAGEN DOCKER *"
-									className="w-full bg-slate-50 rounded-xl p-4 text-xs font-mono font-bold outline-none"
+									placeholder="URL IMAGEN DOCKER *"
+									className={`${inputStyles} font-mono text-xs`}
 								/>
 							</div>
 
 							<div className="space-y-4">
-								<h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
+								<h3 className="text-xs font-black uppercase tracking-widest text-slate-900">
 									Prioridad
 								</h3>
 								<div className="grid grid-cols-2 gap-2">
@@ -355,7 +371,11 @@ export default function NuevaPeticionPage() {
 											onClick={() =>
 												toggleSelection("prioridadTarea", p.idprioridad)
 											}
-											className={`p-4 rounded-xl text-[9px] font-black uppercase border-2 transition-all ${formData.prioridadTarea === p.idprioridad ? "bg-blue-600 border-blue-600 text-white" : "bg-slate-50 border-transparent text-slate-400"}`}
+											className={`p-4 rounded-xl text-[10px] font-black uppercase border-2 transition-all ${
+												formData.prioridadTarea === p.idprioridad
+													? "bg-blue-600 border-blue-600 text-white"
+													: "bg-slate-50 border-slate-200 text-slate-900 hover:border-slate-400"
+											}`}
 										>
 											{p.nombre}
 										</button>
@@ -364,7 +384,7 @@ export default function NuevaPeticionPage() {
 							</div>
 
 							<div className="space-y-4">
-								<h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
+								<h3 className="text-xs font-black uppercase tracking-widest text-slate-900">
 									Momento de Ejecución
 								</h3>
 								<div className="space-y-2">
@@ -378,9 +398,13 @@ export default function NuevaPeticionPage() {
 													m.idmomentoejecucion,
 												)
 											}
-											className={`w-full p-4 rounded-xl text-[9px] font-black uppercase border-2 text-left flex justify-between items-center ${formData.momentoEjecucion === m.idmomentoejecucion ? "bg-slate-900 border-slate-900 text-white" : "bg-slate-50 border-transparent text-slate-400"}`}
+											className={`w-full p-5 rounded-xl text-[10px] font-black uppercase border-2 text-left flex justify-between items-center transition-all ${
+												formData.momentoEjecucion === m.idmomentoejecucion
+													? "bg-slate-900 border-slate-900 text-white"
+													: "bg-slate-50 border-slate-200 text-slate-900 hover:border-slate-400"
+											}`}
 										>
-											{m.nombre}{" "}
+											{m.nombre}
 											{formData.momentoEjecucion === m.idmomentoejecucion &&
 												"●"}
 										</button>
@@ -390,18 +414,19 @@ export default function NuevaPeticionPage() {
 
 							<button
 								disabled={loading}
-								className="w-full bg-blue-600 hover:bg-slate-900 text-white p-8 rounded-3xl font-black text-xs uppercase tracking-[0.4em] shadow-2xl transition-all disabled:opacity-30"
+								className="w-full bg-blue-600 hover:bg-slate-900 text-white p-8 rounded-3xl font-black text-sm uppercase tracking-[0.4em] shadow-2xl transition-all disabled:opacity-30 active:scale-95"
 							>
-								{loading ? "ENVIANDO..." : "CONFIRMAR PETICIÓN"}
+								{loading ? "PROCESANDO..." : "CONFIRMAR PETICIÓN"}
 							</button>
 						</section>
 					</div>
 				</div>
 			</form>
-			<style
-				jsx
-				global
-			>{`.custom-scroll::-webkit-scrollbar { width: 4px; } .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }`}</style>
+			<style jsx global>{`
+                .custom-scroll::-webkit-scrollbar { width: 6px; } 
+                .custom-scroll::-webkit-scrollbar-thumb { background: #0f172a; border-radius: 10px; }
+                input::placeholder { color: #94a3b8 !important; opacity: 1; }
+            `}</style>
 		</div>
 	);
 }
