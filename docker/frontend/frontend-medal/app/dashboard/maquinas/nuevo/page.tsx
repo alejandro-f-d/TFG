@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 export default function CreateMachinePage() {
 	const router = useRouter();
@@ -104,12 +105,9 @@ export default function CreateMachinePage() {
 			<div className="max-w-6xl mx-auto">
 				{/* NAVEGACIÓN */}
 				<div className="flex justify-between items-center mb-16">
-					<button
-						onClick={() => router.back()}
-						className="text-[11px] font-black text-slate-500 uppercase tracking-widest hover:text-red-600 transition-colors italic border-b-2 border-transparent hover:border-red-600"
-					>
-						[ Cancelar operación ]
-					</button>
+					<div className="mb-6">
+						<BackButton />
+					</div>
 					<div className="bg-slate-950 text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.3em] shadow-xl border-b-4 border-blue-900">
 						Provisioning Mode
 					</div>

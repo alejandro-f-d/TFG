@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES (Fuera del componente) ---
 interface PeticionTable {
@@ -98,6 +99,10 @@ export default function PeticionesPage() {
 
 	return (
 		<div className="min-h-screen bg-[#F8FAFC] py-12 px-8 font-sans">
+			<div className="mb-6">
+				<BackButton />
+			</div>
+
 			<div className="max-w-7xl mx-auto">
 				{/* HEADER */}
 				<div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">

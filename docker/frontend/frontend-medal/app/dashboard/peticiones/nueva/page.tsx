@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface Maquina {
@@ -150,13 +151,9 @@ export default function NuevaPeticionPage() {
 					<h1 className="text-7xl font-black text-slate-900 tracking-tighter uppercase">
 						NUEVA <span className="text-blue-600">PETICIÓN</span>
 					</h1>
-					<button
-						type="button"
-						onClick={() => router.back()}
-						className="text-xs font-black text-slate-500 uppercase tracking-widest hover:text-red-600 transition-all mb-2"
-					>
-						[ CANCELAR Y VOLVER ]
-					</button>
+					<div className="mb-6">
+						<BackButton />
+					</div>
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-12">

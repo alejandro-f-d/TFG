@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface Monitor {
@@ -86,15 +87,9 @@ export default function MonitorPage() {
 				{/* --- HEADER FORMAL --- */}
 				<header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
 					<div className="space-y-1">
-						<button
-							onClick={() => router.back()}
-							className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 hover:text-blue-600 transition-colors flex items-center gap-1 group"
-						>
-							<span className="group-hover:-translate-x-1 transition-transform">
-								←
-							</span>{" "}
-							Dashboard
-						</button>
+						<div className="mb-6">
+							<BackButton />
+						</div>
 						<h1 className="text-3xl font-bold text-slate-900 tracking-tight">
 							Estado de los Servicios
 						</h1>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- Interfaces ---
 interface Dispositivo {
@@ -92,6 +93,10 @@ export default function DispositivosPage() {
 		<div className="min-h-screen bg-[#F8FAFC] py-12 px-6">
 			<div className="max-w-6xl mx-auto">
 				{/* CABECERA */}
+				<div className="mb-6">
+					<BackButton />
+				</div>
+
 				<div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
 					<div>
 						<h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">

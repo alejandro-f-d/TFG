@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface Puerto {
@@ -152,12 +153,9 @@ export default function MaquinaServiciosPage() {
 				{/* HEADER */}
 				<div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 border-b-2 border-slate-100 pb-12">
 					<div className="flex-1">
-						<button
-							onClick={() => router.back()}
-							className="text-[10px] font-black text-slate-400 uppercase mb-4 block hover:text-blue-600 transition-colors tracking-widest"
-						>
-							[ ← Volver ]
-						</button>
+						<div className="mb-6">
+							<BackButton />
+						</div>
 						<h1 className="text-7xl font-black text-slate-900 tracking-tighter uppercase leading-none">
 							{esAdminGlobal ? "Infra" : "Mis"}{" "}
 							<span className="text-blue-600 italic">Servicios</span>

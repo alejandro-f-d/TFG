@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface Dispositivo {
@@ -201,12 +202,9 @@ export default function MachineDetailPage() {
 			<div className="max-w-7xl mx-auto">
 				{/* BARRA SUPERIOR */}
 				<div className="flex justify-between items-center mb-12">
-					<button
-						onClick={() => router.push("/dashboard/maquinas")}
-						className="text-[11px] font-black text-slate-500 uppercase tracking-widest hover:text-blue-700 transition-colors border-b-2 border-transparent hover:border-blue-700"
-					>
-						← Volver al Inventario
-					</button>
+					<div className="mb-6">
+						<BackButton />
+					</div>
 					<div className="flex items-center gap-4">
 						{canDelete && (
 							<button

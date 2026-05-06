@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface Participante {
@@ -129,6 +130,10 @@ export default function GitLabProjectsPage() {
 
 	return (
 		<div className="min-h-screen bg-[#F8FAFC] py-12 px-6">
+			<div className="mb-6">
+				<BackButton />
+			</div>
+
 			<div className="max-w-7xl mx-auto">
 				{/* HEADER */}
 				<header className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-8">

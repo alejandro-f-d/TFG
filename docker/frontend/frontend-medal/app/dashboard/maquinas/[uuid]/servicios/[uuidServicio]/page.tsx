@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ACTUALIZADAS ---
 interface Puerto {
@@ -224,12 +225,9 @@ export default function DetalleServicioEspecifico() {
 			<div className="max-w-6xl mx-auto">
 				<div className="flex flex-col md:flex-row justify-between items-end mb-16 border-b-2 border-slate-100 pb-12 gap-6">
 					<div>
-						<button
-							onClick={() => router.back()}
-							className="text-[10px] font-black text-slate-400 uppercase mb-4 block hover:text-blue-600 tracking-widest"
-						>
-							[ ← Regresar ]
-						</button>
+						<div className="mb-6">
+							<BackButton />
+						</div>
 						<h1 className="text-7xl font-black text-slate-900 tracking-tighter uppercase leading-none italic">
 							{servicio.nombreservicio}
 						</h1>

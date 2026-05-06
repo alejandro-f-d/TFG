@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 interface PermisoGlobal {
 	idpermiso: number;
@@ -236,12 +237,9 @@ export default function RoleDetailPage() {
 				{/* HEADER */}
 				<div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
 					<div className="space-y-4">
-						<button
-							onClick={() => router.push("/dashboard/roles")}
-							className="text-[10px] font-black text-slate-400 uppercase tracking-widest block hover:text-blue-600 transition-colors"
-						>
-							← Matriz de Roles
-						</button>
+						<div className="mb-6">
+							<BackButton />
+						</div>
 						<h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase leading-none">
 							{role.nombre}
 						</h1>

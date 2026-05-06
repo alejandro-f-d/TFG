@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/backButton/BackButton";
 
 interface TipoDispositivo {
 	idtipodispositivo: number;
@@ -137,12 +138,9 @@ export default function CreateDevicePage() {
 	return (
 		<div className="min-h-screen bg-[#F1F5F9] py-12 px-6">
 			<div className="max-w-5xl mx-auto">
-				<button
-					onClick={() => router.back()}
-					className="mb-8 text-[11px] font-black tracking-widest text-slate-500 hover:text-red-600 transition-colors uppercase border-b-2 border-transparent hover:border-red-600"
-				>
-					← Cancelar Operación
-				</button>
+				<div className="mb-6">
+					<BackButton />
+				</div>
 
 				<div className="bg-white rounded-[4rem] shadow-2xl shadow-slate-300/50 overflow-hidden border-2 border-white">
 					{/* HEADER */}

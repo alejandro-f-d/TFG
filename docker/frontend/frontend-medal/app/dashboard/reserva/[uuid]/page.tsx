@@ -2,6 +2,7 @@
 
 import { use, useState } from "react";
 import dynamic from "next/dynamic";
+import BackButton from "@/components/backButton/BackButton";
 
 const CalendarComponent = dynamic(
 	() => import("@/components/calendar/calendarFunctions"),
@@ -33,6 +34,10 @@ export default function Page({
 
 	return (
 		<div className="container mx-auto p-6 max-w-7xl">
+			<div className="mb-6">
+				<BackButton />
+			</div>
+
 			<header className="mb-8 border-b border-gray-100 pb-6">
 				<h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
 					Reservas:{" "}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface TipoDispositivo {
@@ -172,6 +173,10 @@ export default function DeviceDetailPage() {
 
 	return (
 		<div className="min-h-screen bg-[#F1F5F9] py-12 px-6">
+			<div className="mb-6">
+				<BackButton />
+			</div>
+
 			<style jsx global>{`
 				.custom-scrollbar::-webkit-scrollbar { width: 8px; }
 				.custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -181,12 +186,6 @@ export default function DeviceDetailPage() {
 			<div className="max-w-6xl mx-auto">
 				{/* NAVBAR INTERNA */}
 				<div className="flex justify-between items-center mb-12">
-					<button
-						onClick={() => router.back()}
-						className="text-[11px] font-black text-slate-500 uppercase tracking-widest hover:text-slate-950 border-b-2 border-transparent hover:border-slate-950"
-					>
-						← Volver
-					</button>
 					<div className="flex items-center gap-4">
 						{canDelete && (
 							<button

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 export default function FirmaDocumentoPage() {
 	const router = useRouter();
@@ -81,6 +82,10 @@ export default function FirmaDocumentoPage() {
 	return (
 		<div className="min-h-screen bg-[#F1F5F9] flex items-center justify-center py-12 px-8 font-sans">
 			<div className="max-w-3xl w-full">
+				<div className="mb-6">
+					<BackButton />
+				</div>
+
 				{/* CABECERA */}
 				<div className="mb-12 text-center">
 					<p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-2 italic">

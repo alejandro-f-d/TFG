@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface UsuarioBusqueda {
@@ -156,12 +157,9 @@ export default function NuevoProyectoGitLab() {
 				{/* CONFIGURACIÓN PROYECTO */}
 				<div className="lg:col-span-7 flex flex-col space-y-10">
 					<header>
-						<button
-							onClick={() => router.back()}
-							className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 hover:text-slate-950 transition-colors mb-8 border-b-2 border-transparent hover:border-slate-950"
-						>
-							← VOLVER AL PANEL
-						</button>
+						<div className="mb-6">
+							<BackButton />
+						</div>
 						<h1 className="text-8xl font-black text-slate-950 tracking-tighter uppercase leading-[0.8]">
 							NUEVO
 							<br />

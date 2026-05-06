@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface MonitorDetalle {
@@ -162,12 +163,9 @@ export default function DetalleMonitorPage() {
 				{/* --- CABECERA / ACCIONES --- */}
 				<div className="flex flex-col md:flex-row justify-between items-start gap-6">
 					<div className="flex-1">
-						<button
-							onClick={() => router.back()}
-							className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-blue-600 mb-4 flex items-center gap-1 transition-colors"
-						>
-							← Volver al Panel
-						</button>
+						<div className="mb-6">
+							<BackButton />
+						</div>
 						<div className="flex items-center gap-4 flex-wrap">
 							<h1 className="text-3xl font-bold text-slate-900 tracking-tight">
 								{monitor.nombreobjetivo}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/backButton/BackButton";
 
 interface MetodoMonitorizar {
 	idmetodo: number;
@@ -102,15 +103,9 @@ export default function NuevoMonitorPage() {
 	return (
 		<div className="min-h-screen bg-slate-50/50 py-16 px-6 font-sans antialiased text-slate-900">
 			<div className="max-w-3xl mx-auto">
-				<button
-					onClick={() => router.back()}
-					className="group mb-8 flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
-				>
-					<span className="group-hover:-translate-x-1 transition-transform">
-						←
-					</span>{" "}
-					Volver al listado
-				</button>
+				<div className="mb-6">
+					<BackButton />
+				</div>
 
 				<form
 					onSubmit={handleSubmit}

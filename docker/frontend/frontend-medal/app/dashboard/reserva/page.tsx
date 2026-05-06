@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/backButton/BackButton";
 
 interface Maquina {
 	idmaquina: number;
@@ -110,6 +111,9 @@ export default function SeleccionCalendarioPage() {
 				{/* HEADER */}
 				<header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 border-b-2 border-slate-100 pb-12">
 					<div>
+						<div className="mb-6">
+							<BackButton />
+						</div>
 						<p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-3 italic">
 							Infraestructura // Calendarios
 						</p>

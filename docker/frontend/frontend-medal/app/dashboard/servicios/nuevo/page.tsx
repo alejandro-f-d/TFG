@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface Maquina {
@@ -213,12 +214,9 @@ export default function CrearServicioPage() {
 		<div className="min-h-screen bg-[#F8FAFC] py-16 px-8 font-sans">
 			<div className="max-w-7xl mx-auto">
 				<header className="mb-12">
-					<button
-						onClick={() => router.back()}
-						className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block italic"
-					>
-						← Cancelar
-					</button>
+					<div className="mb-6">
+						<BackButton />
+					</div>
 					<h1 className="text-6xl font-black text-slate-900 tracking-tighter uppercase leading-none">
 						Nuevo <span className="text-blue-600 italic">Servicio</span>
 					</h1>

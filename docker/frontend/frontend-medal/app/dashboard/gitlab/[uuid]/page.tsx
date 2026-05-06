@@ -11,6 +11,7 @@ import {
 	Tooltip,
 	ResponsiveContainer,
 } from "recharts";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface Participante {
@@ -220,12 +221,9 @@ export default function DetalleProyectoGitLab() {
 		<div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 lg:p-12 overflow-x-hidden">
 			<div className="max-w-7xl mx-auto">
 				<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12">
-					<button
-						onClick={() => router.back()}
-						className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-orange-500 transition-all"
-					>
-						← VOLVER AL DASHBOARD
-					</button>
+					<div className="mb-6">
+						<BackButton />
+					</div>
 					<div className="flex flex-wrap gap-3 w-full sm:w-auto">
 						<a
 							href={proyecto.inforepo.web_url}

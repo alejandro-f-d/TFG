@@ -7,6 +7,7 @@ import {
 	getFieldConfig,
 } from "@/components/config/userEditPermissions";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- Interfaces ---
 interface Role {
@@ -603,12 +604,9 @@ export default function UserDetailPage() {
 		<div className="min-h-screen bg-[#F1F5F9] py-12 px-6">
 			<div className="max-w-5xl mx-auto">
 				<div className="flex justify-between items-center mb-10">
-					<button
-						onClick={() => router.back()}
-						className="text-xs font-black tracking-[0.2em] text-slate-500 hover:text-blue-700 transition-colors uppercase border-b-2 border-transparent hover:border-blue-700"
-					>
-						← Volver
-					</button>
+					<div className="mb-6">
+						<BackButton />
+					</div>
 				</div>
 
 				<div className="bg-white rounded-[3.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden border-2 border-slate-200">

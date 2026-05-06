@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 // --- INTERFACES ---
 interface PeticionFull {
@@ -204,12 +205,9 @@ export default function PeticionDetailPage() {
 				{/* HEADER ACTIONS */}
 				<div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8">
 					<div>
-						<button
-							onClick={() => router.back()}
-							className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 mb-4 block italic"
-						>
-							[ ← Volver al listado ]
-						</button>
+						<div className="mb-6">
+							<BackButton />
+						</div>
 						<h1 className="text-6xl font-black text-slate-900 tracking-tighter uppercase leading-none">
 							Petición{" "}
 							<span className="text-blue-600 italic">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 interface Role {
 	id: number;
@@ -111,6 +112,9 @@ export default function AdminUsersPage() {
 
 	return (
 		<div className="min-h-screen bg-[#F8FAFC] py-12 px-6">
+			<div className="mb-6">
+				<BackButton />
+			</div>
 			<div className="max-w-6xl mx-auto">
 				{/* HEADER SECCIÓN */}
 				<div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">

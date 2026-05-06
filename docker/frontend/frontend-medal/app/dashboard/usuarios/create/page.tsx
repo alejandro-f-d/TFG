@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/backButton/BackButton";
 
 // Componente Interno que contiene la lógica del formulario
 function CreateUserForm() {
@@ -168,6 +169,10 @@ function CreateUserForm() {
 					⚠️ {error}
 				</div>
 			)}
+			<div className="mb-6">
+				<BackButton />
+			</div>
+
 			{success && (
 				<div className="bg-emerald-50 border-2 border-emerald-100 text-emerald-600 p-6 rounded-3xl font-black text-[10px] uppercase tracking-widest">
 					✅ {success}

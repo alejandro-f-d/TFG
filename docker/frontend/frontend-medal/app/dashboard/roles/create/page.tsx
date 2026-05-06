@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-common";
+import BackButton from "@/components/backButton/BackButton";
 
 interface Permiso {
 	idpermiso: number;
@@ -111,13 +112,11 @@ export default function CreateRolePage() {
 		<div className="min-h-screen bg-[#F8FAFC] py-12 px-6">
 			<div className="max-w-6xl mx-auto">
 				{/* HEADER */}
+				<div className="mb-6">
+					<BackButton />
+				</div>
+
 				<div className="mb-12">
-					<button
-						onClick={() => router.push("/dashboard/roles")}
-						className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block hover:text-blue-600 transition-colors"
-					>
-						← Cancelar y volver
-					</button>
 					<h1 className="text-6xl font-black text-slate-900 tracking-tighter uppercase leading-none">
 						Nuevo <span className="text-blue-600">Rol</span>
 					</h1>
