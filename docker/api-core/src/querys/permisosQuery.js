@@ -3,6 +3,7 @@ export const PERMISOS_QUERY = {
     p.idpermiso,
     p.modulo,
     p.nombre,
+		p.descripcion,
     CASE 
         -- Si el alias tiene el formato 'maquina:accion:UUID'
         WHEN p.alias LIKE 'maquina:%:%' THEN 
