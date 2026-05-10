@@ -97,3 +97,40 @@
       {"enum"}{{{\color{keywordcolor}"enum"}}}{6}
 }
 
+\lstdefinelanguage{bash-custom}{
+    language=bash,
+    basicstyle=\ttfamily\footnotesize,
+    numbers=none,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{bggray},
+    keywordstyle=\color{keywordcolor}\bfseries,
+    stringstyle=\color{stringcolor},
+    commentstyle=\color{commentcolor},
+    morekeywords={taskset, stress-ng},
+    literate=
+     *{-}{{{\color{black}-}}}{1}
+      {,}{{{\color{black},}}}{1}
+}
+\lstdefinelanguage{python-custom}{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    numbers=none,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{bggray},
+    keywordstyle=\color{keywordcolor}\bfseries,
+    stringstyle=\color{stringcolor},
+    commentstyle=\color{commentcolor},
+    emph={self, cls, @staticmethod, @classmethod}, % Enfatizar elementos comunes
+    emphstyle=\color{black}\itshape,
+    morekeywords={as, assert, break, class, continue, def, del, elif, else, except, finally, for, from, global, if, import, in, is, lambda, nonlocal, not, or, pass, raise, return, try, while, with, yield, True, False, None, OutOfMemoryError},
+    literate=
+     *{=}{{{\color{black}=}}}{1}
+      {+}{{{\color{black}+}}}{1}
+      {-}{{{\color{black}-}}}{1}
+      {*}{{{\color{black}*}}}{1}
+      {/}{{{\color{black}/}}}{1}
+}
