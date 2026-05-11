@@ -52,6 +52,17 @@ Para el sistema de notificaciones, se ha integrado el servicio de mensajería de
 % Siguiendo la filosofía de diseño modular del proyecto, este servicio se ha implementado mediante una arquitectura dirigida por eventos (Event-Driven Architecture). Bajo este enfoque, la API actúa como el editor, emitiendo eventos de dominio ante acciones relevantes, mientras que el módulo de correo funciona como el Suscriptor. Esta estructura permite un procesamiento asíncrono donde el módulo de notificaciones gestiona la carga de manera independiente al flujo principal de la API, desacoplando la latencia del protocolo SMTP de los tiempos de respuesta de los endpoints.
 
 
+\section{Integración de terceros: Servidores Linux}
+Para la integración de los servidores linux se propone la herramienta mencionada en el incremento III que se encarga de la creación de entorno de desarrollos exclusivos para cada investigador.
+
+\section{Integración de terceros: QNAP}
+
+Según la información presente en foros y la información oficial de la plataforma, es necesario formar parte del Developer Program para poder acceder a la API. \cite{qnap_developer, reddit_qnap_automation} 
+
+
+\section{Integración de terceros: LDAP y VPN}
+Tras investigación y la falta de documentación oficial en respuesta a las necesidades, se podría plantear webScrapping o el uso de algún modelo de inteligencia artificial para la realización de la tarea. \cite{elconfidencial_claude_computer_use} 
+
 \section{Integración de terceros: Gitlab}
 
 \subsection{Descripción del servicio instalado:}

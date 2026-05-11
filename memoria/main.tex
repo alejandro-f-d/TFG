@@ -22,6 +22,14 @@
 
 \include{portada.tex}
 
+\include{capitulos/00_resumen}
+\include{capitulos/00_abstract}
+\newpage
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
 \include{capitulos/01_introduccion}
 \include{capitulos/02_metodologia}
 \include{capitulos/03_plan_de_trabajo}
@@ -30,15 +38,19 @@
 \include{capitulos/incrementos/incremento-iii}
 \include{capitulos/incrementos/incremento-iv}
 
-
-\include{anexos/anexo-i}
-\include{anexos/anexo-ii}
-\include{anexos/anexo-iii}
-
+\include{capitulos/04_analisis_impacto}
+\include{capitulos/05_conclusiones}
 
 \clearpage
 \nocite{*}
 \printbibliography[title={Bibliografía}]
+\clearpage
+
+\include{anexos/anexo-i}
+\include{anexos/anexo-ii}
+\include{anexos/anexo-iii}
+\include{anexos/anexo-iv}
+
 
 
 \end{document}
