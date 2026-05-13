@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 
 export default function BackButton() {
 	const router = useRouter();
-
 	return (
 		<button
+			type="button"
 			onClick={() => router.back()}
 			className="group flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] hover:text-blue-600 transition-all duration-300"
 		>
