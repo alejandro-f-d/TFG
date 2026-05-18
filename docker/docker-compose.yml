@@ -93,6 +93,8 @@ services:
       GOOGLE_APP_PASSWORD: ${GOOGLE_APP_PASSWORD}
       WEB_URL: ${WEB_URL}
       STORAGE_URL: ${STORAGE_URL}
+    env_file:
+      - .env
     networks:
       - medalnetwork
 
