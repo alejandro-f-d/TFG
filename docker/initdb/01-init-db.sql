@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS medal.dispositivos(
 
 
 
--- 7. PROYECTOS GITLAB
+-- 7. PROYECTOS GITLAB 
 CREATE TABLE IF NOT EXISTS medal.proyectosGitlab(
   idProyecto SERIAL PRIMARY KEY,
   nombre VARCHAR(50) NOT NULL, 
@@ -93,13 +93,15 @@ CREATE TABLE IF NOT EXISTS medal.proyectosGitlab(
   fechaInicio DATE NOT NULL DEFAULT CURRENT_DATE,
   fechaFin DATE,
   activo BOOLEAN DEFAULT TRUE,
-  idGitlab INTEGER UNIQUE
+  idGitlab INTEGER UNIQUE,
+  idGrupoGitlab INTEGER  
 );
 
--- 8. PARTICIPA
+-- 8. PARTICIPA 
 CREATE TABLE IF NOT EXISTS medal.participa (
     idUsuario INTEGER NOT NULL,
     idProyecto INTEGER NOT NULL,
+    rol VARCHAR(50) DEFAULT 'Developer',  
     PRIMARY KEY (idUsuario, idProyecto),
     CONSTRAINT fk_participa_usuario
         FOREIGN KEY (idUsuario)

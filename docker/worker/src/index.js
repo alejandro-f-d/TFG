@@ -13,7 +13,7 @@ import { mailProcessor } from "./core/mailProcessor.js"; // Tu lógica de Gmail
 import { pdfProcessor } from "./core/pdfProcessor.js";
 import { healthProcessor } from "./core/healthProcessor.js";
 import { loadMonitorsToRedis } from "./eda/queue.js";
-import { executeGitlab } from "./core/gitlabProcessor.js";
+import { runGitlabSync } from "./core/gitlabProcessor.js";
 
 import BaseDeDatos from "./bbdd/conexion.js";
 
@@ -62,7 +62,7 @@ const startSystem = async () => {
 		const PORT = process.env.PORT || 3000;
 		initCron();
 		await loadMonitorsToRedis();
-		await executeGitlab();
+		await runGitlabSync();
 		app.listen(PORT, () => {
 			console.log(`SERVIDOR WORKER EN: ${PORT}`);
 			console.log(`SISTEMA DE GMAIL: ACTIVO`);
