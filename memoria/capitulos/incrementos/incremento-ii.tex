@@ -412,7 +412,7 @@ En la figura \ref{fig:contraste_pantallas} podemos ver un contraste entre el fig
 \subsection{Backend:}
 
 \subsubsection{Autenticación y middleware:}
-Para la autenticación de los usuarios se ha utilizado el sistema de Bearer Token, este sistema funciona mediante la generación de una contraseña firmada por el servidor que es capaz de identificar al usuario. En el caso de esta implementación, este token guarda el uuid del usuario se trata de un identificador único para cada usuario. Para el sistema de permisos se ha desarrollado un sistema de identificación basado en roles, por ello para cada petición que recibe la API, el middleware se encarga de validad la petición para permitir o denegar el acceso. 
+Para la autenticación de los usuarios se ha utilizado el sistema de Bearer Token, este sistema funciona mediante la generación de una contraseña firmada por el servidor que es capaz de identificar al usuario. En el caso de esta implementación, este token guarda el uuid del usuario se trata de un identificador único para cada usuario. Para el sistema de permisos se ha desarrollado un sistema de identificación basado en roles, por ello para cada petición que recibe la API, el middleware se encarga de validar la petición para permitir o denegar el acceso. 
 
 \subsubsection{Almacenamiento de la información:}
 Para el almacenamiento de la información este sistema se apoya en tres bases de datos, una de ellas relacional para almacenar la información de forma estructurada de los usuarios, servicios y máquinas. 
@@ -483,4 +483,4 @@ La definición de los escenarios se estructura de la siguiente manera:
 \end{itemize}
 \clearpage
 
-Los escenarios planteados se pueden encontrar en el Anexo V.
+Los escenarios planteados para las pruebas de usabilidad se pueden encontrar en el Anexo V.
