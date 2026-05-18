@@ -1,7 +1,7 @@
 export const GITLAB_QUERYS = {
 	// PROYECTOS
 	GET_PROYECTO_BY_ID_GITLAB: `
-    SELECT idProyecto, idGrupoGitlab 
+    SELECT idProyecto, idGrupoGitlab, activo 
     FROM medal.proyectosGitlab 
     WHERE idGitlab = $1
   `,
@@ -31,21 +31,17 @@ export const GITLAB_QUERYS = {
   `,
 
 	// USUARIOS
-	GET_ID_USUARIO_BY_GITLAB_ID: `
-    SELECT idUsuario FROM medal.usuario WHERE gitlab = $1
-  `,
-
 	GET_ALL_USUARIOS_ACTIVOS: `
     SELECT idUsuario, gitlab 
     FROM medal.usuario 
     WHERE activo = true AND gitlab IS NOT NULL
   `,
 
-	// PARTICIPA
+	// PARTICIPA (RELACIÓN USUARIOS - GRUPO - REPOSITORIO)
 	GET_MIEMBROS_BY_PROYECTO: `
-    SELECT p.idUsuario
-    FROM medal.participa p
-    WHERE p.idProyecto = $1
+    SELECT idUsuario
+    FROM medal.participa
+    WHERE idProyecto = $1
   `,
 
 	ALTA_PARTICIPA: `
