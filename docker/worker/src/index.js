@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+globalThis.crypto = crypto;
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
