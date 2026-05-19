@@ -10,6 +10,7 @@ import {
 	crearUsuarioGitlab,
 	bloquearUsuarioGitlab,
 	reactivarUsuarioGitlab,
+	getUserIdByUsername,
 } from "../integrations/gitlab.js";
 
 const verificarCorreo = (correo) => {
@@ -73,14 +74,21 @@ export const postUser = async (req, res) => {
 
 		if (gitlab !== null) {
 			try {
-				const resCrearGitlab = await crearUsuarioGitlab(
-					correoInstitucional,
-					gitlab,
-					nombre,
-					contrasena,
-				);
-				gitlab = resCrearGitlab.id;
-				req.body.gitlab = resCrearGitlab.id;
+				const userExiste = await getUserIdByUsername(gitlab);
+				if (userExiste != null) {
+					// Asignariamos el id.
+					req.body.gitlab = userExiste;
+				} else {
+					// Caso de crear un usuario de cero en gitlab.
+					const resCrearGitlab = await crearUsuarioGitlab(
+						correoInstitucional,
+						gitlab,
+						nombre,
+						contrasena,
+					);
+					gitlab = resCrearGitlab.id;
+					req.body.gitlab = resCrearGitlab.id;
+				}
 			} catch (error) {
 				console.error("Error al crear usuario en GitLab:", error);
 				return res

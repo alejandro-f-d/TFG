@@ -494,3 +494,24 @@ export async function reactivarUsuarioGitlab(userId) {
 		throw error;
 	}
 }
+
+export async function getUserIdByUsername(username) {
+	try {
+		const response = await axios.get(`${process.env.URI_GITLAB}/api/v4/users`, {
+			headers: { "PRIVATE-TOKEN": process.env.GITLAB_TOKEN },
+			params: { username: username },
+		});
+
+		if (response.data && response.data.length > 0) {
+			return response.data[0].id;
+		}
+
+		return null;
+	} catch (error) {
+		console.error(
+			`[GitLab API Error] al buscar el username ${username}:`,
+			error.message,
+		);
+		return null;
+	}
+}
