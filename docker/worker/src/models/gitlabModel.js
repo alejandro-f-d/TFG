@@ -43,16 +43,16 @@ class GitlabModel {
 		}
 	}
 
-	static async registrarIdProyectoLocal(idGitlab, nombre, descripcion) {
+	static async registrarIdProyectoLocal(idGitlab, nombre, descripcion, activo) {
 		const uuidProyecto = uuidv4();
 		try {
-			// Intentamos usar la query enriquecida; si faltasen parámetros usa la minimal de respaldo
 			const queryConfig = GITLAB_QUERYS.ALTA_PROYECTO;
 			const result = await pool.query(queryConfig, [
 				uuidProyecto,
 				nombre || `Proyecto ${idGitlab}`,
 				descripcion || null,
 				idGitlab,
+				activo !== false, // Si explícitamente viene false se guarda como false, si no, true
 			]);
 			return result.rows[0].idproyecto;
 		} catch (error) {
@@ -104,7 +104,9 @@ class GitlabModel {
 	 * Orquestador principal de sincronización de la infraestructura de GitLab hacia MEDAL.
 	 */
 	static async syncAllProjectsFromUsers() {
-		console.log("[START] Iniciando sincronización relacional pura...");
+		console.log(
+			"[START] Iniciando sincronización relacional pura con control de archivados...",
+		);
 
 		const usuariosMap = await this.getAllUsuariosActivos();
 		if (usuariosMap.size === 0) {
@@ -124,7 +126,7 @@ class GitlabModel {
 			membershipChangesCount: 0,
 		};
 
-		// PASO 1: Grupos globales compartidos (Organizaciones comunes en GitLab)
+		// PASO 1: Grupos globales compartidos
 		console.log("\n[PASO 1] Buscando en grupos del Token...");
 		try {
 			const gruposGlobales = await getUserGroups();
@@ -142,7 +144,7 @@ class GitlabModel {
 			console.error("[!] Error en grupos globales:", err.message);
 		}
 
-		// PASO 2: Repositorios individuales de cada usuario (Incluyendo privados y archivados)
+		// PASO 2: Repositorios individuales de cada usuario (Incluyendo archivados)
 		console.log(
 			"\n[PASO 2] Recorriendo repositorios individuales por ID de GitLab...",
 		);
@@ -182,14 +184,13 @@ class GitlabModel {
 			}
 		}
 
-		// PASO 3: Recolección de basura / Purga de repositorios eliminados en la plataforma (404)
+		// PASO 3: Recolección de basura / Purga de repositorios eliminados (404)
 		console.log(
 			"\n[PASO 3] Recolectando basura (404 de repositorios eliminados)...",
 		);
 		for (const [idGitlab, idProyecto] of proyectosLocalesMap.entries()) {
 			if (seenGitlabProjectIds.has(idGitlab)) continue;
 
-			// Validación unitaria para evitar falsos positivos
 			const existsInGitlab = await checkProjectExists(idGitlab);
 			if (!existsInGitlab) {
 				try {
@@ -270,21 +271,41 @@ class GitlabModel {
 	}
 
 	static async _ensureProjectExists(gitlabProj, proyectosLocalesMap, counters) {
+		// Mapeamos: si está archivado en GitLab (archived: true) -> activo es FALSE en BD
+		const esActivo = !gitlabProj.archived;
+
 		let localProjectId = proyectosLocalesMap.get(gitlabProj.id);
+
+		// Si no existe, lo creamos pasándole su estado actual
 		if (!localProjectId) {
 			try {
 				localProjectId = await this.registrarIdProyectoLocal(
 					gitlabProj.id,
 					gitlabProj.name,
 					gitlabProj.description,
+					esActivo,
 				);
 				counters.createdCount++;
 				console.log(
-					`    [Registrado] Mapeo local para ID GitLab: ${gitlabProj.id} (${gitlabProj.name})`,
+					`    [Registrado] Mapeo local para ID GitLab: ${gitlabProj.id} (${gitlabProj.name}) [Activo: ${esActivo}]`,
 				);
 				proyectosLocalesMap.set(gitlabProj.id, localProjectId);
 			} catch (err) {
 				return null;
+			}
+		} else {
+			// Si ya existía localmente, forzamos un UPDATE ejecutando registrarIdProyectoLocal para sincronizar cambios de nombres o de estado (archivado/desarchivado)
+			try {
+				await this.registrarIdProyectoLocal(
+					gitlabProj.id,
+					gitlabProj.name,
+					gitlabProj.description,
+					esActivo,
+				);
+			} catch (err) {
+				console.error(
+					`    [!] Error al actualizar el estado del proyecto existente ${gitlabProj.id}`,
+				);
 			}
 		}
 		return localProjectId;

@@ -15,22 +15,23 @@ export const GITLAB_QUERYS = {
 		WHERE idGitlab IS NOT NULL;
 	`,
 
-	// [NUEVA/CORREGIDA] Inserta o actualiza un proyecto con sus datos enriquecidos reales
+	// [CORREGIDA] Ahora inserta y actualiza la columna 'activo' mapeando el estado de archivado
 	ALTA_PROYECTO: `
-		INSERT INTO medal.proyectosGitlab (uuidProyecto, nombre, descripcion, idGitlab)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO medal.proyectosGitlab (uuidProyecto, nombre, descripcion, idGitlab, activo)
+		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (idGitlab) 
 		DO UPDATE SET 
 			nombre = EXCLUDED.nombre, 
-			descripcion = COALESCE(EXCLUDED.descripcion, medal.proyectosGitlab.descripcion)
+			descripcion = COALESCE(EXCLUDED.descripcion, medal.proyectosGitlab.descripcion),
+			activo = EXCLUDED.activo
 		RETURNING idProyecto;
 	`,
 
-	// [SOPORTE COMPATIBILIDAD] Por si acaso se llama con parámetros básicos en registros automáticos
+	// Soporte de compatibilidad por si se llama con parámetros básicos
 	ALTA_PROYECTO_MINIMAL: `
-		INSERT INTO medal.proyectosGitlab (uuidProyecto, idGitlab, nombre, descripcion)
-		VALUES ($1, $2, 'Proyecto GitLab ' || $2, NULL)
-		ON CONFLICT (idGitlab) DO UPDATE SET idGitlab = EXCLUDED.idGitlab
+		INSERT INTO medal.proyectosGitlab (uuidProyecto, idGitlab, nombre, descripcion, activo)
+		VALUES ($1, $2, 'Proyecto GitLab ' || $2, NULL, TRUE)
+		ON CONFLICT (idGitlab) DO UPDATE SET activo = EXCLUDED.activo
 		RETURNING idProyecto;
 	`,
 
