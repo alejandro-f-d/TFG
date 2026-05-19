@@ -30,6 +30,11 @@ export const GITLAB_QUERYS = {
     FROM medal.proyectosGitlab
   `,
 
+	DELETE_PROYECTO: `
+    DELETE FROM medal.proyectosGitlab 
+    WHERE idProyecto = $1
+  `,
+
 	// USUARIOS
 	GET_ALL_USUARIOS_ACTIVOS: `
     SELECT idUsuario, gitlab 
@@ -37,7 +42,7 @@ export const GITLAB_QUERYS = {
     WHERE activo = true AND gitlab IS NOT NULL
   `,
 
-	// PARTICIPA (RELACIÓN USUARIOS - GRUPO - REPOSITORIO)
+	// PARTICIPA
 	GET_MIEMBROS_BY_PROYECTO: `
     SELECT idUsuario
     FROM medal.participa

@@ -53,3 +53,13 @@ export async function getAllProjectMembers(projectId) {
 export async function obtenerTodosLosProyectosUser(idUser) {
 	return fetchAllPages(`/users/${idUser}/projects`, { archived: false });
 }
+export async function checkProjectExists(projectId) {
+	try {
+		await axios.get(`${process.env.URI_GITLAB}/api/v4/projects/${projectId}`, {
+			headers: { "PRIVATE-TOKEN": process.env.GITLAB_TOKEN },
+		});
+		return true;
+	} catch (error) {
+		return false;
+	}
+}
