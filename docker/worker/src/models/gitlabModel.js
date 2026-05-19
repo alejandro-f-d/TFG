@@ -1,3 +1,4 @@
+// src/models/gitlabModel.js
 import pool from "../bbdd/conexion.js";
 import { v4 as uuidv4 } from "uuid";
 import { GITLAB_QUERYS } from "../querys/gitlabQuerys.js";
@@ -16,11 +17,14 @@ class GitlabModel {
 			const result = await pool.query(GITLAB_QUERYS.GET_ALL_USUARIOS_ACTIVOS);
 			const usuariosMap = new Map();
 			result.rows.forEach((row) => {
-				usuariosMap.set(row.gitlab, row.idusuario);
+				usuariosMap.set(Number(row.gitlab), row.idusuario);
 			});
 			return usuariosMap;
 		} catch (error) {
-			console.error("Error al obtener usuarios activos:", error);
+			console.error(
+				"Error al obtener usuarios activos desde la columna gitlab:",
+				error,
+			);
 			throw error;
 		}
 	}
@@ -30,85 +34,38 @@ class GitlabModel {
 			const result = await pool.query(GITLAB_QUERYS.GET_ALL_PROYECTOS);
 			const proyectosMap = new Map();
 			result.rows.forEach((row) => {
-				const idGitlab =
-					row.idgitlab !== undefined ? row.idgitlab : row.id_gitlab;
-				const idProyecto =
-					row.idproyecto !== undefined ? row.idproyecto : row.id_proyecto;
-				proyectosMap.set(idGitlab, idProyecto);
+				proyectosMap.set(Number(row.idgitlab), row.idproyecto);
 			});
 			return proyectosMap;
 		} catch (error) {
-			console.error("Error al obtener proyectos locales:", error);
+			console.error("Error al obtener IDs de la tabla proyectosGitlab:", error);
 			throw error;
 		}
 	}
 
-	static async getProyectoByIdGitlab(idGitlab) {
-		try {
-			const result = await pool.query(GITLAB_QUERYS.GET_PROYECTO_BY_ID_GITLAB, [
-				idGitlab,
-			]);
-			return result.rows[0] || null;
-		} catch (error) {
-			console.error(
-				`Error al obtener proyecto por idGitlab ${idGitlab}:`,
-				error,
-			);
-			throw error;
-		}
-	}
-
-	static async createProyecto({
-		idGitlab,
-		nombre,
-		descripcion,
-		fechaInicio,
-		archived,
-		idGrupoGitlab,
-	}) {
+	static async registrarIdProyectoLocal(idGitlab, nombre, descripcion) {
 		const uuidProyecto = uuidv4();
-		const activo = !archived;
 		try {
-			const result = await pool.query(GITLAB_QUERYS.ALTA_PROYECTO, [
-				nombre,
-				descripcion,
+			// Intentamos usar la query enriquecida; si faltasen parámetros usa la minimal de respaldo
+			const queryConfig = GITLAB_QUERYS.ALTA_PROYECTO;
+			const result = await pool.query(queryConfig, [
 				uuidProyecto,
-				fechaInicio,
+				nombre || `Proyecto ${idGitlab}`,
+				descripcion || null,
 				idGitlab,
-				activo,
-				idGrupoGitlab,
 			]);
 			return result.rows[0].idproyecto;
 		} catch (error) {
-			console.error(`Error al insertar proyecto ${nombre} en BD:`, error);
-			throw error;
-		}
-	}
-
-	static async updateProyectoGrupo(idProyecto, idGrupoGitlab) {
-		await pool.query(GITLAB_QUERYS.UPDATE_PROYECTO_GRUPO, [
-			idGrupoGitlab,
-			idProyecto,
-		]);
-	}
-
-	static async updateProyectoActivo(idProyecto, archived) {
-		await pool.query(GITLAB_QUERYS.UPDATE_PROYECTO_ACTIVO, [
-			!archived,
-			idProyecto,
-		]);
-	}
-
-	static async deleteProyecto(idProyecto) {
-		try {
-			await pool.query(GITLAB_QUERYS.DELETE_PROYECTO, [idProyecto]);
-		} catch (error) {
 			console.error(
-				`Error al eliminar el proyecto local ${idProyecto}:`,
+				`Error al registrar idGitlab ${idGitlab} en la tabla proyectosGitlab:`,
 				error,
 			);
 			throw error;
 		}
+	}
+
+	static async deleteProyecto(idProyecto) {
+		await pool.query(GITLAB_QUERYS.DELETE_PROYECTO, [idProyecto]);
 	}
 
 	static async getMiembrosByProyecto(idProyecto) {
@@ -134,8 +91,6 @@ class GitlabModel {
 
 	static mapAccessLevelToRole(accessLevel) {
 		const roles = {
-			0: "No Access",
-			5: "Minimal Access",
 			10: "Guest",
 			20: "Reporter",
 			30: "Developer",
@@ -146,239 +101,196 @@ class GitlabModel {
 	}
 
 	/**
-	 * SINCRO INVERSA: Grupos -> Miembros -> Repos de Grupo -> Repos Personales -> Purga de obsoletos
+	 * Orquestador principal de sincronización de la infraestructura de GitLab hacia MEDAL.
 	 */
 	static async syncAllProjectsFromUsers() {
-		console.log(
-			"[START] Iniciando sincronización guiada por Grupos con purga final...",
-		);
+		console.log("[START] Iniciando sincronización relacional pura...");
 
 		const usuariosMap = await this.getAllUsuariosActivos();
 		if (usuariosMap.size === 0) {
-			console.log("No hay usuarios activos registrados con ID de GitLab.");
-			return { created: 0, updated: 0, deleted: 0, membershipChanges: 0 };
+			console.log(
+				"[SYNC] No hay usuarios con valor numérico en columna 'gitlab'. Cancelando.",
+			);
+			return { created: 0, deleted: 0, membershipChanges: 0 };
 		}
 
 		const proyectosLocalesMap = await this.getAllProyectos();
 		const seenGitlabProjectIds = new Set();
+		const seenGitlabGroupIds = new Set();
 
 		const counters = {
 			createdCount: 0,
-			updatedCount: 0,
 			deletedCount: 0,
 			membershipChangesCount: 0,
 		};
 
-		// -------------------------------------------------------------
-		// PASO 1 Y 2: Recorrer Grupos, sus integrantes y sus repos
-		// -------------------------------------------------------------
-		console.log("\n[PASO 1] Leyendo grupos accesibles...");
-		const gruposCargados = await getUserGroups();
-		console.log(`-> Encontrados ${gruposCargados.length} grupos.`);
+		// PASO 1: Grupos globales compartidos (Organizaciones comunes en GitLab)
+		console.log("\n[PASO 1] Buscando en grupos del Token...");
+		try {
+			const gruposGlobales = await getUserGroups();
+			for (const grupo of gruposGlobales) {
+				await this._syncGroupMinimal(
+					grupo,
+					proyectosLocalesMap,
+					usuariosMap,
+					seenGitlabProjectIds,
+					seenGitlabGroupIds,
+					counters,
+				);
+			}
+		} catch (err) {
+			console.error("[!] Error en grupos globales:", err.message);
+		}
 
-		for (const grupo of gruposCargados) {
-			console.log(
-				`\n=== Procesando Grupo: ${grupo.name} (ID: ${grupo.id}) ===`,
-			);
-
-			let groupMembers = [];
-			const groupMembersMap = new Map();
+		// PASO 2: Repositorios individuales de cada usuario (Incluyendo privados y archivados)
+		console.log(
+			"\n[PASO 2] Recorriendo repositorios individuales por ID de GitLab...",
+		);
+		for (const [gitlabNumericId] of usuariosMap.entries()) {
 			try {
-				groupMembers = await getGroupMembers(grupo.id);
-				groupMembers.forEach((m) => groupMembersMap.set(m.id, m.access_level));
 				console.log(
-					`  -> Integrantes detectados en el grupo: ${groupMembers.length}`,
+					`   -> Revisando proyectos del usuario GitLab ID: ${gitlabNumericId}`,
 				);
-			} catch (err) {
-				console.error(
-					`  -> Error mapeando miembros del grupo ${grupo.id}:`,
-					err.message,
-				);
-			}
+				const personalProjects =
+					await obtenerTodosLosProyectosUser(gitlabNumericId);
 
-			let groupProjects = [];
-			try {
-				groupProjects = await getAllGroupProjects(grupo.id);
-				console.log(`  -> Repositorios en este grupo: ${groupProjects.length}`);
-			} catch (err) {
-				console.error(
-					`  -> Error obteniendo repositorios del grupo ${grupo.id}:`,
-					err.message,
-				);
-				continue;
-			}
+				for (const gitlabProj of personalProjects) {
+					if (seenGitlabProjectIds.has(gitlabProj.id)) continue;
+					seenGitlabProjectIds.add(gitlabProj.id);
 
-			for (const gitlabProj of groupProjects) {
-				seenGitlabProjectIds.add(gitlabProj.id);
-
-				const localProjectId = await this._syncProjectStructure(
-					gitlabProj,
-					proyectosLocalesMap,
-					grupo.id,
-					counters,
-				);
-
-				if (localProjectId) {
-					await this._syncProjectMemberships(
-						gitlabProj.id,
-						localProjectId,
-						usuariosMap,
-						groupMembersMap,
+					const localProjectId = await this._ensureProjectExists(
+						gitlabProj,
+						proyectosLocalesMap,
 						counters,
 					);
+					if (localProjectId) {
+						// Sincronizamos membresías individuales del proyecto
+						await this._syncProjectMembershipsMinimal(
+							gitlabProj.id,
+							localProjectId,
+							usuariosMap,
+							new Map(),
+							counters,
+						);
+					}
 				}
+			} catch (err) {
+				console.error(
+					`  [!] Error en repositorios personales del ID GitLab ${gitlabNumericId}:`,
+					err.message,
+				);
 			}
 		}
 
-		// -------------------------------------------------------------
-		// PASO 3: Repositorios personales/directos de cada usuario
-		// -------------------------------------------------------------
+		// PASO 3: Recolección de basura / Purga de repositorios eliminados en la plataforma (404)
 		console.log(
-			"\n[PASO 3] Analizando repositorios individuales de cada usuario...",
+			"\n[PASO 3] Recolectando basura (404 de repositorios eliminados)...",
 		);
-		for (const [gitlabUserId, localUserId] of usuariosMap.entries()) {
-			console.log(
-				`  -> Revisando proyectos de usuario GitLab ID: ${gitlabUserId}`,
-			);
-
-			let personalProjects = [];
-			try {
-				personalProjects = await obtenerTodosLosProyectosUser(gitlabUserId);
-			} catch (err) {
-				console.error(
-					`  [!] Error al obtener repos del usuario ${gitlabUserId}:`,
-					err.message,
-				);
-				continue;
-			}
-
-			for (const gitlabProj of personalProjects) {
-				if (seenGitlabProjectIds.has(gitlabProj.id)) continue;
-
-				seenGitlabProjectIds.add(gitlabProj.id);
-
-				const localProjectId = await this._syncProjectStructure(
-					gitlabProj,
-					proyectosLocalesMap,
-					null,
-					counters,
-				);
-
-				if (localProjectId) {
-					await this._syncProjectMemberships(
-						gitlabProj.id,
-						localProjectId,
-						usuariosMap,
-						new Map(),
-						counters,
-					);
-				}
-			}
-		}
-
-		// -------------------------------------------------------------
-		// PASO 4: Limpieza de repositorios borrados en GitLab
-		// -------------------------------------------------------------
-		console.log(
-			"\n[PASO 4] Iniciando recolección de basura de repositorios locales...",
-		);
-
 		for (const [idGitlab, idProyecto] of proyectosLocalesMap.entries()) {
-			console.log(
-				`  -> Verificando en GitLab el proyecto local ID: ${idProyecto} (idGitlab: ${idGitlab})...`,
-			);
+			if (seenGitlabProjectIds.has(idGitlab)) continue;
 
+			// Validación unitaria para evitar falsos positivos
 			const existsInGitlab = await checkProjectExists(idGitlab);
-
 			if (!existsInGitlab) {
 				try {
 					console.log(
-						`  [!] Borrado confirmado: El proyecto idGitlab ${idGitlab} ya no existe en el servidor. Eliminando de la BD local.`,
+						`  [PURGA] ID GitLab ${idGitlab} inactivo/borrado. Eliminando ID local ${idProyecto}.`,
 					);
 					await this.deleteProyecto(idProyecto);
 					counters.deletedCount++;
 				} catch (err) {
 					console.error(
-						`  [!] Error al borrar el proyecto ${idProyecto} de la base de datos:`,
+						`  [!] Error borrando ID local ${idProyecto}:`,
 						err.message,
 					);
 				}
-			} else {
-				console.log(`     [OK] El proyecto sigue existiendo.`);
 			}
 		}
 
-		console.log("\n[FIN] Sincronización completada con éxito.");
+		console.log("\n[FIN] Sincronización finalizada.");
 		return {
 			created: counters.createdCount,
-			updated: counters.updatedCount,
 			deleted: counters.deletedCount,
 			membershipChanges: counters.membershipChangesCount,
 		};
 	}
 
-	static async _syncProjectStructure(
-		gitlabProj,
+	static async _syncGroupMinimal(
+		grupo,
 		proyectosLocalesMap,
-		idGrupoGitlab,
+		usuariosMap,
+		seenGitlabProjectIds,
+		seenGitlabGroupIds,
 		counters,
 	) {
-		const gitlabProjectId = gitlabProj.id;
-		const fechaInicio = gitlabProj.created_at
-			? gitlabProj.created_at.split("T")[0]
-			: new Date().toISOString().split("T")[0];
-		const archived = gitlabProj.archived || false;
+		if (seenGitlabGroupIds.has(grupo.id)) return;
+		seenGitlabGroupIds.add(grupo.id);
 
-		let localProjectId = proyectosLocalesMap.get(gitlabProjectId);
+		const groupMembersMap = new Map();
+		try {
+			const groupMembers = await getGroupMembers(grupo.id);
+			groupMembers.forEach((m) => groupMembersMap.set(m.id, m.access_level));
+		} catch (err) {
+			console.error(
+				`  [!] Error cargando miembros del grupo ${grupo.id}:`,
+				err.message,
+			);
+		}
 
+		let groupProjects = [];
+		try {
+			groupProjects = await getAllGroupProjects(grupo.id);
+		} catch (err) {
+			console.error(
+				`  [!] Error cargando repos del grupo ${grupo.id}:`,
+				err.message,
+			);
+			return;
+		}
+
+		for (const gitlabProj of groupProjects) {
+			if (seenGitlabProjectIds.has(gitlabProj.id)) continue;
+			seenGitlabProjectIds.add(gitlabProj.id);
+
+			const localProjectId = await this._ensureProjectExists(
+				gitlabProj,
+				proyectosLocalesMap,
+				counters,
+			);
+			if (localProjectId) {
+				await this._syncProjectMembershipsMinimal(
+					gitlabProj.id,
+					localProjectId,
+					usuariosMap,
+					groupMembersMap,
+					counters,
+				);
+			}
+		}
+	}
+
+	static async _ensureProjectExists(gitlabProj, proyectosLocalesMap, counters) {
+		let localProjectId = proyectosLocalesMap.get(gitlabProj.id);
 		if (!localProjectId) {
 			try {
-				localProjectId = await this.createProyecto({
-					idGitlab: gitlabProjectId,
-					nombre: gitlabProj.name,
-					descripcion: gitlabProj.description || "",
-					fechaInicio,
-					archived,
-					idGrupoGitlab: idGrupoGitlab || null,
-				});
-				counters.createdCount++;
-				console.log(`    [Creado] Proyecto: "${gitlabProj.name}"`);
-				proyectosLocalesMap.set(gitlabProjectId, localProjectId);
-			} catch (err) {
-				console.error(
-					`    [!] Error guardando proyecto ${gitlabProj.name}:`,
-					err.message,
+				localProjectId = await this.registrarIdProyectoLocal(
+					gitlabProj.id,
+					gitlabProj.name,
+					gitlabProj.description,
 				);
+				counters.createdCount++;
+				console.log(
+					`    [Registrado] Mapeo local para ID GitLab: ${gitlabProj.id} (${gitlabProj.name})`,
+				);
+				proyectosLocalesMap.set(gitlabProj.id, localProjectId);
+			} catch (err) {
 				return null;
-			}
-		} else {
-			let needsUpdate = false;
-			const existing = await this.getProyectoByIdGitlab(gitlabProjectId);
-			if (existing) {
-				const localGroupId =
-					existing.idgrupogitlab !== undefined
-						? existing.idgrupogitlab
-						: existing.idgrupo_gitlab;
-				if (localGroupId !== idGrupoGitlab) {
-					await this.updateProyectoGrupo(localProjectId, idGrupoGitlab);
-					needsUpdate = true;
-				}
-				const localActivo =
-					existing.activo !== undefined ? existing.activo : true;
-				if (localActivo !== !archived) {
-					await this.updateProyectoActivo(localProjectId, archived);
-					needsUpdate = true;
-				}
-			}
-			if (needsUpdate) {
-				counters.updatedCount++;
-				console.log(`    [Actualizado] "${gitlabProj.name}"`);
 			}
 		}
 		return localProjectId;
 	}
 
-	static async _syncProjectMemberships(
+	static async _syncProjectMembershipsMinimal(
 		gitlabProjectId,
 		localProjectId,
 		usuariosMap,
@@ -389,10 +301,6 @@ class GitlabModel {
 		try {
 			projectMembers = await getAllProjectMembers(gitlabProjectId);
 		} catch (err) {
-			console.error(
-				`    [!] Error consultando miembros explícitos del proyecto ${gitlabProjectId}:`,
-				err.message,
-			);
 			return;
 		}
 
@@ -403,20 +311,15 @@ class GitlabModel {
 		const expectedLocalMemberIds = new Set();
 
 		for (const [memberGitlabId, accessLevel] of finalGitlabMembers.entries()) {
-			const localUserId = usuariosMap.get(memberGitlabId);
-			if (localUserId) {
-				expectedLocalMemberIds.add(localUserId);
-				const role = this.mapAccessLevelToRole(accessLevel);
-				try {
-					await this.upsertParticipa(localUserId, localProjectId, role);
-					counters.membershipChangesCount++;
-				} catch (err) {
-					console.error(
-						`    [!] Error guardando relación (User: ${localUserId}, Repo: ${localProjectId}):`,
-						err.message,
-					);
-				}
-			}
+			const localUserId = usuariosMap.get(Number(memberGitlabId));
+			if (!localUserId) continue;
+
+			expectedLocalMemberIds.add(localUserId);
+			const role = this.mapAccessLevelToRole(accessLevel);
+			try {
+				await this.upsertParticipa(localUserId, localProjectId, role);
+				counters.membershipChangesCount++;
+			} catch (err) {}
 		}
 
 		for (const localMemberId of localMemberIds) {
@@ -425,14 +328,9 @@ class GitlabModel {
 					await this.deleteParticipa(localMemberId, localProjectId);
 					counters.membershipChangesCount++;
 					console.log(
-						`    [Removido] Miembro local ID ${localMemberId} ya no participa.`,
+						`    [Removido] ID Usuario local ${localMemberId} desvinculado del ID GitLab ${gitlabProjectId}`,
 					);
-				} catch (err) {
-					console.error(
-						`    [!] Error al eliminar membresía del ID ${localMemberId}:`,
-						err.message,
-					);
-				}
+				} catch (err) {}
 			}
 		}
 	}
