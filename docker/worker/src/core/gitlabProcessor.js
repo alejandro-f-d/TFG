@@ -6,3 +6,11 @@ export async function runGitlabSync() {
 	console.log("[SYNC] Finalizada:", result);
 	return result;
 }
+
+export const gitlabQueueProcessor = async (job) => {
+	if (job.name === "recargar-gitlab") {
+		console.log("Se empieza a resincronizar el gitlab");
+		await runGitlabSync();
+		console.log("Fin de resincronizar gitlab.");
+	}
+};

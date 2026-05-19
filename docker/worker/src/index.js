@@ -7,11 +7,17 @@ import { Worker } from "bullmq";
 import { initCron } from "./cron/cron.js";
 
 import { redisConnection } from "./config/redis.js";
-import { QUEUE_MAIL, QUEUE_DOCUMENTS, QUEUE_HEALTH } from "./constants.js";
+import {
+	QUEUE_MAIL,
+	QUEUE_DOCUMENTS,
+	QUEUE_HEALTH,
+	QUEUE_GITLAB,
+} from "./constants.js";
 
 import { mailProcessor } from "./core/mailProcessor.js"; // Tu lógica de Gmail
 import { pdfProcessor } from "./core/pdfProcessor.js";
 import { healthProcessor } from "./core/healthProcessor.js";
+import { gitlabQueueProcessor } from "./core/gitlabProcessor.js";
 import { loadMonitorsToRedis } from "./eda/queue.js";
 import { runGitlabSync } from "./core/gitlabProcessor.js";
 
@@ -28,10 +34,16 @@ app.get("/", (req, res) =>
 	res.send("MEDAL API Core - Sistema de Documentos y Mail Activo"),
 );
 
-const initWorker = (queueName, processor, concurrency = 5) => {
+const initWorker = (
+	queueName,
+	processor,
+	concurrency = 5,
+	extraOptions = {},
+) => {
 	const worker = new Worker(queueName, processor, {
 		connection: redisConnection,
 		concurrency: concurrency,
+		...extraOptions,
 	});
 
 	worker.on("ready", () => console.log(`Worker [${queueName}] escuchando...`));
@@ -57,8 +69,13 @@ const startSystem = async () => {
 		await BaseDeDatos.query("SELECT NOW()");
 		console.log("DB POSTGRESQL: CONECTADA");
 		initWorker(QUEUE_MAIL, mailProcessor, 5);
-		initWorker(QUEUE_DOCUMENTS, pdfProcessor, 2);
+		initWorker(QUEUE_DOCUMENTS, pdfProcessor, 2, {
+			lockDuration: 5 * 60 * 1000,
+		});
 		initWorker(QUEUE_HEALTH, healthProcessor, 10);
+		initWorker(QUEUE_GITLAB, gitlabQueueProcessor, 1, {
+			lockDuration: 5 * 60 * 1000,
+		});
 		const PORT = process.env.PORT || 3000;
 		initCron();
 		await loadMonitorsToRedis();

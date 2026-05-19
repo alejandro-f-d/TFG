@@ -2,7 +2,7 @@ import UserModel from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
-import { addEmailToQueue } from "../eda/queue.js";
+import { addEmailToQueue, addGitlabQueue } from "../eda/queue.js";
 import crypto from "crypto";
 import { tienePermiso } from "../middlewares/authMiddleware.js";
 import {
@@ -89,6 +89,7 @@ export const postUser = async (req, res) => {
 					gitlab = resCrearGitlab.id;
 					req.body.gitlab = resCrearGitlab.id;
 				}
+				await addGitlabQueue();
 			} catch (error) {
 				console.error("Error al crear usuario en GitLab:", error);
 				return res

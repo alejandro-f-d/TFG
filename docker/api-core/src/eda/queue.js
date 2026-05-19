@@ -1,6 +1,11 @@
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
-import { QUEUE_MAIL, QUEUE_DOCUMENTS, QUEUE_HEALTH } from "./constants.js";
+import {
+	QUEUE_MAIL,
+	QUEUE_DOCUMENTS,
+	QUEUE_HEALTH,
+	QUEUE_GITLAB,
+} from "./constants.js";
 
 const connection = new IORedis(process.env.REDIS_URL, {
 	maxRetriesPerRequest: null,
@@ -16,6 +21,7 @@ const defaultJobOptions = {
 const mailQueue = new Queue(QUEUE_MAIL, { connection, defaultJobOptions });
 const pdfQueue = new Queue(QUEUE_DOCUMENTS, { connection, defaultJobOptions });
 const monitorQueue = new Queue(QUEUE_HEALTH, { connection, defaultJobOptions });
+const gitlabQueue = new Queue(QUEUE_GITLAB, { connection, defaultJobOptions });
 
 export const addEmailToQueue = async (payload) => {
 	try {
@@ -72,4 +78,22 @@ export const addMonitorToQueue = async (payload) => {
 	}
 };
 
-export const queuesForDashboard = [mailQueue, pdfQueue, monitorQueue];
+export const addGitlabQueue = async () => {
+	try {
+		const job = await gitlabQueue.add("recargar-gitlab", {});
+
+		console.log(
+			`[Queue-Gitlab] Trabajo ID ${job.id} enviado a Redis debido a un nuevo id.`,
+		);
+		return job;
+	} catch (error) {
+		console.error("Se ha producido un error con el REDIS de gitlab. ", error);
+	}
+};
+
+export const queuesForDashboard = [
+	mailQueue,
+	pdfQueue,
+	monitorQueue,
+	gitlabQueue,
+];
