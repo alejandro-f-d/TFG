@@ -4,7 +4,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Worker } from "bullmq";
-import { initCron } from "./cron/cron.js";
+import { initCron, cronGitlab } from "./cron/cron.js";
 
 import { redisConnection } from "./config/redis.js";
 import {
@@ -78,6 +78,7 @@ const startSystem = async () => {
 		});
 		const PORT = process.env.PORT || 3000;
 		initCron();
+		cronGitlab();
 		await loadMonitorsToRedis();
 		await runGitlabSync();
 		app.listen(PORT, () => {

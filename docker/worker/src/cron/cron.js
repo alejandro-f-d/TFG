@@ -1,6 +1,7 @@
 import { CronJob } from "cron";
 import CaducidadFechas from "../models/caducidadFechas.js";
 import { addEmailToQueue } from "../eda/queue.js";
+import { runGitlabSync } from "../core/gitlabProcessor.js";
 
 export const initCron = async () => {
 	const job = new CronJob(
@@ -21,8 +22,28 @@ export const initCron = async () => {
 		true,
 		"Europe/Madrid",
 	);
-
+	job.start();
 	console.log(
 		"Cron de baja de usuarios y peticiones funcionando correctamente.",
 	);
+};
+
+export const cronGitlab = async () => {
+	const job = new CronJob(
+		"0 0 */4 * * *", //Ejecución  cada cuatro horas.
+		async function () {
+			console.log("Ejecutando la tarea de gitlab (Frecuencia: cada 4 horas)");
+			try {
+				await runGitlabSync();
+			} catch (error) {
+				console.error("Error en la tarea programada de cada 4 horas:", error);
+			}
+		},
+		null,
+		false,
+		"Europe/Madrid",
+	);
+
+	job.start();
+	console.log("Gitlab ejecutado con éxito.");
 };
