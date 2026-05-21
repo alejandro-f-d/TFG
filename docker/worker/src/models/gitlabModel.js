@@ -9,6 +9,7 @@ import {
 	getAllProjectMembers,
 	obtenerTodosLosProyectosUser,
 	checkProjectExists,
+	obtenerGruposYMiembros,
 } from "../integrations/gitlab.js";
 
 class GitlabModel {
@@ -49,7 +50,13 @@ class GitlabModel {
 		}
 	}
 
-	static async registrarIdProyectoLocal(idGitlab, nombre, descripcion, activo) {
+	static async registrarIdProyectoLocal(
+		idGitlab,
+		nombre,
+		descripcion,
+		activo,
+		idGrupoGitlab = null,
+	) {
 		const uuidProyecto = uuidv4();
 		try {
 			const result = await pool.query(GITLAB_QUERYS.ALTA_PROYECTO, [
@@ -58,6 +65,7 @@ class GitlabModel {
 				nombre || `Proyecto ${idGitlab}`,
 				descripcion || null,
 				activo !== false,
+				idGrupoGitlab,
 			]);
 			return result.rows[0].idproyecto;
 		} catch (error) {
@@ -70,11 +78,9 @@ class GitlabModel {
 	}
 
 	static async deleteProyecto(idProyecto) {
-		// Limpieza en cascada manual de seguridad para evitar bloqueos relacionales
 		await pool.query(GITLAB_QUERYS.DELETE_ALL_PARTICIPANTES_PROYECTO, [
 			idProyecto,
 		]);
-		// Borrado definitivo del registro maestro del proyecto
 		await pool.query(GITLAB_QUERYS.DELETE_PROYECTO, [idProyecto]);
 	}
 
@@ -111,12 +117,147 @@ class GitlabModel {
 	}
 
 	/**
+	 * Sincroniza e higieniza los grupos y sus miembros optimizado en un solo lote de datos.
+	 */
+	static async syncAllGroups(usuariosMap) {
+		console.log(
+			"\n[PASO 0] Iniciando sincronización optimizada de grupos de GitLab...",
+		);
+
+		const counters = {
+			creados: 0,
+			actualizados: 0,
+			purgados: 0,
+			miembrosCambios: 0,
+		};
+		const seenGitlabGroupIds = new Set();
+		const gruposLocalesMap = new Map();
+
+		try {
+			const resLocales = await pool.query(GITLAB_QUERYS.GET_ALL_GRUPOS_LOCALES);
+			resLocales.rows.forEach((row) => {
+				if (row.idgitlab !== null)
+					gruposLocalesMap.set(Number(row.idgitlab), row.idgrupo);
+			});
+		} catch (error) {
+			console.error(
+				"[!] Error al recuperar grupos locales de la BD:",
+				error.message,
+			);
+			throw error;
+		}
+
+		let gruposYMiembrosApi = [];
+		try {
+			gruposYMiembrosApi = await obtenerGruposYMiembros();
+		} catch (error) {
+			console.error(
+				"[!] Error crítico al invocar obtenerGruposYMiembros:",
+				error.message,
+			);
+			return { counters, gruposLocalesMap };
+		}
+
+		for (const grupoApi of gruposYMiembrosApi) {
+			seenGitlabGroupIds.add(grupoApi.id);
+			let idGrupoLocal = gruposLocalesMap.get(grupoApi.id);
+
+			try {
+				const isNew = !idGrupoLocal;
+
+				const resUpsert = await pool.query(GITLAB_QUERYS.ALTA_GRUPO_GITLAB, [
+					grupoApi.nombre,
+					grupoApi.descripcion,
+					grupoApi.path,
+					grupoApi.webUrl,
+					grupoApi.id,
+				]);
+
+				idGrupoLocal = resUpsert.rows[0].idgrupo;
+				gruposLocalesMap.set(grupoApi.id, idGrupoLocal);
+
+				if (isNew) counters.creados++;
+				else counters.actualizados++;
+
+				const resMiembrosLocales = await pool.query(
+					GITLAB_QUERYS.GET_MIEMBROS_BY_GRUPO,
+					[idGrupoLocal],
+				);
+				const miembrosLocalesSet = new Set(
+					resMiembrosLocales.rows.map((r) => r.idusuario),
+				);
+				const expectedMiembrosLocalesIds = new Set();
+
+				for (const miembroApi of grupoApi.miembros) {
+					const idUsuarioLocal = usuariosMap.get(Number(miembroApi.idUsuario));
+					if (!idUsuarioLocal) continue;
+
+					expectedMiembrosLocalesIds.add(idUsuarioLocal);
+
+					if (!miembrosLocalesSet.has(idUsuarioLocal)) {
+						await pool.query(GITLAB_QUERYS.ALTA_PERTENECE_GRUPO, [
+							idUsuarioLocal,
+							idGrupoLocal,
+						]);
+						counters.miembrosCambios++;
+					}
+				}
+
+				for (const idUsuarioLocal of miembrosLocalesSet) {
+					if (!expectedMiembrosLocalesIds.has(idUsuarioLocal)) {
+						await pool.query(GITLAB_QUERYS.DELETE_PERTENECE_GRUPO, [
+							idUsuarioLocal,
+							idGrupoLocal,
+						]);
+						counters.miembrosCambios++;
+						console.log(
+							`    [Removido] Usuario local ID ${idUsuarioLocal} desvinculado del Grupo Local ID ${idGrupoLocal}`,
+						);
+					}
+				}
+			} catch (errorGrupo) {
+				console.error(
+					`  [!] Error procesando el grupo [${grupoApi.nombre}]:`,
+					errorGrupo.message,
+				);
+			}
+		}
+
+		for (const [idGitlabExterno, idGrupoLocal] of gruposLocalesMap.entries()) {
+			if (!seenGitlabGroupIds.has(idGitlabExterno)) {
+				try {
+					console.log(
+						`  [PURGA 404] El Grupo GitLab ID ${idGitlabExterno} ya no existe en el servidor. Eliminando ID Grupo Local: ${idGrupoLocal}`,
+					);
+					await pool.query(GITLAB_QUERYS.DELETE_GRUPO_GITLAB, [idGrupoLocal]);
+					counters.purgados++;
+				} catch (errPurge) {
+					console.error(
+						`    [!] Error al purgar el grupo local obsoleto ID ${idGrupoLocal}:`,
+						errPurge.message,
+					);
+				}
+			}
+		}
+
+		console.log(
+			`[FIN PASO 0] Grupos -> Creados: ${counters.creados}, Actualizados: ${counters.actualizados}, Purgados: ${counters.purgados}, Cambios Miembros: ${counters.miembrosCambios}\n`,
+		);
+
+		// Retornamos también el mapa para poder usarlo en el PASO 1
+		return { counters, gruposLocalesMap };
+	}
+
+	/**
 	 * Orquestador de sincronización e higiene estricta de la infraestructura de GitLab hacia MEDAL.
 	 */
 	static async syncAllProjectsFromUsers() {
 		console.log("[START] Iniciando sincronización relacional pura...");
 
 		const usuariosMap = await this.getAllUsuariosActivos();
+		// Recogemos el mapa mapeado del PASO 0
+		const { gruposLocalesMap } = await this.syncAllGroups(usuariosMap);
+
 		if (usuariosMap.size === 0) {
 			console.log(
 				"[SYNC] No hay usuarios con valor numérico en columna 'gitlab'. Cancelando.",
@@ -124,7 +265,6 @@ class GitlabModel {
 			return { created: 0, deleted: 0, membershipChanges: 0 };
 		}
 
-		// Reutilizamos el mapa interno para agilizar las búsquedas del PASO 1 y PASO 2
 		const proyectosLocalesMap = new Map();
 		const proyectosListaCompleta = await this.getAllProyectos();
 		proyectosListaCompleta.forEach((p) => {
@@ -152,6 +292,7 @@ class GitlabModel {
 					seenGitlabProjectIds,
 					seenGitlabGroupIds,
 					counters,
+					gruposLocalesMap, // <-- Pasamos el mapa de grupos para resolver IDs locales
 				);
 			}
 		} catch (err) {
@@ -165,7 +306,7 @@ class GitlabModel {
 		for (const [gitlabNumericId] of usuariosMap.entries()) {
 			try {
 				console.log(
-					`   -> Revisando proyectos del usuario GitLab ID: ${gitlabNumericId}`,
+					`    -> Revisando proyectos del usuario GitLab ID: ${gitlabNumericId}`,
 				);
 				const personalProjects =
 					await obtenerTodosLosProyectosUser(gitlabNumericId);
@@ -174,10 +315,12 @@ class GitlabModel {
 					if (seenGitlabProjectIds.has(gitlabProj.id)) continue;
 					seenGitlabProjectIds.add(gitlabProj.id);
 
+					// Pasamos null ya que son repositorios personales fuera de grupos corporativos
 					const localProjectId = await this._ensureProjectExists(
 						gitlabProj,
 						proyectosLocalesMap,
 						counters,
+						null,
 					);
 					if (localProjectId) {
 						await this._syncProjectMembershipsMinimal(
@@ -197,12 +340,11 @@ class GitlabModel {
 			}
 		}
 
-		// PASO 3: Purga estricta (Elimina nulos, corruptos e inexistentes)
+		// PASO 3: Limpieza de datos
 		console.log(
 			"\n[PASO 3] Ejecutando purga y limpieza estricta de la base de datos.",
 		);
 
-		// Volvemos a leer el estado fresco de la BD antes de purgar
 		const proyectosAuditoria = await this.getAllProyectos();
 
 		for (const proy of proyectosAuditoria) {
@@ -224,12 +366,10 @@ class GitlabModel {
 				continue;
 			}
 
-			// Si el proyecto de GitLab ya ha sido procesado en los pasos anteriores, está a salvo
 			if (seenGitlabProjectIds.has(idGitlab)) {
 				continue;
 			}
 
-			// Si tiene un ID válido pero no lo mapeó nadie, validamos si existe en el servidor
 			const existsInGitlab = await checkProjectExists(idGitlab);
 			if (!existsInGitlab) {
 				try {
@@ -262,9 +402,13 @@ class GitlabModel {
 		seenGitlabProjectIds,
 		seenGitlabGroupIds,
 		counters,
+		gruposLocalesMap, // <-- Recibido del orquestador
 	) {
 		if (seenGitlabGroupIds.has(grupo.id)) return;
 		seenGitlabGroupIds.add(grupo.id);
+
+		// Obtenemos el id del grupo local guardado en el PASO 0
+		const idGrupoLocal = gruposLocalesMap.get(grupo.id) || null;
 
 		const groupMembersMap = new Map();
 		try {
@@ -292,10 +436,12 @@ class GitlabModel {
 			if (seenGitlabProjectIds.has(gitlabProj.id)) continue;
 			seenGitlabProjectIds.add(gitlabProj.id);
 
+			// Propagamos el idGrupoLocal detectado
 			const localProjectId = await this._ensureProjectExists(
 				gitlabProj,
 				proyectosLocalesMap,
 				counters,
+				idGrupoLocal,
 			);
 			if (localProjectId) {
 				await this._syncProjectMembershipsMinimal(
@@ -309,7 +455,13 @@ class GitlabModel {
 		}
 	}
 
-	static async _ensureProjectExists(gitlabProj, proyectosLocalesMap, counters) {
+	// Se añade el parámetro idGrupoGitlab al flujo de validación de existencia
+	static async _ensureProjectExists(
+		gitlabProj,
+		proyectosLocalesMap,
+		counters,
+		idGrupoGitlab = null,
+	) {
 		const esActivo = !gitlabProj.archived;
 		let localProjectId = proyectosLocalesMap.get(gitlabProj.id);
 
@@ -320,10 +472,11 @@ class GitlabModel {
 					gitlabProj.name,
 					gitlabProj.description,
 					esActivo,
+					idGrupoGitlab, // <-- Enviado a la query de inserción
 				);
 				counters.createdCount++;
 				console.log(
-					`    [Registrado] Mapeo local para ID GitLab: ${gitlabProj.id} (${gitlabProj.name}) [Activo: ${esActivo}]`,
+					`     [Registrado] Mapeo local para ID GitLab: ${gitlabProj.id} (${gitlabProj.name}) [Activo: ${esActivo}]`,
 				);
 				proyectosLocalesMap.set(gitlabProj.id, localProjectId);
 			} catch (err) {
@@ -336,10 +489,11 @@ class GitlabModel {
 					gitlabProj.name,
 					gitlabProj.description,
 					esActivo,
+					idGrupoGitlab, // <-- Enviado a la query de actualización (UPSERT)
 				);
 			} catch (err) {
 				console.error(
-					`    [!] Error al actualizar metadatos del proyecto existente ${gitlabProj.id}`,
+					`     [!] Error al actualizar metadatos del proyecto existente ${gitlabProj.id}`,
 				);
 			}
 		}
@@ -384,7 +538,7 @@ class GitlabModel {
 					await this.deleteParticipa(localMemberId, localProjectId);
 					counters.membershipChangesCount++;
 					console.log(
-						`    [Removido] ID Usuario local ${localMemberId} desvinculado del ID GitLab ${gitlabProjectId}`,
+						`     [Removido] ID Usuario local ${localMemberId} desvinculado del ID GitLab ${gitlabProjectId}`,
 					);
 				} catch (err) {}
 			}

@@ -14,7 +14,10 @@ La lista de servicios presentes en el laboratorio son los siguientes:
     \item \textbf{VPN (Router TP-Link):} Configuración de usuarios y credenciales en el \textit{gateway} Omada AX3000 ER706W para el acceso remoto.
     \item \textbf{Control de Accesos (Nuki):} Gestión de permisos de apertura y usuarios para las cerraduras inteligentes de las puertas P0 y P-1.
     \item \textbf{Almacenamiento NAS:} Administración de cuotas y usuarios en el servidor de almacenamiento centralizado (\url{http://138.4.130.159:8080}).
+    \item \textbf{Sistema de Identificación Única:} Esta integración podría permitir integrar el sistema de login de la instituación en la plataforma web.
 \end{itemize}
+
+En este proyecto, debido al alcance y magnitud de los diferentes servicios externos solo ha sido posible integrar el servicio de \texttt{Gitlab}. A pesar de ello, se hace un planteamiento teórico del resto de servicios.
 
 \subsection{Requisitos:}
 
@@ -39,6 +42,7 @@ RF15 & Gestión de los servicios de Gitlab. & Incremento 4 \\
 RF15.1   & Alta y baja de los usuarios de gitlab. & Incremento 4 \\
 RF15.2 & Creación y archivado de proyectos de gitlab. & Incremento 4 \\
 RF15.3 & Modificación de los participantes en un proyecto. & Incremento 4 \\
+RF15.4 & Integración de los diferentes repositorios presentes en el gitlab. & Incremento 4 \\
 RF16 & Gestión de credenciales VPN en TP-Link & Incremento 4 \\
 RF17 & Gestión de usuarios en el NAS del laboratorio. & Incremento 4 \\
 \end{longtable}
@@ -105,6 +109,7 @@ El flujo sigue los siguientes pasos. En primer lugar se itera sobre todos los us
 \end{figure}
 
 
+Esta integración permite la creación de proyectos para el usuario root en su namespace de manera guiada. En los repositorios ajenos, que figuran tras la carga del sistema, permite edición de usuarios presentes en el, salvo el usuario raíz. Permite archivar cualquiera de los repositorios presentes en el sistema. En los repositorios de grupos permite añadir gente a los repositorios sin tener pertenencia en los grupos. 
 
 
 \section{Integración de Terceros: Sistema de identificación de usuarios (SIU UPM)}

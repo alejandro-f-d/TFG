@@ -95,3 +95,69 @@ export async function checkProjectExists(projectId) {
 		return false;
 	}
 }
+
+export async function obtenerGruposYMiembros() {
+	try {
+		const responseGrupos = await axios.get(
+			`${process.env.URI_GITLAB}/api/v4/groups`,
+			{
+				headers: { "PRIVATE-TOKEN": process.env.GITLAB_TOKEN },
+				params: {
+					per_page: 100,
+				},
+			},
+		);
+
+		const grupos = responseGrupos.data;
+		const resultadoCompleto = [];
+
+		for (const grupo of grupos) {
+			try {
+				const responseMiembros = await axios.get(
+					`${process.env.URI_GITLAB}/api/v4/groups/${grupo.id}/members`,
+					{
+						headers: { "PRIVATE-TOKEN": process.env.GITLAB_TOKEN },
+					},
+				);
+
+				const miembrosLimpios = responseMiembros.data.map((miembro) => ({
+					idUsuario: miembro.id,
+					username: miembro.username,
+					nombre: miembro.name,
+					estado: miembro.state,
+					nivelAcceso: miembro.access_level,
+				}));
+
+				resultadoCompleto.push({
+					id: grupo.id,
+					nombre: grupo.name,
+					descripcion: grupo.description || "Sin descripción",
+					path: grupo.path,
+					webUrl: grupo.web_url,
+					miembros: miembrosLimpios,
+				});
+			} catch (errorMiembros) {
+				console.error(
+					`[GitLab API Error] No se pudieron obtener los miembros del grupo ${grupo.name}:`,
+					errorMiembros.message,
+				);
+				resultadoCompleto.push({
+					id: grupo.id,
+					nombre: grupo.name,
+					descripcion: grupo.description || "Sin descripción",
+					path: grupo.path,
+					webUrl: grupo.web_url,
+					miembros: [],
+				});
+			}
+		}
+
+		return resultadoCompleto;
+	} catch (error) {
+		console.error(
+			"[GitLab API Error] Error crítico al listar los grupos:",
+			error.message,
+		);
+		return [];
+	}
+}

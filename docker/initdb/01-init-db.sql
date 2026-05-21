@@ -83,9 +83,33 @@ CREATE TABLE IF NOT EXISTS medal.dispositivos(
 );
 
 
+CREATE TABLE IF NOT EXISTS medal.gruposGitlab(
+  idGrupo SERIAL PRIMARY KEY,
+  nombre VARCHAR(200) NOT NULL, 
+  descripcion VARCHAR(500),
+  path VARCHAR(100) NOT NULL,
+  webURL VARCHAR(200),
+  
+  idgitlab INTEGER UNIQUE 
+);
+
+CREATE TABLE IF NOT EXISTS medal.pertenecegrupogitlab(
+  idUsuario INTEGER NOT NULL,
+  idGrupo INTEGER NOT NULL,
+  PRIMARY KEY (idUsuario, idGrupo), 
+  CONSTRAINT fk_participa_usuario
+      FOREIGN KEY (idUsuario)
+      REFERENCES medal.usuario(idUsuario)
+      ON DELETE CASCADE,
+  CONSTRAINT fk_participa_grupo
+      FOREIGN KEY (idGrupo)
+      REFERENCES medal.gruposGitlab(idGrupo)
+      ON DELETE CASCADE
+);
 
 -- 7. PROYECTOS GITLAB 
-CREATE TABLE IF NOT EXISTS medal.proyectosGitlab(
+
+CREATE TABLE IF NOT EXISTS medal.proyectosGitlab (
   idProyecto SERIAL PRIMARY KEY,
   nombre VARCHAR(50) NOT NULL, 
   descripcion VARCHAR(500),
@@ -93,8 +117,13 @@ CREATE TABLE IF NOT EXISTS medal.proyectosGitlab(
   fechaInicio DATE NOT NULL DEFAULT CURRENT_DATE,
   fechaFin DATE,
   activo BOOLEAN DEFAULT TRUE,
-  idGitlab INTEGER UNIQUE,
-  idGrupoGitlab INTEGER  
+  idGitlab INTEGER UNIQUE, -- ID real del repositorio en GitLab
+  idGrupoGitlab INTEGER,   -- ID local de nuestro medal.gruposGitlab
+  
+  CONSTRAINT fk_proyecto_grupo_gitlab
+    FOREIGN KEY (idGrupoGitlab) 
+    REFERENCES medal.gruposGitlab(idGrupo) 
+    ON DELETE CASCADE
 );
 
 -- 8. PARTICIPA 
