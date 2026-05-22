@@ -31,8 +31,8 @@ RF5 & & Interfaz en tiempo real de los recursos consumidos por los contenedores 
 
 
 
-\section{Diseño de la solución:}
-\subsection{Estructura dockerizada de CodeServer:}
+\section{Diseño de la solución}
+\subsection{Estructura dockerizada de CodeServer}
 Los CodeServer son docker especializados con un formato de uso similar a Visual Studio Code. \href{https://github.com/coder/code-server?tab=readme-ov-file}{Proyecto Code Server.}
 
 En la figura \ref{fig:code_server} se detalla el proceso de comunicación entre el cliente y el servicio \texttt{code-server}. En primer lugar, el cliente establece una conexión a través de un servidor \textbf{Nginx}, que actúa como intermediario gestionando la autenticación por usuario y contraseña. Tras la validación, el tráfico se redirige a la instancia específica de cada cliente, quien opera en un entorno aislado y controlado, garantizando una gestión segura y virtualizada de los recursos del servidor. \cite{github_code_server}
@@ -46,7 +46,7 @@ En la figura \ref{fig:code_server} se detalla el proceso de comunicación entre 
 \end{figure}
 
 
-\section{Implementación y Codificación:}
+\section{Implementación y Codificación}
 
 Para cumplir con los requisitos de este incremento se realiza la siguiente implementación.
 
@@ -77,11 +77,11 @@ Para facilitar el cambio organizacional se proporciona un script de instalación
 
 
 
-\section{Validación y Cierre:}
+\section{Validación y Cierre}
 
 Con el objetivo de validar la estabilidad del sistema, se han realizado pruebas a dos niveles principales, el primero de ellos a nivel de CPU y el segundo de ellos a nivel gráfica. En ambos casos, se han validado con pruebas de estrés.
 
-\subsection{Pruebas de estrés a la CPU:}
+\subsection{Pruebas de estrés a la CPU}
 
 Para la verificación de funcionamiento de la CPU se hace uso del mandato \texttt{stress-ng} \cite{stress_ng_manpage}. Con el código \ref{lst:stress_ng_taskset} se realizan unas pruebas en unos núcleos específicos que demuestran la posibilidad de ejecución multicore en la máquina. 
 
@@ -90,7 +90,7 @@ taskset -c 29,30,31 stress-ng --cpu 3 --cpu-load 80 -t 1m
 \end{lstlisting}
 
 
-\subsection{Pruebas de estrés a la GPU:}
+\subsection{Pruebas de estrés a la GPU}
 
 Para la validación de la prueba de estrés de la GPU para realizar las pruebas se hace uso de un script de python mediante la librería de torch, que crea tensores de números aleatorios hasta consumir la totalidad de espacio disponible en la gráfica, validando la conexión con el driver y su funcionamiento bajo estrés de reservas. El código está disponible en el anexo \ref{lst:stress_vram_python}.
 

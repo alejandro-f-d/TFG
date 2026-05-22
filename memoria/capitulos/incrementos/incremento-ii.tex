@@ -1,8 +1,8 @@
-\chapter{Incremento II:}
+\chapter{Incremento II}
 
-\section{Especificación y modelado:}
+\section{Especificación y modelado}
 
-\subsection{Requisitos:}
+\subsection{Requisitos}
 En la parte de la gestión de los usuarios, el administrador de informática tiene un registro de los usuarios, el cual sirve como base de información mínima de cada usuario que se debe mantener. Un registro de esta información se puede encontrar en la tabla \ref{tab:info_usuario_administrador}. El administrador hace distinción de los usuarios activos y de los usuarios inactivos. 
 
 \begin{table}[h]
@@ -115,7 +115,7 @@ RNF6 & \textbf{Contraste:} Interfaz con contrastes correctos que permitan un mej
 
 \notaseguridad{A pesar de que la fecha de finalización sea opcional, es importante que siempre haya una fecha orientativa, de esta manera si por algún descuido el usuario se va y no es reportado de manera correcta por un error humano, el usuario terminaría dándose de baja.}
 
-\subsection{Casos de uso:}
+\subsection{Casos de uso}
 
 En este sistema, a pesar de que pueden existir numerosos tipos de roles, se pueden catalagar con tres tipos de permisos. Esto se hace para simplificar los casos de uso, a pesar de que cada role puede tener un conjunto de permisos asociados.
 
@@ -147,7 +147,7 @@ En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del
 
 
 \newpage
-\subsection{Entidad relación:}
+\subsection{Entidad relación}
 
 Partiendo de la tabla \texttt{Usuario} como núcleo del sistema, el diseño se expande en tres áreas principales: 
 
@@ -181,7 +181,7 @@ La información del entidad relación se puede encontrar en: \href{https://dbdoc
 
 
 
-\subsubsection{Diagramas de secuencia:}
+\subsubsection{Diagramas de secuencia}
 
 Para explicar el funcionamiento del servicio y del sistema se han creado diagramas de secuencia para ilustrar los \texttt{POST, PUT, GET} y \texttt{DELETE} más importantes.
 
@@ -284,9 +284,9 @@ Por último, el diagrama de monitorización de páginas web. Se encuentra el dia
 \newpage
 
 
-\subsection{Desglose de permisos del sistema:}
+\subsection{Desglose de permisos del sistema}
 Para cada uno de los roles se les puede asignar diferentes permisos asociados, entre otros, se encuentran los siguientes:
-\subsubsection{Gestión de la infraestructura:}
+\subsubsection{Gestión de la infraestructura}
 \begin{itemize}
   \item \texttt{Creación y modificación del servidor}: Registrar una nueva máquina en el sistema.
   \item \texttt{Ver servidor}: Acceso al registro completo del servidor y estado junto al servicios asociados.
@@ -298,54 +298,54 @@ Para cada uno de los roles se les puede asignar diferentes permisos asociados, e
   \item \texttt{Visualización de servicios asociados al servidor i}: Permite la visualización de los servicios asociados a un servidor. Esto, no incluye el acceso al resto de información del servidor. 
   \item \texttt{Eliminación de un servicio asociado al servidor i}: Permite la eleiminación de un servicio asociado a un servidor. 
 \end{itemize}
-\subsubsection{Usuarios:}
+\subsubsection{Usuarios}
 \begin{itemize}
   \item \texttt{Crear usuarios}: Dar de alta a nuevos usuarios en el sistema. 
   \item \texttt{Ver usuarios}: Listar los usuarios registrados.
   \item \texttt{Asignar roles}: Vincular a un usuario con un role o conjunto de roles.
 \end{itemize}
-\subsubsection{Roles:}
+\subsubsection{Roles}
 \begin{itemize}
   \item \texttt{Creación de roles}: Permite al usuario la creación de roles.
   \item \texttt{Listado de roles}: Permite ver al usuario los roles que se encuentran actualmente en el sistema.
   \item \texttt{Asignación de roles}: Permite la asignación de roles existentes a los usuarios.
 \end{itemize}
 
-\subsubsection{Proyectos de Gitlab:}
+\subsubsection{Proyectos de Gitlab}
 \begin{itemize}
   \item \texttt{Creación de proyectos}: Permite la creación de un proyecto de gitlab al usuario.
   \item \texttt{Obtener listado de proyectos}: Permite al usuario la obtención del conjunto de listados de proyectos.
 \end{itemize}
 
-\subsubsection{Puertas:}
+\subsubsection{Puertas}
 \begin{itemize}
   \item \texttt{Creación}: Permite la creación de puertas en el sistema.
   \item \texttt{Get}: Permite el listado de las puertas del sistema.
 \end{itemize}
 
-\subsubsection{Dispositivos:}
+\subsubsection{Dispositivos}
 \begin{itemize}
   \item \texttt{Creación de dispositivos}: Permite el registro de nuevos dispositivos físicos en el inventario.
   \item \texttt{Listado de dispositivos}: Acceso al inventario completo de dispositivos registrados.
 \end{itemize}
 
-\subsubsection{Monitoreo Web (HealthCheck):}
+\subsubsection{Monitoreo Web (HealthCheck)}
 \begin{itemize}
   \item \texttt{Creación de monitores}: Permite configurar nuevos objetivos de monitoreo (URLs) y definir el método (GET/PING).
   \item \texttt{Listado y visualización}: Permite ver el estado actual (OK/Error) de los servicios y acceder al histórico de disponibilidad.
   \item \texttt{Gestión de monitores}: Permite la eliminación o pausa de las tareas de monitoreo programadas.
 \end{itemize}
 
-\subsubsection{Documentación Técnica:}
+\subsubsection{Documentación Técnica}
 \begin{itemize}
   \item \texttt{Acceso a Swagger}: Permite visualizar la documentación técnica de la API y realizar pruebas de los endpoints.
 \end{itemize}
 \newpage
 
 
-\section{Diseño de la solución:}
+\section{Diseño de la solución}
 
-\subsection{Proceso de firma de documentos:}
+\subsection{Proceso de firma de documentos}
 
 Para el proceso de firma de documentos por parte de los diferentes usuarios del sistema se va a hacer uso del sistema de @Firma estatal vinculado con la sede electrónica del Ministerio para la Transformación Digital y de la función pública. \cite{PAE} 
 Este sistema se quiere utilizar para garantizar que el usuario acepta los términos y condiciones de servicio a la hora de hacer uso de los servidores que se proporcionan en el laboratorio. Nos apoyamos en el artículo 26, citando textualmente de la \href{https://sedediatid.digital.gob.es/es-es/firmaelectronica/Paginas/firma.aspx}{página web} \cite{sede_electronica_firma_digital, firma_electronica_ciudadanos}. 
@@ -360,7 +360,7 @@ Asimismo, los requisitos de la firma electrónica avanzada se definen en su art�
 \end{itemize}
 \texttt{(fin de cita)}
 
-\subsection{Infraestructura:}
+\subsection{Infraestructura}
 
 La infraestructura se va a basar en microservicios apoyados en docker. El sistema se va a desarrollar en diferentes capas: 
 \begin{itemize}
@@ -391,7 +391,7 @@ En la siguiente figura \ref{fig:infraestructura_inc_ii} encontramos un diagrama 
 
 % Figura \ref{fig:infraestructura_inc_ii} Arquitectura lógica del sistema. Se observa un diseño basado en microservicios y eventos. La API principal actúa como orquestador, delegando tareas pesadas y notificaciones a un Worker independiente mediante una cola de mensajes (Queue). El Worker asume la responsabilidad de la comunicación con el servidor SMTP de Gmail y la ejecución de tareas programadas (CRON), garantizando que la API permanezca disponible y con tiempos de respuesta bajos para el usuario final.
 
-\subsection{FIGMA: Diseño de pantallas}
+\subsection{FIGMA Diseño de pantallas}
 
 El diseño de figma se usa a modo de primer boceto para la aplicación. Tras contrastarlo con un cliente final y su aprobación se pasa a una fase de implementación del frontend teniendo como base este primer boceto. El figma se puede encontrar en el siguiente \href{https://www.figma.com/design/HO9qJUw71z6evEVby9AFfv/TFG?node-id=0-1&t=fru8MHZUuEl0OLhZ-1}{enlace}. 
 
@@ -408,21 +408,21 @@ En la figura \ref{fig:contraste_pantallas} podemos ver un contraste entre el fig
 
 
 
-\section{Implementación y codificación:}
-\subsection{Backend:}
+\section{Implementación y codificación}
+\subsection{Backend}
 
-\subsubsection{Autenticación y middleware:}
+\subsubsection{Autenticación y middleware}
 Para la autenticación de los usuarios se ha utilizado el sistema de Bearer Token, este sistema funciona mediante la generación de una contraseña firmada por el servidor que es capaz de identificar al usuario. En el caso de esta implementación, este token guarda el uuid del usuario se trata de un identificador único para cada usuario. Para el sistema de permisos se ha desarrollado un sistema de identificación basado en roles, por ello para cada petición que recibe la API, el middleware se encarga de validar la petición para permitir o denegar el acceso. 
 
-\subsubsection{Almacenamiento de la información:}
+\subsubsection{Almacenamiento de la información}
 Para el almacenamiento de la información este sistema se apoya en tres bases de datos, una de ellas relacional para almacenar la información de forma estructurada de los usuarios, servicios y máquinas. 
 Los documentos se guardan en un sistema de almacenamiento permanente de objetos. Adecuado para el payload evitando bases de datos SQL y NoSQL.
 Por otro lado, se usa una base de datos redis (\textbf{NoSQL}) para el intercambio de transacciones rápidas entre la api y el worker, como el envío de correos electrónicos y generación de documentos \cite{pdfkit_generator}. \cite{thepower_redis}.
 
-\subsubsection{Validación de los datos de entrada:}
+\subsubsection{Validación de los datos de entrada API}
 Para la validación de los tipos de entrada y de los parámetros obligatorios se hace uso de JOI así como las longuitudes como capa extra de seguridad hacia la API evitando así buffer overflows y errores de tipos.
 
-\subsubsection{Validación de los datos de entrada:}
+\subsubsection{Validación de los datos de entrada PDF}
 
 En el marco teórico los pdf firmados digitalmente están compuestos por un ByteRange, este es el encargado de separar las segmentos del documento firmado y la propia firma digital. \cite{sign_verification} 
 
@@ -430,12 +430,12 @@ Este sistema, al usar firmas con validez legal, tienen una estructura más compl
 
 Este sistema al estar gestionado integramente por el laboratorio puede proporcionar mayor confidencialidad de los documentos firmados.
 
-\subsubsection{CRON:}
+\subsubsection{CRON}
 
 Para las actividades con una perioricidad determinada se hace uso del servicio de CRON de node-js \cite{cron}. De esta manera permitimos la realización de las mismas por parte del \textbf{worker} en un momento determinado. Entre otras se encargará de tareas como: recordatorios de fin de servicios y de estancia de usuarios en el laboratorio. 
 
 
-\subsection{Diseño lógico del proceso de firma:}
+\subsection{Diseño lógico del proceso de firma}
 
 El proceso de firma se puede ver en la figura\ref{fig:detalle_firmas} a través de un flujo dividido en dos etapas. En la primera de ellas, tras la solicitud del servicio por parte del usuario, la API gestiona la creación de un PDF mediante el worker del sistema \cite{pdfkit_generator}. En este documento se le añade una firma única del servidor autofirmada, que aunque carece de validez legal cumple con los requisitos de la trazabilidad y verifica que no se le envía otro pdf distinto. Seguidamente, se inicia la fase de firmas propiamente dicha: una vez que el usuario firma y envía el archivo desde la web, el revisor recibe un aviso para validarlo, permitiendo que el documento avance hacia la autorización final del jefe de laboratorio. Además, en cada una de estas entregas, el sistema realiza una validación interna con el DSS para verificar la autenticidad de la firmas electrónicas y que se encuentra presente y validada la original del servidor.
 
@@ -446,32 +446,32 @@ El proceso de firma se puede ver en la figura\ref{fig:detalle_firmas} a través 
  \label{fig:detalle_firmas}
 \end{figure}
 
-\subsection{Frontend:}
+\subsection{Frontend}
 En el frontend se desarrolla con tecnologías de \texttt{Next.js} y \texttt{React.js}. A continuación se detallan algunos de los desafíos técnicos que se han presentado.
 
-\subsubsection{Pantalla principal:}
+\subsubsection{Pantalla principal}
 
 En la pantalla principal se desarrollan una serie de botones. Dependiendo de los permisos se pueden ver unos u otros, con el permiso \texttt{admin:total} se pueden encontrar todos. Con estos botones se hace la redirección entre pantallas. En este menú ha estado presente la dificultad téncnica de incorporar los servicios específicos del backend externos como el apache, el swagger y bulldashboard, para su incorporación se incrusta en una cookie el token del usuario. 
 
-\subsubsection{Gestión de los datos personales:}
+\subsubsection{Gestión de los datos personales}
 
 En este nivel se han tenido que desarrollar dos tipos de pantallas esto se hace para diferenciar en base a los permisos del usuario. Los usuarios con determinados permisos son capaces de editar los datos personales de otros usuarios mientras que los usuarios sin permisos solo pueden editar su nombre, apellidos y credencial de acceso.
 
 % En la gestión de los datos personales, los usuarios pueden modificar parte de sus datos como el nombre, los apellidos, foto de perfil y credenciales de acceso. Por otro lado, los usuarios con permisos de administración tienen otro panel donde pueden modificar datos específicos.
 
 
-\subsubsection{Calendario:}
+\subsubsection{Calendario}
 % La integración con el calendario ha requerido de unos cambios clave no contemplados, para su implementación se ha hecho uso del node package \href{https://www.npmjs.com/package/fullcalendar}{@fullcalendar}. En esta pantalla ha estado presente diferentes desafíos técnicos, se pueden destacar los siguientes. Se ha tenido la necesidad de diferenciar cada uno de los usuarios que establecen un evento, para ello se ha creado una estructura de colores y mediante una función hash y el módulo en base a la cantidad de colores se selecciona el que representa al usuario. Por otro lado, se ha tenido en cuenta las diferencias horarias con el UTC, se ha desarrollado una función en el frontend que realiza la conversión de horas a formato peninsular.
 
 Para la integración del calendario, hemos utilizado la librería @fullcalendar, lo que ha permitido partir de una base sólida como punto de partida para la solución. Uno de los principales retos fue lograr que cada usuario fuera fácilmente identificable de un vistazo. Para ello se ha diseñado un sistema de colores que se asignan automáticamente mediante una función hash basada en el UUID del dueño de la reserva. Otro de los desafíos ha sido el control horario en base a UTC, se ha usado una lógica en el frontend que detecta y convierte las horas al horario peninsular de forma automática. De esta manera, nos aseguramos de que, al salvar una reserva, las horas se mantengan exactamente donde el usuario las seleccionó, sin desplazamientos inesperados que ocurrían previamente.
 
-\section{Validación y cierre:}
+\section{Validación y cierre}
 
 Para la validación de este servicio se han generado dos conjuntos de test unitarios, el primero de ellos se encarga de la validación automática de los métodos de la API no relacionado con las peticiones. El otro es específico de las peticiones y comprueba las características de seguridad asociadas a las mismas. Adicionalmente se realizan pruebas de usabilidad asociadas al sistema.
 
-\subsection{Pruebas de usabilidad del sistema:}
+\subsection{Pruebas de usabilidad del sistema}
 
-Para la definición de tareas de las pruebas de usabilidad nos apoyamos en los casos del sistema presente en la figura \ref{fig:casos_uso_inc_ii}. En esta validación es interesante reflejar las partes principales del sistema. A continuación se detallan los diferentes casos de uso de las pruebas de usabilidad. Para estas pruebas de usabilidad se utilizará la técnica de \texttt{Think aloud}, donde se le pedirá al usuario que detalle el proceso mental seguido para su flujo de ejecución. 
+Para la definición de tareas de las pruebas de usabilidad nos apoyamos en los casos del sistema presente en la figura \ref{fig:casos_uso_inc_ii}. En esta validación es interesante reflejar las partes principales del sistema. A continuación se detallan los diferentes casos de uso de las pruebas de usabilidad. Para estas pruebas de usabilidad se utilizará la técnica de \texttt{Think aloud}, donde se le pedirá al usuario que detalle el proceso mental seguido para su flujo de ejecución. \cite{linkedin2026usability} 
 
 
 La definición de los escenarios se estructura de la siguiente manera: 

@@ -1,11 +1,11 @@
-\chapter{Incremento I:}
+\chapter{Incremento I}
 
-\section{Requisitos:}
+\section{Requisitos}
 
 En las siguientes tablas podemos ver los requisitos funcionales y no funcionales de la aplicación. En la tabla \ref{tab:rf_simple} se encuentran organizados los requisitos funcionales para el dashboard. Mientras que en la tabla \ref{tab:rnf_simple} podemos encontrar los requisitos no funcionales de la aplicación.
 
 
-\subsection{Requisitos funcionales:}
+\subsection{Requisitos funcionales}
 
 
 \begin{center}
@@ -58,7 +58,7 @@ RF14  & Registro de auditoría bajo un estándar NIST. & Incremento 5 \\
 \normalsize
 \newpage
 
-\subsection{Requisitos no funcionales:}
+\subsection{Requisitos no funcionales}
 \begin{table}[htbp]
     \centering
     \caption{Requisitos no Funcionales y su Incremento Asociado}
@@ -98,4 +98,10 @@ RF14  & Registro de auditoría bajo un estándar NIST. & Incremento 5 \\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+\newpage
+
+\section{Estándares de codificación}
+
+En el desarrollo del proyecto para permitir el mantenimiento y la escalibidad se siguien las siguientes buenas práticas. El backend sigue el patrón de arquitectura Modelo-Vista-Controlador (MVC), mientras que el frontend se construye mediante una arquitectura con componentes. La API sigue un diseño RESTful, y la base de datos actúa como fuente de verdad única (single source of truth) del sistema. A nivel de seguridad, se emplea autenticación mediante tokens JWT y el uso de prepared statements para prevenir inyecciones SQL. En cuanto a la calidad del código, se aplica una nomenclatura consistente en camelCase, junto con linting y formateo automático. Por último, el control de versiones se gestiona mediante GitHub, permitiendo un seguimiento ordenado de los cambios a lo largo del desarrollo.
 

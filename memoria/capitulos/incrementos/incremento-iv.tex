@@ -1,5 +1,5 @@
-\chapter{Incremento IV:}
-\section{Especificación y modelado:}
+\chapter{Incremento IV}
+\section{Especificación y modelado}
 
 % Se presenta a continuación el flujo de trabajo empleado en el desarrollo de las integraciones de sistemas. Para garantizar la alineación con la infraestructura existente, se consultó al coordinador de informática del centro, permitiendo así catalogar los servicios externos activos en el laboratorio MEDAL y definir el alcance de cada integración planteada.
 
@@ -49,42 +49,53 @@ RF17 & Gestión de usuarios en el NAS del laboratorio. & Incremento 4 \\
 \end{center}
 \normalsize
 
-\section{Integración de terceros: SMTP Google}
+\section{Integración de terceros SMTP Google}
 
 Para el sistema de notificaciones, se ha integrado el servicio de mensajería de Google (Gmail), aprovechando la infraestructura preexistente en el laboratorio y sabiendo que el volumen de envíos se mantenga dentro de los umbrales de seguridad permitidos por el proveedor. La integración técnica se realiza mediante contraseñas de aplicación. El sistema de correo electrónico trabaja con un modelo editor suscriptor donde hay presentes diferentes tipos de editores. Entre los editores se puede encontrar a la API que delega la tarea de envío de correos electrónicos al Worker y el sistema de monitorización y el cron con su servicio de notificaciones. Este sistema permite el desacople de latencias sobre los endpoints presentes en la API dando una experiencia fluida al usuario. \cite{npm_nodemailer_usage, npm_nodemailer} 
  
 % Siguiendo la filosofía de diseño modular del proyecto, este servicio se ha implementado mediante una arquitectura dirigida por eventos (Event-Driven Architecture). Bajo este enfoque, la API actúa como el editor, emitiendo eventos de dominio ante acciones relevantes, mientras que el módulo de correo funciona como el Suscriptor. Esta estructura permite un procesamiento asíncrono donde el módulo de notificaciones gestiona la carga de manera independiente al flujo principal de la API, desacoplando la latencia del protocolo SMTP de los tiempos de respuesta de los endpoints.
 
 
-\section{Integración de terceros: Servidores Linux}
+\section{Integración de terceros Servidores Linux}
 Para la integración de los servidores linux se propone la herramienta mencionada en el incremento III que se encarga de la creación de entorno de desarrollos exclusivos para cada investigador.
 
-\section{Integración de terceros: QNAP}
+\section{Integración de terceros QNAP}
 
 Según la información presente en foros y la información oficial de la plataforma, es necesario formar parte del Developer Program para poder acceder a la API. \cite{qnap_developer, reddit_qnap_automation} 
 
 
-\section{Integración de terceros: LDAP y VPN}
-Tras investigación y la falta de documentación oficial en respuesta a las necesidades, se podría plantear webScrapping o el uso de algún modelo de inteligencia artificial para la realización de la tarea. \cite{elconfidencial_claude_computer_use} 
+\section{Integración de terceros Gitlab}
 
-\section{Integración de terceros: Gitlab}
-
-\subsection{Descripción del servicio instalado:}
+\subsection{Descripción del servicio instalado}
 
 La arquitectura actual del sistema se basa en un microservicio desplegado mediante \texttt{Docker}. Tras analizar las diversas metodologías de integración con servicios externos, se ha determinado que el mejor diseño consiste en establecer una comunicación vía \textbf{API}, empleando la autenticación mediante \textbf{tokens de usuario} para garantizar la seguridad y eficiencia en el intercambio de información. \cite{GITLAB_TOKEN}
 
 \subsection{Operaciones permitidas con este servicio de terceros en la página web:}
 El sistema permite las siguientes operaciones con este servicio de terceros:
+
 \begin{itemize}
-  \item \texttt{Creación de nuevos usuarios.}
-  \item \texttt{Modificación de nombres de usuarios de cuentas ya existente.}
-  \item \texttt{Creación de nuevos repositorios de código.}
-  \item \texttt{Obtención de información general asociada a un proyecto e historial de commits.}
-  \item \texttt{Archivar y Desarchivar proyectos en Gitlab.}
-  \item \texttt{Bloqueo de usuarios.}
-  \item \texttt{Modificación de los integrantes colaboradores en un repositorio.}
+\item \texttt{Creación de nuevos usuarios en el sistema.}
+\item \texttt{Modificación de nombres de usuario de cuentas existentes.}
+\item \texttt{Bloqueo de usuarios.}
+\item \texttt{Creación de nuevos repositorios en el namespace del usuario root.}
+\item \texttt{Obtención de información general de un proyecto, incluyendo estadísticas y historial de commits.}
+\item \texttt{Consulta de repositorios con estadísticas para usuarios individuales y grupos.}
+\item \texttt{Modificación de los colaboradores de un repositorio, a excepción del owner.}
+\item \texttt{Gestión de acceso en repositorios de grupo, permitiendo añadir usuarios como invitados sin modificar la configuración del grupo.}
+\item \texttt{Archivado y desarchivado de repositorios.}
+\item \texttt{Sincronización automática mediante un worker que mantiene actualizada la base de datos interna con la información más reciente de los repositorios.}
 \end{itemize}
+
 Todo esto se realiza mediante la integración a través de la cuenta de \textbf{root}.
+
+A pesar de estas posibilidades el trabajo actual tiene ciertas limitaciones:
+\begin{itemize}
+\item \texttt{La creación de repositorios está restringida al namespace del usuario root; no es posible crearlos en namespaces de otros usuarios o grupos.}
+\item \texttt{No es posible modificar al owner de un repositorio.}
+\item \texttt{La gestión de usuarios en repositorios de grupo opera únicamente a nivel de invitado, sin posibilidad de modificar roles internos del grupo.}
+\item \texttt{No se contemplan operaciones sobre grupos como creación, edición o eliminación.}
+\item \texttt{No hay soporte para otras entidades de GitLab como issues, merge requests o pipelines.}
+\end{itemize}
 
 En la figura \ref{fig:detalle_gitlab} se puede ver la pantalla de información específica de un repositorio. Concretamente es un mock del repositorio de gitlab de este proyecto.
 
@@ -95,7 +106,7 @@ En la figura \ref{fig:detalle_gitlab} se puede ver la pantalla de información e
  \label{fig:detalle_gitlab}
 \end{figure}
 
-\subsection{Armonización de datos:}
+\subsection{Armonización de datos}
 
 Con el objetivo de mantener una única fuente de verdad, se necesita un proceso de armonización y extracción de la información de los datos de los repositorios. Para ello se diseña el siguiente flujo ilustrando en la figura \ref{fig:flujo_gitlab}, que puede iniciarse con dos disparadores, mediante un cron que realizará la ejecución autónoma del proceso o con un evento de alta de usuario recibido a través de la cola de mensajes. Independientemente del disparador, ambas vías convergen en el orquestador, que es el componente encargado de iniciar y coordinar el proceso completo de armonización.
 
@@ -109,10 +120,15 @@ El flujo sigue los siguientes pasos. En primer lugar se itera sobre todos los us
 \end{figure}
 
 
-Esta integración permite la creación de proyectos para el usuario root en su namespace de manera guiada. En los repositorios ajenos, que figuran tras la carga del sistema, permite edición de usuarios presentes en el, salvo el usuario raíz. Permite archivar cualquiera de los repositorios presentes en el sistema. En los repositorios de grupos permite añadir gente a los repositorios sin tener pertenencia en los grupos. 
+
+La integración actual cubre las operaciones esenciales de gestión de usuarios y repositorios, pero aún existe un amplio margen de mejora. El trabajo se podría extender a la creación de repositorios a namespaces de otros usuarios y grupos, ampliar la gestión de roles más allá del nivel de invitado en repositorios de grupo, e incorporar operaciones completas sobre grupos. A más largo plazo, se puede contemplar una mayor cobertura de la API de GitLab para dar soporte a entidades como issues, merge requests y pipelines, con el objetivo de ofrecer una integración más completa y autónoma desde la propia aplicación.
+
+\section{Marco teórico Integración de terceros LDAP y VPN}
+Tras investigación y la falta de documentación oficial en respuesta a las necesidades, se podría plantear webScrapping o el uso de algún modelo de inteligencia artificial para la realización de la tarea. \cite{elconfidencial_claude_computer_use} 
 
 
-\section{Integración de Terceros: Sistema de identificación de usuarios (SIU UPM)}
+
+\section{Marco teórico Integración de Terceros Sistema de identificación de usuarios (SIU UPM)}
 
 En este punto, nos encontramos en la situación de que el sistema debe permitir al usuario identificarse de manera segura. Podemos encontrar principalmente dos tipos de usuarios.
 
@@ -132,3 +148,12 @@ En primera instancia, el objetivo es utilizar el SIU para el personal asociado a
  \label{fig:diagrama_identificacion}
 \end{figure}
 
+\section{Marco teórico Integración de Terceros Gestor de Puertas NUKI}
+Para la integración de este servicio, basándome en la documentación oficial de Nuki, se podría realizar la integración vía API, disponible en el portal de desarrollador \href{https://api.nuki.io/}{API de Nuki}.
+
+
+\section{Marco teórico Integración de Terceros Servicio de @firma:}
+Para la integración del servicio de firma electrónica se han dado los primeros pasos, se ha creado un servicio gestionable desde la página web con apache tomcat, donde se deben desplegar los servicios de @firma para su integración. Tras haber realizado esto, se tendría que incorporar a la web. \cite{autofirma2026manual} 
+
+\section{Marco teórico Servidores Linux}
+En el incremento III se proporcionan unos ejecutables de automontaje y creación de entornos de usuario para la ejecución sobre las máquinas. El siguiente paso, para finalizar la integración sería la creación de un conector entre los ejecutables y el servicio de este proyecto. 
