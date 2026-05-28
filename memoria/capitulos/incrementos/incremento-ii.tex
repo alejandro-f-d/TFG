@@ -473,11 +473,6 @@ Para la validación de este servicio se han generado dos conjuntos de test unita
 
 Para la definición de tareas de las pruebas de usabilidad nos apoyamos en los casos del sistema presente en la figura \ref{fig:casos_uso_inc_ii}. En esta validación es interesante reflejar las partes principales del sistema. A continuación se detallan los diferentes casos de uso de las pruebas de usabilidad. Para estas pruebas de usabilidad se utilizará la técnica de \texttt{Think aloud}, donde se le pedirá al usuario que detalle el proceso mental seguido para su flujo de ejecución. \cite{linkedin2026usability}.
 
-El resultado de las pruebas de usabilidad se pueden encontrar en el siguiente gráfico \ref{}.
-
-
-Gracias a las pruebas de usabilidad y la técnica de \texttt{Think aloud} se han podido identificar algunos problemas destacando los siguientes. Algunos usuarios señalaban que la tipografía del sistema es demasiado pequeña, otros que el botón de volver tiene poco contraste. Parte del personal responsable de los investigadores señalan que para la denegación de las peticiones se require de un string con una determinada longitud para denegar una petición ya que suelen hacerlo con 'N/A'. Principalmente se tratan de mejoras menores y de diseño. Además se ha localizado un error de redirección de URIs.
-
 La definición de los escenarios se estructura de la siguiente manera: 
 \begin{itemize}
   \item Rol de usuario. 
@@ -488,3 +483,75 @@ La definición de los escenarios se estructura de la siguiente manera:
 \clearpage
 
 Los escenarios planteados para las pruebas de usabilidad se pueden encontrar en el Anexo V.
+
+
+% El resultado de las pruebas de usabilidad se pueden encontrar en el siguiente gráfico \ref{fig:ueq_resultados} y tabla \ref{tab:ueq_results_tabla}.
+
+% Con el objetivo de evaluar el desempeño de la aplicación se realiza un estudio basados en casos de uso de la herramienta junto al cuestionario UEQ. En la evaluación se evaluaron diferentes perfiles heterogéneos, desde estudiantes que podrían ser público objetivo hasta el administrador y supervisores del laboratorio. Los resultados del UEQ se sitúan en la figura \ref{fig:ueq_resultados} y la tabla \ref{tab:ueq_resultados}. Encontramos tanto fortalezas como debilidades en el diseño. Estos resultados destacan que es una interfaz intuitiva y fácil de aprender, lo cual es esencial para la aplicación ya que esta se orienta a todos los investigadores del laboratorio y la gestión de los recursos. En la parte de novedad, al existir softwares similares no resulta novedosa. Todos los resultados en general, tienen una varianza similar demostrando una misma opinión en las personas evaluadas, en cambio, la novedad tiene mucha varianza indicando que no hay estabilidad total en la respuesta. Para conseguir una mayor estabilidad se debería aumentar la cantidad de cuestionarios realizadas. 
+
+Con el objetivo de evaluar la usabilidad y la experiencia de usuario (UX) de la plataforma, se llevó a cabo un estudio basado en casos de uso reales complementado con el cuestionario estandarizado UEQ (User Experience Questionnaire). La muestra estuvo compuesta por un perfil de usuarios heterogéneo, incluyendo estudiantes, investigadores, supervisores de laboratorio y personal administrativo. Los resultados obtenidos se presentan en la figura \ref{fig:ueq_resultados} y en la tabla \ref{tab:ueq_results_tabla}.
+
+El análisis revela tanto fortalezas como áreas de mejora en el diseño. En términos generales, la aplicación destaca por su alta usabilidad, siendo percibida como una interfaz intuitiva y de fácil aprendizaje. Este es un hallazgo notorio, dado que la herramienta está diseñada para ser utilizada por todo el personal del laboratorio, facilitando la gestión de recursos sin requerir un aprendizaje largo y en detalle.
+
+En cuanto a la dimensión de Novedad (Novelty), los resultados indican una puntuación inferior, lo cual puede atribuirse a la existencia de soluciones con funcionalidades similares en el mercado. Respecto al consenso de los usuarios se puede destacar que hay una varianza baja, es decir, un alto consenso en la mayoría de campos estudiados por el UEQ. A excepción del campo de novedad, sugiriendo falta de consenso en este aspecto.  
+
+
+% Es importante señalar que, mientras que las dimensiones de usabilidad presentan una varianza baja —lo que refleja un alto consenso entre los participantes sobre la eficiencia y claridad del sistema—, la dimensión de Novedad presenta una varianza significativamente más elevada. Esta dispersión sugiere una falta de unanimidad en la percepción de innovación, probablemente influenciada por las expectativas previas de cada perfil de usuario.
+
+Finalmente, se reconoce que, para alcanzar una mayor estabilidad estadística en los resultados, se debe ampliar el tamaño de la muestra en futuras evaluaciones, permitiendo así obtener una opinión más consolidada.
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{ueq/tablas_ueq.png}
+ \caption{Resultados UEQ.}
+ \label{fig:ueq_resultados}
+\end{figure}
+
+
+
+\begin{table}[H]
+\centering
+\caption{Resultados de las escalas UEQ (Media y Varianza)}
+\label{tab:ueq_results_tabla}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Escala (UEQ Scale)} & \textbf{Media (Mean)} & \textbf{Varianza (Variance)} \\
+\midrule
+Attractiveness & 1.881 & 0.50 \\
+Perspicuity    & 2.036 & 0.28 \\
+Efficiency     & 2.214 & 0.32 \\
+Dependability  & 2.000 & 0.33 \\
+Stimulation    & 1.536 & 0.82 \\
+Novelty        & 0.857 & 1.66 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% Gracias a las pruebas de usabilidad y la técnica de \texttt{Think aloud} se han podido identificar algunos problemas destacando los siguientes. Algunos usuarios señalaban que la tipografía del sistema es demasiado pequeña, otros que el botón de volver tiene poco contraste. Parte del personal responsable de los investigadores señalan que para la denegación de las peticiones se require de un string con una determinada longitud para denegar una petición ya que suelen hacerlo con 'N/A'. Principalmente se tratan de mejoras menores y de diseño. Además se ha localizado un error de redirección de URIs. 
+
+% Gracias a las pruebas de usabilidad y la técnica de \texttt{Think aloud} se han podido identificar algunos problemas que deben ser ajustados. En la parte de usabilidad han señalado diferentes aspectos y mejoras a tener en cuenta. En primer lugar la tipografía, en algunas pantallas la tipografía utilizada es pequeña y algunos de los botones caracen del contraste suficiente para su identificación. En el ámbito de las peticiones y del persona supervisor, a la hora de denegarlas requiere de un texto justificativo se ha observado que ponen 'N/A', lo cual no cumple los requisitos y es una razón factible. Otra de las cuestiones, es un componente donde se encuentra el número de página donde estas consultando los datos, los usuarios intuyen que es un botón pulsable para pasar de página en lugar de usar la flecha. Por último, en el ámbito técnico, en las redirecciones del frontend se ha encontrado un componente que redirije a una URI errónea.
+
+% Gracias a las pruebas de usabilidad y a la técnica de Think aloud, se han podido identificar diversos aspectos y problemas que deben ser ajustados en la aplicación. En primer lugar, en relación con la usabilidad de la interfaz, se ha señalado que la tipografía utilizada en algunas pantallas es demasiado pequeña, dificultando su lectura, y que ciertos botones carecen del contraste visual suficiente para facilitar su identificación. En el ámbito de las peticiones, el personal supervisor ha manifestado que, al denegar una solicitud, el sistema exige un texto justificativo que no siempre es necesario; de hecho, se ha observado que los usuarios suelen introducir 'N/A' como respuesta estándar, lo que evidencia que la validación actual es demasiado restrictiva para las necesidades operativas del laboratorio. Por otra parte, se ha detectado una deficiencia en el diseño del componente de paginación, donde los usuarios tienden a intentar interactuar con el número de página como si fuera un elemento pulsable para navegar, en lugar de utilizar los controles de flechas habilitados para tal fin. Por último, en el ámbito técnico, se ha localizado un error en la lógica de redirección de las rutas del frontend, encontrándose un componente que redirige a una URI errónea que debe ser corregida.
+
+Con las pruebas de usabilidad y la técnica de \textt{Think Aloud} se han identificado algunos fallos y campos de mejora. En relación con la interfaz, en algunas pantallas la tipografía es demasiado pequeña, dificultando la lectura. Por otra parte, el botón de volver debido al poco contraste es difícil de localizar. En las peticiones a la hora de denegarla en caso de ser necesario se ha puesto en manifiesto un fallo debido a las restricciones al denegar las peticiones, en algunos casos han destacado que utilizan la expresión 'NA' para establecer que no aplica una petición en específico. Este texto, no es capaz de pasar el filtro de validación de caracteres para denegar una petición. Por otra parte, el componente encargado de mostrar la información de las páginas y en cual nos situamos, los usuarios intuitivamente pulsan en él para cambiar la página en lugar de pulsar las flechas en los laterales del contador, la situación se refleja en la figura \ref{fig:paginas}. En el ámbito técnico, se ha encontrado un error con la redirección de pantallas donde un botón redirige a una URI que no existe. Estos elementos establecen una hoja de ruta a seguir para mejorar la usabilidad de la aplicación. 
+
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{ueq/paginas.png}
+ \caption{Contador de páginas.}
+ \label{fig:paginas}
+\end{figure}
+
+A continuación se detalla el contraste de algunos cambios hechos para el contraste del botón de volver en la figura \ref{fig:comparacion_botones}.
+
+% comparacion_back_button.png
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{ueq/comparacion_back_button.png}
+ \caption{Botón de volver atrás.}
+ \label{fig:comparacion_botones}
+\end{figure}
+
