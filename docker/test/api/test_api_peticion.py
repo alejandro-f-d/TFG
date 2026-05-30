@@ -162,7 +162,7 @@ class TestPeticion:
             "fechaFin": "2027-02-23", "wifi": True, "activo": True,
             "tarjetaAcceso": "T-00000", "teams": False, 
             "esResponsable": False, "roles": [self.id_rol_base], "puertasAutorizadas": [],
-            "duenoMaquina": [], "contrasena": "2y45uc5#bD3d7thMbT"
+            "duenoMaquina": [], "contrasena": "2y45uc5#bD3d7thMbT", "gitlab": None
         }
         res = requests.post(f"{self.BASE_URL}/user", json=payload, headers=headers)
         assert res.status_code in [201, 200]
