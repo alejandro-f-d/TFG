@@ -2,23 +2,137 @@
 
 Para el desarrollo de la sección del estado del arte se han trabajado en los siguientes campos, investigación de desarrollo web, gestión de usuarios y credenciales, entornos de virtualización y proceso de trazabilidad de firmas.
 
-El campo de desarrollo de las páginas web han estado en auge desde su llegada en los 90, con la llegada de \texttt{HyperText Markup Language}, donde en un principio solo permitía la marcación básica del contenido. En este punto, las páginas web eran de contenido estático hasta que aparecieron los CSS que permitieron estilizar las páginas web destacando lenguajes como \texttt{Javascript} y \texttt{Personal Home Page}. En la década del 2010 aparecieron diferentes frameworks tanto para frontend como para Backend donde se puede destacar herramientas como AngularJS y React.js. Este proyecto se centra en proyectos fullstack, trabajando en todas las capas de desarrollo. \cite{armadillo_amarillo_evolucion_web} 
+\section{Desarrollo de Páginas Web}
+
+El campo de desarrollo de las páginas web han estado en auge desde su llegada en los 90, con la llegada de \texttt{HyperText Markup Language}, donde en un principio solo permitía la marcación básica del contenido. En este punto, las páginas web eran de contenido estático hasta que aparecieron los CSS que permitieron estilizar las páginas web destacando lenguajes como \texttt{Javascript} y \texttt{Personal Home Page}. En la década del 2010 aparecieron diferentes frameworks tanto para frontend como para Backend donde se puede destacar herramientas como AngularJS y React.js.\cite{armadillo_amarillo_evolucion_web} 
+
+
+Hoy en día existe una gran multitud de posibilidades para el desarrollo web,
+desde lenguajes como \texttt{TypeScript}, \texttt{JavaScript} o \texttt{Python}
+hasta frameworks especializados que abstraen la complejidad del desarrollo de
+interfaces. En este contexto, la elección del framework de frontend es una
+decisión importante, ya que condiciona la mantenibilidad, la escalabilidad y la
+experiencia de desarrollo a lo largo de todo el proyecto.
+
+Entre las opciones más consolidadas destacan \texttt{Angular}, \texttt{Vue.js}
+y \texttt{React.js}. Angular es un framework completo desarrollado por Google
+que impone una estructura rígida, adecuada para equipos grandes pero con una
+curva de aprendizaje elevada. Vue.js es una alternativa más ligera y progresiva,
+pero con un ecosistema menor. React.js, desarrollado por Meta en 2013,
+se ha consolidado como la biblioteca de frontend más utilizada a nivel mundial
+gracias a su modelo basado en componentes reutilizables y su
+Virtual DOM, que minimiza las actualizaciones reales del navegador
+optimizando el rendimiento de la interfaz.
+
+En el contexto de este proyecto, React.js aborda diferentes necesidades.
+En primer lugar, el panel de administración de este proyeccto, requiere múltiples vistas
+con estados complejos e interdependientes, como la gestión de usuarios, la
+monitorización de colas de tareas o el seguimiento de solicitudes de acceso;
+el modelo de componentes de React permite encapsular cada una de estas vistas
+de forma independiente y reutilizarla en distintos contextos. En segundo lugar,
+el uso de \texttt{TypeScript} sobre React añade tipado estático, lo que reduce
+errores en tiempo de desarrollo y facilita el mantenimiento del código a lo
+largo del tiempo.
+
+
+% Tras una introducción histórica, vamos a introducir el estándares de industria para cada uno de los campos. En el ámbito de la programación de páginas web se distingen las siguientes tecnologías distinguiendo para el backend, bases de datos y frontend. Para el backend, se plantean diferentes tecnologías como NodeJs, Python, PHP y Java entre otras; en el caso de este proyecto, se utiliza NodeJs con diferentes librerías. Para bases de datos existen las relacionales y las no relacionales, aprovechando cada sistema se usan para cada tarea. Por ejemplo, en el caso de datos relacionados y estructurados se ha usado una relacional, en cambio, para una cola de mensajes donde los datos no son estructurados y se necesita una cola de mensajes para un paso ágil de los mismos se hace uso de una base de datos no relacional. En el frontend existen diferentes tecnologías que se pueden combinar, en este caso, se hace uso de Next.js junto a CSS entre otras. \cite{proun_tecnologias_web} 
+
+
+\section{Gestión de usuarios y credenciales:}
 
 En el ámbito de gestión de usuarios y credenciales, de igual manera han tenido una gran evolución, en la decada de los 60, el sistema predominante de gestión de usuario era un sistema de credenciales básicos, es decir, un usuario y una contraseña. En los 90, las redes empresariales empezaron a expandirse y se enfrentaron a nuevos retos de seguridad y apareció el sistema de \texttt{Self-service Password Reset} permitiendo el sistema de recuperación de password. A principios de los 2000 se introduce el \texttt{Single Sign-On (SSO)} incorporando un sistea de inicio único de sesión y herramientas de \texttt{Identity-as-a-Service} para gestionar sistemas distribuidos desde la nube. En el 2010 entra en escena la moda de \texttt{Bring Your Own Device} (BYOD) con nuevos riesgos de seguridad, para mitigarlas aparecen tecnologías como herramientas multifactor, token y accesos biométricos. En el caso de este sistema permite la conexión desde cualquier dispositivo mediante el uso de credenciales válidas. \cite{optimalidm_iam_evolution}
 
+% Para la gestión de usuarios y credenciales, con el objetivo de tener una fuente única de verdad, en la base de datos se incorporan las credenciales usando en el sistema de login \texttt{JSON Web Token} y un sistema de altas por invitación. 
+
+
+En las soluciones autoalojadas Keycloak es la referencia más extendida. Este sistema ofrece SSO, federación de identidades e inicio de sesión social,
+y su naturaleza de código abierto permite una personalización extensiva y un
+desarrollo impulsado por la comunidad.  No obstante,
+el coste total de operación de Keycloak es elevado debido
+al trabajo operacional, el mantenimiento y la necesidad de talento
+especializado. En
+el contexto de este trabajo para un laboratorio con alta rotación de personal y sin
+un equipo DevOps dedicado, asumir el mantenimiento de una plataforma no es viable. Además el sistema no solo
+se necesita autenticar usuarios, sino gestionar su ciclo de vida
+completo, asociarlos a proyectos, aprovisionar automáticamente los servicios
+que necesitan y revocarlos al desvincularse. Este TFG adopta un enfoque propio
+sobre PostgreSQL como fuente única de verdad, utilizando
+JSON Web Tokens (JWT) para la autenticación sin estado en la API y
+un sistema de altas por invitación que garantiza que únicamente el personal
+autorizado puede registrarse en la plataforma. Esta solución a medida elimina
+la sobrecarga operativa de las alternativas analizadas y se adapta exactamente
+a las necesidades del laboratorio.
+
+
+\section{Virtualización}
 
 El incio de la virtualización se remonta a los 60 donde se desarrollaron equipos de cómputos muy potentes como los 'mainframes', que debido a su alta capacidad, cierta parte del cómputo quedó sin utilización, entonces IBM desarrolló un método para ejecutar procesos en paralelo naciendo así las máquinas virtuales. No fue hasta 1999 hasta que se dió el siguiente paso, cuando \texttt{VMware} presentó su primer producto, donde se podían ejecutar varios sistemas operativos en la misma máquina. En 2001 nace los hipervisores de tipo 1, es decir, aquellos que son capaces de ejecutar directamente sobre el hardware teniendo acceso al mismo. Durante los siguientes años se desarrollaron diversas herramientas para la virtualización, como la aparición de VirtualBox, Microsoft-Hyper-V de máquinas, pero, el siguiente gran hito no fue hasta la aparición de AWS en el año 2012  haciendo uso de la virtualización. \cite{icorp_virtualizacion_ti} 
 
+
+% Actualmente para la gestión de microservicios on premises las principales opciones son \texttt{Docker} o \texttt{Kubernetes}. Docker destaca por su capacidad de crear imágenes para realizar tareas complejas y relacionarlos con composiciones, mientras que Kubernetes es para orquestar clústers de microservicios. En el ámbito de esta práctica no es necesario trabajar con clústers, por lo que se decide trabajar únicamente con docker. A lo largo de este proyecto se van a usar diferentes tipos de imágenes para el despliegue de servicios, destacando entre otros Postgres y Redis para las bases de datos, Node para frontend y backend; y por último, code-server para entornos virtualizados de desarrollo. \cite{aws_kubernetes_vs_docker}
+
+En el contexto de este proyecto, la virtualización responde a dos necesidades
+concretas e independientes.
+
+La primera es el aislamiento de los entornos de desarrollo de los
+investigadores. Uno de los problemas identificados en el centro era que la
+instalación de librerías y controladores por parte de distintos investigadores
+sobre los servidores compartidos generaba conflictos de dependencias y
+corrupciones del sistema operativo. La solución adoptada es proporcionar a
+cada miembro del personal docente e investigador un contenedor
+\texttt{code-server} propio, un entorno de desarrollo accesible desde el
+navegador completamente aislado del resto. De este modo, las instalaciones
+de un investigador no pueden interferir con las de otro ni comprometer la
+estabilidad del servidor anfitrión.
+
+La segunda es el despliegue reproducible de la propia plataforma.
+Todos los servicios que componen la aplicación web, incluyendo las bases de
+datos \texttt{PostgreSQL} y \texttt{Redis}, el backend en \texttt{Node.js}
+y el frontend, se despliegan como contenedores Docker orquestados mediante
+\texttt{docker-compose}. Esto garantiza que el entorno de producción es
+reproducible en cualquier máquina, elimina la dependencia de configuraciones
+manuales del sistema operativo anfitrión y simplifica tanto el despliegue
+inicial como el mantenimiento posterior.
+
+Se descarta \texttt{Kubernetes} por sobredimensionamiento: está diseñado
+para escenarios con múltiples nodos, alta disponibilidad y escalado
+automático, requisitos que exceden el alcance de un laboratorio de
+investigación de tamaño reducido. \texttt{Docker} con
+\texttt{docker-compose} cubre ambas necesidades del proyecto con una
+complejidad operativa significativamente menor y sin requerir infraestructura
+adicional.
+
+
+\section{Firma electrónica}
+
+
 En España en 1955, nació la primera Autoridad de Certificación y Europa en 1999 estableció la primera normativa de las firmas digitales.En el 2003 nace la primera legislación Española de la firma electrónica. Tres años después, en el 2006, nace el DNIe permitiendo a la ciudadanía identificarse de manera electrónica y realizar operaciones y consultas. Posteriormente en el 2014 se instaura el reglamento eIDAS en toda la unión europea, un marco legal de identificación electrónica y servicios de confianza. Además en 2015, nace el DNI 3.0 permitiendo su lectura con NFC. Por último en 2024 entra en vigor eIDAS 2, introduciendo un monedero digital que permite guardar las credenciales digitales junto a otros datos personales. \cite{viafirma_evolucion_firma}
 
-Tras una introducción histórica, vamos a introducir el estándares de industria para cada uno de los campos. En el ámbito de la programación de páginas web se distingen las siguientes tecnologías distinguiendo para el backend, bases de datos y frontend. Para el backend, se plantean diferentes tecnologías como NodeJs, Python, PHP y Java entre otras; en el caso de este proyecto, se utiliza NodeJs con diferentes librerías. Para bases de datos existen las relacionales y las no relacionales, aprovechando cada sistema se usan para cada tarea. Por ejemplo, en el caso de datos relacionados y estructurados se ha usado una relacional, en cambio, para una cola de mensajes donde los datos no son estructurados y se necesita una cola de mensajes para un paso ágil de los mismos se hace uso de una base de datos no relacional. En el frontend existen diferentes tecnologías que se pueden combinar, en este caso, se hace uso de Next.js junto a CSS entre otras. \cite{proun_tecnologias_web} 
+En el contexto de este proyecto, la firma electrónica se emplea como mecanismo
+de trazabilidad y validez legal para las solicitudes de acceso a los servidores
+y servicios del laboratorio. El requisito fundamental es que dichas firmas sean
+jurídicamente válidas en España, lo que implica reconocer los certificados
+emitidos por la Fábrica Nacional de Moneda y Timbre (FNMT) y los
+asociados al DNIe, emitidos por la Dirección General de la Policía Nacional.
+La firma digital avanzada o cualificada, basada en un
+certificado digital como el de la FNMT o el DNIe, es la única con validez
+para trámites oficiales. 
 
-Para la gestión de usuarios y credenciales, con el objetivo de tener una fuente única de verdad, en la base de datos se incorporan las credenciales usando en el sistema de login \texttt{JSON Web Token} y un sistema de altas por invitación. 
-
-
-Actualmente para la gestión de microservicios on premises las principales opciones son \texttt{Docker} o \texttt{Kubernetes}. Docker destaca por su capacidad de crear imágenes para realizar tareas complejas y relacionarlos con composiciones, mientras que Kubernetes es para orquestar clústers de microservicios. En el ámbito de esta práctica no es necesario trabajar con clústers, por lo que se decide trabajar únicamente con docker. A lo largo de este proyecto se van a usar diferentes tipos de imágenes para el despliegue de servicios, destacando entre otros Postgres y Redis para las bases de datos, Node para frontend y backend; y por último, code-server para entornos virtualizados de desarrollo. \cite{aws_kubernetes_vs_docker}
-
-En el proceso de firma electrónica, en este proyecto se establece para las peticiones de acceso a los diferentes servicios y servidores presentes en el laboratorio. Un requisito es que sean con validez legal, la plataforma debe ser capaz de procesar firmas de la Fabrica Nacional de Moneda y Timbre junto a la Dirección General de la Policía Nacional. Para esta validación, se hace uso de un servicio de la Unión Europea, el \texttt{Digital Signature Service} que tiene reconocidos los certificados oficiales de diferentes paises. \cite{eu_digital_signature_service} 
+La primera opción considerada fue AutoFirma, la herramienta
+oficial del Ministerio de Transformación Digital y de la Función Púnlica para la firma de documentos en trámites
+con la Administración. Si bien reconoce los certificados de la FNMT y el DNIe,
+está diseñada como aplicación de escritorio para uso ciudadano, no como
+biblioteca integrable en una plataforma web, lo que la descarta para este caso
+de uso. La solución adoptada es el Digital Signature Service (DSS), una
+biblioteca de código abierto desarrollada y mantenida por la Comisión Europea.
+DSS soporta múltiples formatos de firma, incluyendo PAdES,
+XAdES entre otras. Su ventaja fundamental frente a las alternativas es que
+incorpora gestión de confianza mediante la carga de listas
+de confianza europeas.  Esto significa que la plataforma puede validar
+automáticamente los certificados de la FNMT y el DNIe sin necesidad de
+mantener manualmente las listas de autoridades de certificación reconocidas,
+eliminando el riesgo de desactualización y garantizando el cumplimiento
+continuo con la normativa eIDAS. \cite{eu_digital_signature_service}
 
 
 

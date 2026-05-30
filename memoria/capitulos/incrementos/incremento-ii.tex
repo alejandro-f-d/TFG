@@ -376,6 +376,7 @@ La infraestructura se va a basar en microservicios apoyados en docker. El sistem
   \item \texttt{Digital Signature Service}: Servicio de la Comunidad Económica Europea para validar la integridad de firmas en documentos PDF.
   \item \texttt{Frontend}: Capa visible para el usuario y con la que interactua el usuario. 
   \item \texttt{Apache Tomcat}: Gestor de servicios Apache para @firma. Este servicio aprovecha los certificados del nginx para su comunicación segura. Este servicio se podría utilizar para algún caso de uso adicional en caso de ser necesario en un futuro.  
+  \item \texttt{Cola de Mensajes}: Para la cola de mensajes para la comunicación con el worker se hace uso de una base de datos REDIS. 
 \end{itemize}
 
 Se selecciona una arquitectura modular basada en docker ya que estos sistemas permiten aislamiento y portabilidad con respecto a las características de la máquina. En un sistema de mayor cantidad de usuarios que en el caso de este laboratorio permitiría una mayor resilencia con el uso de herramientas como un loadbalancer que opere con diferentes instancias de la API levantando instancias según sea necesario con orquestadores como Kubernetes. En la parte del almacenado de datos, este sistema permitiría la redundancia de datos del sistema en varias bases de datos si fuera necesario.
@@ -415,9 +416,9 @@ En la figura \ref{fig:contraste_pantallas} podemos ver un contraste entre el fig
 Para la autenticación de los usuarios se ha utilizado el sistema de Bearer Token, este sistema funciona mediante la generación de una contraseña firmada por el servidor que es capaz de identificar al usuario. En el caso de esta implementación, este token guarda el uuid del usuario se trata de un identificador único para cada usuario. Para el sistema de permisos se ha desarrollado un sistema de identificación basado en roles, por ello para cada petición que recibe la API, el middleware se encarga de validar la petición para permitir o denegar el acceso. 
 
 \subsubsection{Almacenamiento de la información}
-Para el almacenamiento de la información este sistema se apoya en tres bases de datos, una de ellas relacional para almacenar la información de forma estructurada de los usuarios, servicios y máquinas. 
-Los documentos se guardan en un sistema de almacenamiento permanente de objetos. Adecuado para el payload evitando bases de datos SQL y NoSQL.
-Por otro lado, se usa una base de datos redis (\textbf{NoSQL}) para el intercambio de transacciones rápidas entre la api y el worker, como el envío de correos electrónicos y generación de documentos \cite{pdfkit_generator}. \cite{thepower_redis}.
+Para el almacenamiento de la información este sistema se apoya en tres bases de datos, una de ellas relacional para almacenar la información de forma estructurada de los usuarios, servicios y máquinas. Los documentos por otro lado, se guardan en un almacenamiento de objetos específica para ellos. Por último, una base de datos redis (\texttt{NoSQL}) para la cola de mensajes, siendo más rápida para la comunicación con el worker.\cite{thepower_redis}  
+% Los documentos se guardan en un sistema de almacenamiento permanente de objetos. Adecuado para el payload evitando bases de datos SQL y NoSQL.
+% Por otro lado, se usa una base de datos redis (\textbf{NoSQL}) para el intercambio de transacciones rápidas entre la api y el worker, como el envío de correos electrónicos y generación de documentos \cite{pdfkit_generator}. \cite{thepower_redis}.
 
 \subsubsection{Validación de los datos de entrada API}
 Para la validación de los tipos de entrada y de los parámetros obligatorios se hace uso de JOI así como las longuitudes como capa extra de seguridad hacia la API evitando así buffer overflows y errores de tipos.
