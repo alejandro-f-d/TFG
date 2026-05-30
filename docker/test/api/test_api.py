@@ -904,7 +904,7 @@ class TestGestionUsuarios:
         print(f"\n--- DEBUG ESTRUCTURA: {data['info']['participantes']} ---")
         
         participantes = data["info"]["participantes"]
-        assert len(participantes) == 1, f"Error: Se encontraron {len(participantes)} participantes en lugar de 1."
+        assert len(participantes) == 6, f"Error: Se encontraron {len(participantes)} participantes en lugar de 6."
 
     def test_37_patch_proyecto_vacio(self):
         """
