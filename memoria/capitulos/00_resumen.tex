@@ -33,7 +33,7 @@ La solución de software propuesta adopta un patrón arquitectónico coordinados
 
 Para garantizar la fluidez y el rendimiento del sistema en la ejecución de tareas computacionalmente más pesadas como puede ser la genaración de pdf, la API delega estos procesos. Los procesos son ejecutados por un contenedor que actúa de worker independiente, estableciendo la comunicación a través de una cola de mensajes Redis, una base de datos NoSQL que garantiza fluidez en el proceso. El último módulo es el frontend encargado de servir la información a los usuarios.
 
-Para garantizar un entorno de desarrollo seguro y virtualizado para el personal investigador se realiza la integración de la herramienta de los code-servers mediante que se accede mediante un proxy inverso y credenciales únicas de cada usuario. De esta manera se evitan los errores de dependencias y acceso nativo. 
+Para garantizar un entorno de desarrollo seguro y virtualizado para el personal investigador se realiza la integración de la herramienta de los code-servers que se accede mediante un proxy inverso y credenciales únicas de cada usuario. De esta manera se evitan los errores de dependencias y acceso nativo. 
 
 Con la implantación del sistema, se espera una mejora en los procesos de los administradores de los sistemas mediante un panel unificado de inventariaje y tareas en los diferentes servidores, reduciendo los tiempos de gestión. Por la parte de los investigadores, harán uso de un entorno virtual que evita las colisiones de dependencias y gatantiza un entorno de trabajo estable, seguro y accesible de manera remota. Para el control de calendario de ejecución se espera que la herramienta proporcione un organigrama más claro de uso de las máquinas. 
 
