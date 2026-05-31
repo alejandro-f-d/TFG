@@ -50,7 +50,7 @@ En la figura \ref{fig:code_server} se detalla el proceso de comunicación entre 
 
 Para cumplir con los requisitos de este incremento se realiza la siguiente implementación.
 
-En el ámbito de seguridad y control de acceso se ha creado una Autoridad de Certificación (CA) propia, esto se debe a los diferentes servidores presentes en el laboratorio para dar servicio al personal investigador, gracias a esta CA, solo se proporciona una raíz de confianza a los usuarios que es capaz de validar todos los servidores. 
+En el ámbito de seguridad y control de acceso se ha creado una Autoridad de Certificación (CA) propia debido a los diferentes servidores presentes en el laboratorio para dar servicio al personal investigador. Gracias a esta CA, solo se proporciona una raíz de confianza a los usuarios que es capaz de validar a todos los servidores. 
 
 En la gestión del ciclo de vida de los contenedores de los usuarios, se han desarrollado ejecutables que automatizan la creación y eliminación de los servicios. Estos, modifican los ficheros de configuración del docker-compose y del nginx de manera automática. 
 
@@ -92,6 +92,6 @@ taskset -c 29,30,31 stress-ng --cpu 3 --cpu-load 80 -t 1m
 
 \subsection{Pruebas de estrés a la GPU}
 
-Para la validación de la prueba de estrés de la GPU para realizar las pruebas se hace uso de un script de python mediante la librería de torch, que crea tensores de números aleatorios hasta consumir la totalidad de espacio disponible en la gráfica, validando la conexión con el driver y su funcionamiento bajo estrés de reservas. El código está disponible en el anexo \ref{lst:stress_vram_python}.
+Para la validación de la prueba de estrés de la GPU para realizar las pruebas se hace uso de un script de python mediante la librería de torch, que crea tensores de números aleatorios hasta consumir la totalidad de espacio disponible en la gráfica, validando la conexión con el driver y su funcionamiento bajo estrés de reservas. El código está disponible en el anexo IV.
 
 % Con el objetivo de validar la estabilidad del sistema, se sometió a la infraestructura a un conjunto de pruebas de estrés, evaluando el rendimiento térmico y de cómputo tanto de la CPU como de las GPU. Asimismo, se realizaron despliegues de diversos paquetes y dependencias para verificar la integridad del sistema de gestión de software y garantizar un entorno operativo libre de conflictos. El objetivo es que los usuarios no técnicos investigadores sean capaces de familiarizarse con este sistema y crear sus propios notebooks de ejecución. 

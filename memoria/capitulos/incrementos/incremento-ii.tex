@@ -34,7 +34,7 @@ Otra necesidad que se ha identificado es la necesidad de un sistema de monitoreo
 
 En la tabla \ref{tab:rf_inc2} se pueden encontrar los requisitos funcionales a implementar en esta etapa. En la tabla \ref{tab:rnf_inc2} se localizan los requisitos no funcionales para este incremento. 
 
-Los usuarios disponen de un ordenador fijo cuyo inventari es gestionado por el sistema tras realizar el registro correspondiente.
+Los usuarios disponen de un ordenador fijo cuyo inventario es gestionado por el sistema tras realizar el registro correspondiente.
 
 
 % Ajuste de separación de filas para que no se vea tan apretada (opcional)
@@ -117,18 +117,18 @@ RNF6 & \textbf{Contraste:} Interfaz con contrastes correctos que permitan un mej
 
 \subsection{Casos de uso}
 
-En este sistema, a pesar de que pueden existir numerosos tipos de roles, se pueden catalagar con tres tipos de permisos. Esto se hace para simplificar los casos de uso, a pesar de que cada role puede tener un conjunto de permisos asociados.
+En este sistema, a pesar de que pueden existir numerosos tipos de roles, se pueden catalogar en tres tipos de permisos. Esto se hace para simplificar los casos de uso, a pesar de que cada rol puede tener un conjunto de permisos asociados.
 
 \begin{itemize}
   \item \texttt{Administradores:} Los que poseen este permiso son los encargados de dar de alta y de baja a los usuarios a la vez del despliegue de servicios y recursos.
 
-  \item \texttt{Responsables:} Los que poseen este permiso son los encargados de realizar aprobaciones de los permisos de los usuarios base.
+  \item \texttt{Responsables:} Los que poseen este permiso son los encargados de realizar aprobaciones de las peticiones de los usuarios base.
 
-  \item \texttt{Usuario base:} Usuario sin permiso que realiza la petición de los servicios a los supervisores. 
+  \item \texttt{Usuario base:} Usuario sin permiso que realiza la petición de los servicios a los responsables. 
 
-  \item \texttt{Cron:}  Proceso encargado de notificar de eventos de calendario/temporales.
+  \item \texttt{Cron:}  Proceso encargado de notificar de eventos de calendario.
 
-  \item \texttt{Healthcheck de las web:} Proceso encargado de notifcar cuando las páginas web se encuentran caidas.
+  \item \texttt{Healthcheck de las webs:} Proceso encargado de notificar cuando las páginas web se encuentran caidas.
 \end{itemize}
 
 Estos son los \textbf{actores} del sistema. Los roles de negocio de la aplicación, mapearían a uno de estos roles de aplicación. 
@@ -152,16 +152,16 @@ En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del
 Partiendo de la tabla \texttt{Usuario} como núcleo del sistema, el diseño se expande en tres áreas principales: 
 
 \begin{itemize}
-    \item \textbf{Módulo de Autorización y Sesión:} Se han implementado entidades como \texttt{refreshToken} y \texttt{recuperacionPassword} permitiendo la gestión del inicio de sesión.
+    \item \textbf{Módulo de Autorización y Sesión:} Se han implementado entidades como \texttt{recuperacionPassword} permitiendo la gestión del inicio de sesión.
     \item \textbf{Jerarquía de Aprobación:} La relación entre \texttt{Usuario}, \texttt{Peticion} e \texttt{historialEstadoPeticion} permitiendo tener una trazabilidad de cada una de las acciones relacionadas con las peticiones.
     \item \textbf{Gestión de los servidores y servicios:} A través de la información de los servidores, de los servicios y del sistema de monitorización permite un control de los sistemas y su operabilidad.
 \end{itemize}
 
-Adicionalmente a esto, se tiene apoyo en el sistema de notificación que será usado por cada uno de las áreas cuando sea necesario.
+Adicionalmente a esto, se tiene apoyo en el sistema de notificación que será usado por cada una de las áreas cuando sea necesario.
 
 En la figura \ref{fig:entidad-relacion} se encuentra el diagrama entidad relación de este incremento. 
 
-A la hora de generación de los campos de la base de datos nos apoyamos al sistema previo existente de un formulario que recoge esta información.  \cite{servicios_medal}
+A la hora de generación de los campos de la base de datos nos apoyamos en el formulario previo existente que recoge esta información.  \cite{servicios_medal}
 
 La información del entidad relación se puede encontrar en: \href{https://dbdocs.io/alejandro.fisac.contact/tfg}{DB DOCS.io}.
 
@@ -187,7 +187,7 @@ Para explicar el funcionamiento del servicio y del sistema se han creado diagram
 
 En la figura \ref{fig:diagrama_login} se ilustra el proceso de login. Este se realiza mediante un post al login que se encarga de devolver un token identificativo del usuario que será utilizado en cada operación. 
 
-La arquitectura está diseñado de manera \texttt{stateless}, esto garantiza que cada petición sea independiente.
+La arquitectura está diseñada de manera \texttt{stateless}, esto garantiza que cada petición sea independiente.
 
 \notaseguridad{Es importante destacar que estos tokens tienen un tiempo de vida determinado, no son indefinidos. En caso contrario, serían una especie de llaves maestras que en caso de pérdida cualquier usuario no autorizado podría acceder con ellos lo que puede afectar a la seguridad.}
 
@@ -229,7 +229,7 @@ Este proceso se encuentra reflejado en la figura \ref{fig:diagrama_peticion}.
 
 \newpage
 
-En el ámbito de los roles, se pueden realizar diferentes acciones, creación, edición y eliminación. Se puede observar en la figura \ref{fig:diagrama_roles}.  
+En el ámbito de los roles, se pueden realizar diferentes acciones; creación, edición y eliminación. Se puede observar en la figura \ref{fig:diagrama_roles}.  
 
 \begin{figure}[H]
   \begin{center}
@@ -241,7 +241,7 @@ En el ámbito de los roles, se pueden realizar diferentes acciones, creación, e
 
 \newpage
 
-La misma gestión realizada con los roles, se hace con los servidores, con la gestión de los servidores. Se puede encontrar en la figura \ref{fig:diagrama_servidor}. 
+La misma gestión realizada con los roles, se puede realizar con los servidores. Se puede encontrar en la figura \ref{fig:diagrama_servidor}. 
 
 
 
@@ -269,7 +269,7 @@ Por otro lado, los usuarios pueden editar sus propios datos. Esto se puede encon
 
 \newpage
 
-Por último, el diagrama de monitorización de páginas web. Se encuentra el diagrama en \ref{fig:monitorizacion}.
+Por último, el diagrama de monitorización de páginas web se encuentra el diagrama en \ref{fig:monitorizacion}.
 
 
 \begin{figure}[H]
@@ -289,20 +289,20 @@ Para cada uno de los roles se les puede asignar diferentes permisos asociados, e
 \subsubsection{Gestión de la infraestructura}
 \begin{itemize}
   \item \texttt{Creación y modificación del servidor}: Registrar una nueva máquina en el sistema.
-  \item \texttt{Ver servidor}: Acceso al registro completo del servidor y estado junto al servicios asociados.
+  \item \texttt{Ver servidor}: Acceso al registro completo del servidor y estado junto a los servicios asociados.
   \item \texttt{Baja del servidor}: Eliminación de un servidor del registro.
 \end{itemize}
 \subsubsection{Servicios asociados a la infraestructura:}
 \begin{itemize}
-  \item \texttt{Creación de un servicio asociado al servidor i}: Permite la creación de servicios asociados a un servidor. 
-  \item \texttt{Visualización de servicios asociados al servidor i}: Permite la visualización de los servicios asociados a un servidor. Esto, no incluye el acceso al resto de información del servidor. 
-  \item \texttt{Eliminación de un servicio asociado al servidor i}: Permite la eleiminación de un servicio asociado a un servidor. 
+  \item \texttt{Creación de un servicio asociado al servidor 'i'}: Permite la creación de servicios asociados a un servidor. 
+  \item \texttt{Visualización de servicios asociados al servidor 'i'}: Permite la visualización de los servicios asociados a un servidor. Esto, no incluye el acceso al resto de información del servidor. 
+  \item \texttt{Eliminación de un servicio asociado al servidor 'i'}: Permite la eliminación de un servicio asociado a un servidor. 
 \end{itemize}
 \subsubsection{Usuarios}
 \begin{itemize}
   \item \texttt{Crear usuarios}: Dar de alta a nuevos usuarios en el sistema. 
   \item \texttt{Ver usuarios}: Listar los usuarios registrados.
-  \item \texttt{Asignar roles}: Vincular a un usuario con un role o conjunto de roles.
+  \item \texttt{Asignar roles}: Vincular a un usuario con un rol o conjunto de roles.
 \end{itemize}
 \subsubsection{Roles}
 \begin{itemize}
@@ -370,7 +370,7 @@ La infraestructura se va a basar en microservicios apoyados en docker. El sistem
   \item \texttt{Bases de datos (Tablas del modelo relacional)}: Servicio de almacenamiento para el sistema.
   \item \texttt{Bases de datos (Documentos)}: En este microservicio se van a almacenar de manera segura los documentos, separados de la base de datos para evitar su sobrecarga.
   \item \texttt{API}: Comunicación entre el frontend y el backend.
-  \item \texttt{Worker}: Encargado de realización de trabajos pesados tales como la monitorización de páginas web.
+  \item \texttt{Worker}: Encargado de la realización de trabajos pesados tales como la monitorización de páginas web.
   \item \texttt{Frontend}: Parte con la que va a interactuar el usuario. 
   \item \texttt{Cron}: Encargado de realizar tareas periódicas con el worker.
   \item \texttt{Digital Signature Service}: Servicio de la Comunidad Económica Europea para validar la integridad de firmas en documentos PDF.
@@ -381,7 +381,7 @@ La infraestructura se va a basar en microservicios apoyados en docker. El sistem
 
 Se selecciona una arquitectura modular basada en docker ya que estos sistemas permiten aislamiento y portabilidad con respecto a las características de la máquina. En un sistema de mayor cantidad de usuarios que en el caso de este laboratorio permitiría una mayor resilencia con el uso de herramientas como un loadbalancer que opere con diferentes instancias de la API levantando instancias según sea necesario con orquestadores como Kubernetes. En la parte del almacenado de datos, este sistema permitiría la redundancia de datos del sistema en varias bases de datos si fuera necesario.
 
-En la siguiente figura \ref{fig:infraestructura_inc_ii} encontramos un diagrama del diseño de la arquitectura del sistema, la carga de trabajo de interactuar con la página web es asumida por la API. En cambio, determinadas tareas como el envío de correos electrónicos, monitorización de páginas web, ejecución del CRON es realizado por el WORKER mediante la delegación de tareas de la API por paso de mensajes al worker permitiendo menores tiempo de respuesta de los usuarios por parte de la API. \cite{eda_architecture}
+En la siguiente figura \ref{fig:infraestructura_inc_ii} encontramos un diagrama del diseño de la arquitectura del sistema, en la que la carga de trabajo de interactuar con la página web es asumida por la API. En cambio, determinadas tareas como el envío de correos electrónicos, monitorización de páginas web, ejecución del CRON es realizado por el WORKER mediante la delegación de tareas de la API por paso de mensajes al worker permitiendo menores tiempo de respuesta de los usuarios por parte de la API. \cite{eda_architecture}
 
 \begin{figure}[H] 
  \centering 
@@ -396,7 +396,7 @@ En la siguiente figura \ref{fig:infraestructura_inc_ii} encontramos un diagrama 
 
 El diseño de figma se usa a modo de primer boceto para la aplicación. Tras contrastarlo con un cliente final y su aprobación se pasa a una fase de implementación del frontend teniendo como base este primer boceto. El figma se puede encontrar en el siguiente \href{https://www.figma.com/design/HO9qJUw71z6evEVby9AFfv/TFG?node-id=0-1&t=fru8MHZUuEl0OLhZ-1}{enlace}. 
 
-Para el diseño de las pantallas se ha hecho uso de los componentes de \texttt{Simple Design System}, este contiene diferentes componentes que han servido de punto de partida para el diseño. En el Anexo se pueden encontrar comparativas de las pantallas más importantes.
+Para el diseño de las pantallas se ha hecho uso de los componentes de \texttt{Simple Design System}, que contiene diferentes componentes que han servido de punto de partida para el diseño. En el Anexo se pueden encontrar comparativas de las pantallas más importantes.
 
 En la figura \ref{fig:contraste_pantallas} podemos ver un contraste entre el figma y la aplicación desarrollada de la pantalla principal. 
 
@@ -413,7 +413,7 @@ En la figura \ref{fig:contraste_pantallas} podemos ver un contraste entre el fig
 \subsection{Backend}
 
 \subsubsection{Autenticación y middleware}
-Para la autenticación de los usuarios se ha utilizado el sistema de Bearer Token, este sistema funciona mediante la generación de una contraseña firmada por el servidor que es capaz de identificar al usuario. En el caso de esta implementación, este token guarda el uuid del usuario se trata de un identificador único para cada usuario. Para el sistema de permisos se ha desarrollado un sistema de identificación basado en roles, por ello para cada petición que recibe la API, el middleware se encarga de validar la petición para permitir o denegar el acceso. 
+Para la autenticación de los usuarios se ha utilizado el sistema de Bearer Token. Este sistema funciona mediante la generación de una contraseña firmada por el servidor que es capaz de identificar al usuario. En el caso de esta implementación, este token guarda el uuid del usuario (se trata de un identificador único para cada usuario). Para el sistema de permisos se ha desarrollado un sistema de identificación basado en roles, por ello para cada petición que recibe la API, el middleware se encarga de validar la petición para permitir o denegar el acceso. 
 
 \subsubsection{Almacenamiento de la información}
 Para el almacenamiento de la información este sistema se apoya en tres bases de datos, una de ellas relacional para almacenar la información de forma estructurada de los usuarios, servicios y máquinas. Los documentos por otro lado, se guardan en un almacenamiento de objetos específica para ellos. Por último, una base de datos redis (\texttt{NoSQL}) para la cola de mensajes, siendo más rápida para la comunicación con el worker.\cite{thepower_redis}  
@@ -425,7 +425,7 @@ Para la validación de los tipos de entrada y de los parámetros obligatorios se
 
 \subsubsection{Validación de los datos de entrada PDF}
 
-En el marco teórico los pdf firmados digitalmente están compuestos por un ByteRange, este es el encargado de separar las segmentos del documento firmado y la propia firma digital. \cite{sign_verification} 
+En el marco teórico los pdf firmados digitalmente están compuestos por un ByteRange que es el encargado de separar las segmentos del documento firmado y la propia firma digital. \cite{sign_verification} 
 
 Este sistema, al usar firmas con validez legal, tienen una estructura más compleja. Por ello se utiliza un sistema de organismos oficiales para validar la firma. En este caso, se utiliza un herramienta instalable en local de la \texttt{Comisión Europea}. Se trata de una API REST, que valida todas las firmas de un documento. Más información se puede encontrar en \href{https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467109107/Digital+Signature+Service+-+DSS}{Digital Signature Service} (DSS en adalente) y el \href{https://github.com/esig/dss-demonstrations}{Repositorio Oficial de Documentación}. \cite{github_dss} 
 
@@ -433,12 +433,12 @@ Este sistema al estar gestionado integramente por el laboratorio puede proporcio
 
 \subsubsection{CRON}
 
-Para las actividades con una perioricidad determinada se hace uso del servicio de CRON de node-js \cite{cron}. De esta manera permitimos la realización de las mismas por parte del \textbf{worker} en un momento determinado. Entre otras se encargará de tareas como: recordatorios de fin de servicios y de estancia de usuarios en el laboratorio. 
+Para las actividades con una perioricidad determinada se hace uso del servicio de CRON de node-js \cite{cron}. De esta manera permitimos la realización de las mismas por parte del \textbf{worker} en un momento determinado. Entre otras se encargará de realizar tareas como: recordatorios de fin de servicios y de estancia de usuarios en el laboratorio. 
 
 
 \subsection{Diseño lógico del proceso de firma}
 
-El proceso de firma se puede ver en la figura\ref{fig:detalle_firmas} a través de un flujo dividido en dos etapas. En la primera de ellas, tras la solicitud del servicio por parte del usuario, la API gestiona la creación de un PDF mediante el worker del sistema \cite{pdfkit_generator}. En este documento se le añade una firma única del servidor autofirmada, que aunque carece de validez legal cumple con los requisitos de la trazabilidad y verifica que no se le envía otro pdf distinto. Seguidamente, se inicia la fase de firmas propiamente dicha: una vez que el usuario firma y envía el archivo desde la web, el revisor recibe un aviso para validarlo, permitiendo que el documento avance hacia la autorización final del jefe de laboratorio. Además, en cada una de estas entregas, el sistema realiza una validación interna con el DSS para verificar la autenticidad de la firmas electrónicas y que se encuentra presente y validada la original del servidor.
+El proceso de firma se puede ver en la figura \ref{fig:detalle_firmas} a través de un flujo dividido en dos etapas. En la primera de ellas, tras la solicitud del servicio por parte del usuario, la API gestiona la creación de un PDF mediante el worker del sistema \cite{pdfkit_generator}. En este documento se le añade una firma única del servidor autofirmada, que aunque carece de validez legal cumple con los requisitos de la trazabilidad y verifica que no se le envía otro pdf distinto. Seguidamente, se inicia la fase de firmas propiamente dicha: una vez que el usuario firma y envía el archivo desde la web, el revisor recibe un aviso para validarlo, permitiendo que el documento avance hacia la autorización final del jefe de laboratorio. Además, en cada una de estas entregas, el sistema realiza una validación interna con el DSS para verificar la autenticidad de la firmas electrónicas y que se encuentra presente y validada la original del servidor.
 
 \begin{figure}[H] 
  \centering 
@@ -452,11 +452,11 @@ En el frontend se desarrolla con tecnologías de \texttt{Next.js} y \texttt{Reac
 
 \subsubsection{Pantalla principal}
 
-En la pantalla principal se desarrollan una serie de botones. Dependiendo de los permisos se pueden ver unos u otros, con el permiso \texttt{admin:total} se pueden encontrar todos. Con estos botones se hace la redirección entre pantallas. En este menú ha estado presente la dificultad téncnica de incorporar los servicios específicos del backend externos como el apache, el swagger y bulldashboard, para su incorporación se incrusta en una cookie el token del usuario. 
+En la pantalla principal se desarrollan una serie de botones. Dependiendo de los permisos se pueden ver unos u otros, con el permiso \texttt{admin:total} se pueden encontrar todos. Con estos botones se hace la redirección entre pantallas. En este menú ha estado presente la dificultad técnica de incorporar los servicios específicos del backend externos como el apache, el swagger y bulldashboard. Para la detección de los permisos que posee el usuario, se encuentran establecidos en una cookie. 
 
 \subsubsection{Gestión de los datos personales}
 
-En este nivel se han tenido que desarrollar dos tipos de pantallas esto se hace para diferenciar en base a los permisos del usuario. Los usuarios con determinados permisos son capaces de editar los datos personales de otros usuarios mientras que los usuarios sin permisos solo pueden editar su nombre, apellidos y credencial de acceso.
+En este nivel se han tenido que desarrollar dos tipos de pantallas para diferenciarlas en base a los permisos del usuario. Los usuarios con determinados permisos son capaces de editar los datos personales de otros usuarios mientras que los usuarios sin permisos solo pueden editar su nombre, apellidos y credencial de acceso.
 
 % En la gestión de los datos personales, los usuarios pueden modificar parte de sus datos como el nombre, los apellidos, foto de perfil y credenciales de acceso. Por otro lado, los usuarios con permisos de administración tienen otro panel donde pueden modificar datos específicos.
 
@@ -464,15 +464,15 @@ En este nivel se han tenido que desarrollar dos tipos de pantallas esto se hace 
 \subsubsection{Calendario}
 % La integración con el calendario ha requerido de unos cambios clave no contemplados, para su implementación se ha hecho uso del node package \href{https://www.npmjs.com/package/fullcalendar}{@fullcalendar}. En esta pantalla ha estado presente diferentes desafíos técnicos, se pueden destacar los siguientes. Se ha tenido la necesidad de diferenciar cada uno de los usuarios que establecen un evento, para ello se ha creado una estructura de colores y mediante una función hash y el módulo en base a la cantidad de colores se selecciona el que representa al usuario. Por otro lado, se ha tenido en cuenta las diferencias horarias con el UTC, se ha desarrollado una función en el frontend que realiza la conversión de horas a formato peninsular.
 
-Para la integración del calendario, hemos utilizado la librería @fullcalendar, lo que ha permitido partir de una base sólida como punto de partida para la solución. Uno de los principales retos fue lograr que cada usuario fuera fácilmente identificable de un vistazo. Para ello se ha diseñado un sistema de colores que se asignan automáticamente mediante una función hash basada en el UUID del dueño de la reserva. Otro de los desafíos ha sido el control horario en base a UTC, se ha usado una lógica en el frontend que detecta y convierte las horas al horario peninsular de forma automática. De esta manera, nos aseguramos de que, al salvar una reserva, las horas se mantengan exactamente donde el usuario las seleccionó, sin desplazamientos inesperados que ocurrían previamente.
+Para la integración del calendario, hemos utilizado la librería @fullcalendar, lo que ha permitido partir de una base sólida como punto de partida para la solución. Uno de los principales retos fue lograr que cada usuario fuera fácilmente identificable de un vistazo. Para ello se ha diseñado un sistema de colores que se asignan automáticamente mediante una función hash basada en el UUID del dueño de la reserva. Otro de los desafíos ha sido el control horario en base a UTC. Se ha usado una lógica en el frontend que detecta y convierte las horas al horario peninsular de forma automática. De esta manera, nos aseguramos de que, al salvar una reserva, las horas se mantengan exactamente donde el usuario las seleccionó, sin desplazamientos inesperados que ocurrían previamente.
 
 \section{Validación y cierre}
 
-Para la validación de este servicio se han generado dos conjuntos de test unitarios, el primero de ellos se encarga de la validación automática de los métodos de la API no relacionado con las peticiones. El otro es específico de las peticiones y comprueba las características de seguridad asociadas a las mismas. Adicionalmente se realizan pruebas de usabilidad asociadas al sistema.
+Para la validación de este servicio se han generado dos conjuntos de test unitarios. El primero de ellos se encarga de la validación automática de los métodos de la API no relacionado con las peticiones. El otro es específico de las peticiones y comprueba las características de seguridad asociadas a las mismas. Adicionalmente se realizan pruebas de usabilidad asociadas al sistema.
 
 \subsection{Pruebas de usabilidad del sistema}
 
-Para la definición de tareas de las pruebas de usabilidad nos apoyamos en los casos del sistema presente en la figura \ref{fig:casos_uso_inc_ii}. En esta validación es interesante reflejar las partes principales del sistema. A continuación se detallan los diferentes casos de uso de las pruebas de usabilidad. Para estas pruebas de usabilidad se utilizará la técnica de \texttt{Think aloud}, donde se le pedirá al usuario que detalle el proceso mental seguido para su flujo de ejecución. \cite{linkedin2026usability}.
+Para la definición de tareas de las pruebas de usabilidad nos apoyamos en los casos del sistema presente en la figura \ref{fig:casos_uso_inc_ii}. En esta validación es interesante reflejar las partes principales del sistema. A continuación se detallan los diferentes casos de uso de las pruebas de usabilidad. Se utilizará la técnica de \texttt{Think aloud}, donde se le pedirá al usuario que detalle el proceso mental seguido para su flujo de ejecución. \cite{linkedin2026usability}.
 
 La definición de los escenarios se estructura de la siguiente manera: 
 \begin{itemize}
@@ -535,7 +535,7 @@ Novelty        & 0.857 & 1.66 \\
 
 % Gracias a las pruebas de usabilidad y a la técnica de Think aloud, se han podido identificar diversos aspectos y problemas que deben ser ajustados en la aplicación. En primer lugar, en relación con la usabilidad de la interfaz, se ha señalado que la tipografía utilizada en algunas pantallas es demasiado pequeña, dificultando su lectura, y que ciertos botones carecen del contraste visual suficiente para facilitar su identificación. En el ámbito de las peticiones, el personal supervisor ha manifestado que, al denegar una solicitud, el sistema exige un texto justificativo que no siempre es necesario; de hecho, se ha observado que los usuarios suelen introducir 'N/A' como respuesta estándar, lo que evidencia que la validación actual es demasiado restrictiva para las necesidades operativas del laboratorio. Por otra parte, se ha detectado una deficiencia en el diseño del componente de paginación, donde los usuarios tienden a intentar interactuar con el número de página como si fuera un elemento pulsable para navegar, en lugar de utilizar los controles de flechas habilitados para tal fin. Por último, en el ámbito técnico, se ha localizado un error en la lógica de redirección de las rutas del frontend, encontrándose un componente que redirige a una URI errónea que debe ser corregida.
 
-Con las pruebas de usabilidad y la técnica de \textt{Think Aloud} se han identificado algunos fallos y campos de mejora. En relación con la interfaz, en algunas pantallas la tipografía es demasiado pequeña, dificultando la lectura. Por otra parte, el botón de volver debido al poco contraste es difícil de localizar. En las peticiones a la hora de denegarla en caso de ser necesario se ha puesto en manifiesto un fallo debido a las restricciones al denegar las peticiones, en algunos casos han destacado que utilizan la expresión 'NA' para establecer que no aplica una petición en específico. Este texto, no es capaz de pasar el filtro de validación de caracteres para denegar una petición. Por otra parte, el componente encargado de mostrar la información de las páginas y en cual nos situamos, los usuarios intuitivamente pulsan en él para cambiar la página en lugar de pulsar las flechas en los laterales del contador, la situación se refleja en la figura \ref{fig:paginas}. En el ámbito técnico, se ha encontrado un error con la redirección de pantallas donde un botón redirige a una URI que no existe. Estos elementos establecen una hoja de ruta a seguir para mejorar la usabilidad de la aplicación. 
+Con las pruebas de usabilidad y la técnica de \textt{Think Aloud} se han identificado algunos fallos y campos de mejora. En relación con la interfaz, en algunas pantallas la tipografía es demasiado pequeña, dificultando la lectura. Por otra parte, el botón de volver debido al poco contraste es difícil de localizar. En las peticiones a la hora de denegarla en caso de ser necesario se ha puesto de manifiesto un fallo debido a las restricciones al denegar las peticiones. En algunos casos han destacado que utilizan la expresión 'NA' para establecer que no aplica una petición en específico. Este texto, no es capaz de pasar el filtro de validación de caracteres para denegar una petición. Por otra parte, el componente encargado de mostrar la información de las páginas en cual nos situamos, los usuarios intuitivamente pulsan en él para cambiar la página en lugar de pulsar las flechas en los laterales del contador, la situación se refleja en la figura \ref{fig:paginas}. En el ámbito técnico, se ha encontrado un error con la redirección de pantallas donde un botón redirige a una URI que no existe. Estos elementos establecen una hoja de ruta a seguir para mejorar la usabilidad de la aplicación. 
 
 
 \begin{figure}[H] 

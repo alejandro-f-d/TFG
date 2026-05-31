@@ -57,7 +57,7 @@ Para el sistema de notificaciones, se ha integrado el servicio de mensajería de
 
 
 \section{Integración de terceros Servidores Linux}
-Para la integración de los servidores linux se propone la herramienta mencionada en el incremento III que se encarga de la creación de entorno de desarrollos exclusivos para cada investigador.
+Para la integración de los servidores linux se propone la herramienta mencionada en el incremento III que se encarga de la creación de entorno de desarrollos exclusivos para cada investigador y es interesante a futuro incorporar una conexión con la plataforma de administración.
 
 \section{Integración de terceros QNAP}
 
@@ -68,9 +68,9 @@ Según la información presente en foros y la información oficial de la platafo
 
 \subsection{Descripción del servicio instalado}
 
-La arquitectura actual del sistema se basa en un microservicio desplegado mediante \texttt{Docker}. Tras analizar las diversas metodologías de integración con servicios externos, se ha determinado que el mejor diseño consiste en establecer una comunicación vía \textbf{API}, empleando la autenticación mediante \textbf{tokens de usuario} para garantizar la seguridad y eficiencia en el intercambio de información. \cite{GITLAB_TOKEN}
+La arquitectura actual del sistema se basa en un microservicio desplegado mediante \texttt{Docker}. Tras analizar las diversas metodologías de integración con servicios externos, se ha determinado que el mejor diseño consiste en establecer una comunicación vía \textbf{API} empleando la autenticación mediante \textbf{tokens de usuario} para garantizar la seguridad y eficiencia en el intercambio de información. \cite{GITLAB_TOKEN}
 
-\subsection{Operaciones permitidas con este servicio de terceros en la página web:}
+\subsection{Operaciones permitidas con este servicio de terceros en la página web}
 El sistema permite las siguientes operaciones con este servicio de terceros:
 
 \begin{itemize}
@@ -78,7 +78,7 @@ El sistema permite las siguientes operaciones con este servicio de terceros:
 \item \texttt{Modificación de nombres de usuario de cuentas existentes.}
 \item \texttt{Bloqueo de usuarios.}
 \item \texttt{Creación de nuevos repositorios en el namespace del usuario root.}
-\item \texttt{Obtención de información general de un proyecto, incluyendo estadísticas y historial de commits.}
+\item \texttt{Obtención de información general de un proyecto, incluyendo estadísticas e historial de commits.}
 \item \texttt{Consulta de repositorios con estadísticas para usuarios individuales y grupos.}
 \item \texttt{Modificación de los colaboradores de un repositorio, a excepción del owner.}
 \item \texttt{Gestión de acceso en repositorios de grupo, permitiendo añadir usuarios como invitados sin modificar la configuración del grupo.}
@@ -92,7 +92,7 @@ A pesar de estas posibilidades el trabajo actual tiene ciertas limitaciones:
 \begin{itemize}
 \item \texttt{La creación de repositorios está restringida al namespace del usuario root; no es posible crearlos en namespaces de otros usuarios o grupos.}
 \item \texttt{No es posible modificar al owner de un repositorio.}
-\item \texttt{La gestión de usuarios en repositorios de grupo opera únicamente a nivel de invitado, sin posibilidad de modificar roles internos del grupo.}
+\item \texttt{La gestión de usuarios en repositorios de grupo opera únicamente a nivel de invitado sin posibilidad de modificar roles internos del grupo.}
 \item \texttt{No se contemplan operaciones sobre grupos como creación, edición o eliminación.}
 \item \texttt{No hay soporte para otras entidades de GitLab como issues, merge requests o pipelines.}
 \end{itemize}
@@ -108,9 +108,9 @@ En la figura \ref{fig:detalle_gitlab} se puede ver la pantalla de información e
 
 \subsection{Armonización de datos}
 
-Con el objetivo de mantener una única fuente de verdad, se necesita un proceso de armonización y extracción de la información de los datos de los repositorios. Para ello se diseña el siguiente flujo ilustrando en la figura \ref{fig:flujo_gitlab}, que puede iniciarse con dos disparadores, mediante un cron que realizará la ejecución autónoma del proceso o con un evento de alta de usuario recibido a través de la cola de mensajes. Independientemente del disparador, ambas vías convergen en el orquestador, que es el componente encargado de iniciar y coordinar el proceso completo de armonización.
+Con el objetivo de mantener una única fuente de verdad, se necesita un proceso de armonización y extracción de la información de los datos de los repositorios. Para ello se diseña el siguiente flujo ilustrado en la figura \ref{fig:flujo_gitlab}, que puede iniciarse con dos disparadores, mediante un cron que realizará la ejecución autónoma del proceso o con un evento de alta de usuario recibido a través de la cola de mensajes. Independientemente del disparador, ambas vías convergen en el orquestador, que es el componente encargado de iniciar y coordinar el proceso completo de armonización.
 
-El flujo sigue los siguientes pasos. En primer lugar se itera sobre todos los usuarios con identificador de gitlab presente en el sistema, para cada uno de ellos, se extrae primero todos los grupos de los que es participante, con esto se extraen cada uno de los repositorios presentes en los grupos. Con esta información se nutre la base de datos con la información de proyectos y la relación de participantes. Una vez se ha terminado con los grupos, se hace lo mismo con los repositorios personales. Por último, se hace una limpieza iterativa verificando si los repositorios almacenados siguen estando o han sido eliminados para eliminarlos del sistema.
+El flujo sigue los siguientes pasos. En primer lugar se itera sobre todos los usuarios con identificador de GitLab presente en el sistema, para cada uno de ellos. Se extrae primero todos los grupos de los que es participante. Con esto se extraen cada uno de los repositorios presentes en los grupos. Con esta información se nutre la base de datos con la información de proyectos y la relación de participantes. Una vez se ha terminado con los grupos, se hace lo mismo con los repositorios personales. Por último, se hace una limpieza iterativa verificando si los repositorios almacenados siguen estando o han sido eliminados para eliminarlos del sistema.
 
 \begin{figure}[H] 
  \centering 
@@ -134,12 +134,12 @@ En este punto, nos encontramos en la situación de que el sistema debe permitir 
 
  \begin{itemize}
    \item \texttt{Usuarios con vinculación a la UPM}. En este grupo encontramos a los estudiantes y el personal docente e investigador entre otros. \cite{siu_upm}
-   \item \texttt{Usuarios sin vinculación a la UPM}. Este grupo de usuarios, no tienen ninguna asociación con la universidad, serían un grupo muy pequeño y acotado. Se encontrarían principalmente estudiantes (ajenos a la universidad) e investigadores (ajenos a la universidad) con vinculación en el laboratorio MEDAL.
+   \item \texttt{Usuarios sin vinculación a la UPM}. Este grupo de usuarios no tienen ninguna asociación con la universidad. Serían un grupo muy pequeño y acotado. Se encontrarían principalmente estudiantes (ajenos a la universidad) e investigadores (ajenos a la universidad) con vinculación en el laboratorio MEDAL.
  \end{itemize} 
 
 \notaseguridad{Se debe destacar que el sistema de identificación única, en adelante SIU, se trata de un sistema más seguro que un sistema implementado propio para este trabajo fin de grado. Esto se debe a que se trata de un sistema probado y mantenido por personal experto.}
 
-En primera instancia, el objetivo es utilizar el SIU para el personal asociado a la UPM al cual de manera interna en el servicio se le aplicará una access control list (ACL) para filtrar los usuarios que tienen permitido el acceso. Para los usuarios sin vinculación a la UPM, se crearía un sistema parecido al ofrecido por la UPM pero interno al laboratorio. En la figura \ref{fig:diagrama_identificacion} se puede ver el diagrama de flujo de operación. 
+En primera instancia, el objetivo es utilizar el SIU para el personal asociado a la UPM al cual de manera interna en el servicio se le aplicará una access control list (ACL) para filtrar los usuarios que tienen permitido el acceso. Para los usuarios sin vinculación a la UPM, se crearía un sistema parecido al ofrecido por la UPM pero interno al laboratorio. En la figura \ref{fig:diagrama_identificacion} se puede ver el diagrama de flujo de operación resultante en caso de aplicarse. 
 
 \begin{figure}[H] 
  \centering 
@@ -153,7 +153,7 @@ Para la integración de este servicio, basándome en la documentación oficial d
 
 
 \section{Marco teórico Integración de Terceros Servicio de @firma}
-Para la integración del servicio de firma electrónica se han dado los primeros pasos, se ha creado un servicio gestionable desde la página web con apache tomcat, donde se deben desplegar los servicios de @firma para su integración. Tras haber realizado esto, se tendría que incorporar a la web. \cite{autofirma2026manual} 
+Para la integración del servicio de firma electrónica se han dado los primeros pasos. Se ha creado un servicio gestionable desde la página web con Apache Tomcat, donde se deben desplegar los servicios de @firma para su integración. Tras haber realizado esto, se tendría que incorporar a la web. \cite{autofirma2026manual} 
 
 \section{Marco teórico Servidores Linux}
 En el incremento III se proporcionan unos ejecutables de automontaje y creación de entornos de usuario para la ejecución sobre las máquinas. El siguiente paso, para finalizar la integración sería la creación de un conector entre los ejecutables y el servicio de este proyecto. 
