@@ -53,7 +53,7 @@ Infraestructura: Docker, Docker Compose
 Documentación: LaTeX
 Entornos virtualizados para el personal investigador: Code Server
 
-La infraestructura es la siguiente:
+La infraestructura del dashboard es la siguiente:
 ![infraestructura](./memoria/imagenes/incremento-ii/infraestructura.png)
 
 
