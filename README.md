@@ -40,7 +40,7 @@ Se proporciona un script de compilación automatizado:
 ```bash
 ./compilar_memo.sh
 ```
-Documentación del cliente
+Documentación del cliente:
 Cada carpeta dentro de documentacion_cliente/ contiene su propio main.tex. Compílalos individualmente con pdflatex main.tex desde su respectiva carpeta.
 
 Tecnologías utilizadas
@@ -52,6 +52,9 @@ Base de datos: PostgreSQL, Redis y Objetos
 Infraestructura: Docker, Docker Compose
 Documentación: LaTeX
 Entornos virtualizados para el personal investigador: Code Server
+
+La infraestructura es la siguiente:
+![infraestructura](./memoria/imagenes/incremento-ii/infraestructura.png)
 
 
 👤 Autor
