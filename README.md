@@ -1,3 +1,4 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 # Plataforma web para la gestión de usuarios y servicios asociados en un grupo de investigación
 ## Descripción
 Este Trabajo de Fin de Grado tiene como objetivo mejorar la gestión de usuarios, el inventariado de dispositivos y recursos presentes en el laboratorio, así como los servicios activos en cada máquina.
