@@ -59,4 +59,4 @@ Alejandro Fisac Delgado
 Trabajo de Fin de Grado - Escuela Técnica Superior de Ingenieros Informáticos - Universidad Politécnica de Madrid.
 
 📝 Licencia
-Este proyecto es de uso académico. Consulta el archivo LICENSE si existe, o contacta con el autor para más información.
+Este proyecto es de uso académico bajo licencia MIT.
