@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "proyecto-api-medal-smtp",
+  "private_key_id": "d69d1bfdcebc7a7ca5aeaae515c075ac76967bba",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDFYw6GmELcel7P\n0OIduArECy54DWMhymKzEU3jVr544qTR9BFcqvQi8Pd9l7IK6/qPQYYGvT1zSptF\njZEvi52f13elvKZ3I8UhPlxz+EJ3s30Jt4j7Nrv8esUGQXeS1L301rPXNpccOs4z\nGlYJh+JQ4SLzlExaW6saUcxyi60Ox8YF05aOmV+JorsjEXLx7Le/84cy7VdihpKo\nKS+HUrRfPUhbrAFCyJpp5Z9u1w9hgf3G1LUdbxzXUO2gF3wDilV3a50+E0OO4eUW\nlIu9zBPjJ6u2c+eAmGb1gcbyddSB57ypWU5M3UoATOermaUrB2ZXKfNxSYSgZtLn\nXtAzz0zfAgMBAAECggEARhwPFsOSTBmy/4GkLwYl3MhT8xReN6xZLl1hGvS+ptVp\n0aEtYYrfOGH6pkNxW+vBjYyqfE5PO1oumJ/WB9tBW3r+5oGBZyPvawVpdU+i3D2G\nliL4prIkR2OcA8LRI/gomISCUFj1h3NjtkcOdEgtnKi672WnURjqR2jyg2UVTQAM\nosuXS1p4zbsh76luWWYHniCaRxFviG4hVhg7iGp+ECtOElbgmO1d9HmqKxt+v/UZ\nUQV4Ds0Attm9M0ShJEmciTdBGKJBMv7VLDLPOcjq0zT7C1JKk/ps48d7tbl5v7C+\nzR0nty1GihR4cwvAmO36mDptFhx9JDdEZDcFt8YEAQKBgQDkTuroELgmXlFViVfK\nNYsKFChdcihyxdvb+yNQaubyHszjccr4tMZKg3FoP+hQ1cKZu8pUwCmTfksd0JIr\nHCcBbxyZfF1m0hFjCSHXM6jtMI0bIAZYUwdlDr8Hzbcib6gNnD7njoe7K+1Ob/2G\nddkiVu3Kx1g8beW1aCO1FaJV3wKBgQDdVARObdkVW+16KDdFxWrW0m+5sSfiz1M4\nT+D3zeYAd+U6pKDXdsheFrcYZ2AhVN8o2mxDrgwzajIhk7fbJ4oHyeOcDSkS8QfB\n9W4BL4nLkinLKDI9ZcZQVVj6bcb+VlFiZmzlQVNcjloo9B+ytGeRYIo6CLOjYYDS\nlnEroJvpAQKBgFfrpD7WIXR1IfFEwNAYKoEpHhpOWhFI7NAcOI9Be8qF3fVA3x9D\nzpDnaYbyBW8LwrMdRF+62Mf5/MdwiLmdT9AXj/XzlKyB/TwcSjHrrQQajFyDyq28\n274pHZvNttbGFPuYzgiyNMb5tZtdOU7Ml1/IBi7u8aXj1HA1uHqF6EwVAoGAdi0z\nM3Fh1Q7FqVEp2h5EIrowH7Vg97D93XaBR69v3NYn1n0qyIFLEToNv4ELCiEYGuct\noaGgMB/G7rjCFclx4SDCYIOCZ/O80aqrdwScDc9Yc3peAPyDvEcmAGl3NDyArgrE\noFCWIzh7GZzoA/JhznT+uWgGCvm34Dml6caTGQECgYBayXK2q+xVIXi0jgqsUxUN\n+OnxKHvyT8qpl2/aa+7Mun7IT8jF240nU9CgdFvsF6f6gzcFF27fqsDkJYqRixFu\nwjGW7pA3f/fMtjwEpXSTmyFd/gWfD88hhl4zHJsC7ApaxowoN4lhAst45YwlFKns\nannjkt2T1f0YcZXdtfpYcQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "integracion-sheets@proyecto-api-medal-smtp.iam.gserviceaccount.com",
+  "client_id": "117004601561703476098",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/integracion-sheets%40proyecto-api-medal-smtp.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

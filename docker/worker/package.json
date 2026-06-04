@@ -1,0 +1,43 @@
+{
+	"name": "api-worker",
+	"version": "1.0.0",
+	"description": "API for medal worker for the user administration.",
+	"keywords": [
+		"api"
+	],
+	"homepage": "https://github.com/alejandro-f-d/TFG#readme",
+	"bugs": {
+		"url": "https://github.com/alejandro-f-d/TFG/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/alejandro-f-d/TFG.git"
+	},
+	"license": "ISC",
+	"author": "Alejandro Fisac",
+	"type": "module",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node src/index.js"
+	},
+	"dependencies": {
+		"@signpdf/placeholder-plain": "^3.3.0",
+		"@signpdf/signer-p12": "^3.3.0",
+		"@signpdf/signpdf": "^3.3.0",
+		"axios": "^1.16.1",
+		"bullmq": "^5.70.1",
+		"cors": "^2.8.6",
+		"cron": "^4.4.0",
+		"dotenv": "^17.3.1",
+		"express": "^5.2.1",
+		"form-data": "^4.0.5",
+		"fs": "^0.0.1-security",
+		"ioredis": "^5.10.0",
+		"nodemailer": "^8.0.1",
+		"pdfkit": "^0.17.2",
+		"pg": "^8.20.0",
+		"ping": "^1.0.0",
+		"uuid": "^14.0.0"
+	}
+}

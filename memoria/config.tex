@@ -6,6 +6,8 @@
 \usepackage{hyperref}
 \usepackage{pgfgantt}
 \usepackage{ltablex}
+\usepackage{enumitem}
+\usepackage{float}
 \keepXColumns  % para que el comportamiento de X sea consistente
 \usepackage[most]{tcolorbox}
 % \usepackage{fontawesome5}
@@ -14,6 +16,7 @@
 \usepackage{titlesec}
 \usepackage{tabularx}   % Para el entorno tabularx y la columna X
 \usepackage{booktabs}   % Para \toprule, \midrule y \bottomrule
+\usepackage{hyperref}
 % \incluirimg{ruta}{Escala}{Capitulo}{Label}
 \newcommand{\incluirimg}[4]{
     \begin{figure}[htbp]
@@ -57,3 +60,77 @@
 \definecolor{colorretraso}{RGB}{230, 80, 80} % Rojo para el retraso
 \usepackage{pdflscape}
 \usepackage{rotating}
+
+\usepackage{xcolor}
+\definecolor{bggray}{rgb}{0.95,0.95,0.95}
+\definecolor{stringcolor}{rgb}{0.8,0.1,0.1}
+\definecolor{keywordcolor}{rgb}{0.1,0.1,0.8}
+\definecolor{commentcolor}{rgb}{0.0,0.5,0.0}
+\definecolor{valuecolor}{rgb}{0.6,0.4,0.1}
+
+
+\lstdefinelanguage{json}{
+    basicstyle=\ttfamily\footnotesize,
+    numbers=none,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{bggray},
+    morestring=[s]{"}{"},
+    stringstyle=\color{stringcolor},
+    morecomment=[l]{//},
+    commentstyle=\color{commentcolor},
+    literate=
+     *{:}{{{\color{black}:}}}{1}
+      {,}{{{\color{black},}}}{1}
+      {[}{{{\color{black}[}}}{1}
+      {]}{{{\color{black}]}}}{1}
+      {\{}{{{\color{black}\{}}}{1}
+      {\}}{{{\color{black}\}}}}{1}
+      {"$schema"}{{{\color{keywordcolor}"\$schema"}}}{9} 
+      {"title"}{{{\color{keywordcolor}"title"}}}{7}     
+      {"description"}{{{\color{keywordcolor}"description"}}}{13}
+      {"type"}{{{\color{keywordcolor}"type"}}}{6}
+      {"properties"}{{{\color{keywordcolor}"properties"}}}{12} 
+      {"required"}{{{\color{keywordcolor}"required"}}}{10}    
+      {"format"}{{{\color{keywordcolor}"format"}}}{8}         
+      {"enum"}{{{\color{keywordcolor}"enum"}}}{6}
+}
+
+\lstdefinelanguage{bash-custom}{
+    language=bash,
+    basicstyle=\ttfamily\footnotesize,
+    numbers=none,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{bggray},
+    keywordstyle=\color{keywordcolor}\bfseries,
+    stringstyle=\color{stringcolor},
+    commentstyle=\color{commentcolor},
+    morekeywords={taskset, stress-ng},
+    literate=
+     *{-}{{{\color{black}-}}}{1}
+      {,}{{{\color{black},}}}{1}
+}
+\lstdefinelanguage{python-custom}{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    numbers=none,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{bggray},
+    keywordstyle=\color{keywordcolor}\bfseries,
+    stringstyle=\color{stringcolor},
+    commentstyle=\color{commentcolor},
+    emph={self, cls, @staticmethod, @classmethod}, % Enfatizar elementos comunes
+    emphstyle=\color{black}\itshape,
+    morekeywords={as, assert, break, class, continue, def, del, elif, else, except, finally, for, from, global, if, import, in, is, lambda, nonlocal, not, or, pass, raise, return, try, while, with, yield, True, False, None, OutOfMemoryError},
+    literate=
+     *{=}{{{\color{black}=}}}{1}
+      {+}{{{\color{black}+}}}{1}
+      {-}{{{\color{black}-}}}{1}
+      {*}{{{\color{black}*}}}{1}
+      {/}{{{\color{black}/}}}{1}
+}

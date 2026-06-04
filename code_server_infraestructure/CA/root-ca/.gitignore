@@ -1,0 +1,13 @@
+# Ignorar todas las carpetas de datos y certificados
+certs/
+db/
+private/
+requests/
+
+# Ignorar cualquier archivo suelto generado por OpenSSL
+*.crt
+*.csr
+*.crl
+
+# Excepción: Mantener el archivo de configuración de la CA
+!root-ca.conf

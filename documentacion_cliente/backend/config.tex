@@ -1,0 +1,99 @@
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs} 
+\usepackage{listings} \usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{pgfgantt}
+\usepackage{ltablex}
+\usepackage{enumitem}
+\usepackage{float}
+\keepXColumns  % para que el comportamiento de X sea consistente
+\usepackage[most]{tcolorbox}
+% \usepackage{fontawesome5}
+\graphicspath{{./imagenes}}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tabularx}   % Para el entorno tabularx y la columna X
+\usepackage{booktabs}   % Para \toprule, \midrule y \bottomrule
+\usepackage{hyperref}
+% \incluirimg{ruta}{Escala}{Capitulo}{Label}
+\newcommand{\incluirimg}[4]{
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=#2\textwidth]{#1}
+        \caption{#3}
+        \label{fig:#4}
+    \end{figure}
+}
+
+\newcommand{\incluircodigo}[3]{
+    \lstset{basicstyle=\ttfamily\small, frame=single, breaklines=true}
+    \begin{center}
+        \begin{minipage}{0.9\linewidth}
+            \lstinputlisting[language=#2, caption=#3]{#1}
+        \end{minipage}
+    \end{center}
+}
+\newcommand{\notaseguridad}[1]{
+    \begin{tcolorbox}[
+        colback=yellow!10!white,    % Color de fondo (amarillo muy claro)
+        colframe=orange!70!black,   % Color del borde (naranja oscuro)
+        title=\textbf{Observación de seguridad}, % Título de la caja
+        colbacktitle=orange!70!black, % Color de fondo del título
+        coltitle=white,             % Color del texto del título
+        arc=2mm,                    % Bordes redondeados
+        boxrule=0.5mm,              % Grosor del borde
+        left=10pt, right=10pt,      % Márgenes internos
+        fontupper=\itshape          % Texto del cuerpo en cursiva
+    ]
+        #1
+    \end{tcolorbox}
+}
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  
+\titlespacing*{\chapter}{0pt}{-20pt}{40pt}
+% Definición de colores para el estado de las tareas
+\definecolor{colorplan}{RGB}{200, 200, 200} % Gris para lo planificado
+\definecolor{colorreal}{RGB}{100, 150, 250} % Azul para lo ejecutado
+\definecolor{colorretraso}{RGB}{230, 80, 80} % Rojo para el retraso
+\usepackage{pdflscape}
+\usepackage{rotating}
+
+\usepackage{xcolor}
+\definecolor{bggray}{rgb}{0.95,0.95,0.95}
+\definecolor{stringcolor}{rgb}{0.8,0.1,0.1}
+\definecolor{keywordcolor}{rgb}{0.1,0.1,0.8}
+\definecolor{commentcolor}{rgb}{0.0,0.5,0.0}
+\definecolor{valuecolor}{rgb}{0.6,0.4,0.1}
+
+
+\lstdefinelanguage{json}{
+    basicstyle=\ttfamily\footnotesize,
+    numbers=none,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{bggray},
+    morestring=[s]{"}{"},
+    stringstyle=\color{stringcolor},
+    morecomment=[l]{//},
+    commentstyle=\color{commentcolor},
+    literate=
+     *{:}{{{\color{black}:}}}{1}
+      {,}{{{\color{black},}}}{1}
+      {[}{{{\color{black}[}}}{1}
+      {]}{{{\color{black}]}}}{1}
+      {\{}{{{\color{black}\{}}}{1}
+      {\}}{{{\color{black}\}}}}{1}
+      {"$schema"}{{{\color{keywordcolor}"\$schema"}}}{9} 
+      {"title"}{{{\color{keywordcolor}"title"}}}{7}     
+      {"description"}{{{\color{keywordcolor}"description"}}}{13}
+      {"type"}{{{\color{keywordcolor}"type"}}}{6}
+      {"properties"}{{{\color{keywordcolor}"properties"}}}{12} 
+      {"required"}{{{\color{keywordcolor}"required"}}}{10}    
+      {"format"}{{{\color{keywordcolor}"format"}}}{8}         
+      {"enum"}{{{\color{keywordcolor}"enum"}}}{6}
+}
+

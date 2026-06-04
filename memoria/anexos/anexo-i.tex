@@ -1,0 +1,179 @@
+\chapter{Anexos:}
+\section{Anexo I: JSON Schemas}
+
+\begin{lstlisting}[language=json,caption=JSON Schema para Monitoreo Web]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "nombreObjetivo": { "type": "string", "minLength": 3 },
+    "direccion": { "type": "string", "format": "uri" },
+    "cadaCuantoSegundos": { "type": "integer", "minimum": 60 }
+  },
+  "required": ["nombreObjetivo", "direccion"]
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json,caption=JSON Schema para el Usuario]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Usuario",
+  "type": "object",
+  "properties": {
+    "nombre": { "type": "string", "maxLength": 50 },
+    "apellido1": { "type": "string", "maxLength": 50 },
+    "apellido2": { "type": ["string", "null"], "maxLength": 50 },
+    "correoInstitucional": { "type": "string", "format": "email", "maxLength": 100 },
+    "profesorResponsable": { "type": ["integer", "null"] },
+    "fechaIncorporacion": { "type": "string", "format": "date-time" },
+    "fechaFin": { "type": ["string", "null"], "format": "date-time" },
+    "wifi": { "type": "boolean", "default": false },
+    "activo": { "type": "boolean", "default": true },
+    "tarjetaAcceso": { "type": ["string", "null"], "maxLength": 20 },
+    "teams": { "type": "boolean", "default": false },
+    "esResponsable": { "type": "boolean", "default": false },
+    "roles": { "type": "array", "items": { "type": "integer" } },
+    "puertasAutorizadas": { "type": "array", "items": { "type": "integer" } },
+    "duenoMaquina": { "type": "array", "items": { "type": "integer" } },
+    "usuarioVPN": { "type": ["string", "null"], "maxLength": 50 },
+    "gitlab": { "type": ["string", "null"], "maxLength": 50 }
+  },
+  "required": ["nombre", "apellido1", "correoInstitucional", "fechaIncorporacion"]
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json, caption= JSON Schema para las peticiones]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PeticionServidor",
+  "type": "object",
+  "properties": {
+    "nombreProyectoAsociado": { "type": "string" },
+    "servidorAsociado": { "type": "array", "items": { "type": "integer" }, "minItems": 1 },
+    "cpuSolicitada": { "type": "string" },
+    "ram": { "type": "string" },
+    "disco": { "type": "string" },
+    "prioridadTarea": { "type": "integer" },
+    "momentoEjecucion": { "type": "integer" },
+    "docker": { "type": "string" },
+    "sistemaOperativo": { "type": "string" }
+  },
+  "required": ["nombreProyectoAsociado", "servidorAsociado", "cpuSolicitada", "ram", "disco", "prioridadTarea", "momentoEjecucion", "docker", "sistemaOperativo"]
+}
+\end{lstlisting}
+\begin{lstlisting}[language=json, caption= JSON Schema de Máquina]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Maquina",
+  "type": "object",
+  "properties": {
+    "nombre": { "type": "string", "maxLength": 300 },
+    "caducidadSsl": { "type": ["string", "null"], "format": "date-time" },
+    "certificadoSslActivo": { "type": "boolean", "default": false },
+    "red": {
+      "type": "object",
+      "properties": {
+        "direccionIpPrivadaV4": { "type": "string", "format": "ipv4" },
+        "direccionIpPublicaV4": { "type": ["string", "null"], "format": "ipv4" },
+        "puertaEnlaceV4": { "type": "string", "format": "ipv4" }
+      },
+      "required": ["direccionIpPrivadaV4", "puertaEnlaceV4"]
+    },
+    "especificaciones": {
+      "type": "object",
+      "properties": {
+        "sistemaOperativo": { "type": "string", "maxLength": 100 },
+        "ram": { "type": ["integer", "null"], "minimum": 0 },
+        "esServidor": { "type": "boolean" }
+      },
+      "required": ["sistemaOperativo", "esServidor"]
+    }
+  },
+  "required": ["nombre", "red", "especificaciones"]
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json, caption= JSON Schema Puertas]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Puerta",
+  "type": "object",
+  "properties": {
+    "nombre": { "type": "string", "maxLength": 250 },
+    "ubicacion": { "type": "string", "maxLength": 500 }
+  },
+  "required": ["nombre", "ubicacion"]
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json, caption= JSON Schema Roles y Permisos]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rol",
+  "type": "object",
+  "properties": {
+    "nombre": { "type": "string", "maxLength": 100 },
+    "descripcion": { "type": ["string", "null"], "maxLength": 500 },
+    "permisos": { 
+      "type": "array", 
+      "items": { "type": "integer", "minimum": 1 },
+      "minItems": 1 
+    }
+  },
+  "required": ["nombre", "permisos"]
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json, caption= JSON Schema Proyectos Gitlab]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProyectoGitLab",
+  "type": "object",
+  "properties": {
+    "nombre": { "type": "string", "maxLength": 255 },
+    "descripcion": { "type": ["string", "null"], "maxLength": 1000 },
+    "fechaInicio": { "type": "string", "format": "date-time" },
+    "fechaFin": { "type": ["string", "null"], "format": "date-time" },
+    "activo": { "type": "boolean", "default": true },
+    "participantes": { 
+      "type": "array", 
+      "items": { "type": "integer", "minimum": 1 },
+      "minItems": 1 
+    }
+  },
+  "required": ["nombre", "fechaInicio", "participantes"]
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json, caption= JSON Schema Dispositivo]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dispositivo",
+  "type": "object",
+  "properties": {
+    "nombre": { "type": "string", "maxLength": 200 },
+    "idTipoDispositivo": { "type": "integer", "minimum": 1 },
+    "idMaquina": { "type": ["integer", "null"] },
+    "puntoMontaje": { "type": ["string", "null"], "maxLength": 100 },
+    "capacidad": { "type": ["integer", "null"], "minimum": 0 },
+    "capacidadUsada": { "type": ["integer", "null"], "minimum": 0 },
+    "tecnologia": { "type": ["string", "null"], "maxLength": 200 }
+  },
+  "required": ["nombre", "idTipoDispositivo"]
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json, caption= JSON Schema Login]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Login",
+  "type": "object",
+  "properties": {
+    "correoInstitucional": { "type": "string", "format": "email", "maxLength": 100 },
+    "contrasena": { "type": "string" }
+  },
+  "required": ["correoInstitucional", "contrasena"]
+}
+\end{lstlisting}
+  
+\end{env}

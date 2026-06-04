@@ -1,0 +1,564 @@
+\chapter{Incremento II}
+
+\section{Especificación y modelado}
+
+\subsection{Requisitos}
+En la parte de la gestión de los usuarios, el administrador de informática tiene un registro de los usuarios, el cual sirve como base de información mínima de cada usuario que se debe mantener. Un registro de esta información se puede encontrar en la tabla \ref{tab:info_usuario_administrador}. El administrador hace distinción de los usuarios activos y de los usuarios inactivos. 
+
+\begin{table}[h]
+ \label{tab:info_usuario_administrador}
+ \centering
+ \renewcommand{\arraystretch}{1.3} 
+ \begin{tabular}{l p{8cm}} 
+     \specialrule{1.5pt}{0pt}{0pt}
+     \multicolumn{2}{c}{\textbf{FICHA DE ACCESO DE USUARIO}} \\
+     \specialrule{1pt}{0pt}{0pt}
+     \textbf{Nombre Completo} & Alejandro Fisac \\
+     \textbf{Email}           & alejandro.fisac@alumnos.upm.es \\
+     \textbf{Usuario VPN}     & afisac \\
+     \textbf{Usuario GitLab}  & --- \\
+     \textbf{Nuki (P0 / P-1)} & --- / AlejandroF \\
+     \textbf{Profesor Resp.}  & Ernestina \\
+     \textbf{Fechas}          & Desde: 05/11/2024 -- Hasta: ¿? \\
+     \textbf{Wifi Medal}      & Sí \\
+     \specialrule{1.5pt}{0pt}{0pt}
+ \end{tabular}
+\end{table}
+
+Además de los datos de perfil, el sistema debe mantener un registro histórico de trazabilidad. Esto incluye el almacenamiento íntegro de las peticiones de servicios realizadas por el usuario, así como las respuestas y aprobaciones emitidas por el profesor responsable.
+
+\notaseguridad{El mantener un registro actualizado de cada una de las peticiones del usuario permite tener trazabilidad de los procesos, lo cual es esencial a la hora de depurar responsabilidades.}
+
+
+Otra necesidad que se ha identificado es la necesidad de un sistema de monitoreo de páginas web de manera autónoma. Esto se debe a que el laboratorio tiene diversas páginas web asociadas y es importante que cada una de ellas se encuentre funcionando y en caso de que estas dejen de funcionar se debe notificar para la revisión de la misma. 
+
+En la tabla \ref{tab:rf_inc2} se pueden encontrar los requisitos funcionales a implementar en esta etapa. En la tabla \ref{tab:rnf_inc2} se localizan los requisitos no funcionales para este incremento. 
+
+Los usuarios disponen de un ordenador fijo cuyo inventario es gestionado por el sistema tras realizar el registro correspondiente.
+
+
+% Ajuste de separación de filas para que no se vea tan apretada (opcional)
+\renewcommand{\arraystretch}{1.3}
+
+\begin{longtable}{l p{0.82\textwidth}} % Se ajusta automáticamente al ancho del texto
+\caption{Requisitos Funcionales del Sistema}
+\label{tab:rf_inc2} \\
+\toprule
+\textbf{ID} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{ID} & \textbf{Descripción} \\
+\midrule
+\endhead
+
+\bottomrule
+\multicolumn{2}{p{\textwidth}}{\footnotesize \textit{* Opcional: Campos no requeridos para el alta inicial en el sistema. En el caso Fecha Fin se establece a NULL y en los otros casos a false o carencia de ese servicio.}} \\
+\endfoot
+
+RF1   & Gestión integral de investigadores (CRUD). \\
+RF1.1 & Los administradores pueden dar de alta a la cantidad de roles que sean necesarios. \\
+RF1.2 & Los administradores del sistema podrán visualizar los datos de todos los usuarios dados de alta. \\
+RF1.3 & Los usuarios no administradores deben poder ver sus datos propios. \\
+RF1.4 & Los administradores del sistema deben poder editar los datos de otros usuarios a excepción de las credenciales de acceso de cada usuario. \\
+RF1.5 & Los usuarios no administradores deben poder editar su información y su contraseña. \\
+RF1.6 & Los administradores son los únicos con permisos para eliminar la cuenta de un usuario. \\
+RF2   & Control de periodos de estancia y fechas de finalización. El sistema debe enviar un correo electrónico al administrador en el día de la baja del usuario notificándole la posible baja. \\
+RF2.1 & El administrador del sistema tendrá la opción de dar de baja al usuario o ampliarle según las necesidades una vez recibida esa notificación. En caso de eliminarse, serán revocados de manera automática todos los permisos del usuario.\\
+RF3   & Autenticación y control de acceso basado en roles (RBAC). \\
+RF4   & Los usuarios deben ser capaces de modificar y/o recuperar la contraseña de manera segura. \\
+RF5   & Centralización de datos en la Fuente Única de Verdad (SSOT). \\
+RF6   & El servicio debe permitir trazabilidad y envío de anexos firmados por parte de los usuarios. \\
+  RF6.1 & El servicio utilizará el servicio de \@Firma para la cumplimentación de los documentos. \\
+RF7   & El servicio debe tener un registro actualizado de la información del personal del laboratorio. \\
+  RF7.1 & Nombre (\textbf{Obligatorio}). \\
+  RF7.2 & Apellidos (\textbf{Obligatorio}). \\
+  RF7.3 & Role Asociado (\textbf{Obligatorio}). \\
+  RF7.4 & Correo Institucional (\textbf{Obligatorio}). \\
+  RF7.5 & Usuario VPN (\textit{Opcional}). \\
+  RF7.6 & Usuario Gitlab (\textit{Opcional}). \\
+  RF7.7 & Nuki (\textit{Opcional}). \\
+  RF7.8 & Profesor responsable (\textbf{Obligatorio}). \\
+  RF7.9 & Fecha de incorporación (\textbf{Obligatorio}). \\
+  RF7.10 & Fecha de fin (\textit{Opcional}). \\
+  RF7.11 & Wi-Fi (\textit{Opcional}). \\
+  RF7.12 & Activo (\textbf{Obligatorio.}) \\
+  RF7.13 & Tarjeta de Acceso (\textbf{Obligatorio.}) \\
+RF8 & El sistema debe permitir la monitorización de páginas webs para conocer su estado de manera automática notificando al usuario en caso de no encontrarse funcionando. El healthcheck se hará cada 2 minutos para evitar bloqueo por posible ataque DoS. \\
+RF9 & Creación de información asociada a los máquinas. \\
+  RF9.1 & Nombre del máquina. \\
+  RF9.2 & IP pública del máquina. \\
+  RF9.3 & IP privada del máquina. \\
+  RF9.4 & Puerta de enlace del máquina. \\
+  RF9.5 & DNS del máquina. \\
+  RF9.7 & Identificador del máquina. \\
+  RF9.8 & Dueño de la máquina.
+RF10 & Baja de los máquinas.
+\end{longtable}
+\newpage
+\begin{longtable}{lp{10cm}}
+\caption{Requisitos No Funcionales}
+\label{tab:rnf_inc2} \\
+\toprule
+\textbf{ID} & \textbf{Categoría / Descripción} \\
+\midrule
+RNF1 & \textbf{Seguridad:} Encriptación de contraseñas de forma segura. \\
+RNF2 & \textbf{Seguridad:} Uso obligatorio de protocolo HTTPS. \\
+RNF3 & \textbf{Disponibilidad:} El sistema debe garantizar un Uptime del 99.5\%. \\
+RNF4 & \textbf{Rendimiento:} Tiempo de carga de páginas inferior a 2 segundos. \\
+RNF5 & \textbf{Usabilidad:} Interfaz adaptable a dispositivos móviles (Responsive). \\
+RNF6 & \textbf{Contraste:} Interfaz con contrastes correctos que permitan un mejor uso de la aplicación. \\
+\bottomrule
+\end{longtable}
+
+
+\notaseguridad{A pesar de que la fecha de finalización sea opcional, es importante que siempre haya una fecha orientativa, de esta manera si por algún descuido el usuario se va y no es reportado de manera correcta por un error humano, el usuario terminaría dándose de baja.}
+
+\subsection{Casos de uso}
+
+En este sistema, a pesar de que pueden existir numerosos tipos de roles, se pueden catalogar en tres tipos de permisos. Esto se hace para simplificar los casos de uso, a pesar de que cada rol puede tener un conjunto de permisos asociados.
+
+\begin{itemize}
+  \item \texttt{Administradores:} Los que poseen este permiso son los encargados de dar de alta y de baja a los usuarios a la vez del despliegue de servicios y recursos.
+
+  \item \texttt{Responsables:} Los que poseen este permiso son los encargados de realizar aprobaciones de las peticiones de los usuarios base.
+
+  \item \texttt{Usuario base:} Usuario sin permiso que realiza la petición de los servicios a los responsables. 
+
+  \item \texttt{Cron:}  Proceso encargado de notificar de eventos de calendario.
+
+  \item \texttt{Healthcheck de las webs:} Proceso encargado de notificar cuando las páginas web se encuentran caidas.
+\end{itemize}
+
+Estos son los \textbf{actores} del sistema. Los roles de negocio de la aplicación, mapearían a uno de estos roles de aplicación. 
+
+En la figura \ref{fig:casos_uso_inc_ii} se pueden encontrar los casos de uso del sistema. 
+
+
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{incremento-ii/casos_uso_incremento_ii.png}
+ \caption{Casos de uso del incremento II.}
+ \label{fig:casos_uso_inc_ii}
+\end{figure}
+
+
+
+\newpage
+\subsection{Entidad relación}
+
+Partiendo de la tabla \texttt{Usuario} como núcleo del sistema, el diseño se expande en tres áreas principales: 
+
+\begin{itemize}
+    \item \textbf{Módulo de Autorización y Sesión:} Se han implementado entidades como \texttt{recuperacionPassword} permitiendo la gestión del inicio de sesión.
+    \item \textbf{Jerarquía de Aprobación:} La relación entre \texttt{Usuario}, \texttt{Peticion} e \texttt{historialEstadoPeticion} permitiendo tener una trazabilidad de cada una de las acciones relacionadas con las peticiones.
+    \item \textbf{Gestión de los servidores y servicios:} A través de la información de los servidores, de los servicios y del sistema de monitorización permite un control de los sistemas y su operabilidad.
+\end{itemize}
+
+Adicionalmente a esto, se tiene apoyo en el sistema de notificación que será usado por cada una de las áreas cuando sea necesario.
+
+En la figura \ref{fig:entidad-relacion} se encuentra el diagrama entidad relación de este incremento. 
+
+A la hora de generación de los campos de la base de datos nos apoyamos en el formulario previo existente que recoge esta información.  \cite{servicios_medal}
+
+La información del entidad relación se puede encontrar en: \href{https://dbdocs.io/alejandro.fisac.contact/tfg}{DB DOCS.io}.
+
+\clearpage
+
+\begin{sidewaysfigure}[p]
+    \centering
+    \includegraphics[width=0.75\textwidth]{incremento-ii/entidad_relacion.png}
+    \caption{Entidad relación Incremento II}
+    \label{fig:entidad-relacion}
+\end{sidewaysfigure}
+
+\clearpage
+
+\newpage
+
+
+
+
+\subsubsection{Diagramas de secuencia}
+
+Para explicar el funcionamiento del servicio y del sistema se han creado diagramas de secuencia para ilustrar los \texttt{POST, PUT, GET} y \texttt{DELETE} más importantes.
+
+En la figura \ref{fig:diagrama_login} se ilustra el proceso de login. Este se realiza mediante un post al login que se encarga de devolver un token identificativo del usuario que será utilizado en cada operación. 
+
+La arquitectura está diseñada de manera \texttt{stateless}, esto garantiza que cada petición sea independiente.
+
+\notaseguridad{Es importante destacar que estos tokens tienen un tiempo de vida determinado, no son indefinidos. En caso contrario, serían una especie de llaves maestras que en caso de pérdida cualquier usuario no autorizado podría acceder con ellos lo que puede afectar a la seguridad.}
+
+
+
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=0.5\textwidth]{incremento-ii/diagrama_login.png}
+ \caption{Diagrama de login.}
+ \label{fig:diagrama_login}
+\end{figure}
+
+\newpage
+
+A continuación se describe el flujo operativo del sistema de peticiones, uno de los módulos centrales de la plataforma. El proceso se compone de varias etapas de validación que garantizan la trazabilidad de la solicitud desde su origen hasta su implementación final:
+
+\begin{enumerate}
+  \item \textbf{Solicitud inicial y formalización}: El proceso comienza cuando el usuario genera una petición desde la interfaz. El sistema genera un documento PDF que debe ser firmado en primera instancia por parte del usuario.
+
+  \item \textbf{Carga y validación de documentación}: Una vez firmado el documento, el usuario lo carga en la aplicación. Esta acción genera una notificación automática al responsable correspondiente, adjuntando la solicitud para su revisión y solicitando su firma conforme a la normativa del laboratorio.
+
+  \item \textbf{Aprobación jerárquica}: Tras la validación y firma del responsable, el Jefe de Laboratorio recibe una notificación para proceder con la aprobación final. Esta fase representa el último filtro administrativo.
+
+  \item \textbf{Implementación y cierre}: Una vez que la solicitud se encuentra en estado de Aprobada, el administrador del sistema ejecuta las acciones técnicas asociadas. Al finalizar, marca la petición como Implementada en la plataforma.
+
+  \item \textbf{Notificación de finalización}: Como cierre del flujo, el sistema envía una comunicación automática al usuario solicitante, al responsable y al Jefe de Laboratorio, informando que el recurso solicitado está disponible.
+\end{enumerate}
+
+Este proceso se encuentra reflejado en la figura \ref{fig:diagrama_peticion}.
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{incremento-ii/diagrama_peticion.png}
+  \end{center}
+  \caption{Diagrama de gestión de las peticiones de los usuarios.}
+  \label{fig:diagrama_peticion}
+\end{figure}
+
+\newpage
+
+En el ámbito de los roles, se pueden realizar diferentes acciones; creación, edición y eliminación. Se puede observar en la figura \ref{fig:diagrama_roles}.  
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{incremento-ii/diagrama_roles.png}
+  \end{center}
+  \caption{Diagrama de gestión con las posibilidades de gestión de roles.}
+  \label{fig:diagrama_roles}
+\end{figure}
+
+\newpage
+
+La misma gestión realizada con los roles, se puede realizar con los servidores. Se puede encontrar en la figura \ref{fig:diagrama_servidor}. 
+
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{incremento-ii/diagrama_servidor.png}
+  \end{center}
+  \caption{Diagrama de gestión con las posibilidades de gestión de servidores.}
+  \label{fig:diagrama_servidor}
+\end{figure}
+
+\newpage 
+
+Por otro lado, los usuarios pueden editar sus propios datos. Esto se puede encontrar en la figura \ref{fig:diagrama_datos_propios}.
+
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{incremento-ii/edicion_datos_propios.png}
+  \end{center}
+  \caption{Diagrama de edición de datos propios.}
+  \label{fig:diagrama_datos_propios}
+\end{figure}
+
+\newpage
+
+Por último, el diagrama de monitorización de páginas web se encuentra el diagrama en \ref{fig:monitorizacion}.
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{incremento-ii/monitorizacion_web.png}
+  \end{center}
+  \caption{Diagrama de monitorización web.}
+  \label{fig:monitorizacion}
+\end{figure}
+
+
+\newpage
+
+
+\subsection{Desglose de permisos del sistema}
+Para cada uno de los roles se les puede asignar diferentes permisos asociados, entre otros, se encuentran los siguientes:
+\subsubsection{Gestión de la infraestructura}
+\begin{itemize}
+  \item \texttt{Creación y modificación del servidor}: Registrar una nueva máquina en el sistema.
+  \item \texttt{Ver servidor}: Acceso al registro completo del servidor y estado junto a los servicios asociados.
+  \item \texttt{Baja del servidor}: Eliminación de un servidor del registro.
+\end{itemize}
+\subsubsection{Servicios asociados a la infraestructura:}
+\begin{itemize}
+  \item \texttt{Creación de un servicio asociado al servidor 'i'}: Permite la creación de servicios asociados a un servidor. 
+  \item \texttt{Visualización de servicios asociados al servidor 'i'}: Permite la visualización de los servicios asociados a un servidor. Esto, no incluye el acceso al resto de información del servidor. 
+  \item \texttt{Eliminación de un servicio asociado al servidor 'i'}: Permite la eliminación de un servicio asociado a un servidor. 
+\end{itemize}
+\subsubsection{Usuarios}
+\begin{itemize}
+  \item \texttt{Crear usuarios}: Dar de alta a nuevos usuarios en el sistema. 
+  \item \texttt{Ver usuarios}: Listar los usuarios registrados.
+  \item \texttt{Asignar roles}: Vincular a un usuario con un rol o conjunto de roles.
+\end{itemize}
+\subsubsection{Roles}
+\begin{itemize}
+  \item \texttt{Creación de roles}: Permite al usuario la creación de roles.
+  \item \texttt{Listado de roles}: Permite ver al usuario los roles que se encuentran actualmente en el sistema.
+  \item \texttt{Asignación de roles}: Permite la asignación de roles existentes a los usuarios.
+\end{itemize}
+
+\subsubsection{Proyectos de Gitlab}
+\begin{itemize}
+  \item \texttt{Creación de proyectos}: Permite la creación de un proyecto de gitlab al usuario.
+  \item \texttt{Obtener listado de proyectos}: Permite al usuario la obtención del conjunto de listados de proyectos.
+\end{itemize}
+
+\subsubsection{Puertas}
+\begin{itemize}
+  \item \texttt{Creación}: Permite la creación de puertas en el sistema.
+  \item \texttt{Get}: Permite el listado de las puertas del sistema.
+\end{itemize}
+
+\subsubsection{Dispositivos}
+\begin{itemize}
+  \item \texttt{Creación de dispositivos}: Permite el registro de nuevos dispositivos físicos en el inventario.
+  \item \texttt{Listado de dispositivos}: Acceso al inventario completo de dispositivos registrados.
+\end{itemize}
+
+\subsubsection{Monitoreo Web (HealthCheck)}
+\begin{itemize}
+  \item \texttt{Creación de monitores}: Permite configurar nuevos objetivos de monitoreo (URLs) y definir el método (GET/PING).
+  \item \texttt{Listado y visualización}: Permite ver el estado actual (OK/Error) de los servicios y acceder al histórico de disponibilidad.
+  \item \texttt{Gestión de monitores}: Permite la eliminación o pausa de las tareas de monitoreo programadas.
+\end{itemize}
+
+\subsubsection{Documentación Técnica}
+\begin{itemize}
+  \item \texttt{Acceso a Swagger}: Permite visualizar la documentación técnica de la API y realizar pruebas de los endpoints.
+\end{itemize}
+
+\subsubsection{Calendario}
+\begin{itemize}
+  \item \texttt{Calendario}: Permite la visualización y la creación de reservas en el calendario.
+\end{itemize}
+
+\newpage
+
+
+\section{Diseño de la solución}
+
+\subsection{Proceso de firma de documentos}
+
+Para el proceso de firma de documentos por parte de los diferentes usuarios del sistema se va a hacer uso del sistema de @Firma estatal vinculado con la sede electrónica del Ministerio para la Transformación Digital y de la función pública. \cite{PAE} 
+Este sistema se quiere utilizar para garantizar que el usuario acepta los términos y condiciones de servicio a la hora de hacer uso de los servidores que se proporcionan en el laboratorio. Nos apoyamos en el artículo 26, citando textualmente de la \href{https://sedediatid.digital.gob.es/es-es/firmaelectronica/Paginas/firma.aspx}{página web} \cite{sede_electronica_firma_digital, firma_electronica_ciudadanos}. 
+
+\texttt{(inicio de cita)}
+Asimismo, los requisitos de la firma electrónica avanzada se definen en su artículo 26:
+\begin{itemize}
+  \item estar vinculada al firmante de manera única;
+  \item permitir la identificación del firmante;
+  \item haber sido creada utilizando datos de creación de la firma electrónica que el firmante puede utilizar, con un alto nivel de confianza, bajo su control exclusivo, y
+  \item estar vinculada con los datos firmados por la misma de modo tal que cualquier modificación ulterior de los mismos sea detectable. 
+\end{itemize}
+\texttt{(fin de cita)}
+
+\subsection{Infraestructura}
+
+La infraestructura se va a basar en microservicios apoyados en docker. El sistema se va a desarrollar en diferentes capas: 
+\begin{itemize}
+  % \item Frontend: Esta capa va a ser la visible para el usuario y la que está pensada para que el usuario interactue.
+  % \item API: Esta capa se encargará de la comunicación entre el frontend y el backend. Además se encargará de trabajar con los servicios de @firma.
+  % \item Backend: Esta última capa se va a encargar del almacenamiento de los datos. Concretamente se va a dividir en dos partes principales, una base de datos y en una estructura encargada de almacenar los datos de los documentos (servicio de almacenamiento de objetos).
+  \item \texttt{Bases de datos (Tablas del modelo relacional)}: Servicio de almacenamiento para el sistema.
+  \item \texttt{Bases de datos (Documentos)}: En este microservicio se van a almacenar de manera segura los documentos, separados de la base de datos para evitar su sobrecarga.
+  \item \texttt{API}: Comunicación entre el frontend y el backend.
+  \item \texttt{Worker}: Encargado de la realización de trabajos pesados tales como la monitorización de páginas web.
+  \item \texttt{Frontend}: Parte con la que va a interactuar el usuario. 
+  \item \texttt{Cron}: Encargado de realizar tareas periódicas con el worker.
+  \item \texttt{Digital Signature Service}: Servicio de la Comunidad Económica Europea para validar la integridad de firmas en documentos PDF.
+  \item \texttt{Frontend}: Capa visible para el usuario y con la que interactua el usuario. 
+  \item \texttt{Apache Tomcat}: Gestor de servicios Apache para @firma. Este servicio aprovecha los certificados del nginx para su comunicación segura. Este servicio se podría utilizar para algún caso de uso adicional en caso de ser necesario en un futuro.  
+  \item \texttt{Cola de Mensajes}: Para la cola de mensajes para la comunicación con el worker se hace uso de una base de datos REDIS. 
+\end{itemize}
+
+Se selecciona una arquitectura modular basada en docker ya que estos sistemas permiten aislamiento y portabilidad con respecto a las características de la máquina. En un sistema de mayor cantidad de usuarios que en el caso de este laboratorio permitiría una mayor resilencia con el uso de herramientas como un loadbalancer que opere con diferentes instancias de la API levantando instancias según sea necesario con orquestadores como Kubernetes. En la parte del almacenado de datos, este sistema permitiría la redundancia de datos del sistema en varias bases de datos si fuera necesario.
+
+En la siguiente figura \ref{fig:infraestructura_inc_ii} encontramos un diagrama del diseño de la arquitectura del sistema, en la que la carga de trabajo de interactuar con la página web es asumida por la API. En cambio, determinadas tareas como el envío de correos electrónicos, monitorización de páginas web, ejecución del CRON es realizado por el WORKER mediante la delegación de tareas de la API por paso de mensajes al worker permitiendo menores tiempo de respuesta de los usuarios por parte de la API. \cite{eda_architecture}
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{incremento-ii/infraestructura.png}
+ \caption{Arquitectura lógica del sistema.}
+ \label{fig:infraestructura_inc_ii}
+\end{figure}
+
+% Figura \ref{fig:infraestructura_inc_ii} Arquitectura lógica del sistema. Se observa un diseño basado en microservicios y eventos. La API principal actúa como orquestador, delegando tareas pesadas y notificaciones a un Worker independiente mediante una cola de mensajes (Queue). El Worker asume la responsabilidad de la comunicación con el servidor SMTP de Gmail y la ejecución de tareas programadas (CRON), garantizando que la API permanezca disponible y con tiempos de respuesta bajos para el usuario final.
+
+\subsection{FIGMA Diseño de pantallas}
+
+El diseño de figma se usa a modo de primer boceto para la aplicación. Tras contrastarlo con un cliente final y su aprobación se pasa a una fase de implementación del frontend teniendo como base este primer boceto. El figma se puede encontrar en el siguiente \href{https://www.figma.com/design/HO9qJUw71z6evEVby9AFfv/TFG?node-id=0-1&t=fru8MHZUuEl0OLhZ-1}{enlace}. 
+
+Para el diseño de las pantallas se ha hecho uso de los componentes de \texttt{Simple Design System}, que contiene diferentes componentes que han servido de punto de partida para el diseño. En el Anexo se pueden encontrar comparativas de las pantallas más importantes.
+
+En la figura \ref{fig:contraste_pantallas} podemos ver un contraste entre el figma y la aplicación desarrollada de la pantalla principal. 
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{incremento-ii/comparacion_diseno.png}
+ \caption{Contraste entre figma y diseño real implementado en página principal.}
+ \label{fig:contraste_pantallas}
+\end{figure}
+
+
+
+\section{Implementación y codificación}
+\subsection{Backend}
+
+\subsubsection{Autenticación y middleware}
+Para la autenticación de los usuarios se ha utilizado el sistema de Bearer Token. Este sistema funciona mediante la generación de una contraseña firmada por el servidor que es capaz de identificar al usuario. En el caso de esta implementación, este token guarda el uuid del usuario (se trata de un identificador único para cada usuario). Para el sistema de permisos se ha desarrollado un sistema de identificación basado en roles, por ello para cada petición que recibe la API, el middleware se encarga de validar la petición para permitir o denegar el acceso. 
+
+\subsubsection{Almacenamiento de la información}
+Para el almacenamiento de la información este sistema se apoya en tres bases de datos, una de ellas relacional para almacenar la información de forma estructurada de los usuarios, servicios y máquinas. Los documentos por otro lado, se guardan en un almacenamiento de objetos específica para ellos. Por último, una base de datos redis (\texttt{NoSQL}) para la cola de mensajes, siendo más rápida para la comunicación con el worker.\cite{thepower_redis}  
+% Los documentos se guardan en un sistema de almacenamiento permanente de objetos. Adecuado para el payload evitando bases de datos SQL y NoSQL.
+% Por otro lado, se usa una base de datos redis (\textbf{NoSQL}) para el intercambio de transacciones rápidas entre la api y el worker, como el envío de correos electrónicos y generación de documentos \cite{pdfkit_generator}. \cite{thepower_redis}.
+
+\subsubsection{Validación de los datos de entrada API}
+Para la validación de los tipos de entrada y de los parámetros obligatorios se hace uso de JOI así como las longuitudes como capa extra de seguridad hacia la API evitando así buffer overflows y errores de tipos.
+
+\subsubsection{Validación de los datos de entrada PDF}
+
+En el marco teórico los pdf firmados digitalmente están compuestos por un ByteRange que es el encargado de separar las segmentos del documento firmado y la propia firma digital. \cite{sign_verification} 
+
+Este sistema, al usar firmas con validez legal, tienen una estructura más compleja. Por ello se utiliza un sistema de organismos oficiales para validar la firma. En este caso, se utiliza un herramienta instalable en local de la \texttt{Comisión Europea}. Se trata de una API REST, que valida todas las firmas de un documento. Más información se puede encontrar en \href{https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467109107/Digital+Signature+Service+-+DSS}{Digital Signature Service} (DSS en adalente) y el \href{https://github.com/esig/dss-demonstrations}{Repositorio Oficial de Documentación}. \cite{github_dss} 
+
+Este sistema al estar gestionado integramente por el laboratorio puede proporcionar mayor confidencialidad de los documentos firmados.
+
+\subsubsection{CRON}
+
+Para las actividades con una perioricidad determinada se hace uso del servicio de CRON de node-js \cite{cron}. De esta manera permitimos la realización de las mismas por parte del \textbf{worker} en un momento determinado. Entre otras se encargará de realizar tareas como: recordatorios de fin de servicios y de estancia de usuarios en el laboratorio. 
+
+
+\subsection{Diseño lógico del proceso de firma}
+
+El proceso de firma se puede ver en la figura \ref{fig:detalle_firmas} a través de un flujo dividido en dos etapas. En la primera de ellas, tras la solicitud del servicio por parte del usuario, la API gestiona la creación de un PDF mediante el worker del sistema \cite{pdfkit_generator}. En este documento se le añade una firma única del servidor autofirmada, que aunque carece de validez legal cumple con los requisitos de la trazabilidad y verifica que no se le envía otro pdf distinto. Seguidamente, se inicia la fase de firmas propiamente dicha: una vez que el usuario firma y envía el archivo desde la web, el revisor recibe un aviso para validarlo, permitiendo que el documento avance hacia la autorización final del jefe de laboratorio. Además, en cada una de estas entregas, el sistema realiza una validación interna con el DSS para verificar la autenticidad de la firmas electrónicas y que se encuentra presente y validada la original del servidor.
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{incremento-ii/diagrama_firmas.png}
+ \caption{Flujo detalle firmas.}
+ \label{fig:detalle_firmas}
+\end{figure}
+
+\subsection{Frontend}
+En el frontend se desarrolla con tecnologías de \texttt{Next.js} y \texttt{React.js}. A continuación se detallan algunos de los desafíos técnicos que se han presentado.
+
+\subsubsection{Pantalla principal}
+
+En la pantalla principal se desarrollan una serie de botones. Dependiendo de los permisos se pueden ver unos u otros, con el permiso \texttt{admin:total} se pueden encontrar todos. Con estos botones se hace la redirección entre pantallas. En este menú ha estado presente la dificultad técnica de incorporar los servicios específicos del backend externos como el apache, el swagger y bulldashboard. Para la detección de los permisos que posee el usuario, se encuentran establecidos en una cookie. 
+
+\subsubsection{Gestión de los datos personales}
+
+En este nivel se han tenido que desarrollar dos tipos de pantallas para diferenciarlas en base a los permisos del usuario. Los usuarios con determinados permisos son capaces de editar los datos personales de otros usuarios mientras que los usuarios sin permisos solo pueden editar su nombre, apellidos y credencial de acceso.
+
+% En la gestión de los datos personales, los usuarios pueden modificar parte de sus datos como el nombre, los apellidos, foto de perfil y credenciales de acceso. Por otro lado, los usuarios con permisos de administración tienen otro panel donde pueden modificar datos específicos.
+
+
+\subsubsection{Calendario}
+% La integración con el calendario ha requerido de unos cambios clave no contemplados, para su implementación se ha hecho uso del node package \href{https://www.npmjs.com/package/fullcalendar}{@fullcalendar}. En esta pantalla ha estado presente diferentes desafíos técnicos, se pueden destacar los siguientes. Se ha tenido la necesidad de diferenciar cada uno de los usuarios que establecen un evento, para ello se ha creado una estructura de colores y mediante una función hash y el módulo en base a la cantidad de colores se selecciona el que representa al usuario. Por otro lado, se ha tenido en cuenta las diferencias horarias con el UTC, se ha desarrollado una función en el frontend que realiza la conversión de horas a formato peninsular.
+
+Para la integración del calendario, hemos utilizado la librería @fullcalendar, lo que ha permitido partir de una base sólida como punto de partida para la solución. Uno de los principales retos fue lograr que cada usuario fuera fácilmente identificable de un vistazo. Para ello se ha diseñado un sistema de colores que se asignan automáticamente mediante una función hash basada en el UUID del dueño de la reserva. Otro de los desafíos ha sido el control horario en base a UTC. Se ha usado una lógica en el frontend que detecta y convierte las horas al horario peninsular de forma automática. De esta manera, nos aseguramos de que, al salvar una reserva, las horas se mantengan exactamente donde el usuario las seleccionó, sin desplazamientos inesperados que ocurrían previamente.
+
+\section{Validación y cierre}
+
+Para la validación de este servicio se han generado dos conjuntos de test unitarios. El primero de ellos se encarga de la validación automática de los métodos de la API no relacionado con las peticiones. El otro es específico de las peticiones y comprueba las características de seguridad asociadas a las mismas. Adicionalmente se realizan pruebas de usabilidad asociadas al sistema.
+
+\subsection{Pruebas de usabilidad del sistema}
+
+Para la definición de tareas de las pruebas de usabilidad nos apoyamos en los casos del sistema presente en la figura \ref{fig:casos_uso_inc_ii}. En esta validación es interesante reflejar las partes principales del sistema. A continuación se detallan los diferentes casos de uso de las pruebas de usabilidad. Se utilizará la técnica de \texttt{Think aloud}, donde se le pedirá al usuario que detalle el proceso mental seguido para su flujo de ejecución. \cite{linkedin2026usability}.
+
+La definición de los escenarios se estructura de la siguiente manera: 
+\begin{itemize}
+  \item Rol de usuario. 
+  \item Contexto de la situación.
+  \item Datos para la tarea.
+  \item Meta.
+\end{itemize}
+\clearpage
+
+Los escenarios planteados para las pruebas de usabilidad se pueden encontrar en el Anexo V.
+
+
+% El resultado de las pruebas de usabilidad se pueden encontrar en el siguiente gráfico \ref{fig:ueq_resultados} y tabla \ref{tab:ueq_results_tabla}.
+
+% Con el objetivo de evaluar el desempeño de la aplicación se realiza un estudio basados en casos de uso de la herramienta junto al cuestionario UEQ. En la evaluación se evaluaron diferentes perfiles heterogéneos, desde estudiantes que podrían ser público objetivo hasta el administrador y supervisores del laboratorio. Los resultados del UEQ se sitúan en la figura \ref{fig:ueq_resultados} y la tabla \ref{tab:ueq_resultados}. Encontramos tanto fortalezas como debilidades en el diseño. Estos resultados destacan que es una interfaz intuitiva y fácil de aprender, lo cual es esencial para la aplicación ya que esta se orienta a todos los investigadores del laboratorio y la gestión de los recursos. En la parte de novedad, al existir softwares similares no resulta novedosa. Todos los resultados en general, tienen una varianza similar demostrando una misma opinión en las personas evaluadas, en cambio, la novedad tiene mucha varianza indicando que no hay estabilidad total en la respuesta. Para conseguir una mayor estabilidad se debería aumentar la cantidad de cuestionarios realizadas. 
+
+Con el objetivo de evaluar la usabilidad y la experiencia de usuario (UX) de la plataforma, se llevó a cabo un estudio basado en casos de uso reales complementado con el cuestionario estandarizado UEQ (User Experience Questionnaire). \cite{ueq_online} La muestra estuvo compuesta por un perfil de usuarios heterogéneo, incluyendo estudiantes, investigadores, supervisores de laboratorio y personal administrativo. Los resultados obtenidos se presentan en la figura \ref{fig:ueq_resultados} y en la tabla \ref{tab:ueq_results_tabla}.
+
+El análisis revela tanto fortalezas como áreas de mejora en el diseño. En términos generales, la aplicación destaca por su alta usabilidad, siendo percibida como una interfaz intuitiva y de fácil aprendizaje. Este es un hallazgo notorio, dado que la herramienta está diseñada para ser utilizada por todo el personal del laboratorio, facilitando la gestión de recursos sin requerir un aprendizaje largo y en detalle.
+
+En cuanto a la dimensión de Novedad (Novelty), los resultados indican una puntuación inferior, lo cual puede atribuirse a la existencia de soluciones con funcionalidades similares en el mercado. Respecto al consenso de los usuarios se puede destacar que hay una varianza baja, es decir, un alto consenso en la mayoría de campos estudiados por el UEQ. A excepción del campo de novedad, sugiriendo falta de consenso en este aspecto.  
+
+
+% Es importante señalar que, mientras que las dimensiones de usabilidad presentan una varianza baja —lo que refleja un alto consenso entre los participantes sobre la eficiencia y claridad del sistema—, la dimensión de Novedad presenta una varianza significativamente más elevada. Esta dispersión sugiere una falta de unanimidad en la percepción de innovación, probablemente influenciada por las expectativas previas de cada perfil de usuario.
+
+Finalmente, se reconoce que, para alcanzar una mayor estabilidad estadística en los resultados, se debe ampliar el tamaño de la muestra en futuras evaluaciones, permitiendo así obtener una opinión más consolidada.
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{ueq/tablas_ueq.png}
+ \caption{Resultados UEQ.}
+ \label{fig:ueq_resultados}
+\end{figure}
+
+
+
+\begin{table}[H]
+\centering
+\caption{Resultados de las escalas UEQ (Media y Varianza)}
+\label{tab:ueq_results_tabla}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Escala (UEQ Scale)} & \textbf{Media (Mean)} & \textbf{Varianza (Variance)} \\
+\midrule
+Attractiveness & 1.881 & 0.50 \\
+Perspicuity    & 2.036 & 0.28 \\
+Efficiency     & 2.214 & 0.32 \\
+Dependability  & 2.000 & 0.33 \\
+Stimulation    & 1.536 & 0.82 \\
+Novelty        & 0.857 & 1.66 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% Gracias a las pruebas de usabilidad y la técnica de \texttt{Think aloud} se han podido identificar algunos problemas destacando los siguientes. Algunos usuarios señalaban que la tipografía del sistema es demasiado pequeña, otros que el botón de volver tiene poco contraste. Parte del personal responsable de los investigadores señalan que para la denegación de las peticiones se require de un string con una determinada longitud para denegar una petición ya que suelen hacerlo con 'N/A'. Principalmente se tratan de mejoras menores y de diseño. Además se ha localizado un error de redirección de URIs. 
+
+% Gracias a las pruebas de usabilidad y la técnica de \texttt{Think aloud} se han podido identificar algunos problemas que deben ser ajustados. En la parte de usabilidad han señalado diferentes aspectos y mejoras a tener en cuenta. En primer lugar la tipografía, en algunas pantallas la tipografía utilizada es pequeña y algunos de los botones caracen del contraste suficiente para su identificación. En el ámbito de las peticiones y del persona supervisor, a la hora de denegarlas requiere de un texto justificativo se ha observado que ponen 'N/A', lo cual no cumple los requisitos y es una razón factible. Otra de las cuestiones, es un componente donde se encuentra el número de página donde estas consultando los datos, los usuarios intuyen que es un botón pulsable para pasar de página en lugar de usar la flecha. Por último, en el ámbito técnico, en las redirecciones del frontend se ha encontrado un componente que redirije a una URI errónea.
+
+% Gracias a las pruebas de usabilidad y a la técnica de Think aloud, se han podido identificar diversos aspectos y problemas que deben ser ajustados en la aplicación. En primer lugar, en relación con la usabilidad de la interfaz, se ha señalado que la tipografía utilizada en algunas pantallas es demasiado pequeña, dificultando su lectura, y que ciertos botones carecen del contraste visual suficiente para facilitar su identificación. En el ámbito de las peticiones, el personal supervisor ha manifestado que, al denegar una solicitud, el sistema exige un texto justificativo que no siempre es necesario; de hecho, se ha observado que los usuarios suelen introducir 'N/A' como respuesta estándar, lo que evidencia que la validación actual es demasiado restrictiva para las necesidades operativas del laboratorio. Por otra parte, se ha detectado una deficiencia en el diseño del componente de paginación, donde los usuarios tienden a intentar interactuar con el número de página como si fuera un elemento pulsable para navegar, en lugar de utilizar los controles de flechas habilitados para tal fin. Por último, en el ámbito técnico, se ha localizado un error en la lógica de redirección de las rutas del frontend, encontrándose un componente que redirige a una URI errónea que debe ser corregida.
+
+Con las pruebas de usabilidad y la técnica de \textt{Think Aloud} se han identificado algunos fallos y campos de mejora. En relación con la interfaz, en algunas pantallas la tipografía es demasiado pequeña, dificultando la lectura. Por otra parte, el botón de volver debido al poco contraste es difícil de localizar. En las peticiones a la hora de denegarla en caso de ser necesario se ha puesto de manifiesto un fallo debido a las restricciones al denegar las peticiones. En algunos casos han destacado que utilizan la expresión 'NA' para establecer que no aplica una petición en específico. Este texto, no es capaz de pasar el filtro de validación de caracteres para denegar una petición. Por otra parte, el componente encargado de mostrar la información de las páginas en cual nos situamos, los usuarios intuitivamente pulsan en él para cambiar la página en lugar de pulsar las flechas en los laterales del contador, la situación se refleja en la figura \ref{fig:paginas}. En el ámbito técnico, se ha encontrado un error con la redirección de pantallas donde un botón redirige a una URI que no existe. Estos elementos establecen una hoja de ruta a seguir para mejorar la usabilidad de la aplicación. 
+
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{ueq/paginas.png}
+ \caption{Contador de páginas.}
+ \label{fig:paginas}
+\end{figure}
+
+A continuación se detalla el contraste de algunos cambios hechos para el contraste del botón de volver en la figura \ref{fig:comparacion_botones}.
+
+% comparacion_back_button.png
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{ueq/comparacion_back_button.png}
+ \caption{Botón de volver atrás.}
+ \label{fig:comparacion_botones}
+\end{figure}
+

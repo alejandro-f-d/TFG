@@ -1,0 +1,198 @@
+\documentclass[12pt,a4paper]{report}
+
+% 1. Cargar configuración externa
+\input{config} 
+
+% 2. Configuración de BibLaTeX
+\usepackage{csquotes}
+\usepackage[backend=biber, style=ieee, sorting=none]{biblatex}
+\addbibresource{refs.bib}
+
+% 3. Configuración de Encabezados (FANCYHDR)
+\pagestyle{fancy}
+\fancyhf{}
+\setlength{\headheight}{25pt}
+\rhead{\includegraphics[height=20pt]{MEDAL}} % Asegúrate de que el archivo MEDAL esté en /imagenes
+\lhead{\small TFG - Alejandro Fisac}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+% --- PORTADA ---
+% La portada suele forzar \pagestyle{empty} internamente
+\include{portada} 
+
+% --- PREÁMBULO (Romanos) ---
+\newpage
+\pagenumbering{roman}
+
+% --- CUERPO (Arábigos) ---
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\chapter{Introducción}
+En este documento se presenta la información del entorno de desarrollo de los code-servers, se detallan los aspectos de la información de los ejecutables y requisitos del sistema. 
+\chapter{Herramientas y Stack Tecnológico:}
+\begin{table}[htbp]
+    \centering
+    \caption{Stack Tecnológico del Servicio Backend}
+    \label{tab:stack_backend}
+    \begin{tabularx}{\textwidth}{@{} l X @{}}
+        \toprule
+        \textbf{Componente} & \textbf{Tecnología y Detalles} \\
+        \midrule
+        Scripts de Ejecución & \textbf{Bash}. \\
+        Contenedores & \textbf{Docker} y \textbf{Docker Compose} (aislamiento de servicios). \\
+        Autoridad de Certificación & \textbf{CA propia}. \\ 
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\chapter{Autoridad de certificación:}
+A pesar de operar principalmente en un entorno de red local, la seguridad se ha integrado de forma transversal mediante el uso de Nginx como proxy inverso. Bajo esta arquitectura, el único puerto expuesto al exterior es el del servidor web, manteniendo aislados los puertos internos de los diversos code-servers. Dada la alta densidad de servicios, se ha optado por un modelo de confianza basado en la validación de certificados autofirmados, evitando la complejidad de gestionar una autoridad de certificación (CA) raíz centralizada. En la carpeta de la CA, se encuentra los archivos iniciales para la configuración.
+\section{Generación de la Root CA}
+Generación de la clave privada (\textit{key}) y de la solicitud de firma de certificado (\textit{csr}).
+
+\begin{lstlisting}
+openssl req -new -x509 -config root-ca.conf \
+    -keyout private/medal-root-ca.key \
+    -out medal-root-ca.crt \
+    -extensions ca_ext -days 3650
+\end{lstlisting}
+
+Creación de la lista de certificados revocados (CRL):
+\begin{lstlisting}
+openssl ca -gencrl \
+    -config root-ca.conf \
+    -out root-ca.crl
+\end{lstlisting}
+
+\paragraph{Nota sobre el TFG:} Para el Trabajo de Fin de Grado (TFG) no es estrictamente necesaria una CA intermedia; por lo tanto, se pueden firmar certificados directamente con esta Root CA.
+
+\section{Creación de una solicitud por parte del cliente}
+
+\subsection{Petición: Generación del par clave público-privada}
+\begin{lstlisting}
+openssl req -new -newkey rsa:4096 -nodes \
+    -keyout requests/atenea.key \
+    -out requests/atenea.csr \
+    -subj "/C=ES/ST=Madrid/L=Madrid/O=MEDAL/CN=192.168.68.75"
+\end{lstlisting}
+
+\subsection{Verificación}
+\begin{lstlisting}
+openssl req -in requests/atenea.csr -noout -text
+\end{lstlisting}
+
+\section{Firma de una nueva solicitud}
+Desde la carpeta \texttt{./root-ca/}:
+
+\begin{lstlisting}
+openssl ca -config root-ca.conf \
+    -in requests/atenea.csr \
+    -out certs/atenea.crt \
+    -extensions server_ext \
+    -extfile <(printf "[server_ext]\nsubjectAltName=IP:192.168.68.75\nextendedKeyUsage=serverAuth\nkeyUsage=digitalSignature,keyEncipherment\nbasicConstraints=CA:FALSE") \
+    -batch
+\end{lstlisting}
+
+Generación del \textit{fullchain}:
+\begin{lstlisting}
+cat certs/atenea.crt medal-root-ca.crt > certs/atenea-fullchain.crt
+\end{lstlisting}
+
+\section{Confianza y Distribución}
+El fichero principal a compartir para establecer confianza es: \texttt{medal-root-ca.crt}.
+
+\subsection{Cómo añadir el certificado a confianza}
+
+\subsubsection{Linux (Ubuntu)}
+\begin{lstlisting}
+sudo cp medal-root-ca.crt /usr/local/share/ca-certificates/
+sudo update-ca-certificates
+ls -l /etc/ssl/certs/ | grep medal-root-ca # Verificacion
+\end{lstlisting}
+
+\subsubsection{Windows}
+Hacer doble clic en el certificado, seleccionar \textbf{Instalar certificado}, elegir la ruta del equipo local, seleccionar \textbf{Colocar todos los certificados en el siguiente almacén} y elegir \textbf{Autoridades de certificación de raíz de confianza}.
+
+\subsubsection{Fedora}
+\begin{lstlisting}
+sudo cp medal-root-ca.crt /etc/pki/ca-trust/source/anchors/
+sudo update-ca-trust
+
+# Ejemplo de verificacion en base a un certificado
+openssl verify -CAfile /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem root-ca/certs/atenea.crt 
+\end{lstlisting}
+
+\chapter{Montaje y ejecución del servicio de Code-Server:}
+\section{Montaje Inicial:}
+Para el montaje de los code-server, lo único que es necesario es la ejecución de \texttt{docker compose up -d} del docker-compose inicial proporcionado. De manera adicional con la instalación, se carga un servicio con lectura en el socket de docker accesible a través del nginx con usuario medal y contraseña medal por defecto que nos proporciona una monitorización. En la figura \ref{fig:monitorizacion}.
+
+
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{monitorizacion.png}
+ \caption{Monitorización dozzle.}
+ \label{fig:monitorizacion}
+\end{figure}
+
+\section{Creación de nuevos usuarios:}
+
+Para la creación de nuevos usuarios se tiene en disposición un script llamado \texttt{generador.sh}. Este script se encarga de la creación del usuario en el docker-compose y levantado de los servicios, creación del usuario en el login del nginx y la instalación de las dependencias necesarias básicas para la ejecución del usuario.
+Este ejecutable recibe tres parámetros de entrada: nombrePersona, contraseña y uso de grafica (1: Con acceso al driver 0: Sin acceso al driver). Durante la ejecución del script te solicitará que repitas la contraseña anteriormente insertada.
+
+\section{Parada de docker de usuarios:}
+\subsection{Temporal:}
+Para la parada temporal lo único que es necesario es ir al directorio del docker-compose y ejecutar \texttt{docker compose stop code\_nombreusuario}. Con esto el servicio del usuario en cuestión se encontraría parado.
+
+\subsection{Definitiva con pérdida de datos:}
+Para la eliminación se proporciona un script llamado \texttt{eliminar.sh}, este script requiere de la dependencia yq. Con este comando se borra el docker del usuario y su contenido con la excepción de lo presente en el volúmen compartido con la máquina del host. 
+
+\chapter{Cambio de contraseñas en el sistema:}
+El cambio de contraseña existe a tres niveles. Todo debe ejecutarse desde la carpeta donde se encuentra la raíz de los code-servers.
+
+1. A nivel del nginx con el proxy inverso.
+2. A nivel code-server con el login único de password. 
+3. A nivel terminal. 
+
+\section*{Guía de Configuración}
+
+\subsection*{Proxy inverso}
+
+\begin{lstlisting}
+htpasswd htpasswd nombre
+\end{lstlisting}
+
+Esto te pedirá una nueva contraseña para el usuario \textbf{nombre}.
+
+\subsection*{Code-server login con solo password}
+Para el cambio de esta contraseña se debe hacer lo siguiente:
+
+
+\begin{lstlisting}
+docker compose stop code_nombre
+nano docker-compose.yml # Edición del coder y del campo password asociado al usuario.
+docker compose up code_nombre
+\end{lstlisting}
+
+Con esto se modificaría la contraseña del coder.
+
+\begin{tcolorbox}[colback=red!5!white,colframe=red!75!black,title=\textbf{ADVERTENCIA}]
+Al parar el docker, todos los procesos en ejecución se paran.
+\end{tcolorbox}
+
+\subsection*{Terminal}
+El propio usuario la puede modificar con los procesos normales de terminal bash.
+
+\vspace{1em}
+
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+\textit{\textbf{Consejo}: Es interesante que para evitar confusiones las tres contraseñas sean las mismas que es como lo deja el generador.}
+\end{tcolorbox}
+
+\end{document}

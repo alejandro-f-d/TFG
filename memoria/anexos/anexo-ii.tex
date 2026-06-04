@@ -1,0 +1,113 @@
+
+\section{Anexo II: Identificadores de los recursos.}
+Dominio de los usuarios:
+\texttt{/api/user}:
+\begin{itemize}
+  \item POST \texttt{/api/user}: Creación de un usuario nuevo.
+  \item GET \texttt{/api/user}: Listado de los usuarios presentes en el sistema.
+  \item GET \texttt{/api/user/\{uuid\}}: Obtienes la información asociada a un usuario en específico.
+  \item PATCH \texttt{/api/user/\{uuid\}}: Actualizas la información específica de un usuario.
+\end{itemize}
+
+Dominio de autenticación de usuarios:
+\begin{itemize}
+  \item POST \texttt{/api/user/login}: Usuario inicia sesión en el sistema.
+  \item POST \texttt{/api/user/recuperarPassword}: Solicita correo de recuperación de inicio de sesión del sistema.
+  \item PATCH \texttt{/api/user/recuperarPassword}: Actualización de la contraseña del usuario en el sistema. 
+\end{itemize}
+
+Dominio de las máquinas:
+\begin{itemize}
+  \item POST \texttt{/api/maquina}: Creación de una máquina en el sistema para inventariaje.
+  \item GET \texttt{/api/maquina}: Obtención del listado de las máquinas en el sistema.
+  \item GET \texttt{/api/maquina/\{uuid\}}: Obtienes la información de una máquina a partir de su identificador de recurso.
+  \item PATCH \texttt{/api/maquina/\{uuid\}}: Actualizas la información de una de las máquinas. 
+  \item DELETE \texttt{/api/maquina/\{uuid\}}: Eliminas una máquina.
+\end{itemize}
+
+Dominio de servicios asociados a las máquinas: 
+
+\begin{itemize}
+  \item POST \texttt{/api/maquina/\{uuid\}/servicios}: Crear un nuevo servicio asociado a una máquina.
+  \item GET \texttt{/api/maquina/\{uuid\}/servicios}: Obtiene los servicios asociados a una máquina.
+  \item GET \texttt{/api/maquina/\{uuid\}/servicios/\{uuidServicio\}}: Obtienes la información de un servicio en concreto asociado a una máquina.
+  \item PATCH \texttt{/api/maquina/\{uuid\}/servicios/\{uuidServicio\}}: Actualizas la información de una máquina. 
+  \item DELETE \texttt{/api/maquina/\{uuid\}/servicios/\{uuidServicio\}}: Borras el servicio.
+\end{itemize}
+
+Dominio de Roles:
+
+\begin{itemize}
+  \item POST \texttt{/api/rol}: Creas un rol con un conjunto de permisos.
+  \item GET \texttt{/api/rol}: Obtienes el listado de roles.
+  \item GET \texttt{/api/rol/\{uuid\}}: Obtienes la información de un determinado rol.
+  \item PATCH \texttt{/api/rol/\{uuid\}}: Actualizas la información de un rol.
+  \item DELETE \texttt{/api/rol/\{uuid\}}: Eliminas un role por uuid.
+\end{itemize}
+
+Dominio de las puertas:
+
+\begin{itemize}
+  \item POST \texttt{/api/puertas}: Creación de información asociada a una nueva puerta NUKI.
+  \item GET \texttt{/api/puertas}: Obtienes el listado completo de las puertas. 
+  \item GET \texttt{/api/puertas/\{uuid\}}: Obtienes la información de una puerta por su UUUID.
+  \item DELETE \texttt{/api/puertas/\{uuid\}}: Eliminas una puerta nuki asociada.
+\end{itemize}
+
+Dominio de los proyectos Gitlab: 
+\begin{itemize}
+  \item POST \texttt{/api/proyectosGitlab}: Creación de un nuevo proyecto en el sistema.
+  \item GET \texttt{/api/proyectosGitlab}: Obtienes el listado de los proyectos de Gitlab presentes.
+  \item GET \texttt{/api/proyectosGitlab/\{uuid\}}: Obtienes la información de un proyecto por su uuid.
+  \item PATCH \texttt{/api/proyectosGitlab/\{uuid\}}: Actualizas la información de un proyecto por su uuid. 
+\end{itemize}
+
+Dominio de las peticiones: 
+
+\begin{itemize}
+  \item POST \texttt{/api/peticion}: Creación por parte de un usuario base una petición. 
+  \item GET \texttt{/api/peticion}: Obtiene el listado de los servidores. 
+  \item GET \texttt{/api/peticion/\{uuid\}}: Obtienes la información de una petición por un uuid. 
+  \item POST \texttt{/api/peticion/\{uuid\}/firma}: Procesa la firma de la petición del servidor, actualiza el documento de asociado a la petición. 
+  \item PATCH \texttt{/api/peticion/\{uuid\}/denegar}: Deniega una petición al usuario por una razón específica. 
+  \item PATCH \texttt{/api/peticion/\{uuid\}/completada}: El administrador marca como completada una petición.
+\end{itemize}
+
+Dominio de los permisos:
+
+\begin{itemize}
+  \item GET \texttt{/api/permisos}:  Listado de los permisos que puede tener cada uno de los usuarios. 
+\end{itemize}
+
+Dominio de Health del Sistema:
+
+\begin{itemize}
+  \item GET \texttt{/api/healthcheck}: Obtienes el estado de esta herramienta en tiempo real. 
+\end{itemize}
+
+Dominio de los dispositivos:
+
+\begin{itemize}
+  \item POST \texttt{/api/dispositivos}: Creación de nuevos dispositivos.
+  \item GET \texttt{/api/dispositivos}: Obtención de la lista de dispositivos. 
+  \item GET \texttt{/api/dispositivos/\{uuid\}}: Obtención de la información de un uuid en específico.
+  \item DELETE \texttt{/api/dispositivos/\{uuid\}}: Eliminación de un dispositivo.
+  \item PATCH \texttt{/api/dispositivos/\{uuid\}}: Actualizar un dispositivo e información asociada. 
+\end{itemize}
+
+Dominio de las reservas: 
+\begin{itemize}
+  \item POST \texttt{/api/maquina/\{uuid\}/reserva}: Creas una reserva a una máquina específico.
+  \item GET \texttt{/api/reservas}: Obtiene una lista de reservas de evento de calendario.
+  \item GET \texttt{/api/reservas/\{uuid\}}: Obtienes el detalle de una reserva específica. 
+  \item PATCH \texttt{/api/reservas/\{uuid\}}: Modificas la información de una reserva.
+  \item DELETE \texttt{/api/reservas/\{uuid\}}: Eliminas una reserva específica en el calendario.
+\end{itemize}
+
+Dominio de la administración de las colas de mensajes:
+
+\begin{itemize}
+  \item GET \texttt{/admin/queues}: Gestor de las queues de las colas de mensajes.
+\end{itemize}
+
+El sistema, además permitirá el uso de querys para realizar un filtrado en base a una cadena de caracteres.

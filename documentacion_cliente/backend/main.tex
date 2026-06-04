@@ -1,0 +1,339 @@
+\documentclass[12pt,a4paper]{report}
+
+% 1. Cargar configuración externa
+\input{config} 
+
+% 2. Configuración de BibLaTeX
+\usepackage{csquotes}
+\usepackage[backend=biber, style=ieee, sorting=none]{biblatex}
+\addbibresource{refs.bib}
+
+% 3. Configuración de Encabezados (FANCYHDR)
+\pagestyle{fancy}
+\fancyhf{}
+\setlength{\headheight}{25pt}
+\rhead{\includegraphics[height=20pt]{MEDAL}} % Asegúrate de que el archivo MEDAL esté en /imagenes
+\lhead{\small TFG - Alejandro Fisac}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+% --- PORTADA ---
+% La portada suele forzar \pagestyle{empty} internamente
+\include{portada} 
+
+% --- PREÁMBULO (Romanos) ---
+\newpage
+\pagenumbering{roman}
+
+% --- CUERPO (Arábigos) ---
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\chapter{Introducción}
+En este documento se presenta la información del servicio del backend se van a detallar aspectos como el montaje, troubleshouting y herramientas asociadas al backend. También estará presente el paso a paso de como realizar el montaje.
+\chapter{Herramientas y Stack Tecnológico:}
+\begin{table}[htbp]
+    \centering
+    \caption{Stack Tecnológico del Servicio Backend}
+    \label{tab:stack_backend}
+    \begin{tabularx}{\textwidth}{@{} l X @{}}
+        \toprule
+        \textbf{Componente} & \textbf{Tecnología y Detalles} \\
+        \midrule
+        Entorno de Ejecución & \textbf{Node.js}. \\
+        Gestor de Paquetes & \textbf{npm}. \\
+        Base de Datos & \textbf{PostgreSQL} (motor relacional persistente). \\
+        Contenedores & \textbf{Docker} y \textbf{Docker Compose} (aislamiento de servicios). \\
+        Documentación de API & \textbf{Swagger} (documentación interactiva). \\
+        Pruebas (Testing) & \textbf{Pytest}. \\
+        Correo Electrónic & \textbf{Contraseña de aplicación Google} \\
+        Digital Signature Service (DSS) & \textbf{Servicio de validación de firmas} \\
+        Apache Tomcat & \textbf{Servicio de @firma para el backend.} \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+
+\chapter{Montaje del servicio del Backend:}
+La estructura del backend se monta mediante microservicios basados en docker. A continuación se detallan los pasos a seguir para el montaje. 
+
+\begin{itemize}
+
+    \item \textbf{Configuración de Apache Tomcat:} Para el montaje del apache tomcat Es importante destacar que este proceso no se puede hacer por localhost o ip de loopback ya que este servicio bloquea esto. Los pasos para realizar la configuración se pueden encontrar en \texttt{docker/firma/README.md}. Tras la descarga de cada uno de los ficheros de la forma especificada en el árbol de directorios, se debe configurar las credenciales de acceso al manager de apache tomcat en \texttt{docker/firma/tomcat-users.xml} modificando el username y la password asociada.
+
+    \item \textbf{Despliegue del servicio DSS (Digital Signature Service):} Para la validación de firmas electrónicas, el sistema integra la herramienta \textit{Digital Signature Service}. Debido a la complejidad de sus dependencias, se requiere la construcción previa de su imagen Docker. 
+
+    \notaseguridad{Se recomienda realizar la compilación y construcción de la imagen en \textbf{otra máquina} externa al entorno de producción. Una vez generado el archivo comprimido (\texttt{.tar}), este debe transferirse al servidor final para evitar el consumo excesivo de recursos (CPU/RAM) y dependencias de red durante el despliegue.}
+
+    El procedimiento técnico para la generación y exportación de la imagen es el siguiente:
+
+    \begin{lstlisting}[language=bash, 
+                       caption={Compilación y exportación de la imagen DSS}, 
+                       label={code:dss_setup},
+                       basicstyle=\ttfamily\footnotesize,
+                       breaklines=true]
+# 1. Clonar el repositorio oficial (solo el ultimo commit para ahorrar espacio)
+git clone --depth 1 https://github.com/esig/dss-demonstrations
+cd dss-demonstrations
+
+# 2. Construir la imagen localmente (Requiere Docker instalado)
+docker build -t dss-demo .
+
+# 3. Exportar la imagen a un archivo comprimido para su transferencia
+# Este archivo sera el que se suba al servidor de produccion
+docker save -o dss.tar dss-demo
+
+# 4. En el servidor de destino, cargar la imagen desde el archivo
+docker load -i dss.tar
+    \end{lstlisting}
+
+    Una vez cargada la imagen mediante \texttt{docker load}, el servicio quedará disponible en el registro local del servidor, permitiendo que \texttt{docker-compose} levante el contenedor de validación de firmas.
+
+    \item \textbf{Generación de la contraseña de aplicación Google:} Para el funcionamiento correcto de la aplicación se necesita tener una contraseña de aplicación de Google para el envío de correos electrónicos. Para ello se necesita una cuenta con autenticación de doble factor activada. La documentación de contraseñas de aplicación se puede obtener aquí \href{https://support.google.com/accounts/answer/185833?hl=es-419}{Documentación Google}. Esta contraseña de aplicación será utilizada a continuación en el documento de variables de entorno.
+    \item \textbf{Generación de los certificados de la página web:} En el directorio \texttt{docker/nginx/certs/} deben estar presentes los certificados de los que hará uso la página web para securizar la API y garantizar un tráfico seguro mediante HTTPS.
+
+    \item \textbf{Generación de la firma del servidor en documentos PDF:} En la ruta \texttt{docker/worker/certs/} se debe generar un certificado digital para la firma de cada PDF generado por el sistema, garantizando así su integridad. La firma de este certificado será la primera en todos los documentos. El proceso de generación es el siguiente:
+
+    \begin{lstlisting}[language=bash, 
+                       caption={Comandos OpenSSL para certificados de firma}, 
+                       label={code:openssl_pdf},
+                       basicstyle=\ttfamily\footnotesize,
+                       breaklines=true]
+# 1. Generar clave privada y certificado autofirmado
+openssl req -x509 -newkey rsa:4096 -keyout key.pem \
+    -out cert.pem -sha256 -days 365 -nodes \
+    -subj "/C=ES/ST=Madrid/L=Madrid/O=UPM/OU=CTB/CN=Servidor MEDAL"
+
+# 2. Exportar a formato PKCS12 (sello del servidor)
+openssl pkcs12 -export -out sello_servidor.p12 \
+    -inkey key.pem -in cert.pem \
+    -keypbe AES-256-CBC -certpbe AES-256-CBC \
+    -passout pass:
+
+# 3. Obtencion del SERIAL para variables de entorno
+openssl x509 -in cert.pem -serial -noout
+    \end{lstlisting}
+
+    \textit{Nota: Algunos de estos datos, como el número de serie (SERIAL), serán requeridos en pasos posteriores como variables de entorno del sistema.}
+
+    \item \textbf{Generación del secreto para JWT:} El sistema requiere una clave secreta para la firma de los \textit{JSON Web Tokens}. Para facilitar este proceso, se proporciona un script ejecutable ubicado en \texttt{docker/generate\_jwt.sh}, el cual genera una cadena aleatoria segura.
+    
+    \begin{lstlisting}[language=bash, 
+                       basicstyle=\ttfamily\footnotesize,
+                       breaklines=true]
+# Otorgar permisos de ejecucion y lanzar el script
+chmod +x docker/generate_jwt.sh
+./docker/generate_jwt.sh
+    \end{lstlisting}
+
+    \item \textbf{Configuración de las variables de entorno:} Una vez generados los certificados y secretos, se debe proceder a la cumplimentación del archivo de configuración de entorno (archivo \texttt{docker/.env}). Este archivo centraliza los parámetros de conexión y seguridad de todos los servicios del ecosistema. A continuación, se detalla un ejemplo de la estructura necesaria:
+
+    \begin{lstlisting}[language=bash, 
+                       caption={Ejemplo de archivo de configuración de variables de entorno (.env)}, 
+                       label={code:env_file},
+                       basicstyle=\ttfamily\scriptsize,
+                       breaklines=true,
+                       frame=single]
+# Configuración de la Base de Datos
+DB_USER=root
+DB_PASSWORD=1
+DB_NAME=medal
+API_PORT_EXTERNAL=8080
+DB_PORT_EXTERNAL=10001
+DB_HOST=medal-bdd-postgres
+DB_PORT_INTERNAL=5432
+API_DIRECTION=http://localhost:8080
+JWT_SECRET=5e40edda6cd84b78d3944603a60d8a19fd736035765542a257f252dba23327ed
+REDIS_PASSWORD=vYVSiOC9Tadt4QlWQE6zDGdit97ksBWluVFdEMG5GIQQ0OtgPW
+REDIS_IP=127.0.0.1
+API_IP=127.0.0.1
+PORT_REDIS=6379
+
+REDIS_HOST=redis
+
+# URL de conexión final
+REDIS_URL=redis://default:${REDIS_PASSWORD}@${REDIS_HOST}:6379
+
+GMAIL_USER=pgpprueba609@gmail.com
+GOOGLE_APP_PASSWORD=mvdpbpgavdcghhpw
+WEB_URL=http://MI_WEB/
+STORAGE_URL=http://medal-storage:3001
+
+# Puerto del DSS
+DSS_PORT=7070
+DSS_IP=127.0.0.1
+DSS_URL=http://medal-sign-validator:8080
+COMMON_NAME="Servidor MEDAL"
+SERIAL=6AD8D99D14340F39D47D0DEC3B098D31B51E84F9
+IP_TOMCAT=127.0.0.1
+PORT_TOMCAT=9090
+DB_IP=127.0.0.1
+    \end{lstlisting}
+    Posteriormente a la configuración del archivo, se detalla la funcionalidad de los parámetros divididos por bloques de servicio:
+
+    \begin{table}[htbp]
+        \centering
+        \caption{Descripción de las variables de entorno principales}
+        \label{tab:variables_entorno}
+        \begin{tabularx}{\textwidth}{@{} l X @{}}
+            \toprule
+            \textbf{Variable} & \textbf{Descripción y Propósito} \\
+            \midrule
+            \texttt{DB\_*} & Parámetros de conexión a la base de datos PostgreSQL (usuario, contraseña y base de datos \texttt{medal}). \\
+            \texttt{JWT\_SECRET} & Clave privada utilizada por el servidor para firmar y validar los tokens de sesión de los usuarios. \\
+            \texttt{REDIS\_*} & Configuración de la base de datos en memoria Redis, empleada para la gestión de colas y caché. \\
+            \texttt{GMAIL/GOOGLE\_*} & Credenciales del servicio de correo para el envío de notificaciones automáticas. \\
+            \texttt{STORAGE\_URL} & Dirección interna del servicio de almacenamiento de archivos (volúmenes Docker). \\
+            \texttt{DSS\_*} & Configuración del \textit{Digital Signature Service}, encargado de la validación y generación de firmas digitales. \\
+            \texttt{SERIAL} & Identificador único del certificado de firma generado en pasos anteriores, necesario para la trazabilidad de los documentos PDF. \\
+            \bottomrule
+        \end{tabularx}
+    \end{table}
+
+\item \textbf{Construcción del servicio:} En último lugar se ejecuta el constructor del servicio de la API \texttt{docker/script.sh}, encargado de construir todas los microservicios asociados al servicio. 
+\end{itemize}
+
+\begin{tcolorbox}[
+    colback=red!5!white,
+    colframe=red!75!black,
+    title=\textbf{⚠️ ADVERTENCIA CRÍTICA: Inicialización del Sistema},
+    arc=2mm,
+    boxrule=0.5mm
+]
+    Este procedimiento de despliegue inicial incluye la ejecución de scripts de migración y limpieza de volúmenes. \textbf{Solo debe ejecutarse durante la instalación inicial del sistema.} 
+    
+    Si se ejecutan comandos de reconstrucción de base de datos (\texttt{docker-compose down -v} o reinicialización de esquemas) en un sistema ya en producción, \textbf{se producirá una pérdida irreversible de todos los datos almacenados}, reseteando la base de datos a su estado original de fábrica.
+\end{tcolorbox}
+
+
+\chapter{Herramientas de administración y visualización de servicios}
+
+El administrador del sistema dispone de interfaces especializadas para la monitorización, pruebas y auditoría de los procesos en segundo plano. Estas herramientas permiten desacoplar la lógica de negocio de la supervisión técnica.
+
+\section{Documentación interactiva de la API (Swagger)}
+
+Para facilitar la integración y las pruebas de los diferentes \textit{endpoints}, el sistema integra \textbf{Swagger UI}. Esta herramienta genera una documentación viva basada en el estándar OpenAPI, permitiendo ejecutar peticiones directamente desde el navegador.
+
+\begin{itemize}
+    \item \textbf{Acceso:} \texttt{http://ip:puerto/api-docs}
+    \item \textbf{Funcionalidad:} Permite visualizar los esquemas de datos de entrada/salida, los códigos de respuesta HTTP y realizar pruebas de autenticación mediante el paso de tokens JWT en las cabeceras.
+\end{itemize}
+
+\section{Apache Tomcat Servicio de Firma:}
+
+El sistema de la firma electrónica requiere de un servidor apache tomcat funcionando con ciertos requisitos. Obligación de comunicación vía https mediante un dns o ip quedando excluidas \texttt{localhost y 127.0.0.1}. El administrador tiene la posibilidad de tener acceso vía web del manager de tomcat.
+
+
+
+\section{Monitorización de colas y procesos (BullBoard)}
+
+El sistema utiliza una arquitectura basada en trabajadores (\textit{workers}) para tareas pesadas, como la generación y firma de documentos PDF. Para la visualización de estas colas de mensajes gestionadas por \textbf{Redis}, se ha implementado un panel de control basado en \textbf{BullBoard}.
+
+\begin{itemize}
+    \item \textbf{Acceso:} \texttt{http://ip:puerto/admin/queues}
+    \item \textbf{Capacidades:} 
+    \begin{itemize}
+        \item \textbf{Estado de tareas:} Visualización en tiempo real de tareas en espera (\textit{waiting}), en proceso (\textit{active}), completadas o fallidas.
+        \item \textbf{Reintento manual:} Posibilidad de re-encolar tareas que hayan fallado por errores temporales de red o servicios externos.
+        \item \textbf{Depuración:} Acceso a los mensajes de error y \textit{stack traces} de las tareas que no pudieron completarse con éxito.
+    \end{itemize}
+\end{itemize}
+
+\notaseguridad{El acceso a estas herramientas de administración debe estar restringido mediante políticas de red o cortafuegos en entornos de producción, ya que exponen información sensible sobre la estructura de la base de datos y el estado de los procesos internos.}
+
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{swagger.png}
+ \caption{Documentación de Swagger.}
+ \label{fig:swagger}
+\end{figure}
+
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{tomcat.png}
+ \caption{Gestor online de tomcat.}
+ \label{fig:swagger}
+\end{figure}
+
+
+
+% queue-admin.png
+
+\begin{figure}[H] 
+ \centering 
+ \includegraphics[width=1\textwidth]{queue-admin.png}
+ \caption{Sistema de administración de colas.}
+ \label{fig:swagger}
+\end{figure}
+
+
+\section{Resolución de problemas (Troubleshooting)}
+
+La robustez de la plataforma MEDAL se apoya en un sistema de trazabilidad que permite identificar y corregir fallos en las distintas capas de la arquitectura. A continuación, se detallan los escenarios de error más comunes y los procedimientos de diagnóstico.
+
+\subsection{Identificación de errores mediante logs}
+
+El primer paso para el \textit{troubleshooting} consiste en la inspección de los flujos de salida de los contenedores. Gracias a la centralización en Docker, se pueden monitorizar los tres pilares del backend:
+
+\begin{itemize}
+    \item \textbf{Logs de la API:} \texttt{docker logs -f medal-api-core} 
+    \\ Permite visualizar excepciones no controladas, errores de validación (Joi) y fallos de autenticación JWT.
+    \item \textbf{Logs del Worker:} \texttt{docker logs -f medal-worker} 
+    \\ Crucial para depurar fallos en la generación de PDFs o errores en la firma criptográfica con OpenSSL.
+    \item \textbf{Logs de Base de Datos:} \texttt{docker logs -f medal-bdd-postgres} 
+    \\ Útil para identificar bloqueos de tablas o violaciones de restricciones de integridad referencial.
+\end{itemize}
+
+\subsection{Matriz de fallos comunes y soluciones}
+
+En la Tabla \ref{tab:troubleshooting} se recogen las incidencias típicas detectadas durante la fase de despliegue y sus respectivas soluciones.
+
+
+\begin{table}[htbp]
+    \centering
+    \caption{Guía de resolución de incidencias comunes}
+    \label{tab:troubleshooting}
+    \small % Reducimos un poco el tamaño de letra para que respire mejor
+    \begin{tabularx}{\textwidth}{@{} >{\hsize=0.6\hsize}X >{\hsize=1.2\hsize}X >{\hsize=1.2\hsize}X @{}}
+        \toprule
+        \textbf{Síntoma} & \textbf{Causa Probable} & \textbf{Solución} \\
+        \midrule
+        Error \texttt{500} constante & Variables de entorno (\texttt{.env}) incorrectas o no cargadas. & Verificar el archivo \texttt{.env} y reiniciar contenedores. \\
+        \midrule
+        Fallo de conexión BD & El contenedor de Postgres no ha terminado de inicializar el \textit{socket}. & Reiniciar el servicio de la API tras la subida de la base de datos. \\
+        \midrule
+        PDFs sin firma & Falta el certificado \texttt{.p12} o el \texttt{SERIAL} es erróneo. & Regenerar certificados según el procedimiento detallado anteriormente. \\
+        \midrule
+        Tareas en \textit{Stalled} & El servicio Redis ha perdido la persistencia o falta memoria. & Verificar la cola del servicio Redis y su disponibilidad. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\chapter{Próximos pasos y Escalabilidad del Sistema}
+
+En la fase actual de despliegue, la arquitectura de la plataforma MEDAL ha sido diseñada bajo el principio de \textit{mínimo privilegio}. Esto implica que la mayor parte de los servicios críticos están restringidos exclusivamente al entorno de red interna (\texttt{localhost}) de la máquina anfitriona.
+
+\section{Seguridad Perimetral Actual}
+
+Actualmente, servicios sensibles como la \textbf{base de datos relacional (PostgreSQL)} y el \textbf{gestor de colas (Redis)} no son accesibles desde el exterior. Esta configuración minimiza vectores de ataque, asegurando que solo los contenedores autorizados dentro de la \texttt{medalnetwork} puedan interactuar con los datos.
+
+\section{Hoja de Ruta para el Acceso Remoto}
+
+Para habilitar la administración o consulta de estos servicios desde Internet en futuras iteraciones, se proponen las siguientes líneas de actuación:
+
+\begin{itemize}
+    \item \textbf{Cifrado de Punto a Punto (TLS/SSL):} Implementar certificados digitales específicos para las instancias de base de datos, garantizando que cualquier conexión externa viaje cifrada y protegida contra ataques de \textit{Man-in-the-Middle}.
+    \item \textbf{Exposición Controlada en Docker:} Modificar las directivas de puertos en el archivo \texttt{docker-compose.yml}. Se debe sustituir la restricción de IP de \texttt{127.0.0.1} por la interfaz correspondiente.
+    \item \textbf{Autenticación Robusta:} Antes de la apertura de puertos, es imperativo actualizar las credenciales por contraseñas con alta seguridad (DB\_PASSWORD y REDIS\_PASSWORD) por secretos gestionados de alta entropía.
+    \item \textbf{Monitorización de Accesos:} Configurar reglas de firewall (iptables/ufw) para permitir el tráfico entrante únicamente desde direcciones IP estáticas autorizadas correspondientes a las del laboratorio.
+\end{itemize}
+
+\notaseguridad{Se desaconseja la apertura pública de los puertos de bases de datos a Internet global sin restricciones.}
+
+\end{document}

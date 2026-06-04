@@ -1,0 +1,92 @@
+export const MAQUINA_QUERIES = {
+	SERVER_POST: `
+    INSERT INTO medal.maquina(
+        uuidMaquina, nombre, caducidadssl, certificadosslactivo, emisorssl, 
+        direccionipprivadav4, direccionippublicav4, direccionipprivadav6, 
+        direccionippublicav6, puertaenlacev4, puertaenlacev6, ram, 
+        sistemaoperativo, esservidor
+    ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`,
+	CREAR_PERMISOS: `INSERT INTO medal.permisos(alias, nombre, descripcion, modulo) 
+        VALUES 
+        ($1, 'Ver servicios', 'Ver servicios asociados a la máquina', 'servicios'),
+        ($2, 'Crear servicios', 'Permite la creación de servicios en esta máquina', 'servicios'),
+        ($3, 'Eliminar servicios', 'Eliminar servicios asociados a la máquina', 'servicios'),
+        ($4, 'Calendario', 'Permite al usuario la operación con el calendario', 'calendario')
+        ;`,
+	BASE_SELECT: `SELECT * FROM medal.maquina`,
+	BUILD_GET_ALL: (conditions, limitIndex, offsetIndex) => {
+		let query = `SELECT * FROM medal.maquina`;
+
+		if (conditions.length > 0) {
+			query += ` WHERE ` + conditions.join(" AND ");
+		}
+
+		query += ` ORDER BY idmaquina ASC`; // Recomendado añadir siempre un orden para paginación
+		query += ` LIMIT $${limitIndex} OFFSET $${offsetIndex}`;
+
+		return query;
+	},
+	GET_MAQUINA_UUID: `SELECT 
+        m.*,
+        COALESCE(
+            (SELECT json_agg(
+                json_build_object(
+                    'uuiddispositivo', d.uuiddispositivo,
+                    'nombre', d.nombre,
+                    'capacidad', d.capacidad
+                )
+            ) 
+            FROM medal.dispositivos d 
+            WHERE d.idmaquina = m.idmaquina), 
+        '[]') as dispositivos
+    FROM medal.maquina m
+    WHERE m.uuidmaquina = $1;`,
+	DELETE_PERMS: `DELETE FROM medal.permisos WHERE alias ILIKE $1`,
+	DELETE_MAQ: `DELETE FROM medal.maquina WHERE uuidmaquina = $1`,
+	VERIFICAR_EXISTE: `
+        SELECT uuidmaquina FROM medal.maquina WHERE uuidmaquina = $1;
+    `,
+
+	GET_SERVICIOS_DETALLE: `
+    SELECT * FROM (
+        SELECT DISTINCT ON (s.idservicio)
+            s.*, 
+            p.uuidpeticion, 
+            maq.uuidmaquina,
+            COALESCE(puertos_agg.lista_puertos, '[]') AS lista_puertos,
+            COUNT(*) OVER() AS total_count
+        FROM medal.servicio s
+        JOIN medal.peticion p ON s.idpeticion = p.idpeticion
+        JOIN medal.corre c ON c.idservicio = s.idservicio
+        JOIN medal.maquina maq ON c.idmaquina = maq.idmaquina
+        LEFT JOIN (
+            SELECT idservicio, 
+                   json_agg(json_build_object(
+                       'id', idpuerto, 
+                       'puerto', numeropuertomaquina, 
+                       'protocolo', protocolo,
+                       'nombre', nombreservicio
+                   )) AS lista_puertos
+            FROM medal.puertosabiertos
+            GROUP BY idservicio
+        ) AS puertos_agg ON s.idservicio = puertos_agg.idservicio
+        WHERE maq.uuidmaquina = $4
+          AND s.nombreservicio ILIKE $3 
+          AND s.status ILIKE $5
+        ORDER BY s.idservicio, s.nombreservicio ASC
+    ) sub
+    ORDER BY sub.nombreservicio ASC
+    LIMIT $1 OFFSET $2;
+`,
+
+	UPDATE_SERVER_DYNAMIC: (keys) => {
+		const setClause = keys
+			.map((key, index) => `${key} = $${index + 1}`)
+			.join(", ");
+		return `
+          UPDATE medal.maquina 
+          SET ${setClause} 
+          WHERE uuidmaquina = $${keys.length + 1}
+      `;
+	},
+};

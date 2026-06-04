@@ -1,11 +1,11 @@
-\chapter{Incremento I:}
+\chapter{Incremento I}
 
-\section{Requisitos:}
+\section{Requisitos}
 
-En las siguientes tablas podemos ver los requisitos funcionales y no funcionales de la aplicación. En la tabla \ref{tab:rf_simple} se encuentran organizados los requisitos funcionales para el dashboard. Mientras que en la tabla \ref{tab:rnf_simple} podemos encontrar los requisitos no funcionales de la aplciación.
+En las siguientes tablas podemos ver los requisitos funcionales y no funcionales de la aplicación. En la tabla \ref{tab:rf_simple} se encuentran organizados los requisitos funcionales para el dashboard. Mientras que en la tabla \ref{tab:rnf_simple} podemos encontrar los requisitos no funcionales de la aplicación.
 
 
-\subsection{Requisitos funcionales:}
+\subsection{Requisitos funcionales}
 
 
 \begin{center}
@@ -25,35 +25,40 @@ En las siguientes tablas podemos ver los requisitos funcionales y no funcionales
 \bottomrule
 \endfoot
 
-RF1   & Gestión integral de investigadores (CRUD). & Incremento 1 \\
-RF1.1 & Los administradores pueden dar de alta a la cantidad de roles que sean necesarios. & Incremento 1 \\
-RF1.2 & Los administradores del sistema podrán visualizar los datos de todos los usuarios dados de alta. & Incremento 1 \\
-RF1.3 & Los usuarios no administradores deben poder ver sus datos propios. & Incremento 1 \\
-RF1.4 & Los administradores del sistema deben poder editar los datos de otros usuarios a excepción de las credenciales de acceso de cada usuario. & Incremento 1 \\
-RF1.5 & Los usuarios no administradores deben poder editar su información y su contraseña. & Incremento 1 \\
-RF1.6 & Los administradores son los únicos con permisos para eliminar la cuenta de un usuario. & Incremento 1 \\
-RF2   & Control de periodos de estancia y fechas de finalización. El sistema debe enviar un correo electrónico al administrador en el día de la baja del usuario notificándole la posible baja. & Incremento 1 \\
-RF3   & Autenticación y control de acceso basado en roles (RBAC). & Incremento 1 \\
-RF4   & Los usuarios deben ser capaces de modificar y/o recuperar la contraseña de manera segura. & Incremento 1 \\
-RF5   & Centralización de datos en la Fuente Única de Verdad (SSOT). & Incremento 1 \\
-RF6   & El servicio debe permitir trazabilidad y envío de anexos firmados por parte de los usuarios. & Incremento 1 \\
-RF7   & El sistema debe permitir la creación de nuevos servidores dependiendo de las necesidades. & Incremento 1 \\
+RF1   & Gestión integral de investigadores (CRUD). & Incremento 2 \\
+RF1.1 & Los administradores pueden dar de alta a la cantidad de roles que sean necesarios. & Incremento 2 \\
+RF1.2 & Los administradores del sistema podrán visualizar los datos de todos los usuarios dados de alta. & Incremento 2 \\
+RF1.3 & Los usuarios no administradores deben poder ver sus datos propios. & Incremento 2 \\
+RF1.4 & Los administradores del sistema deben poder editar los datos de otros usuarios a excepción de las credenciales de acceso de cada usuario. & Incremento 2 \\
+RF1.5 & Los usuarios no administradores deben poder editar su información y su contraseña. & Incremento 2 \\
+RF1.6 & Los administradores son los únicos con permisos para eliminar la cuenta de un usuario. & Incremento 2 \\
+RF1.7 & Gestión de las peticiones de los usuarios. & Incremento 2 \\
+RF2   & Control de periodos de estancia y fechas de finalización. El sistema debe enviar un correo electrónico al administrador en el día de la baja del usuario notificándole la posible baja. & Incremento 2 \\
+RF3   & Autenticación y control de acceso basado en roles (RBAC). & Incremento 2 \\
+RF4   & Los usuarios deben ser capaces de modificar y/o recuperar la contraseña de manera segura. & Incremento 2 \\
+RF5   & Centralización de datos en la Fuente Única de Verdad (SSOT). & Incremento 2 \\
+RF6   & El servicio debe permitir trazabilidad y envío de anexos firmados por parte de los usuarios. & Incremento 2 \\
+RF7   & El sistema debe permitir la creación de nuevos servidores dependiendo de las necesidades. & Incremento 3 \\
 \midrule
-RF8   & Aprovisionamiento automático de cuentas en servidores en los microservicios de CodeServer. & Incremento 2 \\
-RF9   & Revocación de los accesos nativos. & Incremento 2 \\
-RF10  & Gestión de privilegios de superusuario (sudo) solo para el administrador en servidores. & Incremento 2 \\
+RF8   & Aprovisionamiento automático de cuentas en servidores en los microservicios de CodeServer. & Incremento 3 \\
+RF9   & Revocación de los accesos nativos e inventariaje de los dispositivos. & Incremento 3 \\
+RF9.1 & Inventariaje de los servicios en ejecución en cada una de las máquinas. & Incremento 2 y 3 \\
+RF9.2 & Sistema de monitoreo de servicios y páginas web. & Incremento 2 y 3 \\
+RF9.3 & Calendario para la administración de recursos. & Incremento 2 y 3 \\
+RF9.4 & Inventariaje de los dispositivos. & Incremento 2 \\
+RF10  & Gestión de privilegios de superusuario (sudo) solo para el administrador en servidores. & Incremento 3 \\
 \midrule
-RF11  & Gestión de miembros en repositorios de GitLab vía API. & Incremento 3 \\
-RF12  & Control de acceso mediante códigos de invitación de las puertas de los laboratorios con la aplicación de NUKI. & Incremento 3 \\
-RF13  & Integración y gestión de canales en Microsoft Teams. & Incremento 3 \\
+RF11  & Gestión de miembros en repositorios de GitLab vía API. & Incremento 4 \\
+RF12  & Control de acceso mediante códigos de invitación de las puertas de los laboratorios con la aplicación de NUKI. & Incremento 4 \\
+RF13  & Integración y gestión de canales en Microsoft Teams. & Incremento 4 \\
 \midrule
-RF14  & Registro de auditoría bajo un estándar NIST. & Incremento 4 \\
+RF14  & Registro de auditoría bajo un estándar NIST. & Incremento 5 \\
 \end{longtable}
 \end{center}
 \normalsize
 \newpage
 
-\subsection{Requisitos no funcionales:}
+\subsection{Requisitos no funcionales}
 \begin{table}[htbp]
     \centering
     \caption{Requisitos no Funcionales y su Incremento Asociado}
@@ -71,7 +76,7 @@ RF14  & Registro de auditoría bajo un estándar NIST. & Incremento 4 \\
 \end{table}
 \normalsize
 \newpage
-\section{Tecnologías planteadas.}
+\section{Tecnologías planteadas}
 
 \begin{table}[htpb]
 \centering
@@ -80,12 +85,23 @@ RF14  & Registro de auditoría bajo un estándar NIST. & Incremento 4 \\
 \begin{tabularx}{\textwidth}{l X}
 \toprule
 \textbf{Capa} & \textbf{Tecnología / Herramienta} \\ \midrule
-\textbf{Frontend} & React.js con Tailwind CSS para la interfaz de usuario. \\
+\textbf{Frontend} & React.js con Typescript CSS para la interfaz de usuario. \\
 \textbf{Backend} & Node.js y Express para la lógica de API RESTful. \\
-\textbf{Base de Datos} & PostgreSQL para el SSOT. \\
+\textbf{Base de Datos} & PostgreSQL para el SSOT, Redis para el paso de mensajes, Objetos para los pdf. \\
 \textbf{Seguridad} & JSON Web Tokens (JWT) y cifrado con funciones hash que no permiten vuelta al valor original. \\
 \textbf{Diseño} & Figma para el prototipado de interfaces (UI/UX). \\
-\textbf{Swagger} & Para la documentación de los métodos de la API se va a utilizar herramientas como swagger para documentar los métodos y opciones de retorno de las APIs. \\ \bottomrule
+\textbf{Swagger} & Para la documentación de los métodos de la API se va a utilizar herramientas como swagger para documentar los métodos y opciones de retorno de las APIs. \\
+\textbf{Digital Signature Service (DSS)} & Servicio para la validación de firmas electrónicas en PDF. \\
+\textbf{Bull Dashboard} & Servicio de administración de las colas de mensaje. \\
+\textbf{DB Diagram.io} & Documentación de la base de datos y entidad relación. \\
+\textbf{Fossflow} & Diagramas asimétricos de la arquitectura. \\
+\bottomrule
 \end{tabularx}
 \end{table}
+
+\newpage
+
+\section{Estándares de codificación}
+
+En el desarrollo del proyecto para permitir el mantenimiento y la escalibidad se siguen las siguientes buenas prácticas. El backend sigue el patrón de arquitectura Modelo-Vista-Controlador (MVC), mientras que el frontend se construye mediante una arquitectura con componentes. La API sigue un diseño RESTful y la base de datos actúa como fuente de verdad única (single source of truth) del sistema. A nivel de seguridad, se emplea autenticación mediante tokens JWT y el uso de prepared statements para prevenir inyecciones SQL. En cuanto a la calidad del código, se aplica una nomenclatura consistente en camelCase, junto con linting y formateo automático. Por último, el control de versiones se gestiona mediante GitHub, permitiendo un seguimiento ordenado de los cambios a lo largo del desarrollo.
 

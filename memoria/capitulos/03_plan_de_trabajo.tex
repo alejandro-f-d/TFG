@@ -1,0 +1,340 @@
+
+\chapter{Estimación del plan de trabajo}
+
+\section{Lista de tareas}
+El desarrollo se ha dividido en los siguientes bloques funcionales:
+
+\begin{enumerate}[label=\textbf{T\arabic*.}]
+    \item \textbf{Análisis de requisitos y diseño de BD:} Definición del esquema \textit{Medal} en PostgreSQL, relaciones, constraints y lógica de integridad.
+    \item \textbf{Desarrollo del Core Backend:} Implementación de la API REST con Node.js, gestión de conexiones.
+    \item \textbf{Módulo de Seguridad:} Configuración de JWT, middleware de autenticación, hashing y validación de esquemas de datos.
+    \item \textbf{Módulo de Infraestructura:} Desarrollo de endpoints para la gestión de máquinas, servicios asociados y puertos.
+    \item \textbf{Interfaz de Usuario (Frontend):} Diseño de un Dashboard web para la visualización de datos en tiempo real y administración de recursos.
+    \item \textbf{Migración de usuarios:} Migración de los distintos usuarios a entornos aislados para evitar conflictos en el uso del servidor por parte de diferentes usuarios. 
+    \item \textbf{Integración de diferentes aplicaciones:} Integración de los servicios externos del laboratorio a la página web.
+    \item \textbf{Pruebas y Documentación:} Testeo de carga, validación de seguridad y redacción de la memoria final.
+\end{enumerate}
+
+\section{Distribución de horas (270 horas totales)}
+
+Basado en la propuesta de trabajo del tutor, las 270 horas totales del proyecto se distribuyen de la siguiente manera entre las tareas definidas:
+
+\begin{itemize}
+    \item \textbf{Formación:} 7\% (~19 horas)
+    \item \textbf{Especificación de requisitos:} 10\% (~27 horas)
+    \item \textbf{Análisis y diseño:} 23\% (~62 horas)
+    \item \textbf{Implementación:} 45\% (~122 horas)
+    \item \textbf{Elaboración de la documentación:} 8\% (~22 horas)
+    \item \textbf{Elaboración de la memoria:} 5\% (~13 horas)
+    \item \textbf{Elaboración de la presentación:} 2\% (~5 horas)
+\end{itemize}
+
+\subsection*{T1. Análisis de requisitos y diseño de BD (62 horas)}
+\begin{itemize}
+    \item \textbf{Especificación de requisitos (27h):} Reuniones con el tutor, análisis de necesidades del grupo de investigación, definición de casos de uso, especificación de requisitos funcionales y no funcionales.
+    \item \textbf{Análisis y diseño (35h):} Diseño del esquema de base de datos en PostgreSQL, definición de relaciones, constraints, lógica de integridad y preparación del modelo de datos.
+\end{itemize}
+
+\subsection*{T2. Desarrollo del Core Backend (45 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (45h):} Configuración inicial del proyecto con Node.js, creación de la estructura base de la API REST, gestión de conexiones a la base de datos, implementación de los primeros endpoints y lógica de negocio fundamental.
+\end{itemize}
+
+\subsection*{T3. Módulo de Seguridad (30 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (25h):} Configuración de autenticación mediante JWT, desarrollo de middleware para la protección de rutas, implementación de hashing de contraseñas y validación de esquemas de datos de entrada/salida.
+    \item \textbf{Formación (5h):} Estudio de buenas prácticas de seguridad en aplicaciones web y manejo de librerías específicas.
+\end{itemize}
+
+\subsection*{T4. Módulo de Infraestructura (30 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (30h):} Desarrollo de los endpoints específicos para la gestión de máquinas (físicas y virtuales), servicios asociados y puertos. Integración con la lógica de negocio para el inventariado.
+\end{itemize}
+
+\subsection*{T5. Interfaz de Usuario (Frontend) (32 horas)}
+\begin{itemize}
+    \item \textbf{Análisis y diseño (15h):} Diseño de la interfaz de usuario (wireframes, mockups), definición de la experiencia de usuario (UX) para el dashboard, selección del framework frontend.
+    \item \textbf{Implementación (17h):} Desarrollo del dashboard web, creación de componentes, conexión con la API backend para la visualización de datos en tiempo real y administración de recursos.
+\end{itemize}
+
+\subsection*{T6. Migración de usuarios (12 horas)}
+\begin{itemize}
+    \item \textbf{Análisis y diseño (5h):} Análisis de los sistemas actuales, diseño de la estrategia de migración a entornos aislados para evitar conflictos.
+    \item \textbf{Implementación (7h):} Ejecución de la migración de usuarios, configuración de los entornos aislados y verificación del proceso.
+\end{itemize}
+
+\subsection*{T7. Integración de diferentes aplicaciones (20 horas)}
+\begin{itemize}
+    \item \textbf{Implementación (20h):} Integración de los servicios externos del laboratorio (VPN, GitLab, etc.) con el dashboard. Desarrollo de la lógica para dar de alta/baja automáticamente los accesos a estos servicios.
+\end{itemize}
+
+\subsection*{T8. Pruebas y Documentación (39 horas)}
+\begin{itemize}
+    \item \textbf{Pruebas (10h):} Testeo de carga, validación de seguridad, pruebas de integración y de sistema para asegurar el correcto funcionamiento.
+    \item \textbf{Documentación (22h):} Redacción de la memoria final del proyecto (incluyendo introducción, objetivos, decisiones técnicas, manuales de usuario, etc.).
+    \item \textbf{Presentación (5h):} Preparación de la presentación y defensa del trabajo ante el tribunal.
+    \item \textbf{Formación (2h):} Formación continua a lo largo del proyecto para resolver dudas técnicas específicas.
+\end{itemize}
+
+
+
+\begin{figure}[p]
+    \centering
+    
+    \rotatebox{90}{
+        \begin{ganttchart}[
+            hgrid,
+            vgrid,
+            x unit=0.65cm,                 
+            y unit title=0.8cm,
+            y unit chart=0.9cm,
+            title label font=\footnotesize,
+            bar label font=\small,
+            bar label node/.style={
+                text width=6.2cm,
+                align=right,
+                anchor=east
+            },
+            canvas/.style={
+                draw=black!40,
+                fill=white
+            },
+            bar/.style={
+                fill=blue!55
+            },
+            bar height=0.55,
+            group periods=false
+        ]{1}{24}
+        
+        \gantttitle{Semanas del Semestre}{24} \\
+        \gantttitlelist{1,...,24}{1} \\
+
+        \ganttbar{Análisis de los requisitos (Inc. 1 y 2)}{1}{3} \\
+        \ganttbar{Base de datos Incremento 1}{3}{7} \\
+        \ganttbar{Implementación BD y estudio de JWT}{7}{8} \\
+        \ganttbar{API y Swagger: implementación y pruebas}{9}{13} \\
+        \ganttbar{Certificados web: aprendizaje e integración}{12}{13} \\
+        \ganttbar{Diseño de la aplicación web (Figma)}{13}{13} \\
+        \ganttbar{Programación de la página web}{14}{17} \\
+        \ganttbar{Migración de usuarios y servicios en code-server}{17}{19} \\
+        \ganttbar{Integración de servicios externos}{20}{23} \\
+        \ganttbar{Revisión general y correcciones}{24}{24} \\
+
+        \ganttbar{Documentación}{1}{24}
+
+        \end{ganttchart}
+    }
+
+    \vspace{0.8cm} % Espacio adicional para evitar colisión con el caption
+    % \caption{Cronograma del proyecto representado mediante un diagrama de Gantt.}
+    \label{fig:gantt_rotated}
+\end{figure}
+
+\newpage
+
+
+\chapter{Ejecución del plan de trabajo entrega intermedia.}
+
+\section{Puntos Función del Proyecto}
+
+Para el cálculo de los puntos función se utiliza la técnica de Puntos de Función de la International Function Point Users Group (IFPUG) \cite{ifpug_org}. Se parte de la base de la especificación de requisitos completa del sistema. 
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=1\textwidth]{PF/REQUISITOS.png}
+  \end{center}
+  \caption{Tabla Resumen de los Requisitos.}
+  \label{fig:REQUISITOS}
+\end{figure}
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=1\textwidth]{PF/ILF.png}
+  \end{center}
+  \caption{Puntos función de los ILF y el estado de los mismos.}
+  \label{fig:ILF}
+\end{figure}
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=1\textwidth]{PF/EIF.png}
+  \end{center}
+  \caption{Puntos función de los EIF y el estado de los mismos.}
+  \label{fig:EIF}
+\end{figure}
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=1\textwidth]{PF/EI.png}
+  \end{center}
+  \caption{Puntos función de los EI y el estado de los mismos.}
+  \label{fig:EI}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=1\textwidth]{PF/EO.png}
+  \end{center}
+  \caption{Puntos función de los EO y el estado de los mismos.}
+  \label{fig:EO}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=1\textwidth]{PF/EQ.png}
+  \end{center}
+  \caption{Puntos función de los EQ y el estado de los mismos.}
+  \label{fig:EQ}
+\end{figure}
+
+
+\section{Resumen del trabajo realizado hasta la entrega intermedia}
+
+% Para la entrega intermedia se han desarrollado diferentes elementos. Se ha realizado el modelo teórico completo de la arquitectura con los respectivos módulos. Se ha realizado la estructura de datos relacional que soporta la infraestructura de servicios de la página web e inventariaje de elementos presentes en el laboratorio. Se ha implementado en gran medida el backend relativo a la página web excluyendo la parte de las integraciones que queda pendiente para el desarrollo en el resto del trabajo. 
+
+
+Durante la primera parte del proyecto previo a la entrega intermedia, se ha implementado la parte principal del proyecto, el core, alcanzando una serie de objetivos importantes en el desarrollo. En primer lugar, se ha diseñado la parte arquitectónica del proyecto la que se ha diseñado en módulos apoyados en tres tipos de base de datos. Una primera de ámbito relacional encargada de soportar el almacenamiento persistente del usuario y una segunda no relacional usada para la comunicación de paso de mensajes entre los módulos y por último, una base de datos de objetos para el almacenamiento de documentos. En segundo lugar, se ha empezado con la implementación del lado servidor con una API REST encargada de crear y gestionar los diferentes recursos de la aplicación. En tercer lugar, se ha creado un prototipo de alta fidelidad de la plataforma que está sirviendo como guía en el desarrollo del frontend y organización de elementos. Por último, en el ámbito de las integraciones de los servicios de terceros se ha empezado a explorar para su posterior implementación y viabilidad en el sistema.
+
+En el ámbito de funcionalidades, se han completado diferentes tareas de la lógica de negocio. Se ha completado el sistema de control de acceso basado en roles y de la gestión de identidad dotando a la aplicación web la creación de usuarios y roles con sus permisos correspondientes. Además el sistema permite el inventariaje de dispositivos, máquinas y servicios facilitando tener un control claro de ejecuciones y sistemas en ejecución. Los sistemas pueden ser solicitados mediante un sistema de peticiones ya presente en el sistema para crear servicios vinculados. Además, la plataforma permite el monitoreo de páginas webs proporcionando visibilidad en tiempo real, el estado e histórico de una página web. 
+
+Durante el desarrollo de la página web se puede destacar la aplicación y uso de estándares y principios como el nivel 2 del Richardson Madurity Model con el uso de verbos HTTP \cite{REST_MADURITY}. La infraestructura de red se ha securizado siguiendo los estándares de la IETF para TLS 1.3, garantizando el cifrado de extremo a extremo \cite{TLS}. Además se siguen las recomendaciones de seguridad de las APIS del INCIBE \cite{incibe_api_security}. 
+
+
+
+En la figura \ref{fig:RESUMEN} se puede observar el estado actual de desarrollo del proyecto.
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=1\textwidth]{PF/RESUMEN.png}
+  \end{center}
+  \caption{Tabla Resumen de Estado del Proyecto.}
+  \label{fig:RESUMEN}
+\end{figure}
+
+El proyecto cuenta con dos estimaciones de esfuerzo: una derivada del cronograma de trabajo y otra basada en Puntos Función. La figuras \ref{fig:AnalisisPlan} y \ref{fig:graficoAnalisisPlan} resumen la comparativa entre la planificación inicial y el esfuerzo real, validando la precisión de las estimaciones realizadas.
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=1\textwidth]{PF/horas_tareas.png}
+  \end{center}
+  \caption{Tabla de Análisis de horas destinadas al proyecto.}
+  \label{fig:AnalisisPlan}
+\end{figure}
+
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=1\textwidth]{PF/horas_tareas_grafico.png}
+  \end{center}
+  \caption{Gráfico visual de las horas destinadas.}
+  \label{fig:graficoAnalisisPlan}
+\end{figure}
+
+
+% En base a los ratios de productividad y la cantidad de puntos función que quedan por hacer, se estima que hace falta una cantidad de $92$ horas para terminar el proyecto.
+%
+% A pesar de tener un ratio de productividad rápido, en las gráfica \ref{fig:graficoAnalisisPlan} se puede ver el error de estimación presente en el sistema en todos los elementos, ya que han sido necesarias más horas de las previstas para realizar las tareas. 
+
+
+\begin{sidewaysfigure}[pH]
+    \centering
+    \includegraphics[width=\textheight, keepaspectratio]{incremento-ii/gannt.png}
+    \caption{Cronograma del desarrollo.}
+    \label{fig:gantt_mermaid}
+\end{sidewaysfigure}
+
+\newpage
+\section{Modificaciones del plan de trabajo}
+
+Basándome en los ratios de productividad y los Puntos Función pendientes por hacer se estima que hacen falta $166$ horas para la realización del proyecto en completo. Debido a este número tan alto de horas, se necesita una reestructuración de las tareas a realizar en el proyecto priorizando las partes más importantes para el objetivo del proyecto. Tras analizar la complejidad de las tareas restantes, su importancia y viabilidad para el desarrollo del proyecto se ha decido no implementar la vinculación con los servicios de externos de la UPM y de Teams. Esto se debe a que para la integración de la herramienta del Sistema de Identificación Única de la UPM, el servicio debe estar corriendo ya en un servidor y desplegado \cite{siu_upm}. Esto no es factible para el proyecto en este punto. Por parte de la integración de Microsoft Teams carezco de los permisos necesarios en la organización para intentar el desarrollo de esta integración con mi cuenta de @alumnos.upm.es. Adicionalmente, se elimina el incremento V y los requisitos asociados al mismo junto a la integración del sistema de autofirma de manera nativa.
+
+Se establecen como objetivos para la memoria final la implementación de las partes faltantes del fronted, tales como el calendario, mejora de las pantallas desarrolladas, la integración de servicios de terceros de las puertas NUKI y Gitalb y la creación de un sistema funcional en base al codeserver como entorno de desarrollo para el personal investigador.
+
+\section{Objetivos actualizados para la realizar para la finalización del proyecto}
+\begin{itemize}
+    \item Automatización y Control de Accesos.
+    \item Visualización de Datos y Monitorización.
+    \item Optimización del Entorno de Desarrollo.
+    \item Documentación y Análisis Técnico.
+    \item Validación del Sistema.
+    \item Despliegue en Entorno Real.
+\end{itemize}
+
+\section{Lista de tareas actualizadas a realizar para la finalización del proyecto}
+Lista de tareas actualizadas: 
+
+\begin{itemize}
+    \item Integración de las puertas NUKI.
+    \item Integración de GitLab.
+    \item Pantalla de calendario, monitor y health.
+    \item Gestión de la infraestructura y la migración de usuarios. 
+    \item Implantación del code server.
+    \item Marco teórico del resto de integraciones que se implementaran como las que no serán implementadas.
+    \item Montaje del servicio en los servidores del laboratorio. 
+    \item Pruebas de usuario sobre la usabilidad del sistema. 
+    \item Realización del resto de módulos relativos al TFG.
+\end{itemize}
+
+
+\section{Revisión del diagrama de Gannt}
+
+% Relativo al cronograma del diagrama de gannt planteado inicialmente presente en la figura \ref{fig:gantt_rotated} y con respecto a los plazos de terminación planificados, esto, ha sido posible gracias al superávit de horas presente en \ref{fig:AnalisisPlan}. A pesar de ir cumplimiendo con los tiempos planificados en el plan de trabajo, al entrar en un periodo de tiempo con mayor carga de trabajo y de exámenes se decide reducir la carga de tareas a la especificada anteriormente.
+
+% En el plan de trabajo se hizo una estimación en formato diagrama de Gannt para la planificación de tareas (\ref{fig:gantt_rotated}). Gracias al superávit de horas invertidas (\ref{fig:AnalisisPlan}) en el proyecto se ha sido capaz de mantener en plazo el desarrollo de la aplicación. A pesar de mantener en plazo el proyecto se ha decidido realizar una reestructuración de las tareas objetivo cara a la entrega final, se han elegido las tareas que permitan la creación de un producto mínimo viable de la aplicación cumplimiendo lo máximo posible con los requisitos de la aplicación. Esta decisión se fundamenta en el aumento de la carga de trabajo de las asignaturas en las que estoy matriculado. 
+
+La planificación inicial, detallada en el diagrama de Gantt de la Figura \ref{fig:gantt_rotated}, se ha mantenido en cronograma gracias al superávit de horas invertidas en la primera parte del desarrollo (Figura \ref{fig:AnalisisPlan}). Sin embargo, ante el aumento de la carga académica en este periodo y la cantidad de horas restantes según Puntos Función, he optado por reestructurar los objetivos finales. Esta decisión busca asegurar la entrega de un Producto Mínimo Viable (MVP) que, aunque ajustado en alcance, cumpla con los requisitos fundamentales del proyecto sin comprometer su viabilidad. 
+
+En la figura \ref{fig:gantt_final_v2} se puede ver la planificación hasta la entrega final del proyecto fin de grado.
+
+% \section{Diagrama de Gannt hasta memoria final:}
+
+\begin{figure}[p]
+    \centering
+    
+    \rotatebox{90}{
+        \begin{ganttchart}[
+            hgrid,
+            vgrid,
+            x unit=1.2cm, 
+            y unit title=0.8cm,
+            y unit chart=0.9cm,
+            title label font=\footnotesize,
+            bar label font=\small,
+            bar label node/.style={
+                text width=7.5cm, 
+                align=right,
+                anchor=east
+            },
+            canvas/.style={
+                draw=black!40,
+                fill=white
+            },
+            bar/.style={
+                fill=blue!55
+            },
+            bar height=0.55,
+            group periods=false
+        ]{17}{24}
+        
+        \gantttitle{Semanas del Semestre}{8} \\
+        \gantttitlelist{17,...,24}{1} \\
+        \ganttbar{Integración de las puertas NUKI y GitLab}{17}{19} \\
+        \ganttbar{Pantalla de calendario, monitor y health}{17}{20} \\
+        \ganttbar{Gestión de infraestructura y migración}{18}{21} \\
+        \ganttbar{Implantación del code server}{19}{22} \\
+        \ganttbar{Marco teórico de integraciones}{17}{22} \\
+        \ganttbar{Montaje en servidores del laboratorio}{22}{23} \\
+        \ganttbar{Pruebas de usabilidad}{23}{24} \\
+        \ganttbar{Realización de módulos restantes TFG}{17}{24} \\
+        \ganttbar{Documentación}{17}{24}
+        \end{ganttchart}
+    }
+
+    \vspace{0.8cm} 
+    \caption{Cronograma del tramo final del proyecto (Semanas 17-24).}
+    \label{fig:gantt_final_v2}
+\end{figure}
