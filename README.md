@@ -57,9 +57,9 @@ La infraestructura del dashboard es la siguiente:
 ![infraestructura](./memoria/imagenes/incremento-ii/infraestructura.png)
 
 
-👤 Autor
+Autor
 Alejandro Fisac Delgado
 Trabajo de Fin de Grado - Escuela Técnica Superior de Ingenieros Informáticos - Universidad Politécnica de Madrid.
 
-📝 Licencia
+Licencia
 Este proyecto es de uso académico bajo licencia MIT.
