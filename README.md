@@ -4,12 +4,15 @@ Este Trabajo de Fin de Grado tiene como objetivo mejorar la gestión de usuarios
 El sistema proporciona un dashboard web con autenticación basada en roles que centraliza la administración del laboratorio, facilitando la coordinación entre el personal investigador y optimizando el uso de los recursos computacionales disponibles.
 
 ## Estructura del repositorio
+```text
 ├── docker/                      # Configuración de despliegue con Docker Compose
 ├── codigo/                      # Código fuente del proyecto (backend + frontend)
 ├── memoria/                     # Memoria final del TFG en LaTeX
+│   └── compilar_memo.sh         # Script para compilar la memoria en PDF
 └── documentacion_cliente/       # Documentación técnica para el cliente
     ├── backend/                 # Documentación del backend y guía de despliegue
     └── code-server/             # Documentación del servicio Code Server
+```
 
 ## Funcionalidades principales
 
