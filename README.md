@@ -16,12 +16,12 @@ El sistema proporciona un dashboard web con autenticación basada en roles que c
 
 ## Funcionalidades principales
 
-Gestión de usuarios con sistema de autenticación y control de acceso basado en roles (RBAC).
-Inventario de dispositivos y recursos: creación, edición y seguimiento del equipamiento del laboratorio.
-Gestión de servicios por máquina: visibilidad de los servicios activos en cada servidor.
-Sistema de calendario: facilita la coordinación y reserva de recursos computacionales según su disponibilidad y capacidad.
-Sistema de peticiones: permite al personal solicitar acceso o uso de recursos en los distintos servidores del sistema, gracias al Digital Signature Service de la Comisión Europea, confirmando la validez de las mismas.
-Code Server: entornos de desarrollo virtualizados y seguros para el personal investigador, eliminando la necesidad de acceso nativo persistente a las máquinas.
+- Gestión de usuarios con sistema de autenticación y control de acceso basado en roles (RBAC).
+- Inventario de dispositivos y recursos: creación, edición y seguimiento del equipamiento del laboratorio.
+- Gestión de servicios por máquina: visibilidad de los servicios activos en cada servidor.
+- Sistema de calendario: facilita la coordinación y reserva de recursos computacionales según su disponibilidad y capacidad.
+- Sistema de peticiones: permite al personal solicitar acceso o uso de recursos en los distintos servidores del sistema, con validación mediante el Digital Signature Service (DSS) de la Comisión Europea.
+- Code Server: entornos de desarrollo virtualizados y seguros para el personal investigador, eliminando la necesidad de acceso nativo persistente a las máquinas.
 
 
 ## Despliegue
@@ -56,7 +56,7 @@ Entornos virtualizados para el personal investigador: Code Server
 
 👤 Autor
 Alejandro Fisac Delgado
-Trabajo de Fin de Grado - Escuela Técnica Superior de Ingenieros Informáticos - Universidad Politécnica de madrid.
+Trabajo de Fin de Grado - Escuela Técnica Superior de Ingenieros Informáticos - Universidad Politécnica de Madrid.
 
 📝 Licencia
 Este proyecto es de uso académico. Consulta el archivo LICENSE si existe, o contacta con el autor para más información.
